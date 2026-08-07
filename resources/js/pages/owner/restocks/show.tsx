@@ -38,9 +38,9 @@ const STATUS_CONFIG: Record<
         border: 'border-amber-200',
     },
     approved: {
-        bg: 'bg-emerald-50',
-        text: 'text-emerald-700',
-        border: 'border-emerald-200',
+        bg: 'bg-amber-50',
+        text: 'text-amber-700',
+        border: 'border-amber-200',
     },
     rejected: {
         bg: 'bg-red-50',
@@ -48,14 +48,14 @@ const STATUS_CONFIG: Record<
         border: 'border-red-200',
     },
     preparing: {
-        bg: 'bg-purple-50',
-        text: 'text-purple-700',
-        border: 'border-purple-200',
+        bg: 'bg-amber-50',
+        text: 'text-amber-700',
+        border: 'border-amber-200',
     },
     shipped: {
-        bg: 'bg-blue-50',
-        text: 'text-blue-700',
-        border: 'border-blue-200',
+        bg: 'bg-amber-50',
+        text: 'text-amber-700',
+        border: 'border-amber-200',
     },
     completed: {
         bg: 'bg-mint-wash',
@@ -63,6 +63,21 @@ const STATUS_CONFIG: Record<
         border: 'border-primary/20',
     },
 };
+
+// Map a product's size_unit to a display unit label ('l'|'ml'|'g'|'kg' → Liter/Pcs).
+function unitLabel(item: any): string {
+    const unit = item?.product?.size_unit ?? item?.variant?.size_unit;
+
+    return unit === 'ml' || unit === 'l' || unit === 'g' || unit === 'kg'
+        ? 'Liter'
+        : 'Pcs';
+}
+
+function stockedQuantity(item: any, value: number | null | undefined): string {
+    return value == null || Number.isNaN(Number(value))
+        ? '—'
+        : `${value} ${unitLabel(item)}`;
+}
 
 export default function OwnerRestockShow({ restock, inventories }: any) {
     const [showApprove, setShowApprove] = useState(false);
@@ -180,10 +195,10 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                                     '-'}
                                             </td>
                                             <td className="px-5 py-3 text-right tabular-nums">
-                                                {item.requested_quantity}
+                                                {stockedQuantity(item, item.requested_quantity)}
                                             </td>
                                             <td className="px-5 py-3 text-right font-semibold tabular-nums">
-                                                {item.approved_quantity ?? '—'}
+                                                {stockedQuantity(item, item.approved_quantity)}
                                             </td>
                                             <td className="px-5 py-3 text-center">
                                                 {inv ? (
@@ -209,10 +224,10 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                 <tr className="border-t border-border bg-surface-muted/30 text-xs font-semibold">
                                     <td className="px-5 py-2.5">Total</td>
                                     <td className="px-5 py-2.5 text-right tabular-nums">
-                                        {totalRequested}
+                                        {stockedQuantity({}, totalRequested)}
                                     </td>
                                     <td className="px-5 py-2.5 text-right tabular-nums">
-                                        {totalApproved || '—'}
+                                        {stockedQuantity({}, totalApproved)}
                                     </td>
                                     <td />
                                 </tr>
@@ -342,7 +357,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                             </div>
                             <div className="flex gap-2">
                                 <Button
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     onClick={() => setShowApprove(true)}
                                 >
                                     <CheckCircle2 className="mr-1.5 h-4 w-4" />
@@ -350,7 +365,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                 </Button>
                                 <Button
                                     variant="destructive"
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     onClick={() => setShowReject(true)}
                                 >
                                     <XCircle className="mr-1.5 h-4 w-4" />
@@ -366,7 +381,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                 Aksi
                             </div>
                             <Button
-                                className="w-full"
+                                className="min-h-11 w-full"
                                 onClick={() =>
                                     router.post(
                                         `/owner/restocks/${restock.id}/mark-shipped`,
@@ -426,36 +441,42 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                                 '-'}
                                         </div>
                                         <div className="text-xs text-text-muted">
-                                            Diminta {item.requested_quantity}
+                                            Diminta{' '}
+                                            {stockedQuantity(item, item.requested_quantity)}
                                         </div>
                                     </div>
-                                    <input
-                                        type="number"
-                                        min={0}
-                                        value={
-                                            (
-                                                approveForm.data.items[
-                                                    index
-                                                ] as any
-                                            ).approved_quantity
-                                        }
-                                        onChange={(e) => {
-                                            const items = [
-                                                ...approveForm.data.items,
-                                            ] as any[];
-                                            items[index] = {
-                                                ...items[index],
-                                                approved_quantity: Number(
-                                                    e.target.value,
-                                                ),
-                                            };
-                                            approveForm.setData(
-                                                'items',
-                                                items as any,
-                                            );
-                                        }}
-                                        className="h-8 w-20 rounded-lg border border-border bg-surface px-2 text-right text-sm font-semibold outline-none focus:border-primary"
-                                    />
+                                    <div className="flex items-center gap-1">
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={
+                                                (
+                                                    approveForm.data.items[
+                                                        index
+                                                    ] as any
+                                                ).approved_quantity
+                                            }
+                                            onChange={(e) => {
+                                                const items = [
+                                                    ...approveForm.data.items,
+                                                ] as any[];
+                                                items[index] = {
+                                                    ...items[index],
+                                                    approved_quantity: Number(
+                                                        e.target.value,
+                                                    ),
+                                                };
+                                                approveForm.setData(
+                                                    'items',
+                                                    items as any,
+                                                );
+                                            }}
+                                            className="h-11 w-20 rounded-lg border border-border bg-surface px-2 text-right text-sm font-semibold outline-none focus:border-primary"
+                                        />
+                                        <span className="text-xs text-text-muted">
+                                            {unitLabel(item)}
+                                        </span>
+                                    </div>
                                 </div>
                             ),
                         )}
@@ -479,11 +500,13 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowApprove(false)}
                         >
                             Batal
                         </Button>
                         <Button
+                            className="min-h-11"
                             onClick={() =>
                                 approveForm.post(
                                     `/owner/restocks/${restock.id}/approve`,
@@ -540,12 +563,14 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowReject(false)}
                         >
                             Batal
                         </Button>
                         <Button
                             variant="destructive"
+                            className="min-h-11"
                             onClick={() =>
                                 rejectForm.post(
                                     `/owner/restocks/${restock.id}/reject`,
