@@ -34,6 +34,7 @@ export default function OfflineSalesIndex({ sales, variants }: any) {
                         size="lg"
                         onClick={() => setShowCreate(true)}
                         icon={Plus}
+                        className="min-h-11"
                     >
                         Catat Penjualan
                     </Button>
