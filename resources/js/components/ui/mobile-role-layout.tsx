@@ -7,9 +7,11 @@ interface Props extends PropsWithChildren {
     footerSlot?: ReactNode;
     /** Optional fixed action bar slot — rendered outside <main> so position:fixed works */
     actionBarSlot?: ReactNode;
+    /** Optional full-width header slot — rendered above <main> (outside max-w wrapper) */
+    headerSlot?: ReactNode;
 }
 
-export default function MobileRoleLayout({ children, footerSlot, actionBarSlot }: Props) {
+export default function MobileRoleLayout({ children, footerSlot, actionBarSlot, headerSlot }: Props) {
     useFlashToast();
 
     const bottomPad = footerSlot
@@ -21,6 +23,8 @@ export default function MobileRoleLayout({ children, footerSlot, actionBarSlot }
     return (
         <div className="min-h-dvh bg-surface text-text">
             <OfflineBanner />
+
+            {headerSlot && <div className="w-full">{headerSlot}</div>}
 
             <main className={`mx-auto max-w-2xl px-4 lg:max-w-4xl xl:max-w-5xl ${bottomPad}`}>
                 {children}
