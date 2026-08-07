@@ -72,7 +72,9 @@ html[data-role='courier'] {
     --color-primary-light: var(--color-blue-50);
     --color-ring: var(--color-blue-700);
     --color-surface: #f8fafc;
-    --color-surface-muted: #f2f4f6;
+    --color-surface-muted: #eef3f9;
+    --shadow-card: 0 1px 3px rgba(37, 99, 235, 0.07), 0 4px 12px rgba(37, 99, 235, 0.06);
+    --shadow-elevated: 0 8px 15px rgba(37, 99, 235, 0.12), 0 3px 6px rgba(37, 99, 235, 0.06);
 }
 
 /* ─── Native Feel Quick Wins ─────────────────────────────── */
