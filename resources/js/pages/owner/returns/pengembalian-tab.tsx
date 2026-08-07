@@ -27,15 +27,6 @@ const RETURN_STATUS_FILTERS = [
     { key: 'rejected', label: 'Ditolak' },
 ];
 
-const statusColorMap: Record<string, string> = {
-    '': 'text-text bg-surface-muted ring-border',
-    submitted: 'text-amber-600 bg-amber-50 ring-amber-200',
-    approved: 'text-blue-600 bg-blue-50 ring-blue-200',
-    received_at_center: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
-    completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
-    rejected: 'text-red-600 bg-red-50 ring-red-200',
-};
-
 export default function PengembalianTab({
     returns,
     filters,
@@ -136,8 +127,7 @@ export default function PengembalianTab({
                             }
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 isActive
-                                    ? (statusColorMap[f.key] ??
-                                      'bg-primary/10 text-primary ring-primary/20')
+                                    ? 'bg-primary/10 text-primary ring-primary/20'
                                     : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
