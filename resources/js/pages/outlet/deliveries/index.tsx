@@ -10,7 +10,6 @@ import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
-import SectionCard from '@/components/ui/section-card';
 import { Skeleton, SkeletonList } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
@@ -159,8 +158,14 @@ export default function OutletDeliveriesIndex({
 
                         {/* Unassigned Orders */}
                         {unassignedOrders.length > 0 && (
-                            <SectionCard label="Perlu Assign Kurir">
-                                <div className="mt-2 space-y-2">
+                            <div>
+                                <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                    Perlu Assign Kurir
+                                    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
+                                        {unassignedOrders.length}
+                                    </span>
+                                </h2>
+                                <div className="space-y-2">
                                     {unassignedOrders.map((order: any) => (
                                         <div
                                             key={order.id}
@@ -213,18 +218,21 @@ export default function OutletDeliveriesIndex({
                                                     )
                                                 }
                                                 icon={Truck}
-                                                className="mt-2 w-full"
+                                                className="mt-2 min-h-11 w-full"
                                             >
                                                 Assign Kurir
                                             </Button>
                                         </div>
                                     ))}
                                 </div>
-                            </SectionCard>
+                            </div>
                         )}
 
                         {/* Delivery List */}
-                        <SectionCard label="Riwayat Pengiriman">
+                        <div>
+                            <h2 className="mb-3 text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                Riwayat Pengiriman
+                            </h2>
                             {deliveries.data.length === 0 ? (
                                 <EmptyState
                                     icon={
@@ -234,7 +242,7 @@ export default function OutletDeliveriesIndex({
                                     description="Pengiriman akan muncul setelah kurir di-assign."
                                 />
                             ) : (
-                                <div className="mt-2 space-y-2">
+                                <div className="space-y-2">
                                     {deliveries.data.map((d: any) => (
                                         <Link
                                             key={d.id}
@@ -282,7 +290,7 @@ export default function OutletDeliveriesIndex({
                                     ))}
                                 </div>
                             )}
-                        </SectionCard>
+                        </div>
                     </>
                 )}
             </OutletPageShell>
