@@ -72,7 +72,7 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
 
     if (loading) {
         return (
-            <div className="rounded-lg border border-border bg-white p-4">
+            <div className="rounded-lg border border-border bg-surface p-4">
                 <SkeletonList count={5} />
             </div>
         );
@@ -84,7 +84,7 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
 
     return (
         <div
-            className="rounded-lg border border-border bg-white p-4"
+            className="rounded-2xl border border-border bg-surface p-5"
             aria-label="Perbandingan harga antar outlet"
         >
             <div className="mb-4 flex items-center justify-between">
@@ -111,10 +111,7 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
                                 Variant
                             </th>
                             {outletIds.map((id) => (
-                                <th
-                                    key={id}
-                                    className="pr-4 pb-2 text-primary"
-                                >
+                                <th key={id} className="pr-4 pb-2 text-primary">
                                     {outlets.find((o) => o.id === id)?.name ??
                                         '-'}
                                 </th>
