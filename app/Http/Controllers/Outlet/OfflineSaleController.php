@@ -42,7 +42,7 @@ class OfflineSaleController extends Controller
             ->get()
             ->map(fn ($inv) => [
                 'id' => $inv->product->id,
-                'name' => $inv->product->category->name.' - '.$inv->product->name,
+                'name' => $inv->product->category?->name.' - '.$inv->product->name,
                 'center_price' => (float) $inv->product->center_price,
                 'stock' => $inv->current_stock,
             ]);
