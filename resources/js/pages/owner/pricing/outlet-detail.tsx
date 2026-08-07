@@ -342,14 +342,15 @@ export default function OutletDetail({
                             }))}
                             className="w-44"
                         />
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            icon={Plus}
-                            onClick={() => setBulkOpen(!bulkOpen)}
-                            aria-label="Atur semua harga"
-                        >
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                className="min-h-11"
+                                icon={Plus}
+                                onClick={() => setBulkOpen(!bulkOpen)}
+                                aria-label="Atur semua harga"
+                            >
                             {bulkOpen ? 'Tutup' : 'Atur Massal'}
                         </Button>
                         {otherOutlets && otherOutlets.length > 0 && (
@@ -357,6 +358,7 @@ export default function OutletDetail({
                                 type="button"
                                 variant="secondary"
                                 size="sm"
+                                className="min-h-11"
                                 icon={Copy}
                                 onClick={() => setCopyOpen(!copyOpen)}
                                 aria-label="Salin harga dari outlet lain"
@@ -414,9 +416,9 @@ export default function OutletDetail({
                 <OwnerTable minWidth="700px">
                     <Table>
                         <TableHeader>
-                            <tr className="border-b border-border/30 bg-surface-muted/50">
+                            <tr className="border-b border-border/30 bg-primary/5">
                                 <TableHead
-                                    className="cursor-pointer px-6 py-3.5 text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
+                                    className="cursor-pointer px-6 py-3.5 text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
                                     onClick={() => toggleSort('name')}
                                 >
                                     Produk
@@ -427,7 +429,7 @@ export default function OutletDetail({
                                     />
                                 </TableHead>
                                 <TableHead
-                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
+                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
                                     onClick={() => toggleSort('center_price')}
                                 >
                                     HPP
@@ -438,7 +440,7 @@ export default function OutletDetail({
                                     />
                                 </TableHead>
                                 <TableHead
-                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
+                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
                                     onClick={() => toggleSort('selling_price')}
                                 >
                                     Harga Jual
@@ -449,7 +451,7 @@ export default function OutletDetail({
                                     />
                                 </TableHead>
                                 <TableHead
-                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
+                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
                                     onClick={() => toggleSort('margin')}
                                 >
                                     Margin
@@ -459,7 +461,7 @@ export default function OutletDetail({
                                         direction={sortDir}
                                     />
                                 </TableHead>
-                                <TableHead className="px-6 py-3.5 text-center text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                <TableHead className="px-6 py-3.5 text-center text-[11px] font-semibold tracking-wider text-primary uppercase">
                                     Aksi
                                 </TableHead>
                             </tr>
@@ -529,7 +531,7 @@ export default function OutletDetail({
                                                         )
                                                     }
                                                     title="Reset ke harga pusat"
-                                                    className="rounded-lg p-1.5 text-text-subtle transition-colors hover:bg-red-50 hover:text-red-600"
+                                                    className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-text-subtle transition-colors hover:bg-red-50 hover:text-red-600"
                                                 >
                                                     <RotateCcw className="h-3.5 w-3.5" />
                                                 </button>
@@ -541,7 +543,7 @@ export default function OutletDetail({
                                                     setModalOpen(true);
                                                 }}
                                                 title="Ubah harga"
-                                                className="rounded-lg p-1.5 text-text-subtle transition-colors hover:bg-mint-wash hover:text-primary"
+                                                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-text-subtle transition-colors hover:bg-mint-wash hover:text-primary"
                                             >
                                                 <Pencil className="h-3.5 w-3.5" />
                                             </button>

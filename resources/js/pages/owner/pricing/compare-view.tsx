@@ -95,6 +95,7 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className="min-h-11"
                     onClick={onClose}
                 >
                     <X className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
@@ -105,12 +106,15 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="border-b border-border text-left text-xs font-medium text-text-muted">
-                            <th className="sticky left-0 bg-white pr-4 pb-2">
+                        <tr className="border-b border-border bg-primary/5 text-left text-xs font-medium">
+                            <th className="sticky left-0 bg-primary/5 pr-4 pb-2 text-primary">
                                 Variant
                             </th>
                             {outletIds.map((id) => (
-                                <th key={id} className="pr-4 pb-2">
+                                <th
+                                    key={id}
+                                    className="pr-4 pb-2 text-primary"
+                                >
                                     {outlets.find((o) => o.id === id)?.name ??
                                         '-'}
                                 </th>
@@ -123,7 +127,7 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
                                 key={variantName}
                                 className="border-b border-border/50"
                             >
-                                <td className="sticky left-0 bg-white py-2 pr-4 font-medium text-text">
+                                <td className="sticky left-0 bg-primary/5 py-2 pr-4 font-medium text-text">
                                     {variantName}
                                 </td>
                                 {outletIds.map((outletId) => {
