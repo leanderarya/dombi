@@ -186,7 +186,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                             <div className="mt-4 flex gap-2">
                                 <Button
                                     size="sm"
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     aria-label="Setujui Return"
                                     onClick={() => setShowApprove(true)}
                                 >
@@ -199,7 +199,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                 <Button
                                     size="sm"
                                     variant="destructive"
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     aria-label="Tolak Return"
                                     onClick={() => setShowReject(true)}
                                 >
@@ -215,7 +215,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         {ret.status === 'approved' && (
                             <Button
                                 size="sm"
-                                className="mt-4 w-full"
+                                className="mt-4 min-h-11 w-full"
                                 onClick={handleMarkReceived}
                             >
                                 <Package
@@ -242,13 +242,13 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                             className="mb-2 flex items-center justify-between rounded-lg border border-border p-3"
                                         >
                                             <div className="min-w-0 flex-1">
-                                                <div className="truncate text-sm font-medium text-text">
+                                                <div className="truncate text-sm font-medium tabular-nums text-text">
                                                     {displayProductName(
                                                         item.variant,
                                                     )}{' '}
                                                     x{item.quantity}
                                                 </div>
-                                                <div className="text-xs text-text-muted">
+                                                <div className="text-xs tabular-nums text-text-muted">
                                                     {formatCurrency(
                                                         item.subtotal,
                                                     )}
@@ -390,16 +390,16 @@ export default function OwnerReturnsShow({ return: ret }: any) {
 
                                     return (
                                         <div className="mt-3 space-y-3">
-                                            <div className="text-xs text-text-muted">
+                                            <div className="text-xs tabular-nums text-text-muted">
                                                 {allDecided
                                                     ? 'Semua item sudah ditentukan'
                                                     : `${decided}/${total} item ditentukan`}
                                             </div>
                                             <Button
                                                 size="sm"
-                                                className={`w-full ${
+                                                className={`min-h-11 w-full ${
                                                     allDecided
-                                                        ? 'bg-emerald-600 hover:bg-emerald-700'
+                                                        ? 'bg-primary hover:bg-primary-hover'
                                                         : 'cursor-not-allowed bg-border text-text-muted'
                                                 }`}
                                                 disabled={!allDecided}
@@ -512,7 +512,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                             {histStatus.label}
                                                         </StatusBadge>
                                                     </div>
-                                                    <div className="mt-0.5 text-xs text-text-muted">
+                                                    <div className="mt-0.5 text-xs tabular-nums text-text-muted">
                                                         {h.actor?.name} &middot;{' '}
                                                         {formatDate(
                                                             h.created_at,
@@ -588,7 +588,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         rows={3}
                     />
                     {rejectForm.errors.reason && (
-                        <div className="text-xs text-red-600">
+                        <div className="text-xs text-red-500">
                             {rejectForm.errors.reason}
                         </div>
                     )}

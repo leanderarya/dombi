@@ -138,7 +138,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         ))}
                         <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm">
                             <span className="text-text-muted">Nilai Tukar</span>
-                            <span className="font-bold text-primary">
+                            <span className="font-bold tabular-nums text-primary">
                                 {formatCurrency(exchange.exchange_value)}
                             </span>
                         </div>
@@ -237,7 +237,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                             <div className="mt-4 flex gap-2">
                                 <Button
                                     size="sm"
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     aria-label="Setujui Exchange"
                                     onClick={() => setShowApprove(true)}
                                 >
@@ -250,7 +250,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                                 <Button
                                     size="sm"
                                     variant="destructive"
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     aria-label="Tolak Exchange"
                                     onClick={() => setShowReject(true)}
                                 >
@@ -267,7 +267,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                             exchange.status === 'preparing') && (
                             <Button
                                 size="sm"
-                                className="mt-4 w-full"
+                                className="mt-4 min-h-11 w-full"
                                 onClick={handleMarkShipped}
                             >
                                 <Truck
@@ -281,7 +281,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         {exchange.status === 'received' && (
                             <Button
                                 size="sm"
-                                className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700"
+                                className="mt-4 min-h-11 w-full bg-primary text-white hover:bg-primary-hover focus-visible:ring-primary"
                                 onClick={() => setShowComplete(true)}
                             >
                                 <CheckCircle2
@@ -365,7 +365,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                                                             {histStatus.label}
                                                         </StatusBadge>
                                                     </div>
-                                                    <div className="mt-0.5 text-xs text-text-muted">
+                                                    <div className="mt-0.5 text-xs tabular-nums text-text-muted">
                                                         {h.actor?.name} &middot;{' '}
                                                         {formatDate(
                                                             h.created_at,
@@ -441,7 +441,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         rows={3}
                     />
                     {rejectForm.errors.reason && (
-                        <div className="text-xs text-red-600">
+                        <div className="text-xs text-red-500">
                             {rejectForm.errors.reason}
                         </div>
                     )}
