@@ -268,41 +268,41 @@ export default function OutletDetail({
         <div>
             {/* Outlet Summary KPIs */}
             <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <div className="rounded-xl bg-surface p-4 shadow-card">
+                <div className="rounded-xl border border-border bg-surface p-4">
                     <div className="text-[11px] font-medium text-text-muted">
                         Total Produk
                     </div>
-                    <div className="mt-1 text-xl font-bold text-text tabular-nums">
+                    <div className="mt-1 text-xl font-bold text-text tabular-nums font-heading">
                         {prices.length}
                     </div>
                 </div>
-                <div className="rounded-xl bg-surface p-4 shadow-card">
+                <div className="rounded-xl border border-border bg-surface p-4">
                     <div className="text-[11px] font-medium text-text-muted">
                         Harga Custom
                     </div>
-                    <div className="mt-1 text-xl font-bold text-text tabular-nums">
+                    <div className="mt-1 text-xl font-bold text-text tabular-nums font-heading">
                         {customCount}
                     </div>
-                    <div className="text-[11px] text-text-subtle">
+                    <div className="text-[11px] text-text-muted">
                         {customCount > 0
                             ? `${customCount}/${prices.length} produk`
                             : 'Semua standar'}
                     </div>
                 </div>
-                <div className="rounded-xl bg-surface p-4 shadow-card">
+                <div className="rounded-xl border border-border bg-surface p-4">
                     <div className="text-[11px] font-medium text-text-muted">
                         Rata-rata Margin
                     </div>
-                    <div className="mt-1 text-xl font-bold text-text tabular-nums">
+                    <div className="mt-1 text-xl font-bold text-text tabular-nums font-heading">
                         {formatCurrency(Math.round(avgMargin))}
                     </div>
                 </div>
-                <div className="rounded-xl bg-surface p-4 shadow-card">
+                <div className="rounded-xl border border-border bg-surface p-4">
                     <div className="text-[11px] font-medium text-text-muted">
                         Margin Negatif
                     </div>
                     <div
-                        className={`mt-1 text-xl font-bold tabular-nums ${negativeCount > 0 ? 'text-red-600' : 'text-text'}`}
+                        className={`mt-1 text-xl font-bold tabular-nums font-heading ${negativeCount > 0 ? 'text-red-600' : 'text-text'}`}
                     >
                         {negativeCount}
                     </div>
@@ -400,7 +400,7 @@ export default function OutletDetail({
 
             {paginated.length === 0 ? (
                 <EmptyState
-                    icon={<Package className="h-8 w-8 text-text-subtle" />}
+                    icon={<Package className="h-8 w-8 text-text-muted" />}
                     title={
                         search || marginFilter !== 'all'
                             ? 'Produk tidak ditemukan'
@@ -531,7 +531,7 @@ export default function OutletDetail({
                                                         )
                                                     }
                                                     title="Reset ke harga pusat"
-                                                    className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-text-subtle transition-colors hover:bg-red-50 hover:text-red-600"
+                                                    className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-text-subtle transition-colors hover:bg-red-50 hover:text-red-600"
                                                 >
                                                     <RotateCcw className="h-3.5 w-3.5" />
                                                 </button>
@@ -543,7 +543,7 @@ export default function OutletDetail({
                                                     setModalOpen(true);
                                                 }}
                                                 title="Ubah harga"
-                                                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-text-subtle transition-colors hover:bg-mint-wash hover:text-primary"
+                                                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-text-subtle transition-colors hover:bg-emerald-50/40 hover:text-primary"
                                             >
                                                 <Pencil className="h-3.5 w-3.5" />
                                             </button>
