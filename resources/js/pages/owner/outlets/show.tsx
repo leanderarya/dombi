@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import OutletInfoModal from '@/components/owner/outlet-info-modal';
 import OutletLocationModal from '@/components/owner/outlet-location-modal';
 import OutletProducts from '@/components/owner/outlet-products';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
@@ -52,7 +51,6 @@ export default function OutletShow({
     const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
     const { flash } = usePage().props as any;
     const [resetOpen, setResetOpen] = useState(false);
-    const [infoModalOpen, setInfoModalOpen] = useState(false);
     const [locationModalOpen, setLocationModalOpen] = useState(false);
     const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
     const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -67,18 +65,18 @@ export default function OutletShow({
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-6 w-3/4" />
                         </div>
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-20 w-full" />
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
@@ -127,20 +125,13 @@ export default function OutletShow({
             <div className="grid gap-4 lg:grid-cols-3">
                 <div className="space-y-4 lg:col-span-2">
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Informasi Outlet"
                     >
-                        <div className="mb-3 flex items-center justify-between">
-                            <div className="text-xs font-semibold text-text-subtle">
+                        <div className="mb-3">
+                            <h2 className="font-heading text-base font-bold text-text">
                                 Informasi Outlet
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setInfoModalOpen(true)}
-                                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
-                            >
-                                <Pencil className="h-3.5 w-3.5" />
-                            </button>
+                            </h2>
                         </div>
                         <h2 className="text-lg font-semibold text-text">
                             {outlet.name ?? '-'}
@@ -180,23 +171,18 @@ export default function OutletShow({
                         )}
                     </div>
 
-                    <OutletInfoModal
-                        outlet={outlet}
-                        open={infoModalOpen}
-                        onClose={() => setInfoModalOpen(false)}
-                        onSuccess={() => router.reload()}
-                    />
-
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Akun Operasional"
                     >
-                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
+                        <div className="mb-3 flex items-center gap-2">
                             <KeyRound
                                 className="h-3.5 w-3.5"
                                 aria-hidden="true"
                             />
-                            Akun Operasional
+                            <h2 className="font-heading text-base font-bold text-text">
+                                Akun Operasional
+                            </h2>
                         </div>
                         <div className="space-y-1 text-xs">
                             <div className="flex justify-between">
@@ -234,13 +220,13 @@ export default function OutletShow({
                     </div>
 
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Lokasi"
                     >
                         <div className="mb-3 flex items-center justify-between">
-                            <div className="text-xs font-semibold text-text-subtle">
+                            <h2 className="font-heading text-base font-bold text-text">
                                 Lokasi
-                            </div>
+                            </h2>
                             <button
                                 type="button"
                                 onClick={() => setLocationModalOpen(true)}
@@ -270,7 +256,7 @@ export default function OutletShow({
                     />
 
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Jadwal Outlet"
                     >
                         <div className="mb-3 flex items-center justify-between">
@@ -279,9 +265,9 @@ export default function OutletShow({
                                     className="h-3.5 w-3.5"
                                     aria-hidden="true"
                                 />
-                                <div className="text-xs font-semibold text-text-subtle">
+                                <h2 className="font-heading text-base font-bold text-text">
                                     Jadwal Outlet
-                                </div>
+                                </h2>
                             </div>
                             <button
                                 type="button"
@@ -316,17 +302,17 @@ export default function OutletShow({
                     />
 
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Produk Outlet"
                     >
-                        <div className="mb-3 flex items-center justify-between text-xs font-semibold text-text-subtle">
-                            <div className="flex items-center gap-2">
-                                <Package
-                                    className="h-3.5 w-3.5"
-                                    aria-hidden="true"
-                                />
+                        <div className="mb-3 flex items-center gap-2">
+                            <Package
+                                className="h-3.5 w-3.5"
+                                aria-hidden="true"
+                            />
+                            <h2 className="font-heading text-base font-bold text-text">
                                 Produk Outlet
-                            </div>
+                            </h2>
                         </div>
                         <p className="mb-2 text-xs text-text-muted">
                             Kelola produk, stok, dan restock outlet ini.
@@ -337,16 +323,18 @@ export default function OutletShow({
                     {settlementSummary &&
                         Number(settlementSummary.outstanding) > 0 && (
                             <div
-                                className="rounded-lg border border-border p-4"
+                                className="rounded-2xl border border-border bg-surface p-5"
                                 aria-label="Settlement Outlet"
                             >
-                                <div className="mb-3 flex items-center justify-between text-xs font-semibold text-text-subtle">
+                                <div className="mb-3 flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <DollarSign
                                             className="h-3.5 w-3.5"
                                             aria-hidden="true"
                                         />
-                                        Settlement Outlet
+                                        <h2 className="font-heading text-base font-bold text-text">
+                                            Settlement Outlet
+                                        </h2>
                                     </div>
                                     <Link
                                         href={`/owner/finance/settlements/${outlet.id}`}
@@ -356,29 +344,29 @@ export default function OutletShow({
                                     </Link>
                                 </div>
                                 <div className="grid grid-cols-3 gap-2">
-                                    <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                        <div className="text-xs font-semibold text-text-subtle">
+                                    <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                        <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Outstanding
                                         </div>
-                                        <div className="mt-0.5 text-xs font-bold text-red-600 tabular-nums">
+                                        <div className="mt-0.5 font-heading text-base font-bold text-red-600 tabular-nums">
                                             {formatCurrency(
                                                 settlementSummary.outstanding,
                                             )}
                                         </div>
                                     </div>
-                                    <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                        <div className="text-xs font-semibold text-text-subtle">
+                                    <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                        <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Terlambat
                                         </div>
-                                        <div className="mt-0.5 text-xs font-bold text-amber-600 tabular-nums">
+                                        <div className="mt-0.5 font-heading text-base font-bold text-amber-600 tabular-nums">
                                             {settlementSummary.overdue_count}
                                         </div>
                                     </div>
-                                    <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                        <div className="text-xs font-semibold text-text-subtle">
+                                    <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                        <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Dibayar
                                         </div>
-                                        <div className="mt-0.5 text-xs font-bold text-emerald-600 tabular-nums">
+                                        <div className="mt-0.5 font-heading text-base font-bold text-emerald-600 tabular-nums">
                                             {formatCurrency(
                                                 settlementSummary.paid_this_month,
                                             )}
@@ -455,15 +443,17 @@ export default function OutletShow({
 
                     {auditLogs && auditLogs.length > 0 && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Riwayat Perubahan"
                         >
-                            <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
+                            <div className="mb-3 flex items-center gap-2">
                                 <History
                                     className="h-3.5 w-3.5"
                                     aria-hidden="true"
                                 />
-                                Riwayat Perubahan
+                                <h2 className="font-heading text-base font-bold text-text">
+                                    Riwayat Perubahan
+                                </h2>
                             </div>
                             {auditLogs.map((log: any) => (
                                 <OwnerDetailRow
@@ -488,13 +478,13 @@ export default function OutletShow({
 
                 <div className="space-y-4">
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Status & Aksi"
                     >
                         <div className="mb-3 flex items-center justify-between">
-                            <div className="text-xs font-semibold text-text-subtle">
+                            <h2 className="font-heading text-base font-bold text-text">
                                 Status & Aksi
-                            </div>
+                            </h2>
                             <button
                                 type="button"
                                 onClick={() => setStatusModalOpen(true)}
@@ -541,24 +531,24 @@ export default function OutletShow({
                             </Link>
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-2">
-                            <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                <div className="text-sm font-bold text-primary tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                <div className="font-heading text-base font-bold text-primary tabular-nums">
                                     {outlet.active_orders_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-subtle">
                                     Pesanan Aktif
                                 </div>
                             </div>
-                            <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                <div className="text-sm font-bold text-emerald-600 tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                <div className="font-heading text-base font-bold text-emerald-600 tabular-nums">
                                     {activeDeliveriesCount ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-subtle">
                                     Pengiriman
                                 </div>
                             </div>
-                            <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                <div className="text-sm font-bold text-text tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                <div className="font-heading text-base font-bold text-text tabular-nums">
                                     {outlet.today_orders_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-subtle">
@@ -566,9 +556,9 @@ export default function OutletShow({
                                 </div>
                             </div>
                             <div
-                                className={`rounded-lg border p-2 ${Number(outlet.low_stock_count) > 0 ? 'border-amber-200 bg-amber-50' : 'border-border bg-surface-muted'}`}
+                                className={`rounded-xl border p-3 ${Number(outlet.low_stock_count) > 0 ? 'border-amber-200 bg-amber-50' : 'border-border bg-surface-muted/50'}`}
                             >
-                                <div className="text-sm font-bold text-amber-600 tabular-nums">
+                                <div className="font-heading text-base font-bold text-amber-600 tabular-nums">
                                     {outlet.low_stock_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-subtle">
@@ -587,15 +577,17 @@ export default function OutletShow({
 
                     {outlet.delivery_radius_km && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Area Layanan"
                         >
-                            <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
+                            <div className="mb-3 flex items-center gap-2">
                                 <MapPin
                                     className="h-3.5 w-3.5"
                                     aria-hidden="true"
                                 />
-                                Area Layanan
+                                <h2 className="font-heading text-base font-bold text-text">
+                                    Area Layanan
+                                </h2>
                             </div>
                             <OwnerDetailRow
                                 label="Radius"
