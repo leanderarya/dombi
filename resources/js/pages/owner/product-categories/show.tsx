@@ -544,8 +544,8 @@ export default function ProductCategoryShow({ category }: Props) {
             }
         >
             {category.description && (
-                <div className="mb-4 rounded-xl bg-surface p-4 shadow-card ring-1 ring-border/20">
-                    <p className="text-sm text-slate-600">
+                <div className="mb-4 rounded-2xl border border-border bg-surface p-5">
+                    <p className="text-sm text-text-muted">
                         {category.description}
                     </p>
                 </div>
@@ -578,7 +578,7 @@ export default function ProductCategoryShow({ category }: Props) {
 
             {filteredProducts.length === 0 ? (
                 <EmptyState
-                    icon={<Package className="h-8 w-8 text-slate-400" />}
+                    icon={<Package className="h-8 w-8 text-text-muted" />}
                     title={
                         category.products?.length === 0
                             ? 'Belum ada produk'
@@ -614,7 +614,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                         ? `null-${idx}`
                                         : `fg-${gKey}`
                                 }
-                                className="overflow-hidden rounded-xl bg-surface shadow-card ring-1 ring-border/20"
+                                className="overflow-hidden rounded-2xl border border-border bg-surface"
                             >
                                 <button
                                     type="button"
@@ -642,7 +642,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                             {section.flavorGroup?.flavor ??
                                                 'Tanpa Rasa'}
                                         </span>
-                                        <span className="ml-2 text-xs text-text-muted">
+                                        <span className="ml-2 text-xs text-text-muted tabular-nums">
                                             {section.products.length} varian ·{' '}
                                             {sizeCount} ukuran
                                         </span>
@@ -769,7 +769,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                             <td className="px-3 py-3 text-text-muted">
                                                                 {p.size || '-'}
                                                             </td>
-                                                            <td className="px-3 py-3 font-mono text-xs text-text-muted">
+                                                            <td className="px-3 py-3 font-mono text-xs text-text-muted tabular-nums">
                                                                 {p.sku || '-'}
                                                             </td>
                                                             <td className="px-3 py-3 text-right text-text-muted tabular-nums">
