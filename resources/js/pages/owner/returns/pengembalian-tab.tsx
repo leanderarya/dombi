@@ -84,18 +84,36 @@ export default function PengembalianTab({
             <div aria-label="Ringkasan Pengembalian">
                 <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                        <span className="text-xs font-medium text-text-muted">Return Tertunda</span>
-                        <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_returns > 0 ? 'text-amber-600' : 'text-text'}`}>{dashboard.pending_returns}</div>
-                        {dashboard.pending_returns > 0 && <p className="text-[11px] text-amber-500">Perlu ditinjau</p>}
+                        <span className="text-xs font-medium text-text-muted">
+                            Return Tertunda
+                        </span>
+                        <div
+                            className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_returns > 0 ? 'text-amber-600' : 'text-text'}`}
+                        >
+                            {dashboard.pending_returns}
+                        </div>
+                        {dashboard.pending_returns > 0 && (
+                            <p className="text-[11px] text-amber-500">
+                                Perlu ditinjau
+                            </p>
+                        )}
                     </div>
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                        <span className="text-xs font-medium text-text-muted">Nilai Return</span>
-                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{formatCurrency(dashboard.returned_value)}</div>
+                        <span className="text-xs font-medium text-text-muted">
+                            Nilai Return
+                        </span>
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                            {formatCurrency(dashboard.returned_value)}
+                        </div>
                     </div>
                     {dashboard.total_returns !== undefined && (
                         <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                            <span className="text-xs font-medium text-text-muted">Total Return</span>
-                            <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{dashboard.total_returns}</div>
+                            <span className="text-xs font-medium text-text-muted">
+                                Total Return
+                            </span>
+                            <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                                {dashboard.total_returns}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -120,7 +138,7 @@ export default function PengembalianTab({
                                 isActive
                                     ? (statusColorMap[f.key] ??
                                       'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
                             {f.label}
@@ -190,7 +208,7 @@ export default function PengembalianTab({
                                 return (
                                     <TableRow
                                         key={ret.id}
-                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors last:border-b-0"
+                                        className="border-t border-border/20 transition-colors last:border-b-0 hover:bg-mint-wash"
                                     >
                                         <TableCell className="px-3 py-2.5 font-bold text-text tabular-nums">
                                             #{ret.id}

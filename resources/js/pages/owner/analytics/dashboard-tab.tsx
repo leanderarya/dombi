@@ -95,7 +95,7 @@ export function DashboardTab({
                         className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                             period === p.key
                                 ? 'bg-primary/10 text-primary ring-primary/20'
-                                : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                         }`}
                     >
                         {p.label}
@@ -124,7 +124,7 @@ export function DashboardTab({
                             <ShoppingCart className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {kpis.total_orders.toLocaleString('id-ID')}
                     </div>
                     {kpis.total_orders_trend && (
@@ -150,7 +150,7 @@ export function DashboardTab({
                             <DollarSign className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {formatCurrency(kpis.total_revenue)}
                     </div>
                     {kpis.total_revenue_trend && (
@@ -176,7 +176,7 @@ export function DashboardTab({
                             <TrendingUp className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {kpis.total_orders > 0
                             ? formatCurrency(
                                   Math.round(
@@ -185,9 +185,7 @@ export function DashboardTab({
                               )
                             : 'Rp 0'}
                     </div>
-                    <p className="text-[11px] text-text-muted">
-                        Per pesanan
-                    </p>
+                    <p className="text-[11px] text-text-muted">Per pesanan</p>
                 </div>
 
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
@@ -199,7 +197,7 @@ export function DashboardTab({
                             <Users className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {kpis.active_outlets}
                     </div>
                     {kpis.active_outlets_trend && (
@@ -211,7 +209,8 @@ export function DashboardTab({
                             }`}
                         >
                             {kpis.active_outlets_trend.positive ? '+' : ''}
-                            {kpis.active_outlets_trend.value}% dari {periodLabel}
+                            {kpis.active_outlets_trend.value}% dari{' '}
+                            {periodLabel}
                         </p>
                     )}
                 </div>
@@ -248,17 +247,19 @@ export function DashboardTab({
                                             <span className="truncate text-text">
                                                 {item.outlet.name}
                                             </span>
-                                            <span className="ml-2 font-semibold tabular-nums text-text">
+                                            <span className="ml-2 font-semibold text-text tabular-nums">
                                                 {formatCurrency(item.revenue)}
                                             </span>
                                         </div>
                                         <div className="h-2 w-full overflow-hidden rounded-full bg-surface-muted">
                                             <div
                                                 className="bar-grow h-2 rounded-full bg-primary"
-                                                style={{
-                                                    width: `${(item.revenue / maxRevenue) * 100}%`,
-                                                    '--delay': '200ms',
-                                                } as React.CSSProperties}
+                                                style={
+                                                    {
+                                                        width: `${(item.revenue / maxRevenue) * 100}%`,
+                                                        '--delay': '200ms',
+                                                    } as React.CSSProperties
+                                                }
                                             />
                                         </div>
                                         <div className="mt-1 text-[10px] text-text-muted">
@@ -313,7 +314,7 @@ export function DashboardTab({
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="text-sm font-semibold tabular-nums text-text">
+                                    <div className="text-sm font-semibold text-text tabular-nums">
                                         {formatCurrency(product.total_revenue)}
                                     </div>
                                 </Link>

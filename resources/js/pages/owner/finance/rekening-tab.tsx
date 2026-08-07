@@ -116,21 +116,29 @@ export default function RekeningTab({
             <div className="mb-6 grid grid-cols-2 gap-4">
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-text-muted">Total Rekening</span>
+                        <span className="text-xs font-medium text-text-muted">
+                            Total Rekening
+                        </span>
                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
                             <Banknote className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{accounts.length}</div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {accounts.length}
+                    </div>
                 </div>
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-text-muted">Aktif</span>
+                        <span className="text-xs font-medium text-text-muted">
+                            Aktif
+                        </span>
                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
                             <CheckCircle2 className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-emerald-600 sm:text-2xl">{activeCount}</div>
+                    <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                        {activeCount}
+                    </div>
                 </div>
             </div>
 
@@ -163,7 +171,7 @@ export default function RekeningTab({
                     {accounts.map((account) => (
                         <div
                             key={account.id}
-                            className="hover:bg-mint-wash rounded-xl bg-surface p-4 shadow-card transition-colors sm:flex sm:items-center sm:justify-between sm:gap-4"
+                            className="rounded-xl bg-surface p-4 shadow-card transition-colors hover:bg-mint-wash sm:flex sm:items-center sm:justify-between sm:gap-4"
                         >
                             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
                                 <span className="font-bold text-text">

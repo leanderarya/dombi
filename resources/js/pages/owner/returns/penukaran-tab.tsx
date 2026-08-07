@@ -102,18 +102,36 @@ export default function PenukaranTab({
             <div aria-label="Ringkasan Penukaran">
                 <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                        <span className="text-xs font-medium text-text-muted">Tertunda</span>
-                        <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_exchanges > 0 ? 'text-amber-600' : 'text-text'}`}>{dashboard.pending_exchanges}</div>
-                        {dashboard.pending_exchanges > 0 && <p className="text-[11px] text-amber-500">Perlu ditinjau</p>}
+                        <span className="text-xs font-medium text-text-muted">
+                            Tertunda
+                        </span>
+                        <div
+                            className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_exchanges > 0 ? 'text-amber-600' : 'text-text'}`}
+                        >
+                            {dashboard.pending_exchanges}
+                        </div>
+                        {dashboard.pending_exchanges > 0 && (
+                            <p className="text-[11px] text-amber-500">
+                                Perlu ditinjau
+                            </p>
+                        )}
                     </div>
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                        <span className="text-xs font-medium text-text-muted">Nilai Tukar</span>
-                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{formatCurrency(dashboard.exchange_value)}</div>
+                        <span className="text-xs font-medium text-text-muted">
+                            Nilai Tukar
+                        </span>
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                            {formatCurrency(dashboard.exchange_value)}
+                        </div>
                     </div>
                     {dashboard.total_exchanges !== undefined && (
                         <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                            <span className="text-xs font-medium text-text-muted">Total Tukar</span>
-                            <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{dashboard.total_exchanges}</div>
+                            <span className="text-xs font-medium text-text-muted">
+                                Total Tukar
+                            </span>
+                            <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                                {dashboard.total_exchanges}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -138,7 +156,7 @@ export default function PenukaranTab({
                                 isActive
                                     ? (statusColorMap[f.key] ??
                                       'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
                             {f.label}

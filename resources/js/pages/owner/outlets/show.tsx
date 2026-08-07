@@ -520,7 +520,7 @@ export default function OutletShow({
                         <div className="space-y-1.5">
                             <Link
                                 href={`/owner/inventories?outlet_id=${outlet.id}`}
-                                className="hover:bg-mint-wash flex h-8 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors"
+                                className="flex h-8 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
                             >
                                 <RefreshCw
                                     className="h-3.5 w-3.5 text-text-subtle"
@@ -530,7 +530,7 @@ export default function OutletShow({
                             </Link>
                             <Link
                                 href={`/owner/orders?outlet_id=${outlet.id}`}
-                                className="hover:bg-mint-wash flex h-8 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors"
+                                className="flex h-8 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
                             >
                                 <ShoppingBag
                                     className="h-3.5 w-3.5 text-text-subtle"

@@ -57,8 +57,7 @@ export default function FinanceOutletCard({
                     )}
                     {netAmount > 0 && direction === 'owner_pays_outlet' && (
                         <span className="font-semibold text-emerald-600">
-                            Owner bayar:{' '}
-                            {formatCurrency(netAmount)}
+                            Owner bayar: {formatCurrency(netAmount)}
                         </span>
                     )}
                     {totalOutstanding > 0 && (

@@ -183,9 +183,9 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                         placeholder="Cari kategori..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 pl-10 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 pl-10 text-sm transition-colors outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
-                    <Package className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                    <Package className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {statusFilters.map((f) => (
@@ -195,7 +195,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                             className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 statusFilter === f.key
                                     ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
                             {f.label}
@@ -245,11 +245,11 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                 {filtered.map((cat) => (
                                     <TableRow
                                         key={cat.id}
-                                        className="hover:bg-mint-wash group transition-colors"
+                                        className="group transition-colors hover:bg-mint-wash"
                                     >
                                         <TableCell className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="bg-mint-wash flex h-8 w-8 items-center justify-center rounded-lg text-primary">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-mint-wash text-primary">
                                                     <Package className="h-4 w-4" />
                                                 </div>
                                                 <div className="flex flex-col">

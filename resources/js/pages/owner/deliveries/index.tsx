@@ -1,11 +1,5 @@
 import { router } from '@inertiajs/react';
-import {
-    CheckCircle,
-    MapPin,
-    Package,
-    Truck,
-    XCircle,
-} from 'lucide-react';
+import { CheckCircle, MapPin, Package, Truck, XCircle } from 'lucide-react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
@@ -75,7 +69,7 @@ export default function OwnerDeliveriesIndex({
                             <Truck className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {stats.active ?? 0}
                     </div>
                     <p className="text-[11px] text-text-muted">
@@ -92,7 +86,7 @@ export default function OwnerDeliveriesIndex({
                             <CheckCircle className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {stats.completed_today ?? 0}
                     </div>
                     <p className="text-[11px] text-text-muted">
@@ -109,7 +103,7 @@ export default function OwnerDeliveriesIndex({
                             <XCircle className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-red-600 sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-red-600 tabular-nums sm:text-2xl">
                         {stats.failed_today ?? 0}
                     </div>
                     <p className="text-[11px] text-text-muted">
@@ -126,7 +120,7 @@ export default function OwnerDeliveriesIndex({
                             <Package className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {stats.total_today ?? 0}
                     </div>
                     <p className="text-[11px] text-text-muted">
@@ -252,15 +246,15 @@ export default function OwnerDeliveriesIndex({
                                             <div className="flex items-center justify-end gap-2">
                                                 {isActive && (
                                                     <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                            >
-                                                                <MapPin
-                                                                    aria-hidden="true"
-                                                                    className="h-3.5 w-3.5"
-                                                                />
-                                                                Lacak
-                                                            </Button>
+                                                        variant="outline"
+                                                        size="sm"
+                                                    >
+                                                        <MapPin
+                                                            aria-hidden="true"
+                                                            className="h-3.5 w-3.5"
+                                                        />
+                                                        Lacak
+                                                    </Button>
                                                 )}
                                                 <Button
                                                     variant="ghost"

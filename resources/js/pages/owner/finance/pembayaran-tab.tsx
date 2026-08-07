@@ -1,10 +1,5 @@
 import { router } from '@inertiajs/react';
-import {
-    CheckCircle,
-    Clock,
-    DollarSign,
-    Loader2,
-} from 'lucide-react';
+import { CheckCircle, Clock, DollarSign, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import PaymentHistoryCard from '@/components/owner/finance/payment-history-card';
@@ -153,31 +148,49 @@ export default function PembayaranTab({
             <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-text-muted">Pending</span>
+                        <span className="text-xs font-medium text-text-muted">
+                            Pending
+                        </span>
                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
                             <Clock className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${(paymentKpis?.pending_count ?? 0) > 0 ? 'text-amber-600' : 'text-text'}`}>{paymentKpis?.pending_count ?? 0}</div>
-                    {(paymentKpis?.pending_count ?? 0) > 0 && <p className="text-[11px] text-amber-500">Perlu verifikasi</p>}
+                    <div
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${(paymentKpis?.pending_count ?? 0) > 0 ? 'text-amber-600' : 'text-text'}`}
+                    >
+                        {paymentKpis?.pending_count ?? 0}
+                    </div>
+                    {(paymentKpis?.pending_count ?? 0) > 0 && (
+                        <p className="text-[11px] text-amber-500">
+                            Perlu verifikasi
+                        </p>
+                    )}
                 </div>
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-text-muted">Hari Ini</span>
+                        <span className="text-xs font-medium text-text-muted">
+                            Hari Ini
+                        </span>
                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
                             <DollarSign className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{formatCurrency(paymentKpis?.verified_today ?? 0)}</div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {formatCurrency(paymentKpis?.verified_today ?? 0)}
+                    </div>
                 </div>
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-text-muted">Bulan Ini</span>
+                        <span className="text-xs font-medium text-text-muted">
+                            Bulan Ini
+                        </span>
                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
                             <CheckCircle className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-emerald-600 sm:text-2xl">{formatCurrency(paymentKpis?.verified_month ?? 0)}</div>
+                    <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                        {formatCurrency(paymentKpis?.verified_month ?? 0)}
+                    </div>
                 </div>
             </div>
 
@@ -206,7 +219,7 @@ export default function PembayaranTab({
                                 isActive
                                     ? (colorMap[sf.key] ??
                                       'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
                             {sf.label}

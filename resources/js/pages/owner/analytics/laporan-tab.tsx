@@ -172,7 +172,7 @@ export function LaporanTab({
                         className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                             period === p.key
                                 ? 'bg-primary/10 text-primary ring-primary/20'
-                                : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                         }`}
                     >
                         {p.label}

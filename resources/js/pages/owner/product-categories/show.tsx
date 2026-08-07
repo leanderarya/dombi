@@ -653,7 +653,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                     );
                                                     setFgImageFile(null);
                                                 }}
-                                                className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
+                                                className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"
                                                 title="Edit gambar grup"
                                             >
                                                 <Upload className="h-3.5 w-3.5" />
@@ -715,7 +715,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                     return (
                                                         <tr
                                                             key={p.id}
-                                                            className={`hover:bg-mint-wash/30 transition ${!p.is_active ? 'opacity-60' : ''}`}
+                                                            className={`transition hover:bg-mint-wash/30 ${!p.is_active ? 'opacity-60' : ''}`}
                                                         >
                                                             <td className="px-3 py-3">
                                                                 <div className="flex items-center gap-2.5">
@@ -827,7 +827,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
+                                                                        className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"
                                                                     >
                                                                         <Copy className="h-3.5 w-3.5" />
                                                                     </button>
@@ -842,7 +842,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
+                                                                        className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"
                                                                     >
                                                                         {p.is_active ? (
                                                                             <ToggleRight className="h-3.5 w-3.5 text-primary" />
@@ -857,7 +857,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
+                                                                        className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"
                                                                     >
                                                                         <Pencil className="h-3.5 w-3.5" />
                                                                     </button>
