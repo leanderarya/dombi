@@ -1,4 +1,12 @@
-import { AlertTriangle, History, Info, MapPin, ShoppingBag, Truck, User } from 'lucide-react';
+import {
+    AlertTriangle,
+    History,
+    Info,
+    MapPin,
+    ShoppingBag,
+    Truck,
+    User,
+} from 'lucide-react';
 import { useState } from 'react';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';

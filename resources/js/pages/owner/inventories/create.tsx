@@ -31,7 +31,8 @@ export default function CreateInventory({ outlets, families }: any) {
                     .flatMap((f: any) => (f.variants ?? []).map((v: any) => v))
                     .find(
                         (v: any) =>
-                            String(v.id) === String(form.data.product_variant_id),
+                            String(v.id) ===
+                            String(form.data.product_variant_id),
                     ),
             ),
         [families, form.data.product_variant_id],

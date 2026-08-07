@@ -121,9 +121,7 @@ export default function OutletFormSheet({
             {/* Header */}
             <div className="mb-5 flex items-start justify-between gap-3">
                 <div>
-                    <h1 className="text-xl font-semibold text-text">
-                        {title}
-                    </h1>
+                    <h1 className="text-xl font-semibold text-text">{title}</h1>
                     <p className="mt-1 text-xs text-text-muted">
                         {isEdit
                             ? 'Perbarui informasi outlet.'
@@ -421,7 +419,9 @@ function Section({
 }) {
     return (
         <section className="rounded-2xl border border-border bg-surface p-5">
-            <h2 className="font-heading text-base font-bold text-text">{title}</h2>
+            <h2 className="font-heading text-base font-bold text-text">
+                {title}
+            </h2>
             {subtitle && (
                 <p className="mt-1 text-xs leading-5 text-text-muted">
                     {subtitle}
