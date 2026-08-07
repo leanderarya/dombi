@@ -121,10 +121,10 @@ export default function OutletFormSheet({
             {/* Header */}
             <div className="mb-5 flex items-start justify-between gap-3">
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-900">
+                    <h1 className="text-xl font-semibold text-text">
                         {title}
                     </h1>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-text-muted">
                         {isEdit
                             ? 'Perbarui informasi outlet.'
                             : 'Pilih lokasi pada peta, lalu isi informasi outlet.'}
@@ -214,10 +214,10 @@ export default function OutletFormSheet({
                                 </>
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-6 text-center">
-                                    <div className="text-sm text-slate-500">
+                                    <div className="text-sm text-text-muted">
                                         Pilih lokasi pada peta terlebih dahulu.
                                     </div>
-                                    <div className="mt-1 text-xs text-slate-400">
+                                    <div className="mt-1 text-xs text-text-muted">
                                         Klik pada peta atau cari alamat di kolom
                                         pencarian.
                                     </div>
@@ -242,7 +242,7 @@ export default function OutletFormSheet({
                         </Section>
 
                         {/* Section 4: Catatan Internal (collapsible) */}
-                        <div className="rounded-lg border border-slate-200 bg-white">
+                        <div className="rounded-2xl border border-border bg-surface">
                             <button
                                 type="button"
                                 onClick={() => setNotesExpanded(!notesExpanded)}
@@ -250,20 +250,20 @@ export default function OutletFormSheet({
                                 className="flex w-full items-center justify-between px-4 py-3 text-left"
                             >
                                 <div>
-                                    <div className="text-base font-semibold text-slate-900">
+                                    <div className="font-heading text-base font-bold text-text">
                                         Catatan Internal
                                     </div>
-                                    <div className="text-xs text-slate-500">
+                                    <div className="text-xs text-text-muted">
                                         Opsional. Catatan akses, jam ramai, atau
                                         patokan lokasi.
                                     </div>
                                 </div>
                                 <ChevronDown
-                                    className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${notesExpanded ? 'rotate-180' : ''}`}
+                                    className={`h-4 w-4 shrink-0 text-text-muted transition-transform ${notesExpanded ? 'rotate-180' : ''}`}
                                 />
                             </button>
                             {notesExpanded && (
-                                <div className="border-t border-slate-100 px-4 py-3">
+                                <div className="border-t border-border px-4 py-3">
                                     <TextArea
                                         label="Catatan"
                                         value={
@@ -347,7 +347,7 @@ export default function OutletFormSheet({
                         </div>
 
                         {/* Action Bar */}
-                        <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-white px-4 py-3 lg:-mx-6 lg:px-6">
+                        <div className="sticky bottom-0 -mx-4 border-t border-border bg-surface px-4 py-3 lg:-mx-6 lg:px-6">
                             <div className="flex items-center gap-3">
                                 <Link
                                     href="/owner/outlets"
@@ -356,7 +356,7 @@ export default function OutletFormSheet({
                                             variant: 'secondary',
                                             size: 'lg',
                                         }),
-                                        'flex-1',
+                                        'min-h-11 flex-1',
                                     )}
                                 >
                                     Batal
@@ -366,7 +366,7 @@ export default function OutletFormSheet({
                                     variant="primary"
                                     size="lg"
                                     disabled={form.processing}
-                                    className="flex-[2]"
+                                    className="min-h-11 flex-[2]"
                                 >
                                     {form.processing
                                         ? 'Menyimpan...'
@@ -384,7 +384,7 @@ export default function OutletFormSheet({
                         >
                             <Suspense
                                 fallback={
-                                    <div className="flex h-[300px] items-center justify-center rounded-lg border border-slate-300 bg-slate-50 text-xs font-semibold text-slate-500 lg:h-[400px]">
+                                    <div className="flex h-[300px] items-center justify-center rounded-2xl border border-border bg-surface-muted text-xs font-semibold text-text-muted lg:h-[400px]">
                                         Loading peta...
                                     </div>
                                 }
@@ -420,10 +420,10 @@ function Section({
     children: ReactNode;
 }) {
     return (
-        <section className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+        <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="font-heading text-base font-bold text-text">{title}</h2>
             {subtitle && (
-                <p className="mt-1 text-xs leading-5 text-slate-500">
+                <p className="mt-1 text-xs leading-5 text-text-muted">
                     {subtitle}
                 </p>
             )}
@@ -442,12 +442,12 @@ function InfoBadge({
     loading?: boolean;
 }) {
     return (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-            <div className="text-xs font-bold tracking-wider text-slate-400 uppercase">
+        <div className="rounded-xl border border-border bg-surface-muted px-3 py-2">
+            <div className="text-xs font-bold tracking-wider text-text-muted uppercase">
                 {label}
             </div>
             <div
-                className={`mt-0.5 text-sm font-medium ${loading ? 'text-slate-400' : 'text-slate-900'}`}
+                className={`mt-0.5 text-sm font-medium tabular-nums ${loading ? 'text-text-muted' : 'text-text'}`}
             >
                 {loading ? 'Mendeteksi...' : value || '-'}
             </div>
@@ -499,7 +499,7 @@ function TextArea({
 }) {
     return (
         <label className="block">
-            <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+            <span className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                 {label} {required && <span className="text-red-500">*</span>}
             </span>
             <textarea
@@ -507,7 +507,7 @@ function TextArea({
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
                 rows={2}
-                className="mt-1.5 min-h-16 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                className="mt-1.5 min-h-16 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 required={required}
             />
             {error && (
