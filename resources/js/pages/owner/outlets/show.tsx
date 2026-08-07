@@ -115,6 +115,7 @@ export default function OutletShow({
                     <Button
                         variant="danger"
                         size="sm"
+                        className="min-h-11"
                         onClick={() => setShowArchiveConfirm(true)}
                     >
                         <Trash2 className="h-3 w-3" aria-hidden="true" />
@@ -136,7 +137,7 @@ export default function OutletShow({
                             <button
                                 type="button"
                                 onClick={() => setInfoModalOpen(true)}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
                             >
                                 <Pencil className="h-3.5 w-3.5" />
                             </button>
@@ -224,7 +225,7 @@ export default function OutletShow({
                         <Button
                             variant="outline"
                             size="sm"
-                            className="mt-3"
+                            className="mt-3 min-h-11"
                             disabled={outlet.status === 'archived'}
                             onClick={() => setResetOpen(true)}
                         >
@@ -243,7 +244,7 @@ export default function OutletShow({
                             <button
                                 type="button"
                                 onClick={() => setLocationModalOpen(true)}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
                             >
                                 <Pencil className="h-3.5 w-3.5" />
                             </button>
@@ -285,13 +286,13 @@ export default function OutletShow({
                             <button
                                 type="button"
                                 onClick={() => setScheduleModalOpen(true)}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
                             >
                                 <Pencil className="h-3.5 w-3.5" />
                             </button>
                         </div>
                         {operatingHours && operatingHours.length > 0 ? (
-                            <p className="text-xs text-text-muted">
+                            <p className="text-xs text-text-muted tabular-nums">
                                 {operatingHours.length} hari operasional
                             </p>
                         ) : (
@@ -300,7 +301,7 @@ export default function OutletShow({
                             </p>
                         )}
                         {holidays && holidays.length > 0 && (
-                            <p className="mt-1 text-xs text-text-muted">
+                            <p className="mt-1 text-xs text-text-muted tabular-nums">
                                 {holidays.length} hari libur tercatat
                             </p>
                         )}
@@ -349,7 +350,7 @@ export default function OutletShow({
                                     </div>
                                     <Link
                                         href={`/owner/finance/settlements/${outlet.id}`}
-                                        className="text-xs font-semibold text-primary hover:text-primary"
+                                        className="flex min-h-11 items-center text-xs font-semibold text-primary hover:text-primary"
                                     >
                                         Lihat Semua
                                     </Link>
@@ -497,7 +498,7 @@ export default function OutletShow({
                             <button
                                 type="button"
                                 onClick={() => setStatusModalOpen(true)}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
                             >
                                 <Pencil className="h-3.5 w-3.5" />
                             </button>
@@ -626,11 +627,16 @@ export default function OutletShow({
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowArchiveConfirm(false)}
                         >
                             Batal
                         </Button>
-                        <Button variant="destructive" onClick={handleArchive}>
+                        <Button
+                            variant="destructive"
+                            className="min-h-11"
+                            onClick={handleArchive}
+                        >
                             Arsipkan
                         </Button>
                     </DialogFooter>
@@ -649,12 +655,14 @@ export default function OutletShow({
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setResetOpen(false)}
                         >
                             Batal
                         </Button>
                         <Button
                             variant="destructive"
+                            className="min-h-11"
                             onClick={() => {
                                 setResetOpen(false);
                                 router.post(
