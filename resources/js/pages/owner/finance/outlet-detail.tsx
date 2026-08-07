@@ -23,7 +23,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
         className: 'bg-amber-50 text-amber-700',
     },
     overdue: { label: 'Terlambat', className: 'bg-red-50 text-red-700' },
-    partial: { label: 'Sebagian', className: 'bg-blue-50 text-blue-700' },
+    partial: { label: 'Sebagian', className: 'bg-primary/10 text-primary' },
     paid: { label: 'Lunas', className: 'bg-emerald-50 text-emerald-700' },
 };
 
@@ -135,14 +135,14 @@ export default function OutletAccountStatement({
                         >
                             <Button
                                 variant="outline"
-                                className="flex-1"
+                                className="min-h-11 flex-1"
                                 onClick={() => setInvoiceOpen(true)}
                             >
                                 <Send className="h-4 w-4" aria-hidden="true" />
                                 Kirim Tagihan
                             </Button>
                             <Button
-                                className="flex-1"
+                                className="min-h-11 flex-1"
                                 onClick={() => setPaymentOpen(true)}
                             >
                                 <DollarSign
@@ -207,7 +207,7 @@ export default function OutletAccountStatement({
                                                     )}
                                                 </span>
                                             </div>
-                                            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted">
+                                            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted tabular-nums">
                                                 <span>
                                                     Produk:{' '}
                                                     {formatCurrency(
@@ -219,7 +219,7 @@ export default function OutletAccountStatement({
                                                         <span className="text-text-subtle">
                                                             &middot;
                                                         </span>
-                                                        <span className="text-blue-600">
+                                                        <span className="text-primary">
                                                             Ongkir:{' '}
                                                             {formatCurrency(
                                                                 s.delivery_fee_amount,
@@ -269,7 +269,7 @@ export default function OutletAccountStatement({
                                             </div>
                                             {s.overpaid_amount > 0 && (
                                                 <div className="mt-2">
-                                                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                                                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
                                                         Kelebihan{' '}
                                                         {formatCurrency(
                                                             s.overpaid_amount,
@@ -432,7 +432,7 @@ export default function OutletAccountStatement({
                                 <OwnerDetailRow
                                     label="Kelebihan"
                                     value={
-                                        <span className="text-blue-600">
+                                        <span className="text-primary">
                                             {formatCurrency(summary.overpaid)}
                                         </span>
                                     }
