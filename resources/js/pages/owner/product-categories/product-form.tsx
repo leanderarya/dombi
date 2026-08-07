@@ -1012,17 +1012,17 @@ export default function ProductForm({
                                                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-[10px] font-bold text-text-muted">
                                                         {idx + 1}
                                                     </span>
-                                                        <span className="truncate text-sm font-medium text-text tabular-nums">
-                                                            {name}
-                                                        </span>
+                                                    <span className="truncate text-sm font-medium text-text tabular-nums">
+                                                        {name}
+                                                    </span>
                                                 </div>
-                                                    <div className="mt-0.5 ml-7 flex items-center gap-2 text-[10px] text-text-subtle">
-                                                        <span>Rasa: {flavor}</span>
-                                                        <span>•</span>
-                                                        <span className="font-mono tabular-nums">
-                                                            {skuPreview}
-                                                        </span>
-                                                    </div>
+                                                <div className="mt-0.5 ml-7 flex items-center gap-2 text-[10px] text-text-subtle">
+                                                    <span>Rasa: {flavor}</span>
+                                                    <span>•</span>
+                                                    <span className="font-mono tabular-nums">
+                                                        {skuPreview}
+                                                    </span>
+                                                </div>
                                             </div>
                                             <div className="text-right tabular-nums">
                                                 <div className="text-xs font-semibold text-text">
@@ -1131,13 +1131,13 @@ export default function ProductForm({
                             <h4 className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                                 Daftar Ukuran & Harga ({bulkSizeRows.length})
                             </h4>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="lg"
-                            className="bg-accent-orange hover:bg-accent-orange-hover text-white border-transparent min-h-11"
-                            onClick={addBulkSizeRow}
-                        >
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="lg"
+                                className="min-h-11 border-transparent bg-accent-orange text-white hover:bg-accent-orange-hover"
+                                onClick={addBulkSizeRow}
+                            >
                                 <Plus className="h-3.5 w-3.5" /> Tambah Ukuran
                             </Button>
                         </div>
