@@ -71,6 +71,8 @@ html[data-role='courier'] {
     --color-primary-hover: var(--color-blue-800);
     --color-primary-light: var(--color-blue-50);
     --color-ring: var(--color-blue-700);
+    --color-surface: #f8fafc;
+    --color-surface-muted: #f2f4f6;
 }
 
 /* ─── Native Feel Quick Wins ─────────────────────────────── */
