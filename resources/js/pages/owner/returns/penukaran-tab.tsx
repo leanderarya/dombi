@@ -31,17 +31,6 @@ const EXCHANGE_STATUS_FILTERS = [
     { key: 'rejected', label: 'Ditolak' },
 ];
 
-const statusColorMap: Record<string, string> = {
-    '': 'text-text bg-surface-muted ring-border',
-    submitted: 'text-amber-600 bg-amber-50 ring-amber-200',
-    approved: 'text-blue-600 bg-blue-50 ring-blue-200',
-    preparing: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
-    shipped: 'text-purple-600 bg-purple-50 ring-purple-200',
-    received: 'text-cyan-600 bg-cyan-50 ring-cyan-200',
-    completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
-    rejected: 'text-red-600 bg-red-50 ring-red-200',
-};
-
 export default function PenukaranTab({
     exchanges,
     filters,
@@ -154,8 +143,7 @@ export default function PenukaranTab({
                             }
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 isActive
-                                    ? (statusColorMap[f.key] ??
-                                      'bg-primary/10 text-primary ring-primary/20')
+                                    ? 'bg-primary/10 text-primary ring-primary/20'
                                     : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >

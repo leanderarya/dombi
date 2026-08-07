@@ -113,14 +113,6 @@ export default function TagihanTab({ kpis, outlets }: any) {
             >
                 {STATUS_FILTERS.map((sf) => {
                     const isActive = filter === sf.key;
-                    const colorMap: Record<string, string> = {
-                        '': 'text-text bg-surface-muted ring-border',
-                        action_needed:
-                            'text-amber-600 bg-amber-50 ring-amber-200',
-                        overdue: 'text-red-600 bg-red-50 ring-red-200',
-                        unpaid: 'text-blue-600 bg-blue-50 ring-blue-200',
-                        paid: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
-                    };
 
                     return (
                         <button
@@ -129,8 +121,7 @@ export default function TagihanTab({ kpis, outlets }: any) {
                             onClick={() => setFilter(sf.key)}
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 isActive
-                                    ? (colorMap[sf.key] ??
-                                      'bg-primary/10 text-primary ring-primary/20')
+                                    ? 'bg-primary/10 text-primary ring-primary/20'
                                     : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
