@@ -283,7 +283,7 @@ export default function OutletDetail({
                     <div className="mt-1 text-xl font-bold text-text tabular-nums">
                         {customCount}
                     </div>
-                    <div className="text-[11px] text-blue-600">
+                    <div className="text-[11px] text-text-subtle">
                         {customCount > 0
                             ? `${customCount}/${prices.length} produk`
                             : 'Semua standar'}
@@ -478,7 +478,7 @@ export default function OutletDetail({
                                                     : row.name}
                                             </span>
                                             {row.has_override ? (
-                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">
+                                                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
                                                     Custom
                                                 </span>
                                             ) : (
