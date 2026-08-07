@@ -528,12 +528,14 @@ export default function ProductCategoryShow({ category }: Props) {
                 <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
+                        size="lg"
                         onClick={() => setShowCatEdit(true)}
                     >
                         <Pencil className="mr-1 h-4 w-4" /> Edit Kategori
                     </Button>
                     <Button
                         variant="danger"
+                        size="lg"
                         onClick={() => setDeleteCatDialog(true)}
                     >
                         <Trash2 className="mr-1 h-4 w-4" /> Hapus
@@ -557,10 +559,18 @@ export default function ProductCategoryShow({ category }: Props) {
             />
 
             <div className="mb-4 flex items-center justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowBulkForm(true)}>
+                <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => setShowBulkForm(true)}
+                >
                     <Layers className="mr-1 h-4 w-4" /> Tambah Multi Rasa
                 </Button>
-                <Button onClick={openCreateProduct}>
+                <Button
+                    size="lg"
+                    className="bg-accent-orange hover:bg-accent-orange-hover"
+                    onClick={openCreateProduct}
+                >
                     <Plus className="mr-1 h-4 w-4" /> Tambah Produk
                 </Button>
             </div>
@@ -608,7 +618,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => toggleGroup(gKey)}
-                                    className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition hover:bg-surface-muted/30"
+                                    className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition hover:bg-surface-muted/30 min-h-[44px]"
                                 >
                                     {isExpanded ? (
                                         <ChevronDown className="h-4 w-4 shrink-0 text-text-muted" />
