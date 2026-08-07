@@ -560,14 +560,14 @@ export default function ProductCategoryShow({ category }: Props) {
                 <Button
                     variant="outline"
                     size="lg"
-                    className="bg-accent-orange hover:bg-accent-orange-hover text-white border-transparent min-h-11"
+                    className="min-h-11 border-transparent bg-accent-orange text-white hover:bg-accent-orange-hover"
                     onClick={() => setShowBulkForm(true)}
                 >
                     <Layers className="mr-1 h-4 w-4" /> Tambah Multi Rasa
                 </Button>
                 <Button
                     size="lg"
-                    className="bg-accent-orange hover:bg-accent-orange-hover min-h-11"
+                    className="min-h-11 bg-accent-orange hover:bg-accent-orange-hover"
                     onClick={openCreateProduct}
                 >
                     <Plus className="mr-1 h-4 w-4" /> Tambah Produk
@@ -617,7 +617,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => toggleGroup(gKey)}
-                                    className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition hover:bg-surface-muted/30 min-h-[44px]"
+                                    className="flex min-h-[44px] w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition hover:bg-surface-muted/30"
                                 >
                                     {isExpanded ? (
                                         <ChevronDown className="h-4 w-4 shrink-0 text-text-muted" />
@@ -662,7 +662,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                     );
                                                     setFgImageFile(null);
                                                 }}
-                                                className="h-11 w-11 flex items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
                                                 title="Edit gambar grup"
                                             >
                                                 <Upload className="h-3.5 w-3.5" />
@@ -836,7 +836,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="h-11 w-11 flex items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                                        className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
                                                                     >
                                                                         <Copy className="h-3.5 w-3.5" />
                                                                     </button>
@@ -851,7 +851,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="h-11 w-11 flex items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                                        className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
                                                                     >
                                                                         {p.is_active ? (
                                                                             <ToggleRight className="h-3.5 w-3.5 text-primary" />
@@ -866,7 +866,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="h-11 w-11 flex items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                                        className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
                                                                     >
                                                                         <Pencil className="h-3.5 w-3.5" />
                                                                     </button>
@@ -877,7 +877,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p.id,
                                                                             )
                                                                         }
-                                                                        className="h-11 w-11 flex items-center justify-center rounded text-text-subtle hover:bg-red-50 hover:text-red-600"
+                                                                        className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-red-50 hover:text-red-600"
                                                                     >
                                                                         <Trash2 className="h-3.5 w-3.5" />
                                                                     </button>
@@ -952,7 +952,11 @@ export default function ProductCategoryShow({ category }: Props) {
                             >
                                 Batal
                             </Button>
-                            <Button type="submit" className="min-h-11" disabled={catProcessing}>
+                            <Button
+                                type="submit"
+                                className="min-h-11"
+                                disabled={catProcessing}
+                            >
                                 {catProcessing ? 'Menyimpan...' : 'Update'}
                             </Button>
                         </DialogFooter>
@@ -1146,7 +1150,11 @@ export default function ProductCategoryShow({ category }: Props) {
                             >
                                 Batal
                             </Button>
-                            <Button type="submit" className="min-h-11" disabled={productProcessing}>
+                            <Button
+                                type="submit"
+                                className="min-h-11"
+                                disabled={productProcessing}
+                            >
                                 {productProcessing
                                     ? 'Menyimpan...'
                                     : editingProduct
@@ -1244,7 +1252,11 @@ export default function ProductCategoryShow({ category }: Props) {
                             >
                                 Batal
                             </Button>
-                            <Button type="submit" className="min-h-11" disabled={bulkProcessing}>
+                            <Button
+                                type="submit"
+                                className="min-h-11"
+                                disabled={bulkProcessing}
+                            >
                                 {bulkProcessing ? 'Membuat...' : 'Buat'}
                             </Button>
                         </DialogFooter>
