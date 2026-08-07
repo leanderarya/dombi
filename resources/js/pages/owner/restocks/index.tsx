@@ -47,16 +47,6 @@ const statusFilters = [
     { key: 'cancelled', label: 'Dibatalkan' },
 ];
 
-const colorMap: Record<string, string> = {
-    '': 'text-text bg-surface-muted ring-border',
-    requested: 'text-amber-600 bg-amber-50 ring-amber-200',
-    preparing: 'text-purple-600 bg-purple-50 ring-purple-200',
-    shipped: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
-    completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
-    rejected: 'text-red-600 bg-red-50 ring-red-200',
-    cancelled: 'text-gray-600 bg-gray-50 ring-gray-200',
-};
-
 type SortKey = 'id' | 'outlet' | 'items' | 'date';
 
 interface RestockDetailItem {
@@ -245,7 +235,7 @@ export default function OwnerRestocksIndex({
                             key={sf.key}
                             type="button"
                             onClick={() => setFilter('status', sf.key)}
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${isActive ? (colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20') : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
+                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${isActive ? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
                         >
                             {sf.label}
                         </button>
