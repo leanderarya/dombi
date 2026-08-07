@@ -117,7 +117,7 @@ export default function CourierLayout({
                     )}
                 </header>
             )}
-            {children}
+            <div className={title ? '' : 'pt-4'}>{children}</div>
             <NotificationSheet
                 open={notificationOpen}
                 onClose={() => setNotificationOpen(false)}
