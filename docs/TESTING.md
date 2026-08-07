@@ -122,7 +122,7 @@ https://staging.dombicenter.com
 - [OK] Order tracking (guest: akses via nomor HP, lihat order aktif saja)
 - [OK] Riwayat pesanan (guest: hanya order aktif, bukan riwayat penuh)
 - [OK] Repeat order (clear cart lama)
-- [OK] Favorit produk (guest: tersimpan session lokal, hilang jika app dihapus; tidak ada halaman favorit tersendiri)
+- [OK] Favorit produk (guest: tersimpan session lokal, hilang jika app dihapus; ada halaman favorit tersendiri `/customer/favorites` utk login, price per outlet, toggle, quick add, empty state)
 - [OK] Alamat pengiriman (CRUD + default + map) — [FIXED batch4] red border on validation errors
 - [OK] Penerima — belum ada halaman profil; saat ini input manual di checkout (deferred ke post-live)
 
