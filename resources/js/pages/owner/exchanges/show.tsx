@@ -148,7 +148,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         ))}
                         <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm">
                             <span className="text-text-muted">Nilai Tukar</span>
-                            <span className="font-bold tabular-nums text-primary">
+                            <span className="font-bold text-primary tabular-nums">
                                 {formatCurrency(exchange.exchange_value)}
                             </span>
                         </div>
@@ -411,7 +411,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                                                             {histStatus.label}
                                                         </StatusBadge>
                                                     </div>
-                                                    <div className="mt-0.5 text-xs tabular-nums text-text-muted">
+                                                    <div className="mt-0.5 text-xs text-text-muted tabular-nums">
                                                         {h.actor?.name} &middot;{' '}
                                                         {formatDate(
                                                             h.created_at,
