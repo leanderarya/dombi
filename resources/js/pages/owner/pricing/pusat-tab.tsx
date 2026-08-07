@@ -314,7 +314,7 @@ export function PusatTab({
                                             </div>
                                         )}
                                         {v.outlet_override_count > 0 && (
-                                            <span className="mt-0.5 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-xs font-bold text-blue-600">
+                                            <span className="mt-0.5 inline-block rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-bold text-emerald-600">
                                                 {v.outlet_override_count}{' '}
                                                 override
                                             </span>
