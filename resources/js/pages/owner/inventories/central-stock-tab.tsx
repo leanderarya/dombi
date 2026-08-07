@@ -141,22 +141,53 @@ export default function CentralStockTab({
         <>
             <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                    <span className="text-xs font-medium text-text-muted">Total Varian</span>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{stats.total_variants}</div>
+                    <span className="text-xs font-medium text-text-muted">
+                        Total Varian
+                    </span>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {stats.total_variants}
+                    </div>
                 </div>
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                    <span className="text-xs font-medium text-text-muted">Total Stok</span>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{stats.total_stock} <span className="text-sm font-normal text-text-muted">pcs</span></div>
+                    <span className="text-xs font-medium text-text-muted">
+                        Total Stok
+                    </span>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {stats.total_stock}{' '}
+                        <span className="text-sm font-normal text-text-muted">
+                            pcs
+                        </span>
+                    </div>
                 </div>
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                    <span className="text-xs font-medium text-text-muted">Stok Habis</span>
-                    <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.zero_stock > 0 ? 'text-red-600' : 'text-text'}`}>{stats.zero_stock}</div>
-                    {stats.zero_stock > 0 && <p className="text-[11px] text-red-500">Perlu tindakan</p>}
+                    <span className="text-xs font-medium text-text-muted">
+                        Stok Habis
+                    </span>
+                    <div
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.zero_stock > 0 ? 'text-red-600' : 'text-text'}`}
+                    >
+                        {stats.zero_stock}
+                    </div>
+                    {stats.zero_stock > 0 && (
+                        <p className="text-[11px] text-red-500">
+                            Perlu tindakan
+                        </p>
+                    )}
                 </div>
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                    <span className="text-xs font-medium text-text-muted">Stok Rendah</span>
-                    <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.low_stock > 0 ? 'text-amber-600' : 'text-text'}`}>{stats.low_stock}</div>
-                    {stats.low_stock > 0 && <p className="text-[11px] text-amber-500">Perlu tindakan</p>}
+                    <span className="text-xs font-medium text-text-muted">
+                        Stok Rendah
+                    </span>
+                    <div
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.low_stock > 0 ? 'text-amber-600' : 'text-text'}`}
+                    >
+                        {stats.low_stock}
+                    </div>
+                    {stats.low_stock > 0 && (
+                        <p className="text-[11px] text-amber-500">
+                            Perlu tindakan
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -178,7 +209,7 @@ export default function CentralStockTab({
                         key={f.key}
                         type="button"
                         onClick={() => setStockFilter(f.key)}
-                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${stockFilter === f.key ? 'bg-emerald-50 text-emerald-600 ring-emerald-200' : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'}`}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${stockFilter === f.key ? 'bg-emerald-50 text-emerald-600 ring-emerald-200' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
                     >
                         {f.label}
                     </button>
@@ -232,7 +263,7 @@ export default function CentralStockTab({
                                 return (
                                     <TableRow
                                         key={v.id}
-                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors"
+                                        className="border-t border-border/20 transition-colors hover:bg-mint-wash"
                                     >
                                         <TableCell className="px-3 py-3">
                                             <span className="font-bold text-text">

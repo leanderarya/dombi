@@ -144,39 +144,57 @@ export default function CourierManagement() {
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-text-muted">Ongkir Masuk</span>
+                            <span className="text-xs font-medium text-text-muted">
+                                Ongkir Masuk
+                            </span>
                             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
                                 <Wallet className="h-5 w-5" />
                             </span>
                         </div>
-                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{formatCurrency(revenueSummary?.delivery_fee ?? 0)}</div>
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                            {formatCurrency(revenueSummary?.delivery_fee ?? 0)}
+                        </div>
                     </div>
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-text-muted">Cost Eksternal</span>
+                            <span className="text-xs font-medium text-text-muted">
+                                Cost Eksternal
+                            </span>
                             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
                                 <Truck className="h-5 w-5" />
                             </span>
                         </div>
-                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{formatCurrency(revenueSummary?.external_cost ?? 0)}</div>
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                            {formatCurrency(revenueSummary?.external_cost ?? 0)}
+                        </div>
                     </div>
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-text-muted">Net</span>
+                            <span className="text-xs font-medium text-text-muted">
+                                Net
+                            </span>
                             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
                                 <Wallet className="h-5 w-5" />
                             </span>
                         </div>
-                        <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${(revenueSummary?.net ?? 0) < 0 ? 'text-red-600' : 'text-text'}`}>{formatCurrency(revenueSummary?.net ?? 0)}</div>
+                        <div
+                            className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${(revenueSummary?.net ?? 0) < 0 ? 'text-red-600' : 'text-text'}`}
+                        >
+                            {formatCurrency(revenueSummary?.net ?? 0)}
+                        </div>
                     </div>
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-text-muted">Jumlah Delivery</span>
+                            <span className="text-xs font-medium text-text-muted">
+                                Jumlah Delivery
+                            </span>
                             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
                                 <Users className="h-5 w-5" />
                             </span>
                         </div>
-                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{revenueSummary?.deliveries ?? 0}</div>
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                            {revenueSummary?.deliveries ?? 0}
+                        </div>
                     </div>
                 </div>
 

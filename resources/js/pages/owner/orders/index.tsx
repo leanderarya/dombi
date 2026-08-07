@@ -82,10 +82,12 @@ export default function OwnerOrdersIndex({
                             <ShoppingCart className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {stats?.total_today ?? 0}
                     </div>
-                    <p className="text-[11px] text-text-muted">Total hari ini</p>
+                    <p className="text-[11px] text-text-muted">
+                        Total hari ini
+                    </p>
                 </div>
 
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
@@ -97,7 +99,7 @@ export default function OwnerOrdersIndex({
                             <DollarSign className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {formatCurrency(stats?.revenue_today ?? 0)}
                     </div>
                     <p className="text-[11px] text-text-muted">
@@ -114,7 +116,7 @@ export default function OwnerOrdersIndex({
                             <Clock className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {stats?.pending ?? 0}
                     </div>
                     <p className="text-[11px] text-text-muted">
@@ -131,7 +133,7 @@ export default function OwnerOrdersIndex({
                             <CheckCircle className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {stats?.completed_today ?? 0}
                     </div>
                     <p className="text-[11px] text-text-muted">
@@ -248,7 +250,7 @@ export default function OwnerOrdersIndex({
                                                 {s.label}
                                             </StatusBadge>
                                         </TableCell>
-                                        <TableCell className="px-4 py-3 text-right font-semibold tabular-nums text-text">
+                                        <TableCell className="px-4 py-3 text-right font-semibold text-text tabular-nums">
                                             {formatCurrency(order.total)}
                                         </TableCell>
                                         <TableCell className="px-4 py-3">

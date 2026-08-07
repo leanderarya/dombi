@@ -49,7 +49,7 @@ export default function ProductSearchFilters({
                         key={f.key}
                         type="button"
                         onClick={() => onFilterChange(f.key)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${filter === f.key ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'}`}
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${filter === f.key ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
                     >
                         {f.label}
                     </button>

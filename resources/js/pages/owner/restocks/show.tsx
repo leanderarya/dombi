@@ -172,7 +172,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     return (
                                         <tr
                                             key={item.id}
-                                            className="hover:bg-mint-wash/50 border-t border-border/20 transition-colors"
+                                            className="border-t border-border/20 transition-colors hover:bg-mint-wash/50"
                                         >
                                             <td className="px-5 py-3 font-medium text-text">
                                                 {item.product?.name ??

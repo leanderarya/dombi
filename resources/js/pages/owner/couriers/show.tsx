@@ -339,7 +339,7 @@ export default function CourierShow({
                                         {recentDeliveries.map((d: any) => (
                                             <tr
                                                 key={d.id}
-                                                className="hover:bg-mint-wash border-t border-border transition-colors"
+                                                className="border-t border-border transition-colors hover:bg-mint-wash"
                                             >
                                                 <td className="px-4 py-2 font-bold text-text tabular-nums">
                                                     {d.order?.order_code ?? '-'}
@@ -415,7 +415,7 @@ export default function CourierShow({
                         <div className="mt-4 space-y-2">
                             <Link
                                 href={`/owner/deliveries?courier_id=${courier.id}`}
-                                className="hover:bg-mint-wash flex h-9 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors"
+                                className="flex h-9 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
                             >
                                 <Truck
                                     className="h-4 w-4 text-text-subtle"
@@ -425,7 +425,7 @@ export default function CourierShow({
                             </Link>
                             <Link
                                 href={`/owner/orders?courier_id=${courier.id}`}
-                                className="hover:bg-mint-wash flex h-9 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors"
+                                className="flex h-9 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
                             >
                                 <Package
                                     className="h-4 w-4 text-text-subtle"

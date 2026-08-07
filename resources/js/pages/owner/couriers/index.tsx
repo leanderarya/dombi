@@ -82,7 +82,7 @@ export default function CouriersIndex({
                                 <Users className="h-5 w-5" />
                             </span>
                         </div>
-                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                             {stats.total}
                         </div>
                     </div>
@@ -96,7 +96,7 @@ export default function CouriersIndex({
                                 <Truck className="h-5 w-5" />
                             </span>
                         </div>
-                        <div className="font-heading text-xl font-bold tabular-nums text-emerald-600 sm:text-2xl">
+                        <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
                             {stats.online}
                         </div>
                     </div>
@@ -110,7 +110,7 @@ export default function CouriersIndex({
                                 <Bike className="h-5 w-5" />
                             </span>
                         </div>
-                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                             {todayDeliveries}
                         </div>
                     </div>
@@ -124,7 +124,7 @@ export default function CouriersIndex({
                                 <Users className="h-5 w-5" />
                             </span>
                         </div>
-                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                             {stats.active_location}
                         </div>
                     </div>
@@ -137,9 +137,9 @@ export default function CouriersIndex({
                         placeholder="Cari kurir..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 pl-10 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 pl-10 text-sm transition-colors outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 </div>
 
                 {/* Courier Cards Grid */}
@@ -160,9 +160,7 @@ export default function CouriersIndex({
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {filtered.map((courier: any) => {
                                 const VehicleIcon =
-                                    courier.vehicle_type === 'car'
-                                        ? Car
-                                        : Bike;
+                                    courier.vehicle_type === 'car' ? Car : Bike;
 
                                 return (
                                     <div
@@ -220,7 +218,7 @@ export default function CouriersIndex({
                                             <span className="text-text-muted">
                                                 Pengiriman Hari Ini
                                             </span>
-                                            <span className="font-bold tabular-nums text-text">
+                                            <span className="font-bold text-text tabular-nums">
                                                 {courier.today_deliveries ?? 0}
                                             </span>
                                         </div>

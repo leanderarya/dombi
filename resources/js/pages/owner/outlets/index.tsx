@@ -85,7 +85,10 @@ export default function OutletsIndex({ outlets }: any) {
     const filters: { key: FilterKey; label: string }[] = [
         { key: 'all', label: `Semua (${totalOutlets})` },
         { key: 'active', label: `Aktif (${activeOutlets})` },
-        { key: 'inactive', label: `Nonaktif (${totalOutlets - activeOutlets})` },
+        {
+            key: 'inactive',
+            label: `Nonaktif (${totalOutlets - activeOutlets})`,
+        },
         { key: 'low_stock', label: `Stok Rendah (${lowStockOutlets})` },
     ];
 
@@ -112,9 +115,9 @@ export default function OutletsIndex({ outlets }: any) {
                         placeholder="Cari outlet..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 pl-10 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 pl-10 text-sm transition-colors outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
-                    <Store className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                    <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {filters.map((f) => (
@@ -124,7 +127,7 @@ export default function OutletsIndex({ outlets }: any) {
                             className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 filter === f.key
                                     ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
                             {f.label}
@@ -191,7 +194,7 @@ export default function OutletsIndex({ outlets }: any) {
                                             <div className="text-[10px] font-medium text-text-muted">
                                                 Pesanan
                                             </div>
-                                            <div className="text-sm font-bold tabular-nums text-text">
+                                            <div className="text-sm font-bold text-text tabular-nums">
                                                 {outlet.active_orders_count}
                                             </div>
                                         </div>

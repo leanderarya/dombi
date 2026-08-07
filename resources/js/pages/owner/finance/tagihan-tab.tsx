@@ -56,33 +56,53 @@ export default function TagihanTab({ kpis, outlets }: any) {
             <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-text-muted">Belum Dibayar</span>
+                        <span className="text-xs font-medium text-text-muted">
+                            Belum Dibayar
+                        </span>
                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
                             <Receipt className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.total_unpaid > 0 ? 'text-red-600' : 'text-text'}`}>{formatCurrency(kpis.total_unpaid)}</div>
+                    <div
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.total_unpaid > 0 ? 'text-red-600' : 'text-text'}`}
+                    >
+                        {formatCurrency(kpis.total_unpaid)}
+                    </div>
                 </div>
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-text-muted">Outlet</span>
+                        <span className="text-xs font-medium text-text-muted">
+                            Outlet
+                        </span>
                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
                             <StoreIcon className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{kpis.outlets_unpaid}</div>
-                    <p className={`text-[11px] ${kpis.outlets_unpaid > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                        {kpis.outlets_unpaid > 0 ? 'Memiliki tagihan' : 'Semua lunas'}
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {kpis.outlets_unpaid}
+                    </div>
+                    <p
+                        className={`text-[11px] ${kpis.outlets_unpaid > 0 ? 'text-amber-600' : 'text-emerald-600'}`}
+                    >
+                        {kpis.outlets_unpaid > 0
+                            ? 'Memiliki tagihan'
+                            : 'Semua lunas'}
                     </p>
                 </div>
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-text-muted">Jatuh Tempo</span>
+                        <span className="text-xs font-medium text-text-muted">
+                            Jatuh Tempo
+                        </span>
                         <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
                             <CalendarClock className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.due_this_week > 0 ? 'text-orange-600' : 'text-text'}`}>{formatCurrency(kpis.due_this_week)}</div>
+                    <div
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.due_this_week > 0 ? 'text-orange-600' : 'text-text'}`}
+                    >
+                        {formatCurrency(kpis.due_this_week)}
+                    </div>
                 </div>
             </div>
 
@@ -111,7 +131,7 @@ export default function TagihanTab({ kpis, outlets }: any) {
                                 isActive
                                     ? (colorMap[sf.key] ??
                                       'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
                             {sf.label}

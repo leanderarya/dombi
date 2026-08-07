@@ -142,7 +142,7 @@ function FilterChips({
                         activeFilter === option.key
                             ? (colorMap[option.key] ??
                               'bg-primary/10 text-primary ring-primary/20')
-                            : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                            : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                     }`}
                 >
                     {option.label}

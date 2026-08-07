@@ -468,7 +468,7 @@ export default function OutletDetail({
                             {paginated.map((row) => (
                                 <TableRow
                                     key={row.product_id}
-                                    className="hover:bg-mint-wash transition-colors"
+                                    className="transition-colors hover:bg-mint-wash"
                                 >
                                     <TableCell className="px-6 py-4">
                                         <div className="flex items-center gap-2">
@@ -541,7 +541,7 @@ export default function OutletDetail({
                                                     setModalOpen(true);
                                                 }}
                                                 title="Ubah harga"
-                                                className="hover:bg-mint-wash rounded-lg p-1.5 text-text-subtle transition-colors hover:text-primary"
+                                                className="rounded-lg p-1.5 text-text-subtle transition-colors hover:bg-mint-wash hover:text-primary"
                                             >
                                                 <Pencil className="h-3.5 w-3.5" />
                                             </button>
