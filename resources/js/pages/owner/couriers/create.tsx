@@ -124,6 +124,7 @@ export default function CreateCourier() {
                     <div className="flex items-center gap-3 pt-2">
                         <Button
                             type="submit"
+                            className="min-h-11 bg-accent-orange text-white shadow-sm hover:bg-accent-orange-hover"
                             loading={form.processing}
                             disabled={form.processing}
                         >
@@ -131,7 +132,7 @@ export default function CreateCourier() {
                         </Button>
                         <a
                             href="/owner/couriers"
-                            className="text-xs font-semibold text-text-muted hover:text-text"
+                            className="flex min-h-11 items-center text-xs font-semibold text-text-muted hover:text-text"
                         >
                             Batal
                         </a>

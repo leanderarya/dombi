@@ -141,6 +141,7 @@ export default function CourierShow({
                         size="sm"
                         onClick={handleToggleActive}
                         className={cn(
+                            'min-h-11',
                             courier.is_active
                                 ? 'border-red-200 text-red-600 hover:bg-red-50'
                                 : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50',
@@ -151,6 +152,7 @@ export default function CourierShow({
                     <Button
                         variant="destructive"
                         size="sm"
+                        className="min-h-11"
                         onClick={() => setShowDeleteConfirm(true)}
                     >
                         Hapus
@@ -183,7 +185,9 @@ export default function CourierShow({
                                             className="h-3.5 w-3.5"
                                             aria-hidden="true"
                                         />
-                                        <span>{courier.phone ?? '-'}</span>
+                                        <span className="tabular-nums">
+                                            {courier.phone ?? '-'}
+                                        </span>
                                     </div>
                                     {courier.vehicle_type && (
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
@@ -195,7 +199,7 @@ export default function CourierShow({
                                                 {courier.vehicle_type}
                                             </span>
                                             {courier.vehicle_plate && (
-                                                <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[11px] font-semibold">
+                                                <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[11px] font-semibold tabular-nums">
                                                     {courier.vehicle_plate}
                                                 </span>
                                             )}
@@ -265,6 +269,7 @@ export default function CourierShow({
                                         <Button
                                             variant="outline"
                                             size="sm"
+                                            className="min-h-11"
                                             onClick={async () => {
                                                 await copyToClipboard(
                                                     inviteUrl,
@@ -279,6 +284,7 @@ export default function CourierShow({
                                         </Button>
                                         <Button
                                             size="sm"
+                                            className="min-h-11"
                                             onClick={async () => {
                                                 const text = `Undangan kurir Dombi: ${inviteUrl}`;
 
@@ -394,7 +400,7 @@ export default function CourierShow({
                                 </div>
                             </div>
                             <div className="shadow-card-muted rounded-xl bg-surface p-3 text-center">
-                                <div className="text-2xl font-bold text-blue-600 tabular-nums">
+                                <div className="text-2xl font-bold text-primary tabular-nums">
                                     {courier.active_deliveries_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-muted">
@@ -415,7 +421,7 @@ export default function CourierShow({
                         <div className="mt-4 space-y-2">
                             <Link
                                 href={`/owner/deliveries?courier_id=${courier.id}`}
-                                className="flex h-9 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
                             >
                                 <Truck
                                     className="h-4 w-4 text-text-subtle"
@@ -425,7 +431,7 @@ export default function CourierShow({
                             </Link>
                             <Link
                                 href={`/owner/orders?courier_id=${courier.id}`}
-                                className="flex h-9 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
                             >
                                 <Package
                                     className="h-4 w-4 text-text-subtle"
@@ -507,7 +513,7 @@ export default function CourierShow({
                                                     e.target.value,
                                                 )
                                             }
-                                            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-text"
+                                            className="min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-text"
                                         >
                                             <option value="">
                                                 Pilih outlet
