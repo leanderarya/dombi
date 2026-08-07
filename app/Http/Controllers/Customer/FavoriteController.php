@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Favorite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class FavoriteController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse|Response
     {
         $user = $request->user();
 
@@ -22,6 +24,10 @@ class FavoriteController extends Controller
         $productIds = Favorite::where('customer_id', $customerId)
             ->pluck('product_id')
             ->toArray();
+
+        if (! $request->wantsJson()) {
+            return Inertia::render('customer/favorites');
+        }
 
         return response()->json(['product_ids' => $productIds]);
     }
