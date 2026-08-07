@@ -1,5 +1,5 @@
 import { useForm, router } from '@inertiajs/react';
-import { CheckCircle2, Clock, Package, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, FileText, History, Package, RefreshCw, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
@@ -44,14 +44,14 @@ export default function OwnerReturnsShow({ return: ret }: any) {
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                         </div>
@@ -112,9 +112,21 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 <div className="space-y-4 lg:col-span-2">
                     {/* Info */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Informasi Return"
                     >
+                        <div className="mb-3 flex items-center gap-2">
+                            <FileText
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Informasi Return
+                            </h3>
+                        </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Detail alasan dan nilai return ini.
+                        </p>
                         <OwnerDetailRow
                             label="Alasan"
                             value={ret.reason_label ?? ret.reason}
@@ -135,12 +147,21 @@ export default function OwnerReturnsShow({ return: ret }: any) {
 
                     {/* Items */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Item Return"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Item Return
+                        <div className="mb-3 flex items-center gap-2">
+                            <Package
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Item Return
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Produk yang dikembalikan beserta nilainya.
+                        </p>
                         {ret.items?.map((item: any) => (
                             <OwnerDetailRow
                                 key={item.id}
@@ -156,12 +177,21 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 <div className="space-y-4">
                     {/* Status + Actions */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Status Return"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Status
+                        <div className="mb-3 flex items-center gap-2">
+                            <RefreshCw
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Status
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Status saat ini dan aksi untuk return ini.
+                        </p>
                         <div className="mb-3 flex items-center gap-2">
                             <StatusIcon
                                 className="h-4 w-4 text-text-muted"
@@ -228,8 +258,14 @@ export default function OwnerReturnsShow({ return: ret }: any) {
 
                         {ret.status === 'received_at_center' && (
                             <>
-                                <div className="mt-4 mb-3 text-xs font-semibold text-text-subtle">
-                                    Status Item
+                                <div className="mt-4 mb-3 flex items-center gap-2">
+                                    <Package
+                                        className="h-4 w-4 text-primary"
+                                        aria-hidden="true"
+                                    />
+                                    <h3 className="font-heading text-base font-bold text-text">
+                                        Status Item
+                                    </h3>
                                 </div>
                                 {ret.items?.map((item: any) => {
                                     const isDecided = item.disposition !== null;
@@ -239,7 +275,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                     return (
                                         <div
                                             key={item.id}
-                                            className="mb-2 flex items-center justify-between rounded-lg border border-border p-3"
+                                            className="mb-2 flex items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3"
                                         >
                                             <div className="min-w-0 flex-1">
                                                 <div className="truncate text-sm font-medium tabular-nums text-text">
@@ -442,7 +478,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         )}
 
                         {ret.status === 'completed' && (
-                            <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center">
                                 <CheckCircle2
                                     className="mx-auto h-5 w-5 text-emerald-500"
                                     aria-hidden="true"
@@ -454,7 +490,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         )}
 
                         {ret.status === 'rejected' && (
-                            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-center">
                                 <XCircle
                                     className="mx-auto h-5 w-5 text-red-500"
                                     aria-hidden="true"
@@ -469,12 +505,21 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                     {/* Status History / Timeline */}
                     {ret.status_histories?.length > 0 && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Riwayat Status Return"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Riwayat Status
+                            <div className="mb-3 flex items-center gap-2">
+                                <History
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Riwayat Status
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Perjalanan status return ini.
+                            </p>
                             <div className="space-y-3">
                                 {ret.status_histories.map(
                                     (h: any, i: number) => {
@@ -554,11 +599,13 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowApprove(false)}
                         >
                             Batal
                         </Button>
                         <Button
+                            className="min-h-11"
                             onClick={handleApprove}
                             disabled={approveForm.processing}
                         >
@@ -595,12 +642,14 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowReject(false)}
                         >
                             Batal
                         </Button>
                         <Button
                             variant="destructive"
+                            className="min-h-11"
                             onClick={handleReject}
                             disabled={rejectForm.processing}
                         >
