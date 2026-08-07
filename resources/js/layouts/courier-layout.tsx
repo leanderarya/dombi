@@ -128,7 +128,7 @@ export default function CourierLayout({
             headerSlot={headerSlot}
         >
             {headerBelow && (
-                <div className="mx-auto max-w-2xl px-4 lg:max-w-4xl">
+                <div className="mx-auto mt-4 max-w-2xl px-4 lg:max-w-4xl">
                     {headerBelow}
                 </div>
             )}
