@@ -544,21 +544,21 @@ export default function ProductForm({
                     <button
                         type="button"
                         onClick={() => setMode('single')}
-                        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${mode === 'single' ? 'bg-surface text-text shadow-sm ring-1 ring-border' : 'text-text-muted hover:text-text'}`}
+                        className={`flex min-h-11 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition ${mode === 'single' ? 'bg-surface text-text shadow-sm ring-1 ring-border' : 'text-text-muted hover:text-text'}`}
                     >
                         <Package className="h-3.5 w-3.5" /> Single
                     </button>
                     <button
                         type="button"
                         onClick={() => setMode('bulk')}
-                        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${mode === 'bulk' ? 'bg-surface text-text shadow-sm ring-1 ring-border' : 'text-text-muted hover:text-text'}`}
+                        className={`flex min-h-11 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition ${mode === 'bulk' ? 'bg-surface text-text shadow-sm ring-1 ring-border' : 'text-text-muted hover:text-text'}`}
                     >
                         <Layers className="h-3.5 w-3.5" /> Multi Rasa
                     </button>
                     <button
                         type="button"
                         onClick={() => setMode('bulk-size')}
-                        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${mode === 'bulk-size' ? 'bg-surface text-text shadow-sm ring-1 ring-border' : 'text-text-muted hover:text-text'}`}
+                        className={`flex min-h-11 items-center gap-1.5 rounded-full px-3.5 text-xs font-semibold transition ${mode === 'bulk-size' ? 'bg-surface text-text shadow-sm ring-1 ring-border' : 'text-text-muted hover:text-text'}`}
                     >
                         <TrendingUp className="h-3.5 w-3.5" /> Multi Ukuran
                     </button>
@@ -946,7 +946,7 @@ export default function ProductForm({
                                         <button
                                             type="button"
                                             onClick={() => removeFlavorChip(f)}
-                                            className="ml-0.5 rounded-full p-0.5 hover:bg-primary/20"
+                                            className="ml-0.5 flex min-h-11 min-w-11 items-center justify-center rounded-full hover:bg-primary/20"
                                         >
                                             <X className="h-3 w-3" />
                                         </button>
@@ -1309,7 +1309,7 @@ export default function ProductForm({
                                                                     i,
                                                                 )
                                                             }
-                                                            className="rounded p-1 text-text-muted opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
+                                                            className="flex h-11 w-11 items-center justify-center rounded text-text-muted opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
                                                         >
                                                             <X className="h-3.5 w-3.5" />
                                                         </button>
