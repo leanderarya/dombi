@@ -183,7 +183,8 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                         placeholder="Cari kategori..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 pl-10 text-sm transition-colors outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        style={{ paddingLeft: 40 }}
+                        className="w-full rounded-xl border border-border bg-surface py-2.5 pr-4 text-sm transition-colors outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                     <Package className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 </div>
