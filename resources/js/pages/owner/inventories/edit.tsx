@@ -6,6 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { displayProductName } from '@/lib/display';
 
+// DESIGN.md: stock quantities are displayed with an explicit unit (Liter/Pcs).
+function unitLabel(item: any): string {
+    const unit = item?.product?.size_unit ?? item?.variant?.size_unit;
+
+    return unit === 'ml' || unit === 'l' || unit === 'g' || unit === 'kg'
+        ? 'Liter'
+        : 'Pcs';
+}
+
 export default function EditInventory({ inventory }: any) {
     const form = useForm({
         current_stock: inventory.current_stock,
@@ -13,13 +22,14 @@ export default function EditInventory({ inventory }: any) {
         notes: '',
     });
 
+    const stockUnit = unitLabel(inventory);
     const variantName = displayProductName(inventory.variant);
     const familyName = inventory.variant?.family?.name ?? '';
 
     return (
         <OwnerPageShell title="Edit Stok" backHref="/owner/inventories">
             <section className="mb-4" aria-label="Detail Inventaris">
-                <div className="text-sm font-semibold text-text">
+                <div className="flex items-center gap-2 text-sm font-semibold text-text">
                     {inventory.outlet?.name}
                 </div>
                 <div className="mt-0.5 text-sm text-text-muted">
@@ -50,7 +60,7 @@ export default function EditInventory({ inventory }: any) {
                     className="space-y-4"
                 >
                     <Input
-                        label="Stok Saat Ini"
+                        label={`Stok Saat Ini (${stockUnit})`}
                         type="number"
                         min={0}
                         value={form.data.current_stock}
@@ -61,10 +71,11 @@ export default function EditInventory({ inventory }: any) {
                             )
                         }
                         error={form.errors.current_stock}
+                        className="min-h-11 tabular-nums focus-visible:ring-primary"
                     />
 
                     <Input
-                        label="Stok Minimum"
+                        label={`Stok Minimum (${stockUnit})`}
                         type="number"
                         min={0}
                         value={form.data.minimum_stock}
@@ -75,6 +86,7 @@ export default function EditInventory({ inventory }: any) {
                             )
                         }
                         error={form.errors.minimum_stock}
+                        className="min-h-11 tabular-nums focus-visible:ring-primary"
                     />
 
                     <Textarea
@@ -82,11 +94,13 @@ export default function EditInventory({ inventory }: any) {
                         value={form.data.notes}
                         onChange={(e) => form.setData('notes', e.target.value)}
                         error={form.errors.notes}
+                        className="min-h-[44px] focus-visible:ring-primary"
                     />
 
                     <div className="flex items-center gap-3 pt-2">
                         <Button
                             type="submit"
+                            className="min-h-11"
                             loading={form.processing}
                             disabled={form.processing}
                         >
@@ -94,7 +108,7 @@ export default function EditInventory({ inventory }: any) {
                         </Button>
                         <a
                             href="/owner/inventories"
-                            className="text-xs font-semibold text-text-muted hover:text-text"
+                            className="flex min-h-11 items-center text-xs font-semibold text-text-muted hover:text-text"
                         >
                             Batal
                         </a>
