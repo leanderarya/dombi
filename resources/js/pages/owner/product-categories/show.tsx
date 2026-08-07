@@ -525,6 +525,7 @@ export default function ProductCategoryShow({ category }: Props) {
                     <Button
                         variant="outline"
                         size="lg"
+                        className="min-h-11"
                         onClick={() => setShowCatEdit(true)}
                     >
                         <Pencil className="mr-1 h-4 w-4" /> Edit Kategori
@@ -532,6 +533,7 @@ export default function ProductCategoryShow({ category }: Props) {
                     <Button
                         variant="danger"
                         size="lg"
+                        className="min-h-11"
                         onClick={() => setDeleteCatDialog(true)}
                     >
                         <Trash2 className="mr-1 h-4 w-4" /> Hapus
@@ -558,14 +560,14 @@ export default function ProductCategoryShow({ category }: Props) {
                 <Button
                     variant="outline"
                     size="lg"
-                    className="bg-accent-orange hover:bg-accent-orange-hover text-white border-transparent"
+                    className="bg-accent-orange hover:bg-accent-orange-hover text-white border-transparent min-h-11"
                     onClick={() => setShowBulkForm(true)}
                 >
                     <Layers className="mr-1 h-4 w-4" /> Tambah Multi Rasa
                 </Button>
                 <Button
                     size="lg"
-                    className="bg-accent-orange hover:bg-accent-orange-hover"
+                    className="bg-accent-orange hover:bg-accent-orange-hover min-h-11"
                     onClick={openCreateProduct}
                 >
                     <Plus className="mr-1 h-4 w-4" /> Tambah Produk
@@ -945,11 +947,12 @@ export default function ProductCategoryShow({ category }: Props) {
                             <Button
                                 type="button"
                                 variant="outline"
+                                className="min-h-11"
                                 onClick={() => setShowCatEdit(false)}
                             >
                                 Batal
                             </Button>
-                            <Button type="submit" disabled={catProcessing}>
+                            <Button type="submit" className="min-h-11" disabled={catProcessing}>
                                 {catProcessing ? 'Menyimpan...' : 'Update'}
                             </Button>
                         </DialogFooter>
@@ -1135,6 +1138,7 @@ export default function ProductCategoryShow({ category }: Props) {
                             <Button
                                 type="button"
                                 variant="outline"
+                                className="min-h-11"
                                 onClick={() => {
                                     setShowProductForm(false);
                                     setEditingProduct(null);
@@ -1142,7 +1146,7 @@ export default function ProductCategoryShow({ category }: Props) {
                             >
                                 Batal
                             </Button>
-                            <Button type="submit" disabled={productProcessing}>
+                            <Button type="submit" className="min-h-11" disabled={productProcessing}>
                                 {productProcessing
                                     ? 'Menyimpan...'
                                     : editingProduct
@@ -1235,11 +1239,12 @@ export default function ProductCategoryShow({ category }: Props) {
                             <Button
                                 type="button"
                                 variant="outline"
+                                className="min-h-11"
                                 onClick={() => setShowBulkForm(false)}
                             >
                                 Batal
                             </Button>
-                            <Button type="submit" disabled={bulkProcessing}>
+                            <Button type="submit" className="min-h-11" disabled={bulkProcessing}>
                                 {bulkProcessing ? 'Membuat...' : 'Buat'}
                             </Button>
                         </DialogFooter>
@@ -1264,12 +1269,14 @@ export default function ProductCategoryShow({ category }: Props) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setDeleteId(null)}
                         >
                             Batal
                         </Button>
                         <Button
                             variant="destructive"
+                            className="min-h-11"
                             onClick={handleDeleteProduct}
                         >
                             Hapus
@@ -1299,6 +1306,7 @@ export default function ProductCategoryShow({ category }: Props) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => {
                                 setSoftDeleteDialog(false);
                                 setSoftDeleteId(null);
@@ -1308,6 +1316,7 @@ export default function ProductCategoryShow({ category }: Props) {
                         </Button>
                         <Button
                             variant="default"
+                            className="min-h-11"
                             onClick={handleSoftDeleteDeactivate}
                         >
                             Deactivate
@@ -1329,12 +1338,14 @@ export default function ProductCategoryShow({ category }: Props) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setDeleteCatDialog(false)}
                         >
                             Batal
                         </Button>
                         <Button
                             variant="destructive"
+                            className="min-h-11"
                             onClick={handleDeleteCategory}
                         >
                             Hapus
@@ -1375,6 +1386,7 @@ export default function ProductCategoryShow({ category }: Props) {
                             <Button
                                 type="button"
                                 variant="outline"
+                                className="min-h-11"
                                 onClick={() => {
                                     setEditingFlavorGroup(null);
                                     setFgImageFile(null);
@@ -1384,6 +1396,7 @@ export default function ProductCategoryShow({ category }: Props) {
                             </Button>
                             <Button
                                 type="submit"
+                                className="min-h-11"
                                 disabled={fgProcessing || !fgImageFile}
                             >
                                 {fgProcessing ? 'Menyimpan...' : 'Simpan'}
