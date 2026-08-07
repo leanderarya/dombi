@@ -103,7 +103,11 @@ export default function OutletSettlementPayments({ payments }: Props) {
             <Head title="Riwayat Pembayaran" />
             <OutletPageShell>
                 <div className="flex items-center justify-between">
-                    <Button size="lg" onClick={() => setShowForm(!showForm)}>
+                    <Button
+                        size="lg"
+                        onClick={() => setShowForm(!showForm)}
+                        className="min-h-11"
+                    >
                         {showForm ? 'Batal' : 'Bayar'}
                     </Button>
                 </div>
@@ -191,7 +195,7 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                 type="submit"
                                 size="lg"
                                 loading={saving}
-                                className="w-full"
+                                className="min-h-11 w-full"
                             >
                                 Kirim Pembayaran
                             </Button>

@@ -182,6 +182,7 @@ export default function OutletScanPage() {
                                     onClick={startScanner}
                                     icon={Camera}
                                     aria-label="Mulai scan QR code"
+                                    className="min-h-11"
                                 >
                                     Mulai Scan
                                 </Button>
@@ -206,7 +207,7 @@ export default function OutletScanPage() {
                         size="lg"
                         onClick={stopScanner}
                         icon={XCircle}
-                        className="mt-3 w-full"
+                        className="mt-3 min-h-11 w-full"
                         aria-label="Berhenti scan"
                     >
                         Berhenti Scan
@@ -258,6 +259,7 @@ export default function OutletScanPage() {
                             size="lg"
                             disabled={!manualCode.trim() || loading}
                             aria-label="Cari pesanan"
+                            className="min-h-11"
                         >
                             Cari
                         </Button>
