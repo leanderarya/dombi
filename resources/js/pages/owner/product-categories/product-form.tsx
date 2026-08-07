@@ -626,7 +626,7 @@ export default function ProductForm({
                             placeholder="200ml, 500ml, 1kg"
                             error={singleForm.errors.size}
                         />
-                        <div className="rounded-lg bg-surface-muted/60 p-2.5 ring-1 ring-border/20">
+                        <div className="rounded-2xl border border-border bg-surface-muted/60 p-3">
                             <div className="mb-1 flex items-center gap-1 text-[11px] font-semibold text-text-muted">
                                 <TrendingUp className="h-3 w-3" /> Live Margin
                             </div>
@@ -761,7 +761,7 @@ export default function ProductForm({
                         </p>
                     )}
 
-                    <div className="flex items-center gap-2 rounded-lg bg-surface-muted/40 px-3 py-2 ring-1 ring-border/20">
+                    <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface-muted/40 p-3">
                         <Checkbox
                             label="Produk Aktif"
                             checked={singleForm.data.is_active}
@@ -802,7 +802,7 @@ export default function ProductForm({
             ) : mode === 'bulk' ? (
                 <form onSubmit={handleBulkSubmit} className="space-y-4">
                     {/* Bulk fields */}
-                    <div className="space-y-3 rounded-xl border border-border/20 bg-surface p-3">
+                    <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
                         <h4 className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                             Konfigurasi Bersama
                         </h4>
@@ -854,7 +854,7 @@ export default function ProductForm({
                             />
                         </div>
 
-                        <div className="flex items-center justify-between rounded-lg bg-emerald-50/60 p-2.5 ring-1 ring-emerald-200">
+                        <div className="flex items-center justify-between rounded-2xl bg-emerald-50/60 p-3 ring-1 ring-emerald-200">
                             <div>
                                 <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
                                     <TrendingUp className="h-3 w-3" /> Margin &
@@ -986,7 +986,7 @@ export default function ProductForm({
                                 {bulkForm.data.size || 'size'}
                             </span>
                         </div>
-                        <div className="max-h-48 divide-y divide-border/30 overflow-y-auto rounded-lg border border-border/20 bg-surface">
+                        <div className="max-h-48 divide-y divide-border/30 overflow-y-auto rounded-2xl border border-border bg-surface">
                             {parsedFlavors.length === 0 ? (
                                 <div className="p-4 text-center text-xs text-text-subtle">
                                     Belum ada rasa - tambah minimal 1
@@ -1081,7 +1081,7 @@ export default function ProductForm({
             ) : (
                 <form onSubmit={handleBulkSizeSubmit} className="space-y-4">
                     {/* Shared flavor + description */}
-                    <div className="space-y-3 rounded-xl border border-border/20 bg-surface p-3">
+                    <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
                         <h4 className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                             Konfigurasi Rasa
                         </h4>
@@ -1138,7 +1138,7 @@ export default function ProductForm({
                             </Button>
                         </div>
 
-                        <div className="overflow-x-auto rounded-lg border border-border/20">
+                        <div className="overflow-x-auto rounded-2xl border border-border">
                             <table className="w-full text-left text-xs">
                                 <thead>
                                     <tr className="bg-surface-muted/60 text-text-muted">
@@ -1211,7 +1211,7 @@ export default function ProductForm({
                                                             )
                                                         }
                                                         placeholder="30000"
-                                                        className="h-8 text-xs"
+                                                        className="h-8 text-xs tabular-nums"
                                                         error={
                                                             bulkSizeErrors[
                                                                 `row_${i}_center_price`
@@ -1234,7 +1234,7 @@ export default function ProductForm({
                                                             )
                                                         }
                                                         placeholder="40000"
-                                                        className="h-8 text-xs"
+                                                        className="h-8 text-xs tabular-nums"
                                                         error={
                                                             bulkSizeErrors[
                                                                 `row_${i}_selling_price`
@@ -1341,7 +1341,7 @@ export default function ProductForm({
                                         {bulkSizeFlavor.trim()} + Ukuran
                                     </span>
                                 </div>
-                                <div className="divide-y divide-border/30 rounded-lg border border-border/20 bg-surface">
+                                <div className="divide-y divide-border/30 rounded-2xl border border-border bg-surface">
                                     {bulkSizeRows
                                         .filter((r) => r.size.trim())
                                         .map((row, idx) => (
@@ -1424,7 +1424,7 @@ export default function ProductForm({
             {(singleForm.hasErrors ||
                 Object.keys(bulkErrors).length > 0 ||
                 Object.keys(bulkSizeErrors).length > 0) && (
-                <div className="rounded-lg bg-red-50 p-2.5 ring-1 ring-red-200">
+                <div className="rounded-xl bg-red-50 p-3 ring-1 ring-red-200">
                     <p className="text-xs font-semibold text-red-700">
                         Periksa kembali isian form:
                     </p>

@@ -44,10 +44,6 @@ interface Props {
     category: ProductCategory;
 }
 
-interface Props {
-    category: ProductCategory;
-}
-
 export default function ProductCategoryShow({ category }: Props) {
     const [search, setSearch] = useState('');
     const [productFilter, setProductFilter] = useState<string>('all');
