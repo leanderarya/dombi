@@ -562,6 +562,7 @@ export default function ProductCategoryShow({ category }: Props) {
                 <Button
                     variant="outline"
                     size="lg"
+                    className="bg-accent-orange hover:bg-accent-orange-hover text-white border-transparent"
                     onClick={() => setShowBulkForm(true)}
                 >
                     <Layers className="mr-1 h-4 w-4" /> Tambah Multi Rasa
@@ -663,7 +664,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                     );
                                                     setFgImageFile(null);
                                                 }}
-                                                className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                className="h-11 w-11 flex items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
                                                 title="Edit gambar grup"
                                             >
                                                 <Upload className="h-3.5 w-3.5" />
@@ -837,7 +838,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                                        className="h-11 w-11 flex items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
                                                                     >
                                                                         <Copy className="h-3.5 w-3.5" />
                                                                     </button>
@@ -852,7 +853,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                                        className="h-11 w-11 flex items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
                                                                     >
                                                                         {p.is_active ? (
                                                                             <ToggleRight className="h-3.5 w-3.5 text-primary" />
@@ -867,7 +868,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                                        className="h-11 w-11 flex items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
                                                                     >
                                                                         <Pencil className="h-3.5 w-3.5" />
                                                                     </button>
@@ -878,7 +879,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p.id,
                                                                             )
                                                                         }
-                                                                        className="rounded p-1 text-text-subtle hover:bg-red-50 hover:text-red-600"
+                                                                        className="h-11 w-11 flex items-center justify-center rounded text-text-subtle hover:bg-red-50 hover:text-red-600"
                                                                     >
                                                                         <Trash2 className="h-3.5 w-3.5" />
                                                                     </button>
