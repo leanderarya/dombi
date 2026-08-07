@@ -782,6 +782,7 @@ export default function ProductForm({
                             type="button"
                             variant="outline"
                             size="lg"
+                            className="min-h-11"
                             onClick={() => onClose?.()}
                         >
                             Batal
@@ -789,6 +790,7 @@ export default function ProductForm({
                         <Button
                             type="submit"
                             size="lg"
+                            className="min-h-11"
                             disabled={singleForm.processing}
                         >
                             {singleForm.processing
@@ -1060,6 +1062,7 @@ export default function ProductForm({
                             type="button"
                             variant="outline"
                             size="lg"
+                            className="min-h-11"
                             onClick={() => onClose?.()}
                         >
                             Batal
@@ -1067,6 +1070,7 @@ export default function ProductForm({
                         <Button
                             type="submit"
                             size="lg"
+                            className="min-h-11"
                             disabled={
                                 bulkForm.processing ||
                                 parsedFlavors.length === 0
@@ -1127,13 +1131,13 @@ export default function ProductForm({
                             <h4 className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                                 Daftar Ukuran & Harga ({bulkSizeRows.length})
                             </h4>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="lg"
-                                className="bg-accent-orange hover:bg-accent-orange-hover text-white border-transparent"
-                                onClick={addBulkSizeRow}
-                            >
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="lg"
+                            className="bg-accent-orange hover:bg-accent-orange-hover text-white border-transparent min-h-11"
+                            onClick={addBulkSizeRow}
+                        >
                                 <Plus className="h-3.5 w-3.5" /> Tambah Ukuran
                             </Button>
                         </div>
@@ -1405,6 +1409,7 @@ export default function ProductForm({
                             type="button"
                             variant="outline"
                             size="lg"
+                            className="min-h-11"
                             onClick={() => onClose?.()}
                         >
                             Batal
@@ -1412,6 +1417,7 @@ export default function ProductForm({
                         <Button
                             type="submit"
                             size="lg"
+                            className="min-h-11"
                             disabled={bulkSizeRows.length === 0}
                         >
                             Buat {bulkSizeRows.length} Produk
