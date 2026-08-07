@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import OutletInfoModal from '@/components/owner/outlet-info-modal';
 import OutletLocationModal from '@/components/owner/outlet-location-modal';
 import OutletProducts from '@/components/owner/outlet-products';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
@@ -51,6 +52,7 @@ export default function OutletShow({
     const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
     const { flash } = usePage().props as any;
     const [resetOpen, setResetOpen] = useState(false);
+    const [infoModalOpen, setInfoModalOpen] = useState(false);
     const [locationModalOpen, setLocationModalOpen] = useState(false);
     const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
     const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -128,10 +130,17 @@ export default function OutletShow({
                         className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Informasi Outlet"
                     >
-                        <div className="mb-3">
+                        <div className="mb-3 flex items-center justify-between">
                             <h2 className="font-heading text-base font-bold text-text">
                                 Informasi Outlet
                             </h2>
+                            <button
+                                type="button"
+                                onClick={() => setInfoModalOpen(true)}
+                                className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                            >
+                                <Pencil className="h-3.5 w-3.5" />
+                            </button>
                         </div>
                         <h2 className="text-lg font-semibold text-text">
                             {outlet.name ?? '-'}
@@ -146,7 +155,7 @@ export default function OutletShow({
                         )}
 
                         {outlet.pic_name && (
-                            <div className="shadow-card-muted mt-3 rounded-xl bg-surface p-3">
+                            <div className="mt-3 rounded-2xl border border-border bg-surface-muted/50 p-3">
                                 <div className="flex items-center gap-1.5 text-xs font-medium text-text-subtle">
                                     <User
                                         className="h-3 w-3"
@@ -170,6 +179,13 @@ export default function OutletShow({
                             </div>
                         )}
                     </div>
+
+                    <OutletInfoModal
+                        outlet={outlet}
+                        open={infoModalOpen}
+                        onClose={() => setInfoModalOpen(false)}
+                        onSuccess={() => router.reload()}
+                    />
 
                     <div
                         className="rounded-2xl border border-border bg-surface p-5"
@@ -348,7 +364,7 @@ export default function OutletShow({
                                         <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Outstanding
                                         </div>
-                                        <div className="mt-0.5 font-heading text-base font-bold text-red-600 tabular-nums">
+                                        <div className="font-heading mt-0.5 text-base font-bold text-red-600 tabular-nums">
                                             {formatCurrency(
                                                 settlementSummary.outstanding,
                                             )}
@@ -358,7 +374,7 @@ export default function OutletShow({
                                         <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Terlambat
                                         </div>
-                                        <div className="mt-0.5 font-heading text-base font-bold text-amber-600 tabular-nums">
+                                        <div className="font-heading mt-0.5 text-base font-bold text-amber-600 tabular-nums">
                                             {settlementSummary.overdue_count}
                                         </div>
                                     </div>
@@ -366,7 +382,7 @@ export default function OutletShow({
                                         <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Dibayar
                                         </div>
-                                        <div className="mt-0.5 font-heading text-base font-bold text-emerald-600 tabular-nums">
+                                        <div className="font-heading mt-0.5 text-base font-bold text-emerald-600 tabular-nums">
                                             {formatCurrency(
                                                 settlementSummary.paid_this_month,
                                             )}
