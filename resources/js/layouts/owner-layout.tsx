@@ -256,24 +256,6 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                             </div>
                         ) : (
                             <>
-                                {/* Cold Chain Capacity */}
-                                <div className="rounded-xl border border-emerald-700/30 bg-emerald-900/50 p-3">
-                                    <div className="mb-1 flex items-center justify-between text-xs">
-                                        <span className="text-emerald-200/80">
-                                            Kapasitas Cold Chain
-                                        </span>
-                                        <span className="font-semibold text-emerald-300">
-                                            78%
-                                        </span>
-                                    </div>
-                                    <div className="h-1.5 w-full rounded-full bg-emerald-950">
-                                        <div
-                                            className="h-1.5 rounded-full bg-emerald-400"
-                                            style={{ width: '78%' }}
-                                        />
-                                    </div>
-                                </div>
-
                                 <div className="mb-2">
                                     <NotificationBell
                                         onClick={() =>
