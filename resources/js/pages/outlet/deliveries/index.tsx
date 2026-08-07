@@ -10,6 +10,7 @@ import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
+import SectionCard from '@/components/ui/section-card';
 import { Skeleton, SkeletonList } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
@@ -158,81 +159,66 @@ export default function OutletDeliveriesIndex({
 
                         {/* Unassigned Orders */}
                         {unassignedOrders.length > 0 && (
-                            <div>
-                                <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wider text-text-subtle uppercase">
-                                    Perlu Assign Kurir
-                                    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
-                                        {unassignedOrders.length}
-                                    </span>
-                                </h2>
-                                <div className="space-y-2">
-                                    {unassignedOrders.map((order: any) => (
-                                        <div
-                                            key={order.id}
-                                            className="rounded-xl border border-border bg-surface-muted p-3"
-                                        >
-                                            <div className="flex items-start justify-between gap-2">
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="text-sm font-bold text-text tabular-nums">
-                                                        {order.order_code}
-                                                    </div>
-                                                    <div className="mt-0.5 text-xs text-text-muted">
-                                                        {order.customer_name}
-                                                    </div>
-                                                    <div className="mt-1 flex items-center gap-2 text-[11px] text-text-subtle">
-                                                        {order.distance_km !=
-                                                            null && (
-                                                            <span>
-                                                                {formatDistance(
-                                                                    order.distance_km,
-                                                                )}
-                                                            </span>
-                                                        )}
-                                                        <span>
-                                                            {formatCurrency(
-                                                                order.total,
-                                                            )}
-                                                        </span>
-                                                        <span
-                                                            className={`font-medium ${order.delivery_age > 30 ? 'text-danger' : 'text-text-muted'}`}
-                                                        >
-                                                            {formatDeliveryAge(
-                                                                order.delivery_age,
-                                                            )}
-                                                        </span>
-                                                    </div>
+                            <SectionCard label="Perlu Assign Kurir">
+                                {unassignedOrders.map((order: any) => (
+                                    <div
+                                        key={order.id}
+                                        className="rounded-xl border border-border bg-surface-muted p-3"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-sm font-bold text-text tabular-nums">
+                                                    {order.order_code}
                                                 </div>
-                                                {order.sla_health && (
-                                                    <DeliverySlaBadge
-                                                        health={
-                                                            order.sla_health
-                                                        }
-                                                    />
-                                                )}
+                                                <div className="mt-0.5 text-xs text-text-muted">
+                                                    {order.customer_name}
+                                                </div>
+                                                <div className="mt-1 flex items-center gap-2 text-[11px] text-text-subtle">
+                                                    {order.distance_km !=
+                                                        null && (
+                                                        <span>
+                                                            {formatDistance(
+                                                                order.distance_km,
+                                                            )}
+                                                        </span>
+                                                    )}
+                                                    <span>
+                                                        {formatCurrency(
+                                                            order.total,
+                                                        )}
+                                                    </span>
+                                                    <span
+                                                        className={`font-medium ${order.delivery_age > 30 ? 'text-danger' : 'text-text-muted'}`}
+                                                    >
+                                                        {formatDeliveryAge(
+                                                            order.delivery_age,
+                                                        )}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <Button
-                                                size="lg"
-                                                onClick={() =>
-                                                    handleAssignCourier(
-                                                        order.id,
-                                                    )
-                                                }
-                                                icon={Truck}
-                                                className="mt-2 min-h-11 w-full"
-                                            >
-                                                Assign Kurir
-                                            </Button>
+                                            {order.sla_health && (
+                                                <DeliverySlaBadge
+                                                    health={order.sla_health}
+                                                />
+                                            )}
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
+                                        <Button
+                                            size="lg"
+                                            onClick={() =>
+                                                handleAssignCourier(order.id)
+                                            }
+                                            icon={Truck}
+                                            className="mt-2 min-h-11 w-full"
+                                        >
+                                            Assign Kurir
+                                        </Button>
+                                    </div>
+                                ))}
+                            </SectionCard>
                         )}
 
                         {/* Delivery List */}
-                        <div>
-                            <h2 className="mb-3 text-xs font-semibold tracking-wider text-text-subtle uppercase">
-                                Riwayat Pengiriman
-                            </h2>
+                        <SectionCard label="Riwayat Pengiriman">
                             {deliveries.data.length === 0 ? (
                                 <EmptyState
                                     icon={
@@ -290,7 +276,7 @@ export default function OutletDeliveriesIndex({
                                     ))}
                                 </div>
                             )}
-                        </div>
+                        </SectionCard>
                     </>
                 )}
             </OutletPageShell>
