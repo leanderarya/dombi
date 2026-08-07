@@ -4,6 +4,7 @@ import {
     Car,
     Clock,
     Copy,
+    MapPin,
     Package,
     Phone,
     Share2,
@@ -58,12 +59,12 @@ export default function CourierShow({
                 backHref="/owner/couriers"
             >
                 <div className="grid gap-4 lg:grid-cols-2">
-                    <div className="space-y-3 rounded-lg border border-border p-4">
+                    <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                         <Skeleton className="h-4 w-24" />
                         <Skeleton className="h-12 w-full" />
                         <Skeleton className="h-6 w-3/4" />
                     </div>
-                    <div className="space-y-3 rounded-lg border border-border p-4">
+                    <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                         <Skeleton className="h-4 w-24" />
                         <Skeleton className="h-20 w-full" />
                     </div>
@@ -165,11 +166,17 @@ export default function CourierShow({
                 <div className="space-y-4 lg:col-span-2">
                     {/* Info Kurir */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Informasi Kurir"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Informasi Kurir
+                        <div className="mb-3 flex items-center gap-2">
+                            <Truck
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Informasi Kurir
+                            </h3>
                         </div>
                         <div className="flex items-start gap-3">
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted text-lg font-bold text-text-muted">
@@ -221,7 +228,7 @@ export default function CourierShow({
                         </div>
 
                         {courier.courier_profile && (
-                            <div className="shadow-card-muted mt-3 rounded-xl bg-surface p-3">
+                            <div className="mt-3 rounded-2xl border border-border bg-surface-muted/50 p-3">
                                 <div className="flex items-center gap-1.5 text-xs font-medium text-text-subtle">
                                     <User
                                         className="h-3 w-3"
@@ -311,22 +318,30 @@ export default function CourierShow({
 
                     {/* Pengiriman Terbaru */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Pengiriman Terbaru"
                     >
-                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
-                            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                            Pengiriman Terbaru
+                        <div className="mb-3 flex items-center gap-2">
+                            <Clock
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Pengiriman Terbaru
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Pengiriman terbaru dari kurir ini
+                        </p>
                         {recentDeliveries.length === 0 ? (
                             <div className="py-6 text-center text-xs text-text-muted">
                                 Belum ada pengiriman
                             </div>
                         ) : (
-                            <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
+                            <div className="overflow-x-auto rounded-2xl border border-border bg-surface">
                                 <table className="w-full min-w-[400px]">
                                     <thead>
-                                        <tr className="bg-surface-muted">
+                                        <tr className="bg-surface-muted/50">
                                             <th className="px-4 py-2 text-left text-xs font-medium text-text-muted">
                                                 Kode
                                             </th>
@@ -345,7 +360,7 @@ export default function CourierShow({
                                         {recentDeliveries.map((d: any) => (
                                             <tr
                                                 key={d.id}
-                                                className="border-t border-border transition-colors hover:bg-mint-wash"
+                                                className="border-t border-border transition-colors hover:bg-emerald-50/40"
                                             >
                                                 <td className="px-4 py-2 font-bold text-text tabular-nums">
                                                     {d.order?.order_code ?? '-'}
@@ -384,31 +399,40 @@ export default function CourierShow({
                 <div className="space-y-4">
                     {/* Statistik */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Statistik"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Statistik
+                        <div className="mb-3 flex items-center gap-2">
+                            <Package
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Statistik
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Ringkasan pengiriman kurir
+                        </p>
                         <div className="grid grid-cols-3 gap-3">
-                            <div className="shadow-card-muted rounded-xl bg-surface p-3 text-center">
-                                <div className="text-2xl font-bold text-text tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3 text-center">
+                                <div className="font-heading text-2xl font-bold text-text tabular-nums">
                                     {courier.total_deliveries_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-muted">
                                     Total
                                 </div>
                             </div>
-                            <div className="shadow-card-muted rounded-xl bg-surface p-3 text-center">
-                                <div className="text-2xl font-bold text-primary tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3 text-center">
+                                <div className="font-heading text-2xl font-bold text-primary tabular-nums">
                                     {courier.active_deliveries_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-muted">
                                     Aktif
                                 </div>
                             </div>
-                            <div className="shadow-card-muted rounded-xl bg-surface p-3 text-center">
-                                <div className="text-2xl font-bold text-emerald-600 tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3 text-center">
+                                <div className="font-heading text-2xl font-bold text-emerald-600 tabular-nums">
                                     {courier.today_deliveries_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-muted">
@@ -421,7 +445,7 @@ export default function CourierShow({
                         <div className="mt-4 space-y-2">
                             <Link
                                 href={`/owner/deliveries?courier_id=${courier.id}`}
-                                className="flex min-h-11 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-surface p-3 text-sm font-semibold text-text transition-colors hover:border-primary hover:bg-emerald-50/40"
                             >
                                 <Truck
                                     className="h-4 w-4 text-text-subtle"
@@ -431,7 +455,7 @@ export default function CourierShow({
                             </Link>
                             <Link
                                 href={`/owner/orders?courier_id=${courier.id}`}
-                                className="flex min-h-11 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-surface p-3 text-sm font-semibold text-text transition-colors hover:border-primary hover:bg-emerald-50/40"
                             >
                                 <Package
                                     className="h-4 w-4 text-text-subtle"
@@ -445,7 +469,7 @@ export default function CourierShow({
                     {/* Outlet Assignment */}
                     {legacyClassification?.isLegacy && (
                         <div
-                            className="rounded-lg border border-amber-200 bg-amber-50 p-4"
+                            className="rounded-2xl border border-amber-200 bg-amber-50 p-5"
                             aria-label="Klasifikasi Kurir Legacy"
                         >
                             <div className="mb-1 text-xs font-semibold text-amber-900">
@@ -537,7 +561,7 @@ export default function CourierShow({
                                 )}
                                 <Button
                                     size="sm"
-                                    className="w-full"
+                                    className="mt-3 min-h-11 w-full"
                                     disabled={classificationForm.processing}
                                     onClick={handleSaveClassification}
                                 >
@@ -550,12 +574,21 @@ export default function CourierShow({
                     )}
 
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Plot Outlet"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Plot Outlet
+                        <div className="mb-3 flex items-center gap-2">
+                            <MapPin
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Plot Outlet
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Tentukan outlet yang menjadi tanggung jawab kurir
+                        </p>
 
                         <div className="space-y-2">
                             {(outlets ?? []).length === 0 ? (
@@ -588,7 +621,7 @@ export default function CourierShow({
                         </div>
                         <Button
                             size="sm"
-                            className="mt-4 w-full"
+                            className="mt-4 min-h-11 w-full"
                             disabled={
                                 assignmentForm.processing ||
                                 legacyClassification?.isLegacy
@@ -619,11 +652,16 @@ export default function CourierShow({
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowDeleteConfirm(false)}
                         >
                             Batal
                         </Button>
-                        <Button variant="destructive" onClick={handleDelete}>
+                        <Button
+                            variant="destructive"
+                            className="min-h-11"
+                            onClick={handleDelete}
+                        >
                             Hapus Permanen
                         </Button>
                     </DialogFooter>
