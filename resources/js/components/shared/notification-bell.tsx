@@ -6,6 +6,7 @@ import { usePushSubscription } from '@/hooks/use-push-subscription';
 interface Props {
     unreadCount?: number;
     onClick?: () => void;
+    className?: string;
 }
 
 interface LatestNotif {
@@ -19,6 +20,7 @@ interface LatestNotif {
 export default function NotificationBell({
     unreadCount: initialCount,
     onClick,
+    className = 'text-text-muted active:bg-surface-muted',
 }: Props) {
     const [polledUnreadCount, setPolledUnreadCount] = useState(0);
     const unreadCount = initialCount ?? polledUnreadCount;
@@ -94,7 +96,7 @@ export default function NotificationBell({
         <div className="relative">
             <button
                 onClick={handleClick}
-                className="relative flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors active:bg-surface-muted"
+                className={`relative flex h-11 w-11 items-center justify-center rounded-lg transition-colors ${className}`}
                 aria-label="Notifikasi"
             >
                 <Bell className="h-5 w-5" strokeWidth={1.5} />
