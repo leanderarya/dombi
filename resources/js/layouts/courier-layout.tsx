@@ -1,5 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
-import { LogOut } from 'lucide-react';
+import { ChevronLeft, LogOut } from 'lucide-react';
 import { useLayoutEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { PropsWithChildren } from 'react';
@@ -54,12 +54,18 @@ export default function CourierLayout({
     const onlineLabel =
         isOnline !== undefined ? (isOnline ? 'Online' : 'Offline') : undefined;
 
+    const name = (auth?.user?.name as string) ?? 'Kurir';
+    const firstName = name.split(' ')[0];
+
     const rightSlot = (
         <div className="flex items-center gap-1">
-            <NotificationBell onClick={() => setNotificationOpen(true)} />
+            <NotificationBell
+                onClick={() => setNotificationOpen(true)}
+                className="rounded-full text-white active:bg-white/20"
+            />
             <button
                 onClick={() => router.post('/logout')}
-                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted active:bg-surface-muted"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-current active:bg-white/20"
                 aria-label="Logout"
             >
                 <LogOut className="h-4 w-4" />
@@ -69,7 +75,6 @@ export default function CourierLayout({
 
     // Dashboard (no title): use brand as title, online status as subtitle
     // Other pages: use provided title/subtitle
-    const headerTitle = title ?? 'Dombi';
     const headerSubtitle = subtitle ?? (title ? undefined : onlineLabel);
 
     return (
@@ -79,14 +84,39 @@ export default function CourierLayout({
             }
             actionBarSlot={actionBarSlot}
         >
-            <PageHeader
-                title={headerTitle}
-                titleClassName={!title ? 'text-primary' : undefined}
-                subtitle={headerSubtitle}
-                backHref={backHref}
-                right={rightSlot}
-                below={headerBelow}
-            />
+            {title ? (
+                <PageHeader
+                    title={title}
+                    subtitle={subtitle}
+                    backHref={backHref}
+                    right={rightSlot}
+                    below={headerBelow}
+                />
+            ) : (
+                <header className="bg-primary text-white">
+                    <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3 lg:max-w-4xl">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg font-bold text-white">
+                                {name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                                <div className="truncate text-base font-bold">
+                                    Halo, {firstName}
+                                </div>
+                                <div className="truncate text-xs text-white/80">
+                                    {headerSubtitle}
+                                </div>
+                            </div>
+                        </div>
+                        {rightSlot}
+                    </div>
+                    {headerBelow && (
+                        <div className="mx-auto max-w-2xl px-4 pb-3 lg:max-w-4xl">
+                            {headerBelow}
+                        </div>
+                    )}
+                </header>
+            )}
             {children}
             <NotificationSheet
                 open={notificationOpen}
