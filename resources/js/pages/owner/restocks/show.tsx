@@ -144,7 +144,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     <User className="h-3.5 w-3.5" />
                     {restock.requester?.name ?? '—'}
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-text-muted">
+                <div className="flex items-center gap-1.5 text-xs tabular-nums text-text-muted">
                     <Clock className="h-3.5 w-3.5" />
                     {formatDate(restock.created_at)}
                 </div>
@@ -154,13 +154,21 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                 {/* Main */}
                 <div className="space-y-6 lg:col-span-2">
                     {/* Items Table */}
-                    <section className="overflow-hidden rounded-xl bg-surface shadow-card">
-                        <div className="flex items-center justify-between border-b border-border px-5 py-3 text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                            <span>Item Permintaan</span>
-                            <span className="font-mono text-text-muted">
+                    <section className="overflow-hidden rounded-2xl border border-border bg-surface">
+                        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                            <div className="flex items-center gap-2">
+                                <Package className="h-4 w-4 text-primary" aria-hidden="true" />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Item Permintaan
+                                </h3>
+                            </div>
+                            <span className="text-xs tabular-nums text-text-muted">
                                 {restock.items?.length ?? 0} item
                             </span>
                         </div>
+                        <p className="px-5 pb-3 text-xs text-text-muted">
+                            Daftar item yang diminta outlet
+                        </p>
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border/50 bg-surface-muted/50 text-left text-xs text-text-muted">
@@ -236,10 +244,14 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     </section>
 
                     {/* Info Grid */}
-                    <section className="rounded-xl bg-surface p-5 shadow-card">
-                        <div className="mb-3 text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                            Informasi
+                    <section className="rounded-2xl border border-border bg-surface p-5">
+                        <div className="mb-3 flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-primary" aria-hidden="true" />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Informasi
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">Detail restock</p>
                         <div className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-sm">
                             <div className="text-text-muted">Outlet</div>
                             <div className="font-medium text-text">
@@ -250,7 +262,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                 {restock.requester?.name ?? '—'}
                             </div>
                             <div className="text-text-muted">Tanggal</div>
-                            <div className="font-medium text-text">
+                            <div className="font-medium tabular-nums text-text">
                                 {formatDate(restock.created_at)}
                             </div>
                             {restock.notes && (
@@ -298,7 +310,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     <div className="text-text-muted">
                                         Dikirim pada
                                     </div>
-                                    <div className="font-medium text-text">
+                                    <div className="font-medium tabular-nums text-text">
                                         {formatDate(restock.sent_at)}
                                     </div>
                                 </>
@@ -318,7 +330,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     <div className="text-text-muted">
                                         Diterima pada
                                     </div>
-                                    <div className="font-medium text-text">
+                                    <div className="font-medium tabular-nums text-text">
                                         {formatDate(restock.received_at)}
                                     </div>
                                 </>
@@ -351,10 +363,16 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                 <div className="space-y-6">
                     {/* Actions */}
                     {restock.status === 'requested' && (
-                        <section className="rounded-xl bg-surface p-5 shadow-card">
-                            <div className="mb-3 text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                                Aksi
+                        <section className="rounded-2xl border border-border bg-surface p-5">
+                            <div className="mb-3 flex items-center gap-2">
+                                <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden="true" />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Aksi
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Tinjau permintaan restock
+                            </p>
                             <div className="flex gap-2">
                                 <Button
                                     className="min-h-11 flex-1"
@@ -376,10 +394,16 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     )}
 
                     {restock.status === 'preparing' && (
-                        <section className="rounded-xl bg-surface p-5 shadow-card">
-                            <div className="mb-3 text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                                Aksi
+                        <section className="rounded-2xl border border-border bg-surface p-5">
+                            <div className="mb-3 flex items-center gap-2">
+                                <Truck className="h-4 w-4 text-primary" aria-hidden="true" />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Aksi
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Lanjutkan pengiriman stok
+                            </p>
                             <Button
                                 className="min-h-11 w-full"
                                 onClick={() =>
@@ -408,10 +432,16 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
 
                     {/* Timeline */}
                     {timeline.length > 0 && (
-                        <section className="rounded-xl bg-surface p-5 shadow-card">
-                            <div className="mb-3 text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                                Riwayat
+                        <section className="rounded-2xl border border-border bg-surface p-5">
+                            <div className="mb-3 flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Riwayat
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Perjalanan restock
+                            </p>
                             <RestockTimeline events={timeline} />
                         </section>
                     )}
@@ -432,7 +462,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                             (item: any, index: number) => (
                                 <div
                                     key={item.id}
-                                    className="flex items-center gap-3 rounded-lg bg-surface-muted/50 px-3 py-2.5"
+                                    className="flex items-center gap-3 rounded-xl bg-surface-muted/50 px-3 py-2.5"
                                 >
                                     <div className="min-w-0 flex-1">
                                         <div className="truncate text-sm font-medium">
@@ -471,7 +501,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                                     items as any,
                                                 );
                                             }}
-                                            className="h-11 w-20 rounded-lg border border-border bg-surface px-2 text-right text-sm font-semibold outline-none focus:border-primary"
+                                            className="h-11 w-20 rounded-xl border border-border bg-surface px-2 text-right text-sm font-semibold tabular-nums outline-none focus:border-primary"
                                         />
                                         <span className="text-xs text-text-muted">
                                             {unitLabel(item)}
