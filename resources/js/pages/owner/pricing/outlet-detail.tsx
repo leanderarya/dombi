@@ -272,7 +272,7 @@ export default function OutletDetail({
                     <div className="text-[11px] font-medium text-text-muted">
                         Total Produk
                     </div>
-                    <div className="mt-1 text-xl font-bold text-text tabular-nums font-heading">
+                    <div className="font-heading mt-1 text-xl font-bold text-text tabular-nums">
                         {prices.length}
                     </div>
                 </div>
@@ -280,7 +280,7 @@ export default function OutletDetail({
                     <div className="text-[11px] font-medium text-text-muted">
                         Harga Custom
                     </div>
-                    <div className="mt-1 text-xl font-bold text-text tabular-nums font-heading">
+                    <div className="font-heading mt-1 text-xl font-bold text-text tabular-nums">
                         {customCount}
                     </div>
                     <div className="text-[11px] text-text-muted">
@@ -293,7 +293,7 @@ export default function OutletDetail({
                     <div className="text-[11px] font-medium text-text-muted">
                         Rata-rata Margin
                     </div>
-                    <div className="mt-1 text-xl font-bold text-text tabular-nums font-heading">
+                    <div className="font-heading mt-1 text-xl font-bold text-text tabular-nums">
                         {formatCurrency(Math.round(avgMargin))}
                     </div>
                 </div>
@@ -302,7 +302,7 @@ export default function OutletDetail({
                         Margin Negatif
                     </div>
                     <div
-                        className={`mt-1 text-xl font-bold tabular-nums font-heading ${negativeCount > 0 ? 'text-red-600' : 'text-text'}`}
+                        className={`font-heading mt-1 text-xl font-bold tabular-nums ${negativeCount > 0 ? 'text-red-600' : 'text-text'}`}
                     >
                         {negativeCount}
                     </div>
@@ -340,17 +340,17 @@ export default function OutletDetail({
                                 value: String(o.id),
                                 label: o.name,
                             }))}
-                            className="w-44 min-h-11"
+                            className="min-h-11 w-44"
                         />
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                size="sm"
-                                className="min-h-11"
-                                icon={Plus}
-                                onClick={() => setBulkOpen(!bulkOpen)}
-                                aria-label="Atur semua harga"
-                            >
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            className="min-h-11"
+                            icon={Plus}
+                            onClick={() => setBulkOpen(!bulkOpen)}
+                            aria-label="Atur semua harga"
+                        >
                             {bulkOpen ? 'Tutup' : 'Atur Massal'}
                         </Button>
                         {otherOutlets && otherOutlets.length > 0 && (
@@ -470,7 +470,7 @@ export default function OutletDetail({
                             {paginated.map((row) => (
                                 <TableRow
                                     key={row.product_id}
-                                    className="transition-colors hover:bg-mint-wash"
+                                    className="transition-colors hover:bg-emerald-50/40"
                                 >
                                     <TableCell className="px-6 py-4">
                                         <div className="flex items-center gap-2">
