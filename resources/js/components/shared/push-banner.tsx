@@ -48,7 +48,7 @@ export default function PushBanner({ variant, onDismiss }: Props) {
 
     if (variant === 'home') {
         return (
-            <div className="mt-4 flex items-center gap-3 rounded-xl bg-white/80 px-3 py-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] backdrop-blur">
+            <div className="flex items-center gap-3 rounded-xl bg-white/80 px-3 py-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] backdrop-blur">
                 <Bell className="h-4 w-4 shrink-0 text-primary" />
                 {pushState === 'denied' ? (
                     <p className="min-w-0 flex-1 text-xs text-text-muted">
