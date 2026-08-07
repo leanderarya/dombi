@@ -9,6 +9,9 @@ const chipStyles: Record<string, string> = {
     delivering: 'bg-sky-50 text-sky-800 border-sky-200',
     completed: 'bg-emerald-50 text-emerald-800 border-emerald-200',
     cancelled: 'bg-slate-100 text-slate-600 border-slate-200',
+    cancelled_by_customer: 'bg-red-50 text-red-800 border-red-200',
+    cancelled_by_outlet: 'bg-red-50 text-red-800 border-red-200',
+    failed_delivery: 'bg-red-50 text-red-800 border-red-200',
     failed: 'bg-red-50 text-red-800 border-red-200',
 };
 
