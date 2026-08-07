@@ -482,7 +482,9 @@ export default function Dashboard({
             title="Dasbor"
             subtitle="Ringkasan operasional hari ini"
         >
-            <PushBanner variant="home" />
+            <div className="mb-4">
+                <PushBanner variant="home" />
+            </div>
 
             {/* Header */}
             <div className="mb-6">
