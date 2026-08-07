@@ -67,7 +67,9 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
         <CourierLayout>
             <Head title="Tugas Saya" />
 
-            <PushBanner variant="home" />
+            <div className="mb-4">
+                <PushBanner variant="home" />
+            </div>
 
             {/* Availability Card — large touch targets for outdoor */}
             <SectionCard>

@@ -65,7 +65,9 @@ export default function Home({ customerName, activeOrders }: any) {
                 auth={auth}
             />
 
-            <PushBanner variant="home" />
+            <div className="mt-4">
+                <PushBanner variant="home" />
+            </div>
 
             {showPhoneBanner && (
                 <PhoneBanner

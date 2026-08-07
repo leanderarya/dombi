@@ -176,7 +176,8 @@ export default function OutletInventory({
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari produk..."
-                                className="w-full rounded-xl border border-border py-2.5 pr-4 pl-9 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
+                                style={{ paddingLeft: 40 }}
+                                className="w-full rounded-xl border border-border py-2.5 pr-4 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
                             />
                         </div>
 
