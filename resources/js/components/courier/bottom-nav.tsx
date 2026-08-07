@@ -48,18 +48,21 @@ export default function CourierBottomNav({ visible = true }: Props) {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold ${
+                            className={`relative flex items-center justify-center text-[10px] font-semibold ${
                                 active ? 'text-primary' : 'text-text-subtle'
                             }`}
                         >
-                            {active && (
-                                <span className="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary" />
-                            )}
-                            <Icon
-                                className="h-5 w-5"
-                                strokeWidth={active ? 2 : 1.5}
-                            />
-                            <span>{item.label}</span>
+                            <span
+                                className={`flex flex-col items-center justify-center gap-0.5 ${
+                                    active ? 'rounded-full bg-primary/10 px-3 py-1' : ''
+                                }`}
+                            >
+                                <Icon
+                                    className="h-5 w-5"
+                                    strokeWidth={active ? 2 : 1.5}
+                                />
+                                <span>{item.label}</span>
+                            </span>
                         </Link>
                     );
                 })}
