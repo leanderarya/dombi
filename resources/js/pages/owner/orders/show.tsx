@@ -465,6 +465,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => {
                                 setCancelOpen(false);
                                 cancelForm.reset();
@@ -474,6 +475,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                         </Button>
                         <Button
                             variant="destructive"
+                            className="min-h-11"
                             disabled={!cancelForm.data.reason}
                             loading={cancelForm.processing}
                             onClick={() => {
