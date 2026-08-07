@@ -96,7 +96,7 @@ export default function CourierLayout({
                 <header className="bg-primary text-white">
                     <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3 lg:max-w-4xl">
                         <div className="flex min-w-0 items-center gap-3">
-                            {auth?.user?.avatar ? (
+                            {auth?.user?.avatar?.trim() ? (
                                 <img
                                     src={auth.user.avatar}
                                     alt="Foto profil"
