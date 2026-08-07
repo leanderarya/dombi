@@ -144,7 +144,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     <User className="h-3.5 w-3.5" />
                     {restock.requester?.name ?? '—'}
                 </div>
-                <div className="flex items-center gap-1.5 text-xs tabular-nums text-text-muted">
+                <div className="flex items-center gap-1.5 text-xs text-text-muted tabular-nums">
                     <Clock className="h-3.5 w-3.5" />
                     {formatDate(restock.created_at)}
                 </div>
@@ -157,12 +157,15 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     <section className="overflow-hidden rounded-2xl border border-border bg-surface">
                         <div className="flex items-center justify-between border-b border-border px-5 py-4">
                             <div className="flex items-center gap-2">
-                                <Package className="h-4 w-4 text-primary" aria-hidden="true" />
+                                <Package
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
                                 <h3 className="font-heading text-base font-bold text-text">
                                     Item Permintaan
                                 </h3>
                             </div>
-                            <span className="text-xs tabular-nums text-text-muted">
+                            <span className="text-xs text-text-muted tabular-nums">
                                 {restock.items?.length ?? 0} item
                             </span>
                         </div>
@@ -195,7 +198,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     return (
                                         <tr
                                             key={item.id}
-                                            className="border-t border-border/20 transition-colors hover:bg-mint-wash/50"
+                                            className="border-t border-border/20 transition-colors hover:bg-emerald-50/40"
                                         >
                                             <td className="px-5 py-3 font-medium text-text">
                                                 {item.product?.name ??
@@ -203,10 +206,16 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                                     '-'}
                                             </td>
                                             <td className="px-5 py-3 text-right tabular-nums">
-                                                {stockedQuantity(item, item.requested_quantity)}
+                                                {stockedQuantity(
+                                                    item,
+                                                    item.requested_quantity,
+                                                )}
                                             </td>
                                             <td className="px-5 py-3 text-right font-semibold tabular-nums">
-                                                {stockedQuantity(item, item.approved_quantity)}
+                                                {stockedQuantity(
+                                                    item,
+                                                    item.approved_quantity,
+                                                )}
                                             </td>
                                             <td className="px-5 py-3 text-center">
                                                 {inv ? (
@@ -246,12 +255,17 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     {/* Info Grid */}
                     <section className="rounded-2xl border border-border bg-surface p-5">
                         <div className="mb-3 flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-primary" aria-hidden="true" />
+                            <Building2
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
                             <h3 className="font-heading text-base font-bold text-text">
                                 Informasi
                             </h3>
                         </div>
-                        <p className="mb-3 text-xs text-text-muted">Detail restock</p>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Detail restock
+                        </p>
                         <div className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-sm">
                             <div className="text-text-muted">Outlet</div>
                             <div className="font-medium text-text">
@@ -262,7 +276,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                 {restock.requester?.name ?? '—'}
                             </div>
                             <div className="text-text-muted">Tanggal</div>
-                            <div className="font-medium tabular-nums text-text">
+                            <div className="font-medium text-text tabular-nums">
                                 {formatDate(restock.created_at)}
                             </div>
                             {restock.notes && (
@@ -310,7 +324,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     <div className="text-text-muted">
                                         Dikirim pada
                                     </div>
-                                    <div className="font-medium tabular-nums text-text">
+                                    <div className="font-medium text-text tabular-nums">
                                         {formatDate(restock.sent_at)}
                                     </div>
                                 </>
@@ -330,7 +344,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     <div className="text-text-muted">
                                         Diterima pada
                                     </div>
-                                    <div className="font-medium tabular-nums text-text">
+                                    <div className="font-medium text-text tabular-nums">
                                         {formatDate(restock.received_at)}
                                     </div>
                                 </>
@@ -365,7 +379,10 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     {restock.status === 'requested' && (
                         <section className="rounded-2xl border border-border bg-surface p-5">
                             <div className="mb-3 flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-primary" aria-hidden="true" />
+                                <CheckCircle2
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
                                 <h3 className="font-heading text-base font-bold text-text">
                                     Aksi
                                 </h3>
@@ -396,7 +413,10 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     {restock.status === 'preparing' && (
                         <section className="rounded-2xl border border-border bg-surface p-5">
                             <div className="mb-3 flex items-center gap-2">
-                                <Truck className="h-4 w-4 text-primary" aria-hidden="true" />
+                                <Truck
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
                                 <h3 className="font-heading text-base font-bold text-text">
                                     Aksi
                                 </h3>
@@ -434,7 +454,10 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     {timeline.length > 0 && (
                         <section className="rounded-2xl border border-border bg-surface p-5">
                             <div className="mb-3 flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
+                                <Clock
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
                                 <h3 className="font-heading text-base font-bold text-text">
                                     Riwayat
                                 </h3>
@@ -472,7 +495,10 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                         </div>
                                         <div className="text-xs text-text-muted">
                                             Diminta{' '}
-                                            {stockedQuantity(item, item.requested_quantity)}
+                                            {stockedQuantity(
+                                                item,
+                                                item.requested_quantity,
+                                            )}
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-1">
