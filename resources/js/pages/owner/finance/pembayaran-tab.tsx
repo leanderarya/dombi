@@ -145,7 +145,7 @@ export default function PembayaranTab({
 
     return (
         <>
-            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-text-muted">

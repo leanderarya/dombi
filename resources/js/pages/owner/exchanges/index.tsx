@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Package } from 'lucide-react';
+import { Package, PackageX, Repeat2, Wallet } from 'lucide-react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
@@ -75,11 +75,16 @@ export default function OwnerExchangesIndex({
         >
             {/* KPI Strip */}
             <div aria-label="Ringkasan Tukar Produk">
-                <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+                <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                        <span className="text-xs font-medium text-text-muted">
-                            Tertunda
-                        </span>
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Tertunda
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                                <Repeat2 className="h-5 w-5" />
+                            </span>
+                        </div>
                         <div
                             className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_exchanges > 0 ? 'text-amber-600' : 'text-text'}`}
                         >
@@ -92,18 +97,28 @@ export default function OwnerExchangesIndex({
                         )}
                     </div>
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                        <span className="text-xs font-medium text-text-muted">
-                            Nilai Tukar
-                        </span>
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Nilai Tukar
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                                <Wallet className="h-5 w-5" />
+                            </span>
+                        </div>
                         <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                             {formatCurrency(dashboard.exchange_value)}
                         </div>
                     </div>
                     {dashboard.total_exchanges !== undefined && (
                         <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                            <span className="text-xs font-medium text-text-muted">
-                                Total
-                            </span>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">
+                                    Total
+                                </span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                                    <PackageX className="h-5 w-5" />
+                                </span>
+                            </div>
                             <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                                 {dashboard.total_exchanges}
                             </div>
