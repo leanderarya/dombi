@@ -165,6 +165,8 @@ export default function ProductCategoriesIndex({ categories }: Props) {
             subtitle="Kelola kategori produk dan variannya"
             headerRight={
                 <Button
+                    size="lg"
+                    className="min-h-11"
                     onClick={() => {
                         resetForm();
                         setShowForm(true);
@@ -193,10 +195,10 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                         <button
                             key={f.key}
                             onClick={() => setStatusFilter(f.key)}
-                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
+                            className={`flex min-h-11 shrink-0 items-center rounded-full px-3.5 text-xs font-semibold ring-1 transition-all ${
                                 statusFilter === f.key
                                     ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-emerald-50/40'
                             }`}
                         >
                             {f.label}
@@ -207,7 +209,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
 
             {filtered.length === 0 ? (
                 <EmptyState
-                    icon={<Package className="h-8 w-8 text-text-subtle" />}
+                    icon={<Package className="h-8 w-8 text-text-muted" />}
                     title={
                         search || statusFilter !== 'all'
                             ? 'Tidak ditemukan'
@@ -221,7 +223,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                 />
             ) : (
                 <div
-                    className="overflow-hidden rounded-xl bg-surface shadow-xs ring-1 ring-foreground/10"
+                    className="overflow-hidden rounded-2xl border border-border bg-surface"
                     aria-label="Daftar Kategori Produk"
                 >
                     <OwnerTable noWrapper>
@@ -246,7 +248,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                 {filtered.map((cat) => (
                                     <TableRow
                                         key={cat.id}
-                                        className="group transition-colors hover:bg-mint-wash"
+                                        className="group transition-colors hover:bg-emerald-50/40"
                                     >
                                         <TableCell className="px-6 py-4">
                                             <div className="flex items-center gap-3">
@@ -261,7 +263,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-6 py-4">
-                                            <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] text-text-muted">
+                                            <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] text-text-muted tabular-nums">
                                                 {cat.products_count ??
                                                     cat.products?.length ??
                                                     0}{' '}
@@ -287,7 +289,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                                             `/owner/product-categories/${cat.id}`,
                                                         )
                                                     }
-                                                    className="flex items-center gap-0.5 text-xs font-semibold text-primary hover:underline"
+                                                    className="flex min-h-11 items-center gap-0.5 text-xs font-semibold text-primary hover:underline"
                                                 >
                                                     Kelola{' '}
                                                     <ChevronRight className="h-3 w-3" />
@@ -296,7 +298,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                                     onClick={() =>
                                                         handleEdit(cat)
                                                     }
-                                                    className="p-1.5 text-text-muted transition-colors hover:text-primary"
+                                                    className="flex min-h-11 min-w-11 items-center justify-center text-text-muted transition-colors hover:text-primary"
                                                     aria-label={`Edit ${cat.name}`}
                                                 >
                                                     <Pencil className="h-3.5 w-3.5" />
@@ -305,7 +307,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                                     onClick={() =>
                                                         setDeleteId(cat.id)
                                                     }
-                                                    className="p-1.5 text-text-muted transition-colors hover:text-red-600"
+                                                    className="flex min-h-11 min-w-11 items-center justify-center text-text-muted transition-colors hover:text-red-600"
                                                     aria-label={`Hapus ${cat.name}`}
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
