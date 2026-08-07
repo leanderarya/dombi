@@ -3,6 +3,7 @@ import {
     ArrowLeftRight,
     CheckCircle2,
     Clock,
+    History,
     Package,
     Truck,
     XCircle,
@@ -54,14 +55,14 @@ export default function OwnerExchangesShow({ exchange }: any) {
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                         </div>
@@ -122,12 +123,21 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 <div className="space-y-4 lg:col-span-2">
                     {/* Exchange Items */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Item Pengganti"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Item Pengganti
+                        <div className="mb-3 flex items-center gap-2">
+                            <Package
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Item Pengganti
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Produk pengganti yang dikirim beserta nilainya.
+                        </p>
                         {exchange.items?.map((item: any) => (
                             <OwnerDetailRow
                                 key={item.id}
@@ -147,12 +157,21 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     {/* Linked Return */}
                     {exchange.return_request && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Return Terkait"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Return Terkait
+                            <div className="mb-3 flex items-center gap-2">
+                                <Package
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Return Terkait
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Return sumber dari tukar produk ini.
+                            </p>
                             <OwnerDetailRow
                                 label="Return"
                                 value={`#${exchange.return_request.id}`}
@@ -186,12 +205,21 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     {/* Notes */}
                     {exchange.notes && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Catatan Exchange"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Catatan
+                            <div className="mb-3 flex items-center gap-2">
+                                <Package
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Catatan
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Info tambahan untuk exchange ini.
+                            </p>
                             <p className="text-sm text-text-muted">
                                 {exchange.notes}
                             </p>
@@ -203,12 +231,21 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 <div className="space-y-4">
                     {/* Status + Actions */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Status Exchange"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Status
+                        <div className="mb-3 flex items-center gap-2">
+                            <StatusIcon
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Status
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Status saat ini dan aksi untuk exchange ini.
+                        </p>
                         <div className="mb-3 flex items-center gap-2">
                             <StatusIcon
                                 className="h-4 w-4 text-text-muted"
@@ -293,7 +330,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         )}
 
                         {exchange.status === 'completed' && (
-                            <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center">
                                 <CheckCircle2
                                     className="mx-auto h-5 w-5 text-emerald-500"
                                     aria-hidden="true"
@@ -305,7 +342,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         )}
 
                         {exchange.status === 'rejected' && (
-                            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-center">
                                 <XCircle
                                     className="mx-auto h-5 w-5 text-red-500"
                                     aria-hidden="true"
@@ -320,12 +357,21 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     {/* Status History / Timeline */}
                     {exchange.status_histories?.length > 0 && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Riwayat Status Exchange"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Riwayat Status
+                            <div className="mb-3 flex items-center gap-2">
+                                <History
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Riwayat Status
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Perjalanan status exchange ini.
+                            </p>
                             <div className="space-y-3">
                                 {exchange.status_histories.map(
                                     (h: any, i: number) => {
@@ -407,11 +453,13 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowApprove(false)}
                         >
                             Batal
                         </Button>
                         <Button
+                            className="min-h-11"
                             onClick={handleApprove}
                             disabled={approveForm.processing}
                         >
@@ -448,12 +496,14 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowReject(false)}
                         >
                             Batal
                         </Button>
                         <Button
                             variant="destructive"
+                            className="min-h-11"
                             onClick={handleReject}
                             disabled={rejectForm.processing}
                         >
@@ -476,11 +526,13 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowComplete(false)}
                         >
                             Batal
                         </Button>
                         <Button
+                            className="min-h-11"
                             onClick={() =>
                                 router.post(
                                     `/owner/exchanges/${exchange.id}/complete`,
