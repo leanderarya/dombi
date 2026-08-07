@@ -781,11 +781,16 @@ export default function ProductForm({
                         <Button
                             type="button"
                             variant="outline"
+                            size="lg"
                             onClick={() => onClose?.()}
                         >
                             Batal
                         </Button>
-                        <Button type="submit" disabled={singleForm.processing}>
+                        <Button
+                            type="submit"
+                            size="lg"
+                            disabled={singleForm.processing}
+                        >
                             {singleForm.processing
                                 ? 'Menyimpan...'
                                 : isEditing
@@ -876,7 +881,7 @@ export default function ProductForm({
                                             : '-'}
                                     </span>
                                 </div>
-                                <div className="mt-1 text-xs font-medium text-text">
+                                <div className="mt-1 text-xs font-medium text-text tabular-nums">
                                     {parsedFlavors.length} varian akan dibuat
                                 </div>
                             </div>
@@ -922,8 +927,8 @@ export default function ProductForm({
                                 type="button"
                                 variant="outline"
                                 onClick={addFlavorChip}
-                                size="sm"
-                                className="h-9"
+                                size="lg"
+                                className="h-11"
                             >
                                 <Plus className="h-4 w-4" /> Tambah
                             </Button>
@@ -964,7 +969,7 @@ export default function ProductForm({
                                 placeholder="Coklat, Vanilla&#10;Stroberi&#10;Matcha, Taro"
                                 rows={2}
                             />
-                            <p className="text-[10px] text-text-subtle">
+                            <p className="text-[10px] text-text-subtle tabular-nums">
                                 Total unik: {parsedFlavors.length} rasa
                             </p>
                         </div>
@@ -1005,17 +1010,17 @@ export default function ProductForm({
                                                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-[10px] font-bold text-text-muted">
                                                         {idx + 1}
                                                     </span>
-                                                    <span className="truncate text-sm font-medium text-text">
-                                                        {name}
-                                                    </span>
+                                                        <span className="truncate text-sm font-medium text-text tabular-nums">
+                                                            {name}
+                                                        </span>
                                                 </div>
-                                                <div className="mt-0.5 ml-7 flex items-center gap-2 text-[10px] text-text-subtle">
-                                                    <span>Rasa: {flavor}</span>
-                                                    <span>•</span>
-                                                    <span className="font-mono">
-                                                        {skuPreview}
-                                                    </span>
-                                                </div>
+                                                    <div className="mt-0.5 ml-7 flex items-center gap-2 text-[10px] text-text-subtle">
+                                                        <span>Rasa: {flavor}</span>
+                                                        <span>•</span>
+                                                        <span className="font-mono tabular-nums">
+                                                            {skuPreview}
+                                                        </span>
+                                                    </div>
                                             </div>
                                             <div className="text-right tabular-nums">
                                                 <div className="text-xs font-semibold text-text">
@@ -1054,12 +1059,14 @@ export default function ProductForm({
                         <Button
                             type="button"
                             variant="outline"
+                            size="lg"
                             onClick={() => onClose?.()}
                         >
                             Batal
                         </Button>
                         <Button
                             type="submit"
+                            size="lg"
                             disabled={
                                 bulkForm.processing ||
                                 parsedFlavors.length === 0
@@ -1123,7 +1130,8 @@ export default function ProductForm({
                             <Button
                                 type="button"
                                 variant="outline"
-                                size="sm"
+                                size="lg"
+                                className="bg-accent-orange hover:bg-accent-orange-hover text-white border-transparent"
                                 onClick={addBulkSizeRow}
                             >
                                 <Plus className="h-3.5 w-3.5" /> Tambah Ukuran
@@ -1343,10 +1351,10 @@ export default function ProductForm({
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-[10px] font-bold text-text-muted">
+                                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-[10px] font-bold text-text-muted tabular-nums">
                                                             {idx + 1}
                                                         </span>
-                                                        <span className="truncate text-sm font-medium text-text">
+                                                        <span className="truncate text-sm font-medium text-text tabular-nums">
                                                             {`${bulkSizeFlavor.trim()} ${row.size}`}
                                                         </span>
                                                     </div>
@@ -1355,7 +1363,7 @@ export default function ProductForm({
                                                             Ukuran: {row.size}
                                                         </span>
                                                         <span>•</span>
-                                                        <span className="font-mono">
+                                                        <span className="font-mono tabular-nums">
                                                             {row.sku.trim() ||
                                                                 autoSku(
                                                                     row.size,
@@ -1396,12 +1404,14 @@ export default function ProductForm({
                         <Button
                             type="button"
                             variant="outline"
+                            size="lg"
                             onClick={() => onClose?.()}
                         >
                             Batal
                         </Button>
                         <Button
                             type="submit"
+                            size="lg"
                             disabled={bulkSizeRows.length === 0}
                         >
                             Buat {bulkSizeRows.length} Produk
