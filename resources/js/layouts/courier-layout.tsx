@@ -96,9 +96,17 @@ export default function CourierLayout({
                 <header className="bg-primary text-white">
                     <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3 lg:max-w-4xl">
                         <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg font-bold text-white">
-                                {name.charAt(0).toUpperCase()}
-                            </div>
+                            {auth?.user?.avatar ? (
+                                <img
+                                    src={auth.user.avatar}
+                                    alt="Foto profil"
+                                    className="h-11 w-11 shrink-0 rounded-full border-2 border-white/50 object-cover"
+                                />
+                            ) : (
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg font-bold text-white">
+                                    {name.charAt(0).toUpperCase()}
+                                </div>
+                            )}
                             <div className="min-w-0">
                                 <div className="truncate text-base font-bold">
                                     Halo, {firstName}
