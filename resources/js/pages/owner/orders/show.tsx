@@ -1,5 +1,13 @@
 import { useForm } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, Clock, MapPin, ShoppingBag, Truck, User } from 'lucide-react';
+import {
+    ChevronDown,
+    ChevronUp,
+    Clock,
+    MapPin,
+    ShoppingBag,
+    Truck,
+    User,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import OrderStatusChip from '@/components/owner/order-status-chip';
@@ -143,7 +151,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 absorb), CC selalu customer.
                             </div>
                         </div>
-                        <div className="mt-2 rounded-xl border border-border bg-surface-muted/50 p-3 text-right font-heading text-base font-bold tabular-nums">
+                        <div className="font-heading mt-2 rounded-xl border border-border bg-surface-muted/50 p-3 text-right text-base font-bold tabular-nums">
                             {formatCurrency(order.total)}
                         </div>
                     </div>
@@ -284,7 +292,10 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                         </>
                                     ) : (
                                         <>
-                                            Lihat Semua (<span className="tabular-nums">{olderHistories.length}</span>
+                                            Lihat Semua (
+                                            <span className="tabular-nums">
+                                                {olderHistories.length}
+                                            </span>
                                             ){' '}
                                             <ChevronDown
                                                 aria-hidden="true"
@@ -410,14 +421,14 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                             'retry_delivery',
                             'returned_to_outlet',
                         ].includes(order.delivery?.status ?? '')) && (
-                            <Button
-                                variant="destructive"
-                                className="min-h-11 w-full"
-                                onClick={() => setResolveOpen(true)}
-                            >
-                                Selesaikan Masalah
-                            </Button>
-                        )}
+                        <Button
+                            variant="destructive"
+                            className="min-h-11 w-full"
+                            onClick={() => setResolveOpen(true)}
+                        >
+                            Selesaikan Masalah
+                        </Button>
+                    )}
 
                     {/* Cancel */}
                     {[
