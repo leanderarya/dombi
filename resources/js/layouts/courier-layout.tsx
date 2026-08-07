@@ -116,11 +116,6 @@ export default function CourierLayout({
                 </div>
                 {rightSlot}
             </div>
-            {headerBelow && (
-                <div className="mx-auto max-w-2xl px-4 pb-3 lg:max-w-4xl">
-                    {headerBelow}
-                </div>
-            )}
         </header>
     );
 
@@ -133,6 +128,11 @@ export default function CourierLayout({
             headerSlot={headerSlot}
         >
             <div className="pt-4">{children}</div>
+            {headerBelow && (
+                <div className="mx-auto max-w-2xl px-4 lg:max-w-4xl">
+                    {headerBelow}
+                </div>
+            )}
             <NotificationSheet
                 open={notificationOpen}
                 onClose={() => setNotificationOpen(false)}
