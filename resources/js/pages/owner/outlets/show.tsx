@@ -520,7 +520,7 @@ export default function OutletShow({
                         <div className="space-y-1.5">
                             <Link
                                 href={`/owner/inventories?outlet_id=${outlet.id}`}
-                                className="flex h-8 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
                             >
                                 <RefreshCw
                                     className="h-3.5 w-3.5 text-text-subtle"
@@ -530,7 +530,7 @@ export default function OutletShow({
                             </Link>
                             <Link
                                 href={`/owner/orders?outlet_id=${outlet.id}`}
-                                className="flex h-8 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
                             >
                                 <ShoppingBag
                                     className="h-3.5 w-3.5 text-text-subtle"
@@ -541,7 +541,7 @@ export default function OutletShow({
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-2">
                             <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                <div className="text-sm font-bold text-blue-600 tabular-nums">
+                                <div className="text-sm font-bold text-primary tabular-nums">
                                     {outlet.active_orders_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-subtle">
@@ -598,6 +598,7 @@ export default function OutletShow({
                             </div>
                             <OwnerDetailRow
                                 label="Radius"
+                                bold
                                 value={`${outlet.delivery_radius_km} km`}
                             />
                             <p className="mt-1 text-xs text-text-muted">
