@@ -74,7 +74,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <div
-                            className={`h-3.5 w-3.5 rounded-full ${courier.is_online ? 'bg-emerald-500' : 'bg-text-subtle'}`}
+                            className={`h-3.5 w-3.5 rounded-full ${courier.is_online ? 'bg-primary' : 'bg-text-subtle'}`}
                         />
                         <div className="text-base font-bold text-text">
                             {courier.is_online ? 'Online' : 'Offline'}
