@@ -23,14 +23,14 @@ export default function OwnerDeliveryShow({ delivery }: any) {
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-xl border border-border p-4">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-xl border border-border p-4">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                         </div>
@@ -60,7 +60,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {/* Status */}
                     <div
                         aria-label="Status pengiriman"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-xl border border-border p-4"
                     >
                         <div className="mb-3 text-xs font-semibold text-text-subtle">
                             Status
@@ -76,7 +76,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                             }
                         />
                         {isActive && (
-                            <div className="mt-3 flex h-9 items-center justify-center gap-2 rounded-lg bg-indigo-50 text-sm font-semibold text-indigo-700">
+                            <div className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary/10 text-sm font-semibold text-primary">
                                 <MapPin
                                     aria-hidden="true"
                                     className="h-3.5 w-3.5"
@@ -89,7 +89,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {/* Delivery Info */}
                     <div
                         aria-label="Info pengiriman"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-xl border border-border p-4"
                     >
                         <div className="mb-3 text-xs font-semibold text-text-subtle">
                             Info Pengiriman
@@ -146,7 +146,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {/* Items */}
                     <div
                         aria-label="Item pesanan"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-xl border border-border p-4"
                     >
                         <div className="mb-3 text-xs font-semibold text-text-subtle">
                             Item Pesanan
@@ -168,7 +168,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {delivery.courier && (
                         <div
                             aria-label="Informasi kurir"
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-xl border border-border p-4"
                         >
                             <div className="mb-3 text-xs font-semibold text-text-subtle">
                                 Kurir
@@ -183,7 +183,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {/* Timeline */}
                     <div
                         aria-label="Linimasa pengiriman"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-xl border border-border p-4"
                     >
                         <div className="mb-3 text-xs font-semibold text-text-subtle">
                             Linimasa
@@ -239,7 +239,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                             </p>
                             <Button
                                 variant="destructive"
-                                className="mt-3 w-full"
+                                className="mt-3 min-h-11 w-full"
                                 onClick={() => setResolveOpen(true)}
                             >
                                 Selesaikan Insiden
