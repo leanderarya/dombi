@@ -63,6 +63,7 @@ export default function OutletRestocksIndex({
                                 size="lg"
                                 onClick={() => setShowCreate(true)}
                                 icon={Plus}
+                                className="min-h-11"
                             >
                                 Buat Restock
                             </Button>
