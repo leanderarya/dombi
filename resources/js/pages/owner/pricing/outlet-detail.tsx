@@ -340,7 +340,7 @@ export default function OutletDetail({
                                 value: String(o.id),
                                 label: o.name,
                             }))}
-                            className="w-44"
+                            className="w-44 min-h-11"
                         />
                             <Button
                                 type="button"
