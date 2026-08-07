@@ -1,5 +1,13 @@
 import { useForm, router } from '@inertiajs/react';
-import { CheckCircle2, Clock, FileText, History, Package, RefreshCw, XCircle } from 'lucide-react';
+import {
+    CheckCircle2,
+    Clock,
+    FileText,
+    History,
+    Package,
+    RefreshCw,
+    XCircle,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
@@ -278,13 +286,13 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                             className="mb-2 flex items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3"
                                         >
                                             <div className="min-w-0 flex-1">
-                                                <div className="truncate text-sm font-medium tabular-nums text-text">
+                                                <div className="truncate text-sm font-medium text-text tabular-nums">
                                                     {displayProductName(
                                                         item.variant,
                                                     )}{' '}
                                                     x{item.quantity}
                                                 </div>
-                                                <div className="text-xs tabular-nums text-text-muted">
+                                                <div className="text-xs text-text-muted tabular-nums">
                                                     {formatCurrency(
                                                         item.subtotal,
                                                     )}
@@ -335,7 +343,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                                     },
                                                                 );
                                                             }}
-                                                            className="rounded-md border border-border bg-white px-2 py-1 text-[11px] font-medium text-text-muted hover:bg-surface-muted"
+                                                            className="min-h-11 rounded-md border border-border bg-surface px-2 py-1 text-[11px] font-medium text-text-muted hover:bg-surface-muted"
                                                         >
                                                             Ubah
                                                         </button>
@@ -426,7 +434,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
 
                                     return (
                                         <div className="mt-3 space-y-3">
-                                            <div className="text-xs tabular-nums text-text-muted">
+                                            <div className="text-xs text-text-muted tabular-nums">
                                                 {allDecided
                                                     ? 'Semua item sudah ditentukan'
                                                     : `${decided}/${total} item ditentukan`}
@@ -557,7 +565,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                             {histStatus.label}
                                                         </StatusBadge>
                                                     </div>
-                                                    <div className="mt-0.5 text-xs tabular-nums text-text-muted">
+                                                    <div className="mt-0.5 text-xs text-text-muted tabular-nums">
                                                         {h.actor?.name} &middot;{' '}
                                                         {formatDate(
                                                             h.created_at,
