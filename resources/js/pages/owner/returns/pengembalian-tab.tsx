@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { PackageX, RefreshCcw, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerTable from '@/components/owner/owner-table';
@@ -73,11 +74,16 @@ export default function PengembalianTab({
         <>
             {/* KPI Strip */}
             <div aria-label="Ringkasan Pengembalian">
-                <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+                <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                        <span className="text-xs font-medium text-text-muted">
-                            Return Tertunda
-                        </span>
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Return Tertunda
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                                <RefreshCcw className="h-5 w-5" />
+                            </span>
+                        </div>
                         <div
                             className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_returns > 0 ? 'text-amber-600' : 'text-text'}`}
                         >
@@ -90,18 +96,28 @@ export default function PengembalianTab({
                         )}
                     </div>
                     <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                        <span className="text-xs font-medium text-text-muted">
-                            Nilai Return
-                        </span>
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Nilai Return
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                                <Wallet className="h-5 w-5" />
+                            </span>
+                        </div>
                         <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                             {formatCurrency(dashboard.returned_value)}
                         </div>
                     </div>
                     {dashboard.total_returns !== undefined && (
                         <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
-                            <span className="text-xs font-medium text-text-muted">
-                                Total Return
-                            </span>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">
+                                    Total Return
+                                </span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                                    <PackageX className="h-5 w-5" />
+                                </span>
+                            </div>
                             <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                                 {dashboard.total_returns}
                             </div>
