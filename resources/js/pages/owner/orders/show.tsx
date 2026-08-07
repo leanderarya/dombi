@@ -153,8 +153,8 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 : 'Customer'}
                         </div>
                         <OwnerDetailRow
-                            label="Nama"
-                            value={order.customer_name}
+                            label="ID Pesanan"
+                            value={order.order_code}
                         />
                         <OwnerDetailRow
                             label="Telepon"
@@ -199,7 +199,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-3 inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary-light px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                                className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-lg border border-primary/20 bg-primary-light px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
                             >
                                 <MapPin
                                     aria-hidden="true"
@@ -248,7 +248,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                     onClick={() =>
                                         setShowFullTimeline(!showFullTimeline)
                                     }
-                                    className="mt-2 flex items-center gap-1 text-xs font-medium text-primary"
+                                    className="mt-2 flex min-h-11 items-center gap-1 px-2 text-xs font-medium text-primary"
                                 >
                                     {showFullTimeline ? (
                                         <>
@@ -342,7 +342,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 }))}
                             />
                             <Button
-                                className="mt-3 w-full"
+                                className="mt-3 min-h-11 w-full"
                                 loading={form.processing}
                             >
                                 <Truck aria-hidden="true" className="h-4 w-4" />
@@ -374,14 +374,14 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                             'retry_delivery',
                             'returned_to_outlet',
                         ].includes(order.delivery?.status ?? '')) && (
-                        <Button
-                            variant="destructive"
-                            className="w-full"
-                            onClick={() => setResolveOpen(true)}
-                        >
-                            Selesaikan Masalah
-                        </Button>
-                    )}
+                            <Button
+                                variant="destructive"
+                                className="min-h-11 w-full"
+                                onClick={() => setResolveOpen(true)}
+                            >
+                                Selesaikan Masalah
+                            </Button>
+                        )}
 
                     {/* Cancel */}
                     {[
@@ -392,7 +392,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     ].includes(order.status) && (
                         <Button
                             variant="destructive"
-                            className="w-full"
+                            className="min-h-11 w-full"
                             onClick={() => setCancelOpen(true)}
                         >
                             Batalkan Pesanan
