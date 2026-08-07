@@ -148,7 +148,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
     const { collapsed } = useSidebar();
 
     return (
-        <div className="bg-mint-canvas min-h-screen text-text">
+        <div className="min-h-screen bg-mint-canvas text-text">
             <a
                 href="#main-content"
                 className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-white focus:outline-none"
@@ -205,19 +205,19 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                         className={`${collapsed ? 'px-3 py-5' : 'px-4 pt-6 pb-5'}`}
                     >
                         {collapsed ? (
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-bold font-heading text-lg">
+                            <div className="font-heading flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/20 text-lg font-bold text-emerald-300">
                                 D
                             </div>
                         ) : (
                             <div className="flex items-center gap-3 border-b border-emerald-800/60 pb-4">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-bold font-heading text-lg">
+                                <div className="font-heading flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/20 text-lg font-bold text-emerald-300">
                                     D
                                 </div>
                                 <div>
-                                    <div className="text-sm font-bold font-heading tracking-wide">
+                                    <div className="font-heading text-sm font-bold tracking-wide">
                                         DOMBI
                                     </div>
-                                    <div className="text-[11px] text-emerald-200/70 font-medium">
+                                    <div className="text-[11px] font-medium text-emerald-200/70">
                                         Susu Kambing Direct
                                     </div>
                                 </div>
@@ -234,7 +234,9 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                     />
 
                     {/* Footer */}
-                    <div className={`${collapsed ? 'px-2 py-3' : 'px-3 py-4'} space-y-3 pt-4 border-t border-emerald-800/60`}>
+                    <div
+                        className={`${collapsed ? 'px-2 py-3' : 'px-3 py-4'} space-y-3 border-t border-emerald-800/60 pt-4`}
+                    >
                         {collapsed ? (
                             <div className="flex flex-col items-center gap-1">
                                 <div className="flex justify-center overflow-hidden">
@@ -246,7 +248,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                                 </div>
                                 <button
                                     onClick={() => router.post('/logout')}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-200/70 transition-colors hover:text-white hover:bg-emerald-800/40"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-200/70 transition-colors hover:bg-emerald-800/40 hover:text-white"
                                     title="Logout"
                                 >
                                     <LogoutIcon />
@@ -255,8 +257,8 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                         ) : (
                             <>
                                 {/* Cold Chain Capacity */}
-                                <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-700/30">
-                                    <div className="flex items-center justify-between text-xs mb-1">
+                                <div className="rounded-xl border border-emerald-700/30 bg-emerald-900/50 p-3">
+                                    <div className="mb-1 flex items-center justify-between text-xs">
                                         <span className="text-emerald-200/80">
                                             Kapasitas Cold Chain
                                         </span>
@@ -264,9 +266,9 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                                             78%
                                         </span>
                                     </div>
-                                    <div className="w-full bg-emerald-950 rounded-full h-1.5">
+                                    <div className="h-1.5 w-full rounded-full bg-emerald-950">
                                         <div
-                                            className="bg-emerald-400 h-1.5 rounded-full"
+                                            className="h-1.5 rounded-full bg-emerald-400"
                                             style={{ width: '78%' }}
                                         />
                                     </div>
@@ -282,7 +284,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
 
                                 <a
                                     href="/owner/profile"
-                                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-emerald-200/70 hover:text-white text-xs font-medium transition-all hover:bg-emerald-800/40"
+                                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium text-emerald-200/70 transition-all hover:bg-emerald-800/40 hover:text-white"
                                 >
                                     <Settings className="h-4 w-4" />
                                     <span>Pengaturan Sistem</span>
@@ -290,7 +292,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
 
                                 <button
                                     onClick={() => router.post('/logout')}
-                                    className="hover:bg-emerald-800/40 w-full rounded-xl px-3 py-2 text-sm font-medium text-emerald-200/70 transition-colors hover:text-white"
+                                    className="w-full rounded-xl px-3 py-2 text-sm font-medium text-emerald-200/70 transition-colors hover:bg-emerald-800/40 hover:text-white"
                                 >
                                     Logout
                                 </button>

@@ -83,7 +83,7 @@ export default function CreateCourier() {
                                             'flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold transition-all',
                                             isSelected
                                                 ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
-                                                : 'hover:bg-mint-wash border-border bg-surface text-text-muted',
+                                                : 'border-border bg-surface text-text-muted hover:bg-mint-wash',
                                         )}
                                     >
                                         <Icon

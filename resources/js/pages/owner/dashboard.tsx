@@ -162,8 +162,8 @@ function RevenueTrendChart({
 
     const buildSmoothPath = useCallback((pts: { x: number; y: number }[]) => {
         if (pts.length < 2) {
-return '';
-}
+            return '';
+        }
 
         let d = `M${pts[0].x},${pts[0].y}`;
 
@@ -195,16 +195,16 @@ return '';
     const handleMouseMove = useCallback(
         (e: React.MouseEvent<SVGSVGElement>) => {
             if (rafRef.current) {
-return;
-}
+                return;
+            }
 
             rafRef.current = requestAnimationFrame(() => {
                 rafRef.current = null;
                 const svg = svgRef.current;
 
                 if (!svg) {
-return;
-}
+                    return;
+                }
 
                 const pt = svg.createSVGPoint();
                 pt.x = e.clientX;
@@ -212,13 +212,14 @@ return;
                 const ctm = svg.getScreenCTM();
 
                 if (!ctm) {
-return;
-}
+                    return;
+                }
 
                 const svgP = pt.matrixTransform(ctm.inverse());
                 const closest = points.reduce(
                     (best, p, i) =>
-                        Math.abs(p.x - svgP.x) < Math.abs(points[best].x - svgP.x)
+                        Math.abs(p.x - svgP.x) <
+                        Math.abs(points[best].x - svgP.x)
                             ? i
                             : best,
                     0,
@@ -241,8 +242,8 @@ return;
     useEffect(
         () => () => {
             if (rafRef.current) {
-cancelAnimationFrame(rafRef.current);
-}
+                cancelAnimationFrame(rafRef.current);
+            }
         },
         [],
     );
@@ -256,7 +257,7 @@ cancelAnimationFrame(rafRef.current);
                     </h3>
                     <p className="text-xs text-text-muted">
                         Total {period} hari:{' '}
-                        <span className="font-semibold tabular-nums text-text">
+                        <span className="font-semibold text-text tabular-nums">
                             {formatCurrency(total)}
                         </span>
                     </p>
@@ -368,17 +369,18 @@ cancelAnimationFrame(rafRef.current);
                                     Math.max(hovered.x - 50, 4),
                                     w - 104,
                                 )}
-                                y={hovered.y < 30 ? hovered.y + 14 : hovered.y - 30}
+                                y={
+                                    hovered.y < 30
+                                        ? hovered.y + 14
+                                        : hovered.y - 30
+                                }
                                 width={100}
                                 height={26}
                                 rx="6"
                                 fill="#1E1E1E"
                             />
                             <text
-                                x={Math.min(
-                                    Math.max(hovered.x, 54),
-                                    w - 54,
-                                )}
+                                x={Math.min(Math.max(hovered.x, 54), w - 54)}
                                 y={
                                     (hovered.y < 30
                                         ? hovered.y + 14
@@ -504,7 +506,7 @@ export default function Dashboard({
                             <TrendingUp className="h-3 w-3" /> +8.2%
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {formatCurrency(revenueTrend.total)}
                     </div>
                     <p className="text-[11px] text-text-muted">
@@ -522,7 +524,7 @@ export default function Dashboard({
                             <Check className="h-3 w-3" /> Optimal
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         32{' '}
                         <span className="text-sm font-normal text-text-muted">
                             Order
@@ -543,7 +545,7 @@ export default function Dashboard({
                             {totalPendingActions} Pending
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {totalPendingActions}{' '}
                         <span className="text-sm font-normal text-text-muted">
                             Tugas
@@ -637,7 +639,10 @@ export default function Dashboard({
                                     : 0;
 
                             return (
-                                <div key={risk.variant.id} className="space-y-1">
+                                <div
+                                    key={risk.variant.id}
+                                    className="space-y-1"
+                                >
                                     <div className="flex justify-between text-xs font-medium">
                                         <span className="text-text">
                                             {displayProductName(risk.variant)}
@@ -654,10 +659,12 @@ export default function Dashboard({
                                     <div className="h-2 w-full overflow-hidden rounded-full bg-surface-muted">
                                         <div
                                             className={`bar-grow h-2 rounded-full ${sev.bar}`}
-                                            style={{
-                                                width: `${stockPercent}%`,
-                                                '--delay': '200ms',
-                                            } as React.CSSProperties}
+                                            style={
+                                                {
+                                                    width: `${stockPercent}%`,
+                                                    '--delay': '200ms',
+                                                } as React.CSSProperties
+                                            }
                                         />
                                     </div>
                                 </div>
@@ -679,7 +686,8 @@ export default function Dashboard({
                             <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
                             <span>
                                 <strong>Stok Kritis:</strong>{' '}
-                                {kpis.criticalStock} produk butuh restock segera.
+                                {kpis.criticalStock} produk butuh restock
+                                segera.
                             </span>
                         </div>
                     )}
@@ -747,7 +755,7 @@ export default function Dashboard({
                                                     {alert.daysOverdue} hari
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3.5 text-right font-semibold tabular-nums text-amber-700">
+                                            <td className="px-4 py-3.5 text-right font-semibold text-amber-700 tabular-nums">
                                                 {formatCurrency(
                                                     alert.outstandingAmount,
                                                 )}

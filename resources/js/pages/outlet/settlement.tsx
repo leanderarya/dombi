@@ -467,12 +467,17 @@ export default function OutletSettlement({
                                     </div>
                                     <BreakdownRow
                                         label="Online Outlet Share"
-                                        value={summary.breakdown.online_outlet_share}
+                                        value={
+                                            summary.breakdown
+                                                .online_outlet_share
+                                        }
                                     />
                                     <BreakdownRow
                                         label="Biaya Kurir"
                                         value={summary.breakdown.delivery_cost}
-                                        negative={summary.breakdown.delivery_cost > 0}
+                                        negative={
+                                            summary.breakdown.delivery_cost > 0
+                                        }
                                     />
                                     <BreakdownRow
                                         label="Refund"
@@ -482,7 +487,9 @@ export default function OutletSettlement({
                                     <BreakdownRow
                                         label="Setoran Offline"
                                         value={summary.breakdown.offline_sales}
-                                        negative={summary.breakdown.offline_sales > 0}
+                                        negative={
+                                            summary.breakdown.offline_sales > 0
+                                        }
                                     />
                                     <div className="border-t border-border pt-2">
                                         <div className="flex items-center justify-between">

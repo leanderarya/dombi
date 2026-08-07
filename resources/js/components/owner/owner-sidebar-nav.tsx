@@ -169,7 +169,7 @@ export default function OwnerSidebarNav({
                 {activeFlyoutGroup && (
                     <div
                         ref={flyoutRef}
-                        className="fixed z-[60] w-48 rounded-xl bg-[#005D42] py-1.5 shadow-lg border border-emerald-700/30"
+                        className="fixed z-[60] w-48 rounded-xl border border-emerald-700/30 bg-[#005D42] py-1.5 shadow-lg"
                         style={{
                             left: '4rem',
                             top: `${flyoutPosition}px`,
