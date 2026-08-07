@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, MapPin, Truck } from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, MapPin, ShoppingBag, Truck, User } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import OrderStatusChip from '@/components/owner/order-status-chip';
@@ -42,12 +42,12 @@ export default function OwnerOrderShow({ order, couriers }: any) {
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
                         </div>
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-6 w-full" />
                             <Skeleton className="h-6 w-full" />
@@ -55,7 +55,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-6 w-3/4" />
@@ -83,10 +83,16 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     {/* Items */}
                     <div
                         aria-label="Item pesanan"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Item
+                        <div className="mb-3 flex items-center gap-2">
+                            <ShoppingBag
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Item
+                            </h3>
                         </div>
                         {order.items.map((item: any) => (
                             <OwnerDetailRow
@@ -137,7 +143,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 absorb), CC selalu customer.
                             </div>
                         </div>
-                        <div className="mt-2 rounded-lg bg-surface-muted p-3 text-right text-lg font-bold tabular-nums">
+                        <div className="mt-2 rounded-xl border border-border bg-surface-muted/50 p-3 text-right text-lg font-bold tabular-nums">
                             {formatCurrency(order.total)}
                         </div>
                     </div>
@@ -145,12 +151,18 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     {/* Customer */}
                     <div
                         aria-label="Informasi pelanggan"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            {isDifferentRecipient(order)
-                                ? 'Pemesan'
-                                : 'Customer'}
+                        <div className="mb-3 flex items-center gap-2">
+                            <User
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                {isDifferentRecipient(order)
+                                    ? 'Pemesan'
+                                    : 'Customer'}
+                            </h3>
                         </div>
                         <OwnerDetailRow
                             label="ID Pesanan"
@@ -180,8 +192,14 @@ export default function OwnerOrderShow({ order, couriers }: any) {
 
                         {isDifferentRecipient(order) && (
                             <>
-                                <div className="mt-3 mb-3 text-xs font-semibold text-text-subtle">
-                                    Penerima
+                                <div className="mb-3 flex items-center gap-2">
+                                    <User
+                                        aria-hidden="true"
+                                        className="h-4 w-4 text-primary"
+                                    />
+                                    <h3 className="font-heading text-base font-bold text-text">
+                                        Penerima
+                                    </h3>
                                 </div>
                                 <OwnerDetailRow
                                     label="Nama"
@@ -199,7 +217,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-lg border border-primary/20 bg-primary-light px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                                className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/20 bg-primary-light px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
                             >
                                 <MapPin
                                     aria-hidden="true"
@@ -216,10 +234,16 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     {/* Timeline */}
                     <div
                         aria-label="Linimasa pesanan"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Linimasa
+                        <div className="mb-3 flex items-center gap-2">
+                            <Clock
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Linimasa
+                            </h3>
                         </div>
                         {lastHistory && (
                             <div className="flex items-center gap-2">
@@ -326,10 +350,16 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 );
                             }}
                             aria-label="Form assign kurir"
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Assign Kurir
+                            <div className="mb-3 flex items-center gap-2">
+                                <Truck
+                                    aria-hidden="true"
+                                    className="h-4 w-4 text-primary"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Assign Kurir
+                                </h3>
                             </div>
                             <Select
                                 value={String(form.data.courier_id)}
@@ -355,10 +385,16 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     {order.delivery && (
                         <div
                             aria-label="Informasi kurir"
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Kurir
+                            <div className="mb-3 flex items-center gap-2">
+                                <Truck
+                                    aria-hidden="true"
+                                    className="h-4 w-4 text-primary"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Kurir
+                                </h3>
                             </div>
                             <OwnerDetailRow
                                 label="Nama"
