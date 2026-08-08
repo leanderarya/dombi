@@ -122,6 +122,7 @@ export default function OrderShow({
                 orderedAt={order.ordered_at}
                 trackingUrl={trackingUrl}
                 isConfirmation={isConfirmation}
+                status={order.status}
             />
 
             <main className="mx-auto max-w-lg space-y-5 px-4 pt-4 pb-24">
