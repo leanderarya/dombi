@@ -13,13 +13,24 @@ import { whatsAppDefaultMessage, waLinkWithText } from '@/lib/whatsapp-message';
 
 interface Props {
     order: NormalizedOrder;
-    onCancelCTA?: () => void;
+    reorderHref: string;
 }
 
-export default function TerminalStatusCards({ order, onCancelCTA }: Props) {
-    if (!isTerminal(order.status)) {
+export default function TerminalStatusCards({ order, reorderHref }: Props) {
+    if (!isTerminal(order.status) || order.status === 'completed') {
         return null;
     }
+
+    const reorderLink = (
+        <Link
+            href={reorderHref}
+            className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
+        >
+            <RotateCcw className="h-4 w-4" />
+            Pesan Lagi
+        </Link>
+    );
+
 
     if (order.status === 'completed') {
         return (
@@ -70,6 +81,7 @@ export default function TerminalStatusCards({ order, onCancelCTA }: Props) {
                 {note && (
                     <div className="mt-1 text-xs text-red-700">{note}</div>
                 )}
+                {reorderLink}
             </div>
         );
     }
@@ -117,6 +129,7 @@ export default function TerminalStatusCards({ order, onCancelCTA }: Props) {
                         Hubungi Outlet
                     </a>
                 )}
+                {reorderLink}
             </div>
         );
     }
@@ -133,24 +146,7 @@ export default function TerminalStatusCards({ order, onCancelCTA }: Props) {
                 <div className="mt-2 text-sm text-text-muted">
                     Outlet tidak memberikan konfirmasi dalam batas waktu.
                 </div>
-                {onCancelCTA ? (
-                    <button
-                        type="button"
-                        onClick={onCancelCTA}
-                        className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
-                    >
-                        <RotateCcw className="h-4 w-4" />
-                        Pesan Ulang
-                    </button>
-                ) : (
-                    <Link
-                        href="/customer/home"
-                        className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
-                    >
-                        <RotateCcw className="h-4 w-4" />
-                        Pesan Ulang
-                    </Link>
-                )}
+                {reorderLink}
             </div>
         );
     }

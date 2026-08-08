@@ -281,9 +281,7 @@ export default function TrackPage({
 
                 <TerminalStatusCards
                     order={norm}
-                    onCancelCTA={() => {
-                        window.location.href = '/customer/home';
-                    }}
+                    reorderHref="/customer/home"
                 />
 
                 {/* Share Tracking */}
