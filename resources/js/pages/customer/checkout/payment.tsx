@@ -5,6 +5,7 @@ import NoticeBanner from '@/components/customer/checkout/notice-banner';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
 import Dialog from '@/components/ui/dialog';
+import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { formatCurrency, formatDistance } from '@/lib/format';
@@ -14,6 +15,7 @@ import { useCart } from '@/lib/use-cart';
 export default function CheckoutPayment({ draft, summary }: any) {
     const cart = useCart();
     const { markUsedForOrder } = useCustomerLocation();
+    useLockSwipeBack();
     const fulfillmentType = draft?.fulfillment?.fulfillment_type ?? 'pickup';
     const isDelivery = fulfillmentType === 'delivery_dombi';
     const [itemsExpanded, setItemsExpanded] = useState(false);
