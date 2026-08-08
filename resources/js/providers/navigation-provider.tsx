@@ -24,8 +24,11 @@ export function NavigationProvider({
     rootUrl?: string;
 }) {
     const back = () => {
+        // If there's no in-app history (deep link / refresh), fall back to home.
         if (window.history.length > 1) {
             window.history.back();
+        } else {
+            router.visit(rootUrl);
         }
     };
 

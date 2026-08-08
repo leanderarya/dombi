@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ChevronDown, Store } from 'lucide-react';
+import { ChevronDown, ChevronLeft, Store } from 'lucide-react';
 import type { OutletOption } from '@/contexts/outlet-context';
 
 interface Props {
@@ -38,26 +38,14 @@ export default function CollapsedOutletBar({
                 willChange: 'transform, opacity',
             }}
         >
-            <div className="flex items-center gap-2.5 px-3 py-2.5">
+            <div className="flex items-center gap-2.5 px-3 py-1">
                 {/* Back button */}
                 <Link
                     href={backHref}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text active:bg-surface-muted"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-text active:bg-surface-muted"
+                    aria-label="Kembali"
                 >
-                    <svg
-                        width="20"
-                        height="20"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M15 19l-7-7 7-7"
-                        />
-                    </svg>
+                    <ChevronLeft className="h-5 w-5" />
                 </Link>
 
                 {/* Outlet info — tap to open sheet */}

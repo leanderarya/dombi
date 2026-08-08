@@ -136,7 +136,7 @@ function HeroCarousel({
             <div className="pointer-events-none absolute bottom-0 -left-10 h-36 w-36 rounded-full bg-black/10 blur-xl" />
 
             {/* Top bar: brand store + bell */}
-            <div className="relative z-10 flex items-center justify-between px-4 pt-4 pb-3 text-white">
+            <div className="relative z-10 flex items-center justify-between px-4 pt-safe pb-3 text-white">
                 <span className="flex items-center gap-1.5 text-xs font-semibold tracking-wide">
                     <Store className="h-3 w-3 text-emerald-300" />
                     Dombi Store • {outletName ?? 'Seturan'}
