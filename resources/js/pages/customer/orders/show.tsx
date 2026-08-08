@@ -155,9 +155,7 @@ export default function OrderShow({
 
                 <TerminalStatusCards
                     order={norm}
-                    onCancelCTA={() => {
-                        window.location.href = `/customer/orders/${order.id}/restore-cart`;
-                    }}
+                    reorderHref={`/customer/orders/${order.id}/restore-cart`}
                 />
 
                 {isPickup && order.status === 'ready_for_pickup' && (
