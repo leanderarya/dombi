@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast as toastNotify } from 'sonner';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import ForeGreenHeader from '@/components/customer/fore-green-header';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
@@ -101,7 +102,7 @@ function resolveSelection(
 function useAddToCart() {
     const cart = useCart();
     const { totalItems } = cart;
-    const { selectedOutlet } = useOutlet();
+    const { selectedOutlet, syncOutletId } = useOutlet();
     const [adding, setAdding] = useState(false);
     const [added, setAdded] = useState(false);
     const [toast, setToast] = useState<{ name: string; qty: number } | null>(
@@ -133,7 +134,23 @@ function useAddToCart() {
                         quantity: qty,
                     }),
                 });
-                await res.json();
+                const data = (await res.json().catch(() => null)) as {
+                    switched_outlet?: boolean;
+                    outlet?: {
+                        to_outlet_id?: number;
+                        from_outlet_name?: string;
+                        to_outlet_name?: string;
+                    };
+                } | null;
+
+                if (data?.switched_outlet && data?.outlet?.to_outlet_id) {
+                    // Smart switch: sync outlet context + notify
+                    syncOutletId(data.outlet.to_outlet_id);
+                    toastNotify.warning(
+                        `Stok tidak tersedia di ${data.outlet.from_outlet_name}. Outlet belanja Anda otomatis dialihkan ke ${data.outlet.to_outlet_name}.`,
+                        { duration: 4000 },
+                    );
+                }
             } catch {
                 cart.removeItem(variant.id);
             }
@@ -145,7 +162,7 @@ function useAddToCart() {
             timers.current.push(setTimeout(() => setAdded(false), 1500));
             timers.current.push(setTimeout(() => setToast(null), 2500));
         },
-        [cart, adding, added, isOutletClosed],
+        [cart, adding, added, isOutletClosed, syncOutletId],
     );
 
     return { addToCart, adding, added, toast, totalItems };
