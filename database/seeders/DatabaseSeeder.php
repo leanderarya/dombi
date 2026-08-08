@@ -28,5 +28,8 @@ class DatabaseSeeder extends Seeder
 
         // 7. Customers (registered + guest) + addresses
         $this->call(CustomerSeeder::class);
+
+        // 8. Demo orders (registered + guest) — whole-system testing
+        $this->call(DemoOrderSeeder::class);
     }
 }

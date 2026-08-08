@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\User;
+use App\Support\PhoneNormalizer;
 use Illuminate\Database\Seeder;
 
 class CustomerSeeder extends Seeder
@@ -18,7 +19,7 @@ class CustomerSeeder extends Seeder
             ['user_id' => $user?->id],
             [
                 'name' => 'Customer Dombi',
-                'phone' => '089000000001',
+                'phone' => PhoneNormalizer::normalize('089000000001'),
                 'email' => 'customer@example.com',
                 'is_registered' => true,
                 'last_order_at' => now()->subDays(2),
@@ -68,7 +69,7 @@ class CustomerSeeder extends Seeder
 
         foreach ($guests as $g) {
             $guest = Customer::updateOrCreate(
-                ['phone' => $g['phone']],
+                ['phone' => PhoneNormalizer::normalize($g['phone'])],
                 [
                     'name' => $g['name'],
                     'email' => null,
