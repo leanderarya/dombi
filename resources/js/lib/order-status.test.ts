@@ -78,6 +78,16 @@ describe('getBadgeProps', () => {
         ).toEqual({ badgeFallbackStatus: 'pending_payment' });
     });
 
+    it('keeps raw status for pickup ready_for_pickup (not Menunggu Kurir)', () => {
+        expect(
+            getBadgeProps({
+                status: 'ready_for_pickup',
+                paymentStatus: 'paid',
+                isPickup: true,
+            }),
+        ).toEqual({ badgeFallbackStatus: 'ready_for_pickup' });
+    });
+
     it('falls back to raw status otherwise', () => {
         expect(
             getBadgeProps({
