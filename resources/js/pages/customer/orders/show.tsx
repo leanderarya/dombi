@@ -5,6 +5,7 @@ import OrderHeader from '@/components/customer/order/order-header';
 import OrderInfoCard from '@/components/customer/order/order-info-card';
 import RefundStatusCard from '@/components/customer/order/refund-status-card';
 import StatusGuidanceCard from '@/components/customer/order/status-guidance-card';
+import TerminalStatusCards from '@/components/customer/order/terminal-status-cards';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
@@ -16,6 +17,13 @@ import {
     useOrderReport,
 } from '@/hooks/use-order-actions';
 import { useOrderRecovery } from '@/lib/order-recovery';
+import {
+    getBadgeProps,
+    getPaymentIssue,
+    isCancellable,
+    isTerminal,
+    normalizeOrder,
+} from '@/lib/order-status';
 import { usePolling } from '@/lib/use-polling';
 import { whatsAppDefaultMessage, waLinkWithText } from '@/lib/whatsapp-message';
 
@@ -36,8 +44,6 @@ const REPORT_STATUS_LABELS: Record<string, { label: string; variant: string }> =
         rejected: { label: 'Tidak Dapat Diproses', variant: 'danger' },
     };
 
-const CANCELLABLE_STATUSES = ['pending_confirmation'];
-
 /* ─── Main ─────────────────────────────────────────────────── */
 
 export default function OrderShow({
@@ -49,21 +55,18 @@ export default function OrderShow({
     canReport = false,
     refund = null,
 }: any) {
-    usePolling(15000);
+    const isTerminalOrder = isTerminal(order.status);
+    const isCancellableOrder = isCancellable(order.status);
+    const paymentIssue = getPaymentIssue(order.payment_status);
+    const norm = normalizeOrder(order);
+
+    // Poll selagi pesanan aktif (belum terminal) supaya status segar.
+    // Berhenti saat isTerminalOrder — status akhir tak berubah.
+    // enabled=false memicu cleanup efek poll (clearInterval) di dalam hook.
+    usePolling(15000, [], !isTerminalOrder);
     const { addOrder } = useOrderRecovery();
 
-    const isTerminal = [
-        'completed',
-        'cancelled_by_customer',
-        'cancelled_by_outlet',
-        'rejected_by_outlet',
-        'failed_delivery',
-        'expired',
-    ].includes(order.status);
     const isPickup = order.fulfillment_type === 'pickup';
-    const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
-    const hasPaymentIssue =
-        order.payment_status === 'failed' || order.payment_status === 'expired';
     const trackingUrl =
         order.tracking_url ??
         (order.recovery_token
@@ -122,9 +125,9 @@ export default function OrderShow({
             />
 
             <main className="mx-auto max-w-lg space-y-5 px-4 pt-4 pb-24">
-                {hasPaymentIssue && (
+                {paymentIssue && (
                     <PaymentIssueBanner
-                        isFailed={order.payment_status === 'failed'}
+                        isFailed={paymentIssue.isFailed}
                         onPay={pay}
                         loading={payLoading}
                     />
@@ -141,17 +144,19 @@ export default function OrderShow({
                     outletName={order.outlet?.name}
                     customerName={order.customer_name}
                     orderCode={order.order_code}
-                    {...(order.status === 'ready_for_pickup' && !isPickup
-                        ? { badgeVariant: 'info', badgeLabel: 'Menunggu Kurir' }
-                        : hasPaymentIssue
-                          ? { badgeFallbackStatus: 'payment_failed' }
-                          : order.status === 'pending_confirmation' &&
-                              order.payment_status !== 'paid'
-                            ? { badgeFallbackStatus: 'pending_payment' }
-                            : { badgeFallbackStatus: order.status })}
+                    {...getBadgeProps({
+                        status: order.status,
+                        paymentStatus: order.payment_status,
+                        isPickup,
+                    })}
                 />
 
                 {refund && <RefundStatusCard refund={refund} />}
+
+                <TerminalStatusCards
+                    order={norm}
+                    reorderHref={`/customer/orders/${order.id}/restore-cart`}
+                />
 
                 {isPickup && order.status === 'ready_for_pickup' && (
                     <OrderQRCard orderCode={order.order_code} />
@@ -192,9 +197,9 @@ export default function OrderShow({
                     status={order.status}
                 />
 
-                {isCancellable ? (
+                {isCancellableOrder ? (
                     <CancelButton onClick={() => setCancelDialogOpen(true)} />
-                ) : !isTerminal ? (
+                ) : !isTerminalOrder ? (
                     <NonCancellableNotice
                         phone={order.outlet?.phone}
                         outletName={order.outlet?.name}
@@ -203,8 +208,6 @@ export default function OrderShow({
                         status={order.status}
                         fulfillmentType={order.fulfillment_type}
                     />
-                ) : order.status !== 'completed' ? (
-                    <ReorderLink orderId={order.id} />
                 ) : null}
 
                 {hasRecentReport && activeReport && (
@@ -355,18 +358,6 @@ function NonCancellableNotice({
                 </a>
             )}
         </div>
-    );
-}
-
-function ReorderLink({ orderId }: { orderId: number }) {
-    return (
-        <Link
-            href={`/customer/orders/${orderId}/restore-cart`}
-            className="flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary text-xs font-bold text-white active:opacity-80"
-        >
-            <RotateCcw className="h-3.5 w-3.5" />
-            Pesan Lagi
-        </Link>
     );
 }
 
