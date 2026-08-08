@@ -62,8 +62,13 @@ class OrderController extends Controller
             $historyQuery = $customer->orders()
                 ->visibleAsCustomerHistory()
                 ->with(['outlet', 'items'])
-                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount'])
-                ->orderByDesc('ordered_at');
+                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount']);
+
+            if ($request->string('filter')->isNotEmpty()) {
+                $historyQuery->whereIn('status', $this->historyFilterStatuses($request->string('filter')->toString()));
+            }
+
+            $historyQuery->orderByDesc('ordered_at');
 
             $historyOrders = $historyQuery
                 ->paginate(10)
@@ -513,5 +518,22 @@ class OrderController extends Controller
         ]);
 
         return $redacted;
+    }
+
+    /**
+     * Map a history filter chip (all/completed/cancelled/failed) to statuses.
+     */
+    private function historyFilterStatuses(string $filter): array
+    {
+        return match ($filter) {
+            'completed' => ['completed'],
+            'cancelled' => [
+                'cancelled_by_customer',
+                'cancelled_by_outlet',
+                'rejected_by_outlet',
+            ],
+            'failed' => ['failed_delivery', 'expired'],
+            default => [],
+        };
     }
 }
