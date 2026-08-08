@@ -20,8 +20,8 @@ class DemoOrderSeeder extends Seeder
         $customers = Customer::query()->get();
         abort_unless($customers->isNotEmpty(), 500, 'No customers found. Run CustomerSeeder first.');
 
-        $outlets = Outlet::query()->whereIn('id', [1, 2])->get();
-        abort_if($outlets->isEmpty(), 500, 'No outlets found. Run OutletSeeder first.');
+        $outlets = Outlet::query()->whereIn('name', ['Outlet Tembalang', 'Outlet Banyumanik'])->get();
+        abort_if($outlets->count() < 2, 500, 'No outlets found. Run OutletSeeder first.');
 
         $products = Product::with('category')->orderBy('id')->limit(8)->get();
         abort_if($products->isEmpty(), 500, 'No products. Run ProductCatalogSeeder first.');
