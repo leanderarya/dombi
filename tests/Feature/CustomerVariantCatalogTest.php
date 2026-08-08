@@ -107,10 +107,10 @@ class CustomerVariantCatalogTest extends TestCase
             'product_id' => $this->kopi250->id,
             'quantity' => 1,
         ])
-            ->assertOk()
+            ->assertUnprocessable()
             ->assertJson([
                 'success' => false,
-                'error' => 'Stok produk ini sudah habis',
+                'error' => 'Stok produk ini sedang tidak tersedia di seluruh outlet.',
             ]);
     }
 

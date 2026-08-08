@@ -8,6 +8,7 @@ import {
     ThumbsUp,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CollapsedOutletBar from '@/components/customer/collapsed-outlet-bar';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
@@ -395,6 +396,7 @@ function ProductCard({
 }) {
     const v = group.representativeVariant;
     const cart = useCart();
+    const { syncOutletId } = useOutlet();
 
     const handleAdd = async () => {
         if (onQuickAdd) {
@@ -422,6 +424,23 @@ function ProductCard({
 
             if (!res.ok) {
                 throw new Error('Failed to add item');
+            }
+
+            const data = (await res.json().catch(() => null)) as {
+                switched_outlet?: boolean;
+                outlet?: {
+                    to_outlet_id?: number;
+                    from_outlet_name?: string;
+                    to_outlet_name?: string;
+                };
+            } | null;
+
+            if (data?.switched_outlet && data?.outlet?.to_outlet_id) {
+                syncOutletId(data.outlet.to_outlet_id);
+                toast.warning(
+                    `Stok tidak tersedia di ${data.outlet.from_outlet_name}. Outlet belanja Anda otomatis dialihkan ke ${data.outlet.to_outlet_name}.`,
+                    { duration: 4000 },
+                );
             }
         } catch {
             cart.removeItem(v.id);
@@ -477,6 +496,7 @@ function VariantRow({
     const v = group.representativeVariant;
     const { isFavorite, toggle } = useFavorites();
     const cart = useCart();
+    const { syncOutletId } = useOutlet();
     const isFav = isFavorite(v.id);
 
     const productHref = `/customer/products/${group.familyId}`;
@@ -507,6 +527,23 @@ function VariantRow({
 
             if (!res.ok) {
                 throw new Error('Failed to add item');
+            }
+
+            const data = (await res.json().catch(() => null)) as {
+                switched_outlet?: boolean;
+                outlet?: {
+                    to_outlet_id?: number;
+                    from_outlet_name?: string;
+                    to_outlet_name?: string;
+                };
+            } | null;
+
+            if (data?.switched_outlet && data?.outlet?.to_outlet_id) {
+                syncOutletId(data.outlet.to_outlet_id);
+                toast.warning(
+                    `Stok tidak tersedia di ${data.outlet.from_outlet_name}. Outlet belanja Anda otomatis dialihkan ke ${data.outlet.to_outlet_name}.`,
+                    { duration: 4000 },
+                );
             }
         } catch {
             cart.removeItem(v.id);
