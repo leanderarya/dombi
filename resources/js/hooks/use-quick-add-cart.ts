@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast as toastNotify } from 'sonner';
+import { useOutlet } from '@/contexts/outlet-context';
 import { mutationFetch } from '@/lib/api';
 import { useCart } from '@/lib/use-cart';
 
@@ -11,10 +13,12 @@ interface Options {
 
 /**
  * Shared quick-add-to-cart: optimistic cart update + server POST + toast.
- * Per-item state (independent per instance).
+ * Handles smart outlet switch (server returns switched_outlet) by syncing the
+ * outlet context and showing a warning toast.
  */
 export function useQuickAddCart() {
     const cart = useCart();
+    const { syncOutletId } = useOutlet();
     const [adding, setAdding] = useState(false);
     const [toast, setToast] = useState(false);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,6 +53,17 @@ export function useQuickAddCart() {
                     throw new Error('Failed to add item');
                 }
 
+                const data = await res.json().catch(() => null);
+
+                if (data?.switched_outlet && data?.outlet?.to_outlet_id) {
+                    // Smart switch: sync outlet context + notify
+                    syncOutletId(data.outlet.to_outlet_id);
+                    toastNotify.warning(
+                        `Stok tidak tersedia di ${data.outlet.from_outlet_name}. Outlet belanja Anda otomatis dialihkan ke ${data.outlet.to_outlet_name}.`,
+                        { duration: 4000 },
+                    );
+                }
+
                 if (timerRef.current) {
                     clearTimeout(timerRef.current);
                 }
@@ -62,7 +77,7 @@ export function useQuickAddCart() {
                 setAdding(false);
             }
         },
-        [adding, cart],
+        [adding, cart, syncOutletId],
     );
 
     return { addToCart, adding, toast };

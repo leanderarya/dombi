@@ -14,6 +14,7 @@ use App\Models\Product;
 use App\Services\DeliveryPricingService;
 use App\Services\DokuService;
 use App\Services\OrderService;
+use App\Services\OutletAssignmentService;
 use App\Services\PaymentFeeCalculator;
 use App\Services\RecommendOutletService;
 use App\Support\PhoneNormalizer;
@@ -35,6 +36,10 @@ class CheckoutController extends Controller
     private const CHECKOUT_VISIBLE_FULFILLMENT_TYPES = ['pickup', 'delivery_dombi'];
 
     private const PAYMENT_METHODS = ['qris', 'transfer', 'ewallet', 'credit_card', 'gopay', 'shopeepay', 'dana'];
+
+    public function __construct(
+        private readonly OutletAssignmentService $outletAssignmentService,
+    ) {}
 
     public function redirect(Request $request): RedirectResponse
     {
@@ -761,11 +766,29 @@ class CheckoutController extends Controller
         $outletId = $request->session()->get('checkout.fulfillment.selected_outlet_id')
             ?: $request->session()->get('checkout.selected_outlet_id');
 
+        // No anchored outlet → resolve to nearest open outlet that serves the whole
+        // cart (deterministic, not arbitrary first()). If none, surface as empty.
+        if (! $outletId && ! empty($variantIds)) {
+            $outlet = $this->outletAssignmentService->findAvailableOutlet(
+                null,
+                null,
+                $cart,
+            );
+
+            if ($outlet) {
+                $outletId = $outlet->id;
+                $request->session()->put('checkout.fulfillment.selected_outlet_id', $outlet->id);
+            }
+        }
+
         $inventoriesQuery = OutletInventory::whereIn('product_id', $variantIds)
             ->where('is_active', true);
 
         if ($outletId) {
             $inventoriesQuery->where('outlet_id', (int) $outletId);
+        } else {
+            // No outlet can serve the cart — no stock anywhere.
+            $inventoriesQuery->whereRaw('1 = 0');
         }
 
         $inventories = $inventoriesQuery->get()->keyBy('product_id');

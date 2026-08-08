@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import Dialog from '@/components/ui/dialog';
 import { useOutlet } from '@/contexts/outlet-context';
 import { mutationFetch } from '@/lib/api';
@@ -54,7 +55,7 @@ function SizeSelectorSheetContent({
     const [maxQuantity, setMaxQuantity] = useState<number>(999);
 
     const cart = useCart();
-    const { selectedOutlet } = useOutlet();
+    const { selectedOutlet, syncOutletId } = useOutlet();
     const isOutletClosed = selectedOutlet?.is_open === false;
 
     const selectedVariant =
@@ -92,6 +93,14 @@ function SizeSelectorSheetContent({
 
             if (data.item?.max_quantity !== undefined) {
                 setMaxQuantity(data.item.max_quantity);
+            }
+
+            if (data?.switched_outlet && data?.outlet?.to_outlet_id) {
+                syncOutletId(data.outlet.to_outlet_id);
+                toast.warning(
+                    `Stok tidak tersedia di ${data.outlet.from_outlet_name}. Outlet belanja Anda otomatis dialihkan ke ${data.outlet.to_outlet_name}.`,
+                    { duration: 4000 },
+                );
             }
         } catch {
             cart.removeItem(selectedVariant.id);

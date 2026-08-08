@@ -74,6 +74,36 @@ class OutletAssignmentService
         });
     }
 
+    /**
+     * Find the nearest open outlet that has enough stock for a single product.
+     * Deterministic — never falls back to an arbitrary first() row.
+     */
+    public function findOpenOutletWithStock(
+        int $productId,
+        int $quantity,
+        ?float $lat = null,
+        ?float $lng = null,
+        ?int $excludeOutletId = null,
+    ): ?Outlet {
+        $outlets = Outlet::query()
+            ->active()
+            ->with(['inventories' => fn ($q) => $q->where('product_id', $productId)->where('is_active', true)])
+            ->get()
+            ->reject(fn (Outlet $outlet) => $outlet->id === $excludeOutletId)
+            ->filter(fn (Outlet $outlet) => $outlet->isOpen())
+            ->filter(fn (Outlet $outlet) => $outlet->inventories->contains(
+                fn ($inv) => ($inv->current_stock - $inv->reserved_stock) >= $quantity
+            ));
+
+        if ($lat !== null && $lng !== null) {
+            $outlets = $outlets->sortBy(fn (Outlet $outlet) => $outlet->latitude !== null && $outlet->longitude !== null
+                ? $this->calculateDistance($lat, $lng, (float) $outlet->latitude, (float) $outlet->longitude)
+                : PHP_FLOAT_MAX);
+        }
+
+        return $outlets->first();
+    }
+
     public function outletHasEnoughStock(Outlet $outlet, array $items, bool $lockForUpdate = false): bool
     {
         $inventories = null;

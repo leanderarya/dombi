@@ -3,13 +3,19 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
+use App\Services\OutletAssignmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    public function __construct(
+        private readonly OutletAssignmentService $outletAssignmentService,
+    ) {}
+
     public function addItem(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -20,16 +26,67 @@ class CartController extends Controller
         $product = Product::findOrFail($validated['product_id']);
         $quantity = $validated['quantity'];
 
-        $outletId = session('checkout.fulfillment.selected_outlet_id');
+        $outletId = session('checkout.fulfillment.selected_outlet_id')
+            ?: session('checkout.selected_outlet_id');
+
+        // Pre-anchor resolution: no anchored outlet yet → resolve to nearest open
+        // outlet that has stock for this product (deterministic, not first()).
+        if (! $outletId) {
+            $outlet = $this->outletAssignmentService->findOpenOutletWithStock($product->id, $quantity);
+
+            if (! $outlet) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Stok produk ini sedang tidak tersedia di seluruh outlet.',
+                ], 422);
+            }
+
+            $this->anchorOutlet($outlet->id);
+            $outletId = $outlet->id;
+        }
 
         $inventory = OutletInventory::where('product_id', $product->id)
+            ->where('outlet_id', $outletId)
             ->where('is_active', true)
-            ->when($outletId, fn ($q) => $q->where('outlet_id', $outletId))
             ->first();
 
         $availableStock = $inventory
             ? max(0, (int) $inventory->current_stock - (int) $inventory->reserved_stock)
             : 0;
+
+        // Smart switch: anchored outlet has NO stock → find nearest open outlet
+        // with enough stock and switch the session anchor. Partial stock keeps
+        // the existing auto-adjust (clamp) behavior below.
+        $switched = null;
+        if ($availableStock <= 0) {
+            $newOutlet = $this->outletAssignmentService->findOpenOutletWithStock(
+                $product->id,
+                $quantity,
+                excludeOutletId: (int) $outletId,
+            );
+
+            if (! $newOutlet) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Stok produk ini sedang tidak tersedia di seluruh outlet.',
+                ], 422);
+            }
+
+            $oldOutlet = Outlet::query()->find($outletId);
+            $switched = [
+                'from_outlet_id' => $outletId,
+                'from_outlet_name' => $oldOutlet?->name ?? 'Outlet sebelumnya',
+                'to_outlet_id' => $newOutlet->id,
+                'to_outlet_name' => $newOutlet->name,
+            ];
+
+            $this->anchorOutlet($newOutlet->id);
+            $outletId = $newOutlet->id;
+            $inventory = $this->inventoryAt($outletId, $product->id);
+            $availableStock = $inventory
+                ? max(0, (int) $inventory->current_stock - (int) $inventory->reserved_stock)
+                : 0;
+        }
 
         $maxQuantity = $availableStock;
 
@@ -80,6 +137,8 @@ class CartController extends Controller
                 'max_quantity' => $maxQuantity,
             ],
             'warning' => $warning,
+            'switched_outlet' => $switched !== null,
+            'outlet' => $switched,
         ]);
     }
 
@@ -176,5 +235,19 @@ class CartController extends Controller
         session(['checkout.fulfillment.selected_outlet_id' => $validated['outlet_id']]);
 
         return response()->json(['success' => true]);
+    }
+
+    private function anchorOutlet(int $outletId): void
+    {
+        session(['checkout.fulfillment.selected_outlet_id' => $outletId]);
+        session(['checkout.selected_outlet_id' => $outletId]);
+    }
+
+    private function inventoryAt(int $outletId, int $productId): ?OutletInventory
+    {
+        return OutletInventory::where('outlet_id', $outletId)
+            ->where('product_id', $productId)
+            ->where('is_active', true)
+            ->first();
     }
 }
