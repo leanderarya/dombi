@@ -150,3 +150,22 @@ export function getBadgeProps(input: {
 export function normalizeOrder(order: NormalizedOrder): NormalizedOrder {
     return order;
 }
+
+const STATUS_LABELS: Record<string, string> = {
+    pending_confirmation: 'Menunggu Konfirmasi',
+    confirmed: 'Pesanan Dikonfirmasi',
+    preparing: 'Pesanan Disiapkan',
+    ready_for_pickup: 'Siap Diambil',
+    picked_up: 'Pesanan Diambil',
+    delivering: 'Pesanan Dikirim',
+    completed: 'Pesanan Kamu Sudah Selesai!',
+    cancelled_by_customer: 'Pesanan Dibatalkan',
+    cancelled_by_outlet: 'Dibatalkan Outlet',
+    rejected_by_outlet: 'Pesanan Ditolak',
+    failed_delivery: 'Pengiriman Gagal',
+    expired: 'Pesanan Kadaluarsa',
+};
+
+export function getStatusLabel(status: string): string {
+    return STATUS_LABELS[status] ?? status.replaceAll('_', ' ');
+}

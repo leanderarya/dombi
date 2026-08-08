@@ -5,6 +5,7 @@ import {
     getPaymentIssue,
     getBadgeProps,
     normalizeOrder,
+    getStatusLabel,
 } from './order-status';
 
 describe('isTerminal', () => {
@@ -109,5 +110,18 @@ describe('normalizeOrder', () => {
             total: 100,
         };
         expect(normalizeOrder(order)).toEqual(order);
+    });
+});
+
+describe('getStatusLabel', () => {
+    it('returns human label for known statuses', () => {
+        expect(getStatusLabel('completed')).toBe('Pesanan Kamu Sudah Selesai!');
+        expect(getStatusLabel('pending_confirmation')).toBe(
+            'Menunggu Konfirmasi',
+        );
+    });
+
+    it('falls back to spaced raw status', () => {
+        expect(getStatusLabel('some_unknown')).toBe('some unknown');
     });
 });
