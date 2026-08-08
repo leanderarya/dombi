@@ -5,6 +5,7 @@ import CheckoutItemCard from '@/components/customer/checkout-item-card';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
+import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { mutationFetch } from '@/lib/api';
 import { checkoutFulfillmentType } from '@/lib/checkout-fulfillment';
@@ -31,6 +32,7 @@ export default function CheckoutIndex({
     const { auth } = usePage().props as any;
     const isLoggedIn = !!auth?.user;
     const cart = useCart();
+    useLockSwipeBack();
     const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
     const [items, setItems] = useState<DraftItem[]>(draft?.items ?? []);
     const [fulfillmentType, setFulfillmentType] = useState<string>(() => {

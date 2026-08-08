@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import type { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
+import { useCapacitorBackButton } from '@/hooks/use-capacitor-back-button';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
 import CartConfirmationProvider from '@/providers/cart-confirmation-provider';
 
@@ -91,6 +92,12 @@ const PushInit = () => {
     return null;
 };
 
+const BackButtonInit = () => {
+    useCapacitorBackButton();
+
+    return null;
+};
+
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     progress: {
@@ -131,6 +138,7 @@ createInertiaApp({
                     style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
                 />
                 <PushInit />
+                <BackButtonInit />
             </>,
         );
     },
