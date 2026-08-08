@@ -1,7 +1,9 @@
 import { Link } from '@inertiajs/react';
 import { Clock, MapPin, Phone } from 'lucide-react';
 import StatusBadge from '@/components/ui/status-badge';
+import type { BadgeVariant } from '@/components/ui/status-badge';
 import { useCountdown } from '@/hooks/use-countdown';
+import { getBadgeProps } from '@/lib/order-status';
 import { whatsAppDefaultMessage, waLinkWithText } from '@/lib/whatsapp-message';
 
 const MAPS_LINK = 'https://www.google.com/maps/dir/?api=1&destination=';
@@ -113,7 +115,6 @@ export default function StatusGuidanceCard({
     orderCode,
     badgeVariant,
     badgeLabel,
-    badgeFallbackStatus,
 }: Props) {
     const countdown = useCountdown(confirmationExpiresAt);
     const isPendingUnpaid =
@@ -130,6 +131,14 @@ export default function StatusGuidanceCard({
           : status;
     const guidance =
         STATUS_GUIDANCE[guidanceKey] ?? STATUS_GUIDANCE[paymentStatus ?? ''];
+    const badge: {
+        badgeVariant?: BadgeVariant;
+        badgeLabel?: string;
+        badgeFallbackStatus?: string;
+    } =
+        badgeVariant && badgeLabel
+            ? { badgeVariant: badgeVariant as BadgeVariant, badgeLabel }
+            : getBadgeProps({ status, paymentStatus, isPickup });
 
     if (!guidance) {
         return null;
@@ -145,12 +154,12 @@ export default function StatusGuidanceCard({
 
     return (
         <div className="rounded-xl border border-border bg-white p-3">
-            {badgeLabel && badgeVariant ? (
-                <StatusBadge variant={badgeVariant as any}>
-                    {badgeLabel}
+            {badge.badgeVariant && badge.badgeLabel ? (
+                <StatusBadge variant={badge.badgeVariant}>
+                    {badge.badgeLabel}
                 </StatusBadge>
-            ) : badgeFallbackStatus ? (
-                <StatusBadge status={badgeFallbackStatus} />
+            ) : badge.badgeFallbackStatus ? (
+                <StatusBadge status={badge.badgeFallbackStatus} />
             ) : null}
             <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
