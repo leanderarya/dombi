@@ -62,7 +62,7 @@ export default function OrderShow({
 
     // Poll selagi pesanan aktif (belum terminal) supaya status segar.
     // Berhenti saat isTerminalOrder — status akhir tak berubah.
-    // enabled=false the bottom menghentikan interval (cleanup di dalam hook).
+    // enabled=false memicu cleanup efek poll (clearInterval) di dalam hook.
     usePolling(15000, [], !isTerminalOrder);
     const { addOrder } = useOrderRecovery();
 
