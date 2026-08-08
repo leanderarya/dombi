@@ -183,6 +183,7 @@ export default function OrderShow({
                     items={order.items}
                     subtotal={order.subtotal}
                     deliveryFee={order.delivery_fee ?? 0}
+                    paymentFee={order.payment_fee ?? 0}
                     total={order.total}
                     isPickup={isPickup}
                     paymentMethod={order.payment_method}

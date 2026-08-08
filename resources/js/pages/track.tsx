@@ -40,6 +40,7 @@ type TrackOrder = {
     total: number;
     subtotal: number;
     delivery_fee: number;
+    payment_fee?: number;
     payment_method: string;
     confirmation_expires_at?: string | null;
     payment_status?: string | null;
@@ -237,6 +238,7 @@ export default function TrackPage({
                     items={order.items}
                     subtotal={order.subtotal}
                     deliveryFee={order.delivery_fee}
+                    paymentFee={order.payment_fee ?? 0}
                     total={order.total}
                     isPickup={isPickup}
                     paymentMethod={order.payment_method}
