@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     ChevronLeft,
     ChevronRight,
@@ -128,17 +128,22 @@ function ProductsInner() {
             ? `${selectedOutlet.distance_km.toFixed(1)} km`
             : '';
 
+    const handleBack = () => {
+        router.visit('/customer/home');
+    };
+
     return (
         <>
             <Head title="Dombi Center" />
             <div className="relative mx-auto min-h-screen w-full max-w-md bg-[#FAFAFA] pb-24 font-sans text-gray-900 shadow-xl">
                 {/* ── 1. HEADER ── */}
-                <header className="relative rounded-b-3xl bg-[#006241] px-4 pt-4 pb-10 text-white">
+                <header className="relative rounded-b-3xl bg-primary px-4 pt-safe pb-10 text-white">
                     <div className="mb-4 flex items-center justify-between">
                         <button
                             type="button"
-                            onClick={() => history.back()}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30"
+                            onClick={handleBack}
+                            className="flex h-11 w-11 items-center justify-center rounded-lg text-white active:bg-white/20"
+                            aria-label="Kembali"
                         >
                             <ChevronLeft className="h-5 w-5" />
                         </button>
@@ -155,7 +160,7 @@ function ProductsInner() {
                             onClick={() => !isLoggedIn || switchTo('pickup')}
                             className={`flex-1 rounded-full px-3 py-1.5 text-center text-xs font-bold transition-all ${
                                 fulfillmentType === 'pickup'
-                                    ? 'bg-white text-[#006241] shadow-xs'
+                                    ? 'bg-white text-emerald-700 shadow-xs'
                                     : 'text-white/70'
                             }`}
                         >
@@ -172,7 +177,7 @@ function ProductsInner() {
                             }}
                             className={`relative flex-1 rounded-full px-3 py-1.5 text-center text-xs font-medium transition-all ${
                                 fulfillmentType === 'delivery'
-                                    ? 'bg-white text-[#006241] shadow-xs'
+                                    ? 'bg-white text-emerald-700 shadow-xs'
                                     : 'text-white/70'
                             }`}
                         >
@@ -196,7 +201,7 @@ function ProductsInner() {
                         onClick={() => setOutletSheetOpen(true)}
                         className="flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-100 bg-white p-3.5 text-left shadow-md"
                     >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-[#006241]">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
                             <Store className="h-5 w-5" />
                         </div>
 
@@ -206,7 +211,7 @@ function ProductsInner() {
                                     {outletName}
                                 </h3>
                                 {selectedOutlet && (
-                                    <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-[#006241]">
+                                    <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
                                         Terdekat
                                     </span>
                                 )}
@@ -230,7 +235,7 @@ function ProductsInner() {
                         onClick={() => setActiveFilter('all')}
                         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all ${
                             activeFilter === 'all'
-                                ? 'border-emerald-600 bg-emerald-50 text-[#006241]'
+                                ? 'border-emerald-700 bg-emerald-50 text-emerald-700'
                                 : 'border-gray-200 bg-white text-gray-400'
                         }`}
                     >
@@ -243,7 +248,7 @@ function ProductsInner() {
                             onClick={() => setActiveFilter(opt.key)}
                             className={`shrink-0 rounded-full px-4 py-2 text-xs transition-all ${
                                 activeFilter === opt.key
-                                    ? 'bg-[#006241] font-bold text-white shadow-xs'
+                                    ? 'bg-emerald-600 font-bold text-white shadow-xs'
                                     : 'border border-gray-200 bg-white font-medium text-gray-600'
                             }`}
                         >
@@ -449,7 +454,7 @@ function ProductCard({
                             e.stopPropagation();
                             handleAdd();
                         }}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#006241] text-white shadow-xs"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xs"
                         aria-label={`Tambah ${v.name}`}
                     >
                         <Plus className="h-3.5 w-3.5" />
@@ -544,7 +549,7 @@ function VariantRow({
                     {group.familyDescription}
                 </p>
                 <div className="mt-2 flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#006241] tabular-nums">
+                    <span className="text-xs font-bold text-emerald-700 tabular-nums">
                         {formatCurrency(group.lowestPrice)}
                     </span>
                     <button
@@ -554,7 +559,7 @@ function VariantRow({
                             e.stopPropagation();
                             handleAdd();
                         }}
-                        className="flex h-7 w-7 items-center justify-center rounded-full bg-[#006241] text-white shadow-xs"
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xs"
                         aria-label={`Tambah ${group.displayLabel}`}
                     >
                         <Plus className="h-4 w-4" />
