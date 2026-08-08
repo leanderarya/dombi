@@ -1,24 +1,29 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    CheckCircle2,
-    Clock,
+    AlertTriangle,
     MessageCircle,
     Phone,
-    RotateCcw,
     Share2,
     XCircle,
-    AlertTriangle,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import GuestRefundStatusCard from '@/components/customer/order/guest-refund-status-card';
 import OrderHeader from '@/components/customer/order/order-header';
 import OrderInfoCard from '@/components/customer/order/order-info-card';
 import StatusGuidanceCard from '@/components/customer/order/status-guidance-card';
+import TerminalStatusCards from '@/components/customer/order/terminal-status-cards';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
 import Dialog from '@/components/ui/dialog';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    getBadgeProps,
+    getPaymentIssue,
+    isCancellable,
+    isTerminal,
+    normalizeOrder,
+} from '@/lib/order-status';
 import { whatsAppDefaultMessage, waLinkWithText } from '@/lib/whatsapp-message';
 import type { GuestRefundPayload } from '@/types/refund';
 
@@ -87,8 +92,6 @@ type Props = {
     refund?: GuestRefundPayload | null;
 };
 
-const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
-
 export default function TrackPage({
     order,
     found,
@@ -108,16 +111,14 @@ export default function TrackPage({
     const [cancelError, setCancelError] = useState<string | null>(null);
     const [cancelLoading, setCancelLoading] = useState(false);
 
-    // Auto-polling for non-terminal orders
-    const isTerminal = [
-        'completed',
-        'cancelled_by_customer',
-        'cancelled_by_outlet',
-        'rejected_by_outlet',
-        'expired',
-    ].includes(order?.status ?? '');
+    // Poll selagi pesanan aktif (belum terminal) supaya status segar untuk guest.
+    // Berhenti saat isTerminalOrder — status mahkota tak berubah lagi.
+    // only:['order'] agar hanya reload payload order, bukan props lain.
+    const isTerminalOrder = isTerminal(order?.status ?? '');
+    const isCancellableOrder = isCancellable(order?.status ?? '');
+    const paymentIssue = getPaymentIssue(order?.payment_status);
     useEffect(() => {
-        if (isTerminal || !order) {
+        if (isTerminalOrder || !order) {
             return;
         }
 
@@ -126,14 +127,15 @@ export default function TrackPage({
         }, 15000);
 
         return () => clearInterval(interval);
-    }, [isTerminal, order]);
+    }, [isTerminalOrder, order]);
 
     if (!found || !order) {
         return <NotFoundState />;
     }
 
+    const norm = normalizeOrder(order);
+
     const isPickup = order.fulfillment_type === 'pickup';
-    const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
     const trackingUrl = order.tracking_url;
 
     function handleShare() {
@@ -207,52 +209,57 @@ export default function TrackPage({
             {/* Content */}
             <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
                 {/* Status Badge */}
-                <div className="flex items-center justify-center">
-                    {order.status === 'ready_for_pickup' && !isPickup ? (
-                        <StatusBadge variant="info">Menunggu Kurir</StatusBadge>
-                    ) : (
-                        <StatusBadge
-                            status={
-                                order.status === 'pending_confirmation' &&
-                                order.payment_status !== 'paid'
-                                    ? order.payment_status === 'failed' ||
-                                      order.payment_status === 'expired'
-                                        ? 'payment_failed'
-                                        : 'pending_payment'
-                                    : order.status
-                            }
-                        />
-                    )}
-                </div>
+                {(() => {
+                    const badge = getBadgeProps({
+                        status: order.status,
+                        paymentStatus: order.payment_status,
+                        isPickup,
+                    });
+
+                    return (
+                        <div className="flex items-center justify-center">
+                            {badge.badgeVariant && badge.badgeLabel ? (
+                                <StatusBadge variant={badge.badgeVariant}>
+                                    {badge.badgeLabel}
+                                </StatusBadge>
+                            ) : (
+                                <StatusBadge
+                                    status={
+                                        badge.badgeFallbackStatus ??
+                                        order.status
+                                    }
+                                />
+                            )}
+                        </div>
+                    );
+                })()}
 
                 {/* Payment Issue Banner */}
-                {order.status === 'pending_confirmation' &&
-                    (order.payment_status === 'failed' ||
-                        order.payment_status === 'expired') && (
-                        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                            <div className="flex items-start gap-3">
-                                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-                                <div>
-                                    <div className="text-sm font-semibold text-red-800">
-                                        {order.payment_status === 'failed'
-                                            ? 'Pembayaran Gagal'
-                                            : 'Pembayaran Kadaluarsa'}
-                                    </div>
-                                    <div className="mt-1 text-xs text-red-600">
-                                        {order.payment_status === 'failed'
-                                            ? 'Pembayaran tidak berhasil diproses. Silakan coba bayar ulang.'
-                                            : 'Batas waktu pembayaran telah habis. Silakan coba bayar ulang.'}
-                                    </div>
-                                    <Link
-                                        href={`/customer/orders/confirm/${order.order_code}`}
-                                        className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80"
-                                    >
-                                        Bayar Ulang
-                                    </Link>
+                {order.status === 'pending_confirmation' && paymentIssue && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-start gap-3">
+                            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+                            <div>
+                                <div className="text-sm font-semibold text-red-800">
+                                    {paymentIssue.isFailed
+                                        ? 'Pembayaran Gagal'
+                                        : 'Pembayaran Kadaluarsa'}
                                 </div>
+                                <div className="mt-1 text-xs text-red-600">
+                                    {paymentIssue.isFailed
+                                        ? 'Pembayaran tidak berhasil diproses. Silakan coba bayar ulang.'
+                                        : 'Batas waktu pembayaran telah habis. Silakan coba bayar ulang.'}
+                                </div>
+                                <Link
+                                    href={`/customer/orders/confirm/${order.order_code}`}
+                                    className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80"
+                                >
+                                    Bayar Ulang
+                                </Link>
                             </div>
                         </div>
-                    )}
+                    </div>
+                )}
 
                 {/* What's Next Guidance */}
                 <StatusGuidanceCard
@@ -272,25 +279,15 @@ export default function TrackPage({
                     <OrderQRCard orderCode={order.order_code} />
                 )}
 
-                {/* Completed Hero */}
-                {order.status === 'completed' && (
-                    <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 p-6 text-center">
-                        <div className="flex justify-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-                                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
-                            </div>
-                        </div>
-                        <h2 className="mt-4 text-lg font-bold text-text">
-                            Pesanan Selesai!
-                        </h2>
-                        <p className="mt-1 text-sm text-text-muted">
-                            Terima kasih sudah pesan di Dombi 🎉
-                        </p>
-                    </div>
-                )}
+                <TerminalStatusCards
+                    order={norm}
+                    onCancelCTA={() => {
+                        window.location.href = '/customer/home';
+                    }}
+                />
 
                 {/* Share Tracking */}
-                {!isTerminal && trackingUrl && (
+                {!isTerminalOrder && trackingUrl && (
                     <div className="mt-4">
                         <button
                             type="button"
@@ -333,125 +330,6 @@ export default function TrackPage({
                     status={order.status}
                 />
 
-                {/* Rejection / Cancellation */}
-                {order.status === 'rejected_by_outlet' &&
-                    order.rejection_reason && (
-                        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                            <div className="flex items-center gap-2">
-                                <XCircle className="h-4 w-4 text-red-500" />
-                                <div className="text-[13px] text-red-600">
-                                    Pesanan Ditolak Outlet
-                                </div>
-                            </div>
-                            <div className="mt-2 text-sm font-semibold text-red-800">
-                                {order.rejection_reason}
-                            </div>
-                            {order.rejection_note && (
-                                <div className="mt-1 text-xs text-red-700">
-                                    {order.rejection_note}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                {order.status === 'cancelled_by_customer' &&
-                    order.cancellation_reason && (
-                        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                            <div className="flex items-center gap-2">
-                                <XCircle className="h-4 w-4 text-red-500" />
-                                <div className="text-[13px] text-red-600">
-                                    Pesanan Dibatalkan
-                                </div>
-                            </div>
-                            <div className="mt-2 text-sm font-semibold text-red-800">
-                                {order.cancellation_reason}
-                            </div>
-                            {order.cancellation_note && (
-                                <div className="mt-1 text-xs text-red-700">
-                                    {order.cancellation_note}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                {order.status === 'cancelled_by_outlet' &&
-                    order.cancellation_reason && (
-                        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                            <div className="flex items-center gap-2">
-                                <XCircle className="h-4 w-4 text-red-500" />
-                                <div className="text-[13px] text-red-600">
-                                    Dibatalkan Outlet
-                                </div>
-                            </div>
-                            <div className="mt-2 text-sm font-semibold text-red-800">
-                                {order.cancellation_reason}
-                            </div>
-                        </div>
-                    )}
-
-                {order.status === 'failed_delivery' && (
-                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                        <div className="flex items-center gap-2">
-                            <AlertTriangle className="h-4 w-4 text-amber-600" />
-                            <div className="text-[13px] text-amber-700">
-                                Pengiriman Gagal
-                            </div>
-                        </div>
-                        {order.delivery?.failed_reason && (
-                            <div className="mt-1.5 text-sm font-medium text-amber-900">
-                                {order.delivery.failed_reason}
-                            </div>
-                        )}
-                        <div className="mt-2 text-sm text-amber-800">
-                            Silakan hubungi outlet untuk bantuan.
-                        </div>
-                        {order.outlet?.phone && (
-                            <a
-                                href={waLinkWithText(
-                                    order.outlet.phone,
-                                    whatsAppDefaultMessage({
-                                        order_code: order.order_code,
-                                        status: order.status,
-                                        fulfillment_type:
-                                            order.fulfillment_type,
-                                        customer_name: order.customer_name,
-                                        outlet_name: order.outlet?.name,
-                                        total: order.total,
-                                    }),
-                                )}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-bold text-white active:opacity-80"
-                            >
-                                <Phone className="h-4 w-4" />
-                                Hubungi Outlet
-                            </a>
-                        )}
-                    </div>
-                )}
-
-                {order.status === 'expired' && (
-                    <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4">
-                        <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-text-muted" />
-                            <div className="text-[13px] text-text">
-                                Pesanan Kadaluarsa
-                            </div>
-                        </div>
-                        <div className="mt-2 text-sm text-text-muted">
-                            Outlet tidak memberikan konfirmasi dalam batas
-                            waktu.
-                        </div>
-                        <Link
-                            href="/customer/home"
-                            className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
-                        >
-                            <RotateCcw className="h-4 w-4" />
-                            Pesan Ulang
-                        </Link>
-                    </div>
-                )}
-
                 {/* Pay Now / Retry Button — unpaid pending orders (including failed payment) */}
                 {order.status === 'pending_confirmation' &&
                     order.payment_status !== 'paid' && (
@@ -475,7 +353,7 @@ export default function TrackPage({
                     )}
 
                 {/* Cancel Button — authenticated users */}
-                {isCancellable && canCancel && (
+                {isCancellableOrder && canCancel && (
                     <div className="mt-4">
                         <button
                             type="button"
@@ -491,7 +369,7 @@ export default function TrackPage({
                 )}
 
                 {/* Login CTA for cancel — guest users */}
-                {isCancellable && !canCancel && !isLoggedIn && (
+                {isCancellableOrder && !canCancel && !isLoggedIn && (
                     <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4 text-center">
                         <div className="text-sm font-medium text-text">
                             Ingin membatalkan pesanan?
@@ -509,7 +387,7 @@ export default function TrackPage({
                 )}
 
                 {/* Verify phone prompt — authenticated but phone not linked */}
-                {isCancellable && !canCancel && isLoggedIn && (
+                {isCancellableOrder && !canCancel && isLoggedIn && (
                     <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
                         <div className="flex items-start gap-3">
                             <MessageCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
@@ -535,7 +413,7 @@ export default function TrackPage({
                 )}
 
                 {/* Non-cancellable message */}
-                {!isCancellable && !isTerminal && (
+                {!isCancellableOrder && !isTerminalOrder && (
                     <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4 text-center">
                         <div className="text-sm text-text-muted">
                             Pesanan sedang diproses dan tidak dapat dibatalkan.
