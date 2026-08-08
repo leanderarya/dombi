@@ -54,6 +54,7 @@ interface Props {
     subtotal: number;
     deliveryFee: number;
     total: number;
+    paymentFee?: number;
     isPickup: boolean;
     paymentMethod: string;
     outlet?: OutletInfo | null;
@@ -73,6 +74,7 @@ export default function OrderInfoCard({
     subtotal,
     deliveryFee,
     total,
+    paymentFee = 0,
     isPickup,
     paymentMethod,
     outlet,
@@ -263,7 +265,15 @@ export default function OrderInfoCard({
                             label="Harga Pesanan"
                             value={formatCurrency(subtotal)}
                         />
-                        <PriceRow label="Biaya Layanan" value="GRATIS" accent />
+                        <PriceRow
+                            label="Biaya Layanan"
+                            value={
+                                Number(paymentFee) > 0
+                                    ? formatCurrency(paymentFee)
+                                    : 'GRATIS'
+                            }
+                            accent
+                        />
                         <PriceRow label="PPN (11%)" value="Termasuk" />
                     </div>
                 )}
