@@ -126,6 +126,8 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::get('/checkout/validate-stock', [CustomerCheckoutController::class, 'validateStock'])->name('checkout.validate-stock');
         Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
         Route::get('/orders/{order}/confirmation/{token}', [CustomerOrderController::class, 'confirmation'])->name('orders.confirmation');
+        // Favorites view — guest can see localStorage favorites; toggle/merge require account
+        Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
         Route::get('/orders/confirm/{orderCode}', [CustomerOrderController::class, 'confirm'])->name('orders.confirm');
         Route::post('/orders/recovery', GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
 
@@ -168,7 +170,6 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::delete('/recipients/{recipient}', [RecipientController::class, 'destroy'])->name('recipients.destroy');
 
         // Favorites (server-persisted per account)
-        Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
         Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
         Route::post('/favorites/merge', [FavoriteController::class, 'merge'])->name('favorites.merge');
     });

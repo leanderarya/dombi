@@ -32,7 +32,7 @@ export default function OutletSheet({
         <Dialog
             open={open}
             onClose={onClose}
-            title={fulfillmentType ? 'Outlet & Method' : 'Pilih Outlet'}
+            title={fulfillmentType ? 'Pilih Store' : 'Pilih Outlet'}
         >
             {fulfillmentType && onFulfillmentChange && (
                 <div className="-mx-5 border-b border-border px-5 pt-1 pb-3">

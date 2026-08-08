@@ -7,6 +7,7 @@ export interface Variant {
     size: string | null;
     price: number;
     is_active: boolean;
+    is_recommended: boolean;
     image: string | null;
     available_stock?: number;
     stock_status?: string;

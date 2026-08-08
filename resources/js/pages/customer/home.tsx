@@ -1,16 +1,25 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import {
+    ArrowRight,
+    BadgeCheck,
+    ChevronRight,
+    Coffee,
+    Coins,
+    Crown,
+    Gift,
+    Leaf,
+    Percent,
+    Store,
+    Wine,
+} from 'lucide-react';
 import { useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
-import {
-    ChatCircleFill,
-    MapPinFill,
-    PackageFill,
-    StorefrontFill,
-    TruckFill,
-} from '@/components/icons/phosphor-fill';
+import NotificationBell from '@/components/shared/notification-bell';
+import NotificationSheet from '@/components/shared/notification-sheet';
 import PushBanner from '@/components/shared/push-banner';
 import { useGoogleLogin } from '@/hooks/use-google-login';
 import { useHeroSlides } from '@/hooks/use-hero-slides';
+import type { HeroSlide } from '@/hooks/use-hero-slides';
 import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import { useNearestOutlet } from '@/hooks/use-nearest-outlet';
 import { usePickupFlow } from '@/hooks/use-pickup-flow';
@@ -29,6 +38,7 @@ export default function Home({ customerName, activeOrders }: any) {
     const pickup = usePickupFlow(nearestOutlet);
 
     const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
+    const [notificationOpen, setNotificationOpen] = useState(false);
     const [phoneBannerDismissed, setPhoneBannerDismissed] = useState(
         () =>
             typeof window !== 'undefined' &&
@@ -58,7 +68,11 @@ export default function Home({ customerName, activeOrders }: any) {
             activeOrder={activeOrder}
         >
             <Head title="Home" />
-            <HeroCarousel hero={hero} />
+            <HeroCarousel
+                hero={hero}
+                outletName={nearestOutlet?.name ?? null}
+                onOpenNotifications={() => setNotificationOpen(true)}
+            />
             <GreetingCard
                 isLoggedIn={isLoggedIn}
                 customerName={customerName}
@@ -87,75 +101,112 @@ export default function Home({ customerName, activeOrders }: any) {
                 pickupLoading={pickup.loading}
             />
 
-            <ExploreGrid
-                nearestOutlet={nearestOutlet}
-                isLoggedIn={isLoggedIn}
-            />
-            <TrustBadges />
+            <PromoBento />
 
             <DeliveryLoginSheet
                 open={deliverySheetOpen}
                 onClose={() => setDeliverySheetOpen(false)}
+            />
+            <NotificationSheet
+                open={notificationOpen}
+                onClose={() => setNotificationOpen(false)}
             />
             {pickup.loading && <PickupOverlay pickup={pickup} />}
         </CustomerMobileLayout>
     );
 }
 
-/* ─── Sub-components ───────────────────────────────────────── */
+/* ─── Hero Header & Carousel ───────────────────────────────── */
 
-function HeroCarousel({ hero }: { hero: ReturnType<typeof useHeroSlides> }) {
-    const { slides, index, setIndex, current } = hero;
+function HeroCarousel({
+    hero,
+    outletName,
+    onOpenNotifications,
+}: {
+    hero: ReturnType<typeof useHeroSlides>;
+    outletName: string | null;
+    onOpenNotifications: () => void;
+}) {
+    const { slides, index, setIndex } = hero;
 
     return (
-        <section className="-mx-4 overflow-hidden rounded-b-[2rem]">
-            <div className="relative h-72 transition-all duration-700">
-                <div
-                    className={`absolute inset-0 bg-gradient-to-br ${current.gradient} transition-all duration-700`}
-                />
-                <img
-                    src={current.image}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        <section className="relative -mx-4 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-[#185338] via-[#216b49] to-[#3a8b63] pb-14">
+            {/* Decorative blobs */}
+            <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="pointer-events-none absolute bottom-0 -left-10 h-36 w-36 rounded-full bg-black/10 blur-xl" />
 
-                <div className="absolute right-5 bottom-16 left-5 z-10">
-                    <h1 className="text-2xl leading-tight font-bold text-white drop-shadow-md">
-                        {current.title}
-                    </h1>
-                    <p className="mt-1 text-sm text-white/80 drop-shadow-sm">
-                        {current.subtitle}
-                    </p>
-                    {current.cta && (
-                        <Link
-                            href={current.ctaHref}
-                            className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-white/20 px-6 text-sm font-bold text-white backdrop-blur-sm active:bg-white/30"
-                        >
-                            {current.cta}
-                        </Link>
-                    )}
+            {/* Top bar: brand store + bell */}
+            <div className="relative z-10 flex items-center justify-between px-4 pt-4 pb-3 text-white">
+                <span className="flex items-center gap-1.5 text-xs font-semibold tracking-wide">
+                    <Store className="h-3 w-3 text-emerald-300" />
+                    Dombi Store • {outletName ?? 'Seturan'}
+                </span>
+                <NotificationBell
+                    onClick={onOpenNotifications}
+                    className="text-white active:bg-white/20"
+                />
+            </div>
+
+            {/* Carousel slides */}
+            <div className="relative z-10 px-4 pb-3">
+                <div className="overflow-hidden">
+                    <div
+                        className="flex transition-transform duration-500 ease-out"
+                        style={{ transform: `translateX(-${index * 100}%)` }}
+                    >
+                        {slides.map((slide) => (
+                            <HeroSlideCard key={slide.title} slide={slide} />
+                        ))}
+                    </div>
                 </div>
 
-                <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+                {/* Dots */}
+                <div className="mt-3 flex items-center justify-center gap-1.5">
                     {slides.map((_, i) => (
                         <button
                             key={i}
                             type="button"
                             onClick={() => setIndex(i)}
-                            className="flex min-h-11 min-w-11 items-center justify-center active:opacity-80"
                             aria-label={`Slide ${i + 1}`}
-                        >
-                            <span
-                                className={`block h-2 rounded-full transition-all duration-300 ${i === index ? 'w-6 bg-white' : 'w-2 bg-white/40'}`}
-                            />
-                        </button>
+                            className={`rounded-full transition-all duration-300 ${
+                                i === index
+                                    ? 'h-1.5 w-5 bg-white'
+                                    : 'h-1.5 w-1.5 bg-white/40'
+                            }`}
+                        />
                     ))}
                 </div>
             </div>
         </section>
     );
 }
+
+function HeroSlideCard({ slide }: { slide: HeroSlide }) {
+    return (
+        <div className="flex min-w-full items-center justify-between gap-3 rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-md">
+            <div className="max-w-[60%] space-y-1">
+                <span className="inline-block rounded-md bg-emerald-950/40 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-300 uppercase">
+                    {slide.title}
+                </span>
+                <h2 className="text-xl leading-tight font-extrabold text-white">
+                    {slide.subtitle}
+                </h2>
+                <p className="text-[9px] font-medium text-emerald-200/80">
+                    {slide.cta}
+                </p>
+            </div>
+            <div className="relative flex h-28 w-28 shrink-0 items-center justify-center">
+                <img
+                    src={slide.image}
+                    alt={slide.title}
+                    className="h-24 w-24 rotate-3 rounded-xl object-cover shadow-lg transition-transform duration-300 hover:rotate-0"
+                />
+            </div>
+        </div>
+    );
+}
+
+/* ─── Greeting Card ────────────────────────────────────────── */
 
 function GreetingCard({
     isLoggedIn,
@@ -169,33 +220,225 @@ function GreetingCard({
     const { login } = useGoogleLogin();
 
     return (
-        <div className="relative z-20 mx-4 -mt-8 rounded-2xl bg-white px-5 py-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
-            <div className="flex items-center justify-between">
-                <div>
-                    <div className="text-lg font-bold text-text">
-                        {isLoggedIn
-                            ? `Hai ${customerName ?? auth.user.name}!`
-                            : 'Selamat Datang di Dombi!'}
+        <section className="relative z-20 -mt-10">
+            <div className="rounded-2xl border border-border bg-white p-4 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.06)]">
+                <div className="mb-3 flex items-center justify-between">
+                    <div>
+                        <span className="text-[11px] font-medium text-text-muted">
+                            Selamat datang,
+                        </span>
+                        <h1 className="flex items-center gap-1.5 text-base font-bold text-text">
+                            {isLoggedIn
+                                ? `Hai ${(
+                                      customerName ??
+                                      auth?.user?.name ??
+                                      ''
+                                  ).toUpperCase()}!`
+                                : 'Hai, Dombi Lovers!'}
+                            {isLoggedIn && (
+                                <BadgeCheck className="h-3.5 w-3.5 text-primary" />
+                            )}
+                        </h1>
                     </div>
-                    <div className="mt-1 text-xs text-text-muted">
-                        {isLoggedIn
-                            ? 'Yuk belanja kebutuhanmu hari ini.'
-                            : 'Masuk untuk pengalaman penuh.'}
-                    </div>
+                    {isLoggedIn ? (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-500 shadow-sm">
+                            <Coins className="h-4 w-4" />
+                        </div>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={login}
+                            className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-bold text-white active:opacity-80"
+                        >
+                            Masuk
+                        </button>
+                    )}
                 </div>
-                {!isLoggedIn && (
-                    <button
-                        type="button"
-                        onClick={login}
-                        className="shrink-0 rounded-full border-2 border-primary px-4 py-2 text-xs font-bold text-primary active:bg-primary-light"
-                    >
-                        Masuk
-                    </button>
+
+                {isLoggedIn && (
+                    <div className="flex items-center gap-2 border-t border-gray-100 pt-3">
+                        <button
+                            type="button"
+                            className="flex flex-1 items-center justify-between rounded-xl border border-emerald-100 bg-primary-light px-3 py-2 text-left active:opacity-80"
+                        >
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-white">
+                                    <Leaf className="h-3 w-3" />
+                                </div>
+                                <span className="text-xs font-bold text-text">
+                                    120{' '}
+                                    <span className="font-normal text-text-muted">
+                                        Poin
+                                    </span>
+                                </span>
+                            </div>
+                            <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
+                        </button>
+                        <button
+                            type="button"
+                            className="flex flex-1 items-center justify-between rounded-xl border border-sky-100 bg-sky-50 px-3 py-2 text-left active:opacity-80"
+                        >
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-sky-600 text-[10px] text-white">
+                                    <Crown className="h-3 w-3" />
+                                </div>
+                                <span className="text-xs font-bold text-sky-950">
+                                    MyDombi Plan
+                                </span>
+                            </div>
+                            <ChevronRight className="h-3.5 w-3.5 text-sky-400" />
+                        </button>
+                    </div>
                 )}
             </div>
-        </div>
+        </section>
     );
 }
+
+/* ─── Quick Actions (Pick Up vs Delivery) ──────────────────── */
+
+function QuickActions({
+    onPickup,
+    onDelivery,
+    pickupLoading,
+}: {
+    onPickup: () => void;
+    onDelivery: () => void;
+    pickupLoading: boolean;
+}) {
+    return (
+        <section className="mt-6">
+            <h2 className="px-4 text-sm font-bold text-text">Pesan Sekarang</h2>
+            <div className="mt-3 grid grid-cols-2 gap-3 px-4">
+                <button
+                    type="button"
+                    onClick={onPickup}
+                    disabled={pickupLoading}
+                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-2xl border border-emerald-200/70 bg-primary-light p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all active:opacity-80 disabled:opacity-50"
+                >
+                    <div className="relative z-10">
+                        <h3 className="text-base font-extrabold text-primary transition-transform group-hover:translate-x-0.5">
+                            Pick Up
+                        </h3>
+                        <p className="mt-1 text-[11px] leading-snug font-medium text-text-muted">
+                            Ambil di store
+                            <br />
+                            tanpa antri
+                        </p>
+                    </div>
+                    <div className="relative z-10 flex items-end justify-end">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs text-white shadow-md">
+                            <Gift className="h-3.5 w-3.5" />
+                        </span>
+                    </div>
+                    <div className="absolute -right-2 -bottom-2 h-20 w-20 rounded-full bg-emerald-200/40 blur-md transition-transform group-hover:scale-110" />
+                </button>
+
+                <button
+                    type="button"
+                    onClick={onDelivery}
+                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-2xl border border-orange-200/70 bg-orange-50/60 p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all active:opacity-80"
+                >
+                    <div className="relative z-10">
+                        <h3 className="text-base font-extrabold text-orange-700 transition-transform group-hover:translate-x-0.5">
+                            Delivery
+                        </h3>
+                        <p className="mt-1 text-[11px] leading-snug font-medium text-text-muted">
+                            Garansi tepat
+                            <br />
+                            waktu, dijamin!
+                        </p>
+                    </div>
+                    <div className="relative z-10 flex items-end justify-end">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-700 text-xs text-white shadow-md">
+                            <Coffee className="h-3.5 w-3.5" />
+                        </span>
+                    </div>
+                    <div className="absolute -right-2 -bottom-2 h-20 w-20 rounded-full bg-orange-200/40 blur-md transition-transform group-hover:scale-110" />
+                </button>
+            </div>
+        </section>
+    );
+}
+
+/* ─── Promo Bento ──────────────────────────────────────────── */
+
+const PROMO_BENTOS = [
+    {
+        title: 'MyDombi Plan',
+        subtitle: 'Berlangganan jauh lebih untung',
+        icon: <Percent className="h-4 w-4" />,
+        iconBg: 'bg-emerald-100 text-primary',
+        cta: 'Cek Paket',
+    },
+    {
+        title: 'Dombi Essentials',
+        subtitle: 'Bawa minumanmu gaya baru',
+        icon: <Wine className="h-4 w-4" />,
+        iconBg: 'bg-amber-100 text-amber-700',
+        cta: 'Lihat Merchandise',
+        badge: 'Baru',
+    },
+    {
+        title: 'Catering & Event',
+        subtitle: 'Rayakan momen bareng Dombi',
+        icon: <Coffee className="h-4 w-4" />,
+        iconBg: 'bg-purple-100 text-purple-700',
+        cta: 'Pesan Sekarang',
+    },
+];
+
+function PromoBento() {
+    return (
+        <section className="mt-6">
+            <div className="flex items-center justify-between px-4">
+                <h2 className="text-sm font-bold text-text">
+                    Yang Menarik di Dombi
+                </h2>
+                <Link
+                    href="/customer/products"
+                    className="text-xs font-semibold text-primary active:opacity-80"
+                >
+                    Lihat Semua
+                </Link>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-3 px-4">
+                {PROMO_BENTOS.map((bento) => (
+                    <div
+                        key={bento.title}
+                        className="relative flex flex-col justify-between rounded-2xl border border-border bg-white p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                    >
+                        <div>
+                            <div
+                                className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${bento.iconBg}`}
+                            >
+                                {bento.icon}
+                            </div>
+                            {bento.badge && (
+                                <span className="absolute top-2 right-2 rounded bg-orange-700 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                                    {bento.badge}
+                                </span>
+                            )}
+                            <h3 className="text-xs font-bold text-text">
+                                {bento.title}
+                            </h3>
+                            <p className="mt-0.5 text-[11px] text-text-muted">
+                                {bento.subtitle}
+                            </p>
+                        </div>
+                        <div className="mt-3 flex items-center border-t border-gray-100 pt-2 text-[10px] font-bold text-primary">
+                            <span>{bento.cta}</span>
+                            <ArrowRight className="ml-1 h-3 w-3" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+/* ─── Phone Banner ─────────────────────────────────────────── */
 
 function PhoneBanner({ onDismiss }: { onDismiss: () => void }) {
     return (
@@ -221,185 +464,7 @@ function PhoneBanner({ onDismiss }: { onDismiss: () => void }) {
     );
 }
 
-function QuickActions({
-    onPickup,
-    onDelivery,
-    pickupLoading,
-}: {
-    onPickup: () => void;
-    onDelivery: () => void;
-    pickupLoading: boolean;
-}) {
-    return (
-        <section className="mt-6">
-            <h2 className="fore-section-header">Pesan Sekarang</h2>
-            <p className="mt-1 text-xs text-text-muted">
-                Pilih cara belanja favoritmu.
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-                <button
-                    type="button"
-                    onClick={onPickup}
-                    disabled={pickupLoading}
-                    className="group flex min-h-[100px] flex-col items-center justify-center gap-2.5 rounded-2xl bg-primary-light/30 p-4 transition-all active:scale-[0.98] active:opacity-80 disabled:opacity-50"
-                >
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
-                        <StorefrontFill className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="text-center">
-                        <div className="text-sm font-bold text-text">
-                            Pick Up
-                        </div>
-                        <div className="mt-0.5 text-[11px] text-text-muted">
-                            Ambil di outlet
-                        </div>
-                    </div>
-                </button>
-                <button
-                    type="button"
-                    onClick={onDelivery}
-                    className="group flex min-h-[100px] flex-col items-center justify-center gap-2.5 rounded-2xl bg-amber-50/40 p-4 transition-all active:scale-[0.98] active:opacity-80"
-                >
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
-                        <TruckFill className="h-6 w-6 text-amber-600" />
-                    </div>
-                    <div className="text-center">
-                        <div className="text-sm font-bold text-text">
-                            Delivery
-                        </div>
-                        <div className="mt-0.5 text-[11px] text-text-muted">
-                            Diantar ke rumah
-                        </div>
-                    </div>
-                </button>
-            </div>
-        </section>
-    );
-}
-
-interface ExploreCard {
-    icon: React.ReactNode;
-    bg: string;
-    title: string;
-    subtitle: string;
-    href?: string;
-    isButton?: boolean;
-    onClick?: () => void;
-}
-
-function ExploreGrid({
-    nearestOutlet,
-    isLoggedIn,
-}: {
-    nearestOutlet: { name: string } | null;
-    isLoggedIn: boolean;
-}) {
-    const { login } = useGoogleLogin();
-
-    const cards: ExploreCard[] = [
-        {
-            icon: <MapPinFill className="h-5 w-5 text-blue-600" />,
-            bg: 'bg-blue-50',
-            title: 'Outlet Terdekat',
-            subtitle: nearestOutlet?.name ?? 'Cari outlet terdekat',
-            href: '/customer/products',
-        },
-        {
-            icon: <PackageFill className="h-5 w-5 text-amber-600" />,
-            bg: 'bg-amber-50',
-            title: 'Riwayat Pesanan',
-            subtitle: isLoggedIn
-                ? 'Lihat pesanan sebelumnya'
-                : 'Login untuk melihat',
-            href: isLoggedIn ? '/customer/orders' : undefined,
-            onClick: isLoggedIn ? undefined : login,
-        },
-        {
-            icon: <ChatCircleFill className="h-5 w-5 text-purple-600" />,
-            bg: 'bg-purple-50',
-            title: 'Butuh Bantuan?',
-            subtitle: 'Hubungi via WhatsApp',
-            href: 'https://wa.me/6281111111111',
-            isButton: true,
-        },
-    ];
-
-    return (
-        <section className="mt-6">
-            <h2 className="fore-section-header">Jelajahi Dombi</h2>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-                {cards.map((card) => {
-                    if (card.onClick) {
-                        return (
-                            <button
-                                key={card.title}
-                                type="button"
-                                onClick={card.onClick}
-                                className="group flex items-start gap-3 rounded-xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-200 active:opacity-80"
-                            >
-                                <div
-                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.bg} shadow-inner`}
-                                >
-                                    {card.icon}
-                                </div>
-                                <div className="min-w-0">
-                                    <div className="text-xs font-bold text-text">
-                                        {card.title}
-                                    </div>
-                                    <div className="mt-0.5 text-[11px] leading-relaxed text-text-muted">
-                                        {card.subtitle}
-                                    </div>
-                                </div>
-                            </button>
-                        );
-                    }
-
-                    const Tag = card.isButton ? 'a' : Link;
-                    const extra = card.isButton
-                        ? { target: '_blank', rel: 'noopener noreferrer' }
-                        : {};
-
-                    return (
-                        <Tag
-                            key={card.title}
-                            href={card.href!}
-                            {...extra}
-                            className="group flex items-start gap-3 rounded-xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-200 active:opacity-80"
-                        >
-                            <div
-                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.bg} shadow-inner`}
-                            >
-                                {card.icon}
-                            </div>
-                            <div className="min-w-0">
-                                <div className="text-xs font-bold text-text">
-                                    {card.title}
-                                </div>
-                                <div className="mt-0.5 text-[11px] leading-relaxed text-text-muted">
-                                    {card.subtitle}
-                                </div>
-                            </div>
-                        </Tag>
-                    );
-                })}
-            </div>
-        </section>
-    );
-}
-
-function TrustBadges() {
-    return (
-        <section className="mt-6 mb-4">
-            <div className="flex items-center justify-center gap-3 text-xs text-text-subtle">
-                <span>Sertifikasi Halal</span>
-                <span className="h-3 w-px bg-border" />
-                <span>Izin Usaha</span>
-                <span className="h-3 w-px bg-border" />
-                <span>Dombi 2024</span>
-            </div>
-        </section>
-    );
-}
+/* ─── Pickup Overlay ───────────────────────────────────────── */
 
 function PickupOverlay({
     pickup,
@@ -416,7 +481,7 @@ function PickupOverlay({
             aria-label="Ambil di Outlet"
         >
             <div className="mb-6 h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-            <div className="text-center">
+            <div className="px-6 text-center">
                 {foundOutletName ? (
                     <>
                         <div className="text-[11px] font-bold tracking-widest text-emerald-200 uppercase">

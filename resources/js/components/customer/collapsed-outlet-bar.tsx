@@ -28,12 +28,15 @@ export default function CollapsedOutletBar({
 
     return (
         <div
-            className={`fixed top-0 right-0 left-0 z-50 bg-white shadow-sm transition-all duration-200 ease-out ${
+            className={`fixed top-0 right-0 left-0 z-50 bg-white/90 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                 show
                     ? 'translate-y-0 opacity-100'
                     : 'pointer-events-none -translate-y-full opacity-0'
             }`}
-            style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+            style={{
+                paddingTop: 'env(safe-area-inset-top, 0px)',
+                willChange: 'transform, opacity',
+            }}
         >
             <div className="flex items-center gap-2.5 px-3 py-2.5">
                 {/* Back button */}

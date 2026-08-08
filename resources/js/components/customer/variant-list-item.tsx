@@ -1,12 +1,11 @@
 import { Link } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import ProductImage from '@/components/customer/product-image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOutlet } from '@/contexts/outlet-context';
-import { mutationFetch } from '@/lib/api';
+import { useQuickAddCart } from '@/hooks/use-quick-add-cart';
 import { formatCurrency } from '@/lib/format';
-import { useCart } from '@/lib/use-cart';
 import { useFavorites } from '@/lib/use-favorites';
 
 interface Variant {
@@ -42,11 +41,9 @@ const VariantListItem = memo(function VariantListItem({
     onQuickAdd,
     loading,
 }: Props) {
-    const [adding, setAdding] = useState(false);
-    const [toast, setToast] = useState(false);
-    const cart = useCart();
     const { isFavorite, toggle } = useFavorites();
     const { selectedOutlet } = useOutlet();
+    const { addToCart, adding, toast } = useQuickAddCart();
 
     const isFav = isFavorite(variant.id);
     const isOutOfStock = variant.stock_status === 'out_of_stock';
@@ -89,34 +86,11 @@ const VariantListItem = memo(function VariantListItem({
             return;
         }
 
-        setAdding(true);
-        cart.addItem(variant.id, 1, displayPrice);
-
-        try {
-            const token = document
-                .querySelector('meta[name="csrf-token"]')
-                ?.getAttribute('content');
-            const res = await mutationFetch('/customer/cart/add', {
-                method: 'POST',
-                headers: {
-                    ...(token ? { 'X-CSRF-TOKEN': token } : {}),
-                },
-                body: JSON.stringify({
-                    product_id: variant.id,
-                    quantity: 1,
-                }),
-            });
-
-            if (!res.ok) {
-                throw new Error('Failed to add item');
-            }
-        } catch {
-            cart.removeItem(variant.id);
-        }
-
-        setAdding(false);
-        setToast(true);
-        setTimeout(() => setToast(false), 2000);
+        await addToCart({
+            productId: variant.id,
+            price: displayPrice,
+            quantity: 1,
+        });
     };
 
     const handleFavorite = (e: React.MouseEvent) => {

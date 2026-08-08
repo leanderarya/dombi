@@ -15,7 +15,7 @@ class Product extends Model
     protected $fillable = [
         'product_category_id', 'product_flavor_group_id', 'name', 'description',
         'flavor', 'size', 'normalized_size', 'size_value', 'size_unit',
-        'sku', 'center_price', 'selling_price', 'center_stock', 'image', 'is_active',
+        'sku', 'center_price', 'selling_price', 'center_stock', 'image', 'is_active', 'is_recommended',
     ];
 
     protected function casts(): array
@@ -25,6 +25,7 @@ class Product extends Model
             'selling_price' => 'decimal:2',
             'center_stock' => 'integer',
             'is_active' => 'boolean',
+            'is_recommended' => 'boolean',
         ];
     }
 

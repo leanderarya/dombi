@@ -25,5 +25,8 @@ class DatabaseSeeder extends Seeder
 
         // 6. Payment accounts for settlement
         $this->call(PaymentAccountSeeder::class);
+
+        // 7. Customers (registered + guest) + addresses
+        $this->call(CustomerSeeder::class);
     }
 }
