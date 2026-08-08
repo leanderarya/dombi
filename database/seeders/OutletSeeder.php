@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\CourierProfile;
 use App\Models\Outlet;
+use App\Models\OutletOperatingHours;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -50,6 +51,8 @@ class OutletSeeder extends Seeder
 
         $tembalangUser->update(['outlet_id' => $tembalang->id]);
 
+        $this->seedOperatingHours($tembalang);
+
         // ── Outlet Banyumanik ──────────────────────────────────────
         $banyumanikUser = User::updateOrCreate(['email' => 'outlet.banyumanik@example.com'], [
             'name' => 'Outlet Banyumanik',
@@ -75,6 +78,8 @@ class OutletSeeder extends Seeder
         ]);
 
         $banyumanikUser->update(['outlet_id' => $banyumanik->id]);
+
+        $this->seedOperatingHours($banyumanik);
 
         // ── Courier ────────────────────────────────────────────────
         $courierUser = User::updateOrCreate(['email' => 'courier@example.com'], [
@@ -103,5 +108,15 @@ class OutletSeeder extends Seeder
             'is_active' => true,
             'must_change_password' => false,
         ]);
+    }
+
+    private function seedOperatingHours(Outlet $outlet): void
+    {
+        for ($day = 0; $day <= 6; $day++) {
+            OutletOperatingHours::updateOrCreate(
+                ['outlet_id' => $outlet->id, 'day_of_week' => $day],
+                ['open_time' => '00:00:00', 'close_time' => '23:59:00', 'is_closed' => false],
+            );
+        }
     }
 }
