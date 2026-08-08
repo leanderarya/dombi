@@ -112,9 +112,11 @@ export function getPaymentIssue(
     if (paymentStatus === 'failed') {
         return { isFailed: true };
     }
+
     if (paymentStatus === 'expired') {
         return { isFailed: false };
     }
+
     return null;
 }
 
@@ -130,15 +132,18 @@ export function getBadgeProps(input: {
     if (input.status === 'ready_for_pickup' && !input.isPickup) {
         return { badgeVariant: 'info', badgeLabel: 'Menunggu Kurir' };
     }
+
     if (getPaymentIssue(input.paymentStatus)) {
         return { badgeFallbackStatus: 'payment_failed' };
     }
+
     if (
         input.status === 'pending_confirmation' &&
         input.paymentStatus !== 'paid'
     ) {
         return { badgeFallbackStatus: 'pending_payment' };
     }
+
     return { badgeFallbackStatus: input.status };
 }
 
