@@ -31,7 +31,6 @@ export default function TerminalStatusCards({ order, reorderHref }: Props) {
         </Link>
     );
 
-
     if (order.status === 'completed') {
         return (
             <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-6 text-center">

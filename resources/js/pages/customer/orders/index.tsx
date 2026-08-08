@@ -1,6 +1,6 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Search } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import ActiveOrderCard from '@/components/customer/active-order-card';
 import EmptyOrderState from '@/components/customer/empty-order-state';
 import OrderFilterChips from '@/components/customer/order-filter-chips';
@@ -67,13 +67,17 @@ const filterOptions = [
     { key: 'all', label: 'Semua' },
     { key: 'completed', label: 'Selesai' },
     { key: 'cancelled', label: 'Dibatalkan' },
+    { key: 'failed', label: 'Gagal' },
 ];
 
 type ViewState = 'recovered' | 'empty';
 
 export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
     const { maskedPhone, clearRecovery } = useOrderRecovery();
-    const [filter, setFilter] = useState('all');
+    const [filter, setFilter] = useState(
+        () =>
+            new URLSearchParams(window.location.search).get('filter') ?? 'all',
+    );
     usePolling(20000);
     const [recoverySheetOpen, setRecoverySheetOpen] = useState(false);
     const [recoveryLoading, setRecoveryLoading] = useState(false);
@@ -81,6 +85,15 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
     const [recoveredHistory, setRecoveredHistory] = useState<any[] | null>(
         null,
     );
+
+    function handleFilterChange(next: string) {
+        setFilter(next);
+        router.get(
+            '/customer/orders',
+            next === 'all' ? {} : { filter: next, page: 1 },
+            { preserveState: true, replace: true },
+        );
+    }
 
     // Check for pending recovery phone on mount (after OAuth redirect)
     useEffect(() => {
@@ -102,41 +115,11 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
         hasServerOrders || hasRecoveredOrders ? 'recovered' : 'empty';
 
     const displayActive = recoveredActive ?? activeOrders ?? [];
-    const displayHistory = useMemo(
-        () => recoveredHistory ?? historyOrders?.data ?? [],
-        [historyOrders?.data, recoveredHistory],
-    );
-
-    const filteredHistory = useMemo(() => {
-        if (filter === 'all') {
-            return displayHistory;
-        }
-
-        if (filter === 'completed') {
-            return displayHistory.filter((o: any) => o.status === 'completed');
-        }
-
-        if (filter === 'cancelled') {
-            return displayHistory.filter((o: any) =>
-                [
-                    'cancelled_by_customer',
-                    'cancelled_by_outlet',
-                    'rejected_by_outlet',
-                ].includes(o.status),
-            );
-        }
-
-        if (filter === 'failed') {
-            return displayHistory.filter((o: any) =>
-                ['failed_delivery', 'expired'].includes(o.status),
-            );
-        }
-
-        return displayHistory;
-    }, [displayHistory, filter]);
+    const displayHistory = recoveredHistory ?? historyOrders?.data ?? [];
 
     const hasActiveOrders = displayActive.length > 0;
-    const hasHistory = filteredHistory.length > 0;
+    // Server already filters history; count what's shown.
+    const hasHistory = displayHistory.length > 0;
 
     return (
         <CustomerMobileLayout hideTopBar>
@@ -154,7 +137,7 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                             <OrderFilterChips
                                 options={filterOptions}
                                 active={filter}
-                                onChange={setFilter}
+                                onChange={handleFilterChange}
                             />
                         </div>
                     )}
@@ -224,7 +207,7 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                                 </div>
                             ) : (
                                 <div className="mt-2 space-y-3">
-                                    {filteredHistory.map((order: any) => (
+                                    {displayHistory.map((order: any) => (
                                         <OrderHistoryCard
                                             key={order.id}
                                             order={order}

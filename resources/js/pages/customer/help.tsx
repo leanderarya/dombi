@@ -14,7 +14,7 @@ export default function Help() {
                     >
                         <ChevronLeft className="h-5 w-5" />
                     </Link>
-                    <h1 className="text-base font-bold text-text">Bantuan</h1>
+                    <h1 className="text-sm font-semibold text-text">Bantuan</h1>
                     <div className="h-11 w-11" />
                 </div>
             </header>
