@@ -44,6 +44,7 @@ export interface Product {
     has_image: boolean;
     display_image: string | null;
     is_active: boolean;
+    is_recommended?: boolean;
     stock_status?: 'available' | 'low' | 'out_of_stock';
 }
 export interface ProductPricingRow {

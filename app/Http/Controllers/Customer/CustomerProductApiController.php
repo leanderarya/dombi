@@ -73,6 +73,7 @@ class CustomerProductApiController extends Controller
                     'available_stock' => $availableStock,
                     'stock_status' => $stockStatus,
                     'is_active' => $product->is_active,
+                    'is_recommended' => $product->is_recommended,
                 ];
             });
 

@@ -15,17 +15,13 @@ class FavoriteController extends Controller
     {
         $user = $request->user();
 
-        if (! $user) {
-            return response()->json(['product_ids' => []]);
-        }
+        $productIds = $user
+            ? Favorite::where('customer_id', $user->getCustomerOrCreate()->id)
+                ->pluck('product_id')
+                ->toArray()
+            : [];
 
-        $customerId = $user->getCustomerOrCreate()->id;
-
-        $productIds = Favorite::where('customer_id', $customerId)
-            ->pluck('product_id')
-            ->toArray();
-
-        if (! $request->wantsJson()) {
+        if ($request->header('X-Inertia')) {
             return Inertia::render('customer/favorites');
         }
 

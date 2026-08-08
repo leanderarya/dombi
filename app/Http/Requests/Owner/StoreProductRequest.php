@@ -25,6 +25,7 @@ class StoreProductRequest extends FormRequest
             'selling_price' => ['required', 'numeric', 'gte:center_price'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'is_active' => ['sometimes', 'boolean'],
+            'is_recommended' => ['sometimes', 'boolean'],
         ];
     }
 }

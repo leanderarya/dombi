@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dombi-v4';
+const CACHE_NAME = 'dombi-v5';
 const OFFLINE_URL = '/offline';
 
 self.addEventListener('install', (event) => {

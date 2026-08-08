@@ -1,15 +1,14 @@
 import { Head, Link } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 import ProductImage from '@/components/customer/product-image';
 import { Skeleton } from '@/components/ui/skeleton';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useProducts } from '@/hooks/use-products';
 import type { Variant } from '@/hooks/use-products';
+import { useQuickAddCart } from '@/hooks/use-quick-add-cart';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
-import { mutationFetch } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
-import { useCart } from '@/lib/use-cart';
 import { useFavorites } from '@/lib/use-favorites';
 
 interface FavoriteRowData {
@@ -25,10 +24,6 @@ function FavoritesInner() {
         outletLoading,
     );
     const { favorites, toggle } = useFavorites();
-    const cart = useCart();
-    const [addingId, setAddingId] = useState<number | null>(null);
-    const [toastId, setToastId] = useState<number | null>(null);
-    const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isOutletClosed = selectedOutlet?.is_open === false;
 
     const favoriteVariants = useMemo(() => {
@@ -50,50 +45,6 @@ function FavoritesInner() {
             a.variant.name.localeCompare(b.variant.name),
         );
     }, [families, favorites]);
-
-    const handleQuickAdd = async (variant: Variant) => {
-        if (
-            addingId !== null ||
-            variant.stock_status === 'out_of_stock' ||
-            isOutletClosed
-        ) {
-            return;
-        }
-
-        setAddingId(variant.id);
-        cart.addItem(variant.id, 1, variant.price);
-
-        try {
-            const token = document
-                .querySelector('meta[name="csrf-token"]')
-                ?.getAttribute('content');
-            const res = await mutationFetch('/customer/cart/add', {
-                method: 'POST',
-                headers: {
-                    ...(token ? { 'X-CSRF-TOKEN': token } : {}),
-                },
-                body: JSON.stringify({
-                    product_id: variant.id,
-                    quantity: 1,
-                }),
-            });
-
-            if (!res.ok) {
-                throw new Error('Failed');
-            }
-
-            if (toastTimer.current) {
-                clearTimeout(toastTimer.current);
-            }
-
-            setToastId(variant.id);
-            toastTimer.current = setTimeout(() => setToastId(null), 2000);
-        } catch {
-            cart.removeItem(variant.id);
-        } finally {
-            setAddingId(null);
-        }
-    };
 
     const handleFavorite = (variant: Variant) => {
         toggle(variant.id);
@@ -122,48 +73,48 @@ function FavoritesInner() {
     };
 
     return (
-        <CustomerMobileLayout>
+        <CustomerMobileLayout hideTopBar>
             <Head title="Favorit" />
-
-            <div className="pt-safe">
-                <h1 className="text-xl font-semibold text-text">Favorit</h1>
-                <p className="mt-1 text-xs text-text-muted">
-                    {loading
-                        ? '...'
-                        : `${favoriteVariants.length} produk favorit`}
-                </p>
-            </div>
-
-            {loading ? (
-                <FavoritesSkeleton />
-            ) : error ? (
-                <FavoritesError message={error} onRetry={retry} />
-            ) : favoriteVariants.length === 0 ? (
-                <FavoritesEmpty />
-            ) : (
-                <div className="mt-3 overflow-hidden rounded-2xl border border-border/60 bg-white">
-                    {favoriteVariants.map((row, i) => (
-                        <div
-                            key={row.variant.id}
-                            className={
-                                i < favoriteVariants.length - 1
-                                    ? 'border-b border-border/30'
-                                    : ''
-                            }
-                        >
-                            <FavoriteRow
-                                row={row}
-                                href={productHref(row.variant, row.familyId)}
-                                adding={addingId === row.variant.id}
-                                toasting={toastId === row.variant.id}
-                                isOutletClosed={isOutletClosed}
-                                onQuickAdd={() => handleQuickAdd(row.variant)}
-                                onFavorite={() => handleFavorite(row.variant)}
-                            />
-                        </div>
-                    ))}
+            {/* Page Title */}
+            <header className="sticky top-0 z-30 bg-white/95 pt-safe backdrop-blur">
+                <div className="mx-auto flex max-w-lg items-center justify-center px-4 py-3">
+                    <h1 className="text-base font-bold text-text">Favorit</h1>
                 </div>
-            )}
+            </header>
+            <div className="pt-4">
+                {loading ? (
+                    <FavoritesSkeleton />
+                ) : error ? (
+                    <FavoritesError message={error} onRetry={retry} />
+                ) : favoriteVariants.length === 0 ? (
+                    <FavoritesEmpty />
+                ) : (
+                    <div className="mt-3 overflow-hidden rounded-2xl border border-border/60 bg-white">
+                        {favoriteVariants.map((row, i) => (
+                            <div
+                                key={row.variant.id}
+                                className={
+                                    i < favoriteVariants.length - 1
+                                        ? 'border-b border-border/30'
+                                        : ''
+                                }
+                            >
+                                <FavoriteRow
+                                    row={row}
+                                    href={productHref(
+                                        row.variant,
+                                        row.familyId,
+                                    )}
+                                    isOutletClosed={isOutletClosed}
+                                    onFavorite={() =>
+                                        handleFavorite(row.variant)
+                                    }
+                                />
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </CustomerMobileLayout>
     );
 }
@@ -171,22 +122,25 @@ function FavoritesInner() {
 function FavoriteRow({
     row,
     href,
-    adding,
-    toasting,
     isOutletClosed,
-    onQuickAdd,
     onFavorite,
 }: {
     row: FavoriteRowData;
     href: string;
-    adding: boolean;
-    toasting: boolean;
     isOutletClosed: boolean;
-    onQuickAdd: () => void;
     onFavorite: () => void;
 }) {
     const { variant, familyName } = row;
     const isOutOfStock = variant.stock_status === 'out_of_stock';
+    const { addToCart, adding, toast } = useQuickAddCart();
+
+    const handleQuickAdd = () => {
+        if (isOutOfStock || isOutletClosed) {
+            return;
+        }
+
+        addToCart({ productId: variant.id, price: variant.price, quantity: 1 });
+    };
 
     return (
         <Link
@@ -224,7 +178,7 @@ function FavoriteRow({
             </div>
 
             <div className="shrink-0">
-                {toasting ? (
+                {toast ? (
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100">
                         <svg
                             className="h-4 w-4 text-emerald-600"
@@ -246,7 +200,7 @@ function FavoriteRow({
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            onQuickAdd();
+                            handleQuickAdd();
                         }}
                         disabled={adding || isOutOfStock || isOutletClosed}
                         className={`flex h-10 w-10 items-center justify-center rounded-full transition-all active:opacity-80 disabled:opacity-40 ${

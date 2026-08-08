@@ -58,7 +58,7 @@ function HomeIcon({ active }: { active: boolean }) {
             <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                d="M19 10.5v8a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 18.5v-8M3.5 10.5 11.6 3.2a1 1 0 0 1 1.3 0l8.1 7.3"
             />
         </svg>
     );

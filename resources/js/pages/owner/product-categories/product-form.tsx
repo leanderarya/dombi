@@ -44,6 +44,7 @@ export default function ProductForm({
             : '',
         image: null as File | null,
         is_active: editingProduct?.is_active ?? true,
+        is_recommended: editingProduct?.is_recommended ?? false,
         product_category_id: category.id,
     });
 
@@ -275,6 +276,10 @@ export default function ProductForm({
             fd.append('center_price', singleForm.data.center_price);
             fd.append('selling_price', singleForm.data.selling_price);
             fd.append('is_active', singleForm.data.is_active ? '1' : '0');
+            fd.append(
+                'is_recommended',
+                singleForm.data.is_recommended ? '1' : '0',
+            );
 
             if (singleImageFile) {
                 fd.append('image', singleImageFile);
@@ -319,6 +324,10 @@ export default function ProductForm({
             fd.append('center_price', singleForm.data.center_price);
             fd.append('selling_price', singleForm.data.selling_price);
             fd.append('is_active', singleForm.data.is_active ? '1' : '0');
+            fd.append(
+                'is_recommended',
+                singleForm.data.is_recommended ? '1' : '0',
+            );
             fd.append('product_category_id', String(category.id));
 
             if (singleImageFile) {
@@ -774,6 +783,22 @@ export default function ProductForm({
                         />
                         <span className="ml-auto text-[11px] text-text-subtle">
                             Nonaktifkan untuk sembunyikan dari outlet
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50/40 p-3">
+                        <Checkbox
+                            label="Rekomendasi"
+                            checked={singleForm.data.is_recommended}
+                            onChange={(e) =>
+                                singleForm.setData(
+                                    'is_recommended',
+                                    e.target.checked,
+                                )
+                            }
+                        />
+                        <span className="ml-auto text-[11px] text-text-subtle">
+                            Tampilkan di section Rekomendasi menu customer
                         </span>
                     </div>
 

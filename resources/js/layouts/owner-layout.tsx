@@ -6,7 +6,7 @@ import {
     Truck,
     Wallet,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useLayoutEffect } from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import OwnerCommandSheet from '@/components/owner/owner-command-sheet';
 import OwnerPageSkeleton from '@/components/owner/owner-page-skeleton';
@@ -134,6 +134,20 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
 
 function OwnerLayoutInner({ children }: PropsWithChildren) {
     useFlashToast();
+    useLayoutEffect(() => {
+        const root = document.documentElement;
+        const previousRole = root.dataset.role;
+
+        root.dataset.role = 'owner';
+
+        return () => {
+            if (previousRole) {
+                root.dataset.role = previousRole;
+            } else {
+                delete root.dataset.role;
+            }
+        };
+    }, []);
     const { loading } = useInertiaLoading();
     const page = usePage<any>();
     const { ownerOperationalCounts } = page.props;
