@@ -93,6 +93,8 @@ export default function OutletLocationMap({
         address: null,
     });
     const abortRef = useRef<AbortController | null>(null);
+    // ponytail: popupRef typed `any` (react-leaflet Popup ref) — keep simple
+    const popupRef = useRef<any>(null);
     const [gpsError, setGpsError] = useState<string | null>(null);
     const [gpsLoading, setGpsLoading] = useState(false);
 
@@ -307,6 +309,26 @@ export default function OutletLocationMap({
                                     });
                                 },
                             }}
+                        >
+                            {!readOnly && (
+                                <Popup ref={popupRef}>
+                                    <MapPreviewContent
+                                        lat={marker.lat}
+                                        lng={marker.lng}
+                                        geo={geo}
+                                        onConfirm={() =>
+                                            popupRef.current?.close()
+                                        }
+                                    />
+                                </Popup>
+                            )}
+                        </Marker>
+                    )}
+                    {!readOnly && (
+                        <AutoOpenPopup
+                            popupRef={popupRef}
+                            marker={marker}
+                            readOnly={readOnly}
                         />
                     )}
                 </MapContainer>
@@ -330,6 +352,49 @@ export default function OutletLocationMap({
                         : SEMARANG_CENTER.lng.toFixed(2)}
                 </span>
             </div>
+        </div>
+    );
+}
+
+function MapPreviewContent({
+    lat,
+    lng,
+    geo,
+    onConfirm,
+}: {
+    lat: number;
+    lng: number;
+    geo: GeoStatus;
+    onConfirm: () => void;
+}) {
+    return (
+        <div className="w-56 p-1 text-xs">
+            <div className="font-bold text-slate-900 tabular-nums">
+                {lat.toFixed(6)} · {lng.toFixed(6)}
+            </div>
+            {geo.loading && (
+                <div className="mt-1 flex items-center gap-1.5 text-slate-500">
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-600" />
+                    Mendeteksi alamat...
+                </div>
+            )}
+            {geo.failed && (
+                <div className="mt-1 text-red-600">
+                    Gagal mendeteksi wilayah. Geser marker atau coba lagi.
+                </div>
+            )}
+            {!geo.loading && !geo.failed && geo.address && (
+                <div className="mt-1 text-slate-600">
+                    {geo.address.formatted_address}
+                </div>
+            )}
+            <button
+                type="button"
+                onClick={onConfirm}
+                className="mt-2 w-full rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+            >
+                Simpan Lokasi
+            </button>
         </div>
     );
 }
@@ -466,6 +531,26 @@ function MapClickHandler({
             });
         },
     });
+
+    return null;
+}
+
+function AutoOpenPopup({
+    popupRef,
+    marker,
+    readOnly,
+}: {
+    popupRef: React.MutableRefObject<any>;
+    marker: LatLng | null;
+    readOnly: boolean;
+}) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (marker && !readOnly && popupRef.current) {
+            popupRef.current.openOn(map);
+        }
+    }, [map, marker, readOnly, popupRef]);
 
     return null;
 }
