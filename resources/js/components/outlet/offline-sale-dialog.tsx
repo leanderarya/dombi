@@ -51,6 +51,12 @@ export default function OfflineSaleDialog({
         });
     };
 
+    const qtyValue = form.data.quantity.toString();
+    const qtyNum = Number(form.data.quantity);
+    const qtyValid = Number.isInteger(qtyNum) && qtyNum >= 1;
+    const qtyMax = selectedVariant?.stock ?? null;
+    const qtyOverflow = qtyValid && qtyMax !== null && qtyNum > qtyMax;
+
     if (!open) {
         return null;
     }
@@ -63,7 +69,7 @@ export default function OfflineSaleDialog({
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl"
+                className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -112,20 +118,29 @@ export default function OfflineSaleDialog({
                                 </label>
                                 <input
                                     type="number"
+                                    inputMode="numeric"
                                     min="1"
-                                    max={selectedVariant?.stock ?? 999}
-                                    value={form.data.quantity}
-                                    onChange={(e) =>
+                                    placeholder="0"
+                                    value={qtyValue}
+                                    onChange={(e) => {
+                                        const raw = e.target.value;
                                         form.setData(
                                             'quantity',
-                                            Math.max(
-                                                1,
-                                                parseInt(e.target.value) || 1,
-                                            ),
-                                        )
-                                    }
+                                            raw === '' ? 0 : Number(raw),
+                                        );
+                                    }}
                                     className="min-h-11 w-full rounded-lg border border-border bg-surface text-center text-sm font-semibold text-text focus:ring-2 focus:ring-primary/30 focus:outline-none"
                                 />
+                                {qtyOverflow && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        Maksimal {qtyMax} (stok tersedia)
+                                    </p>
+                                )}
+                                {qtyValid && qtyNum < 1 && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        Jumlah minimal 1
+                                    </p>
+                                )}
                             </div>
                             <div className="flex-1">
                                 <label className="mb-1 block text-xs font-medium text-text-muted">
@@ -162,7 +177,12 @@ export default function OfflineSaleDialog({
                         )}
                         <button
                             type="submit"
-                            disabled={form.processing || !form.data.variant_id}
+                            disabled={
+                                form.processing ||
+                                !form.data.variant_id ||
+                                !qtyValid ||
+                                qtyOverflow
+                            }
                             className="min-h-11 w-full rounded-lg bg-emerald-600 text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
                         >
                             {form.processing ? 'Menyimpan...' : 'Simpan'}
