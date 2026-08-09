@@ -14,10 +14,25 @@ import {
     useMap,
     useMapEvents,
 } from 'react-leaflet';
-import { searchPlaces } from '@/lib/geocoding';
-import type { PlaceSuggestion } from '@/lib/geocoding';
+import { reverseGeocode, searchPlaces } from '@/lib/geocoding';
+import type {
+    PlaceSuggestion,
+    ReverseGeocodeResult,
+} from '@/lib/geocoding';
 
 type LatLng = { lat: number; lng: number };
+
+type GeoStatus = {
+    loading: boolean;
+    failed: boolean;
+    address: ReverseGeocodeResult | null;
+};
+
+type LocationChange = {
+    lat: number;
+    lng: number;
+    geo: GeoStatus;
+};
 
 type ExistingOutlet = {
     id: number;
@@ -29,7 +44,7 @@ type ExistingOutlet = {
 
 interface Props {
     value?: LatLng | null;
-    onChange: (value: LatLng) => void;
+    onChange: (change: LocationChange) => void;
     readOnly?: boolean;
     existingOutlets?: ExistingOutlet[];
 }
@@ -71,6 +86,53 @@ export default function OutletLocationMap({
 }: Props) {
     const marker = value?.lat && value?.lng ? value : null;
     const center = marker ?? SEMARANG_CENTER;
+
+    const [geo, setGeo] = useState<GeoStatus>({
+        loading: false,
+        failed: false,
+        address: null,
+    });
+    const abortRef = useRef<AbortController | null>(null);
+
+    // Reverse-geocode saat marker bergerak (debounce 650ms + abort)
+    useEffect(() => {
+        if (!marker) {
+            return;
+        }
+
+        abortRef.current?.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
+
+        // ponytail: sync loading reset per brief; rule wants it in callback but
+        // that would delay the loading flag past the 650ms debounce
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setGeo((prev) => ({ ...prev, loading: true, failed: false }));
+
+        const timeout = window.setTimeout(async () => {
+            try {
+                const address = await reverseGeocode(
+                    marker.lat,
+                    marker.lng,
+                    controller.signal,
+                );
+                setGeo({ loading: false, failed: false, address });
+            } catch {
+                if (!controller.signal.aborted) {
+                    setGeo((prev) => ({
+                        ...prev,
+                        loading: false,
+                        failed: true,
+                    }));
+                }
+            }
+        }, 650);
+
+        return () => {
+            window.clearTimeout(timeout);
+            controller.abort();
+        };
+    }, [marker]);
     const selectedIcon = useMemo(
         () =>
             L.icon({
@@ -112,7 +174,9 @@ export default function OutletLocationMap({
     return (
         <div className="overflow-hidden rounded-lg border border-slate-300 bg-slate-100">
             {!readOnly && (
-                <MapSearchBox onSelect={(lat, lng) => onChange({ lat, lng })} />
+                <MapSearchBox
+                    onSelect={(lat, lng) => onChange({ lat, lng, geo })}
+                />
             )}
             <div className="h-[200px] w-full lg:h-[400px]">
                 <MapContainer
@@ -134,7 +198,9 @@ export default function OutletLocationMap({
                         position={marker}
                     />
                     <MapCenter position={marker} />
-                    {!readOnly && <MapClickHandler onChange={onChange} />}
+                    {!readOnly && (
+                        <MapClickHandler onChange={onChange} geo={geo} />
+                    )}
 
                     {/* Existing outlet markers */}
                     {existingOutlets.map((o) => (
@@ -170,6 +236,7 @@ export default function OutletLocationMap({
                                     onChange({
                                         lat: point.lat,
                                         lng: point.lng,
+                                        geo,
                                     });
                                 },
                             }}
@@ -316,10 +383,20 @@ function MapSearchBox({
     );
 }
 
-function MapClickHandler({ onChange }: { onChange: (value: LatLng) => void }) {
+function MapClickHandler({
+    onChange,
+    geo,
+}: {
+    onChange: (change: LocationChange) => void;
+    geo: GeoStatus;
+}) {
     useMapEvents({
         click(event) {
-            onChange({ lat: event.latlng.lat, lng: event.latlng.lng });
+            onChange({
+                lat: event.latlng.lat,
+                lng: event.latlng.lng,
+                geo,
+            });
         },
     });
 
