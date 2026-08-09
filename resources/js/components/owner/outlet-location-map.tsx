@@ -5,7 +5,14 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import { Locate, Search, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useEffectEvent,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import {
     MapContainer,
     Marker,
@@ -86,6 +93,9 @@ export default function OutletLocationMap({
 }: Props) {
     const marker = value?.lat && value?.lng ? value : null;
     const center = marker ?? SEMARANG_CENTER;
+    const lat = marker?.lat;
+    const lng = marker?.lng;
+    const emitChange = useEffectEvent(onChange);
 
     const [geo, setGeo] = useState<GeoStatus>({
         loading: false,
@@ -99,8 +109,10 @@ export default function OutletLocationMap({
     const [gpsLoading, setGpsLoading] = useState(false);
 
     // Reverse-geocode saat marker bergerak (debounce 650ms + abort)
+    // Deps on primitive coords (lat/lng) — onChange read via useEffectEvent so
+    // a new onChange identity won't re-fire the loop.
     useEffect(() => {
-        if (!marker) {
+        if (lat === undefined || lng === undefined) {
             return;
         }
 
@@ -116,15 +128,15 @@ export default function OutletLocationMap({
         const timeout = window.setTimeout(async () => {
             try {
                 const address = await reverseGeocode(
-                    marker.lat,
-                    marker.lng,
+                    lat,
+                    lng,
                     controller.signal,
                 );
                 const resolved = { loading: false, failed: false, address };
                 setGeo(resolved);
-                onChange({
-                    lat: marker.lat,
-                    lng: marker.lng,
+                emitChange({
+                    lat,
+                    lng,
                     geo: resolved,
                 });
             } catch {
@@ -135,9 +147,9 @@ export default function OutletLocationMap({
                         loading: false,
                         ...failed,
                     }));
-                    onChange({
-                        lat: marker.lat,
-                        lng: marker.lng,
+                    emitChange({
+                        lat,
+                        lng,
                         geo: {
                             loading: false,
                             ...failed,
@@ -151,7 +163,7 @@ export default function OutletLocationMap({
             window.clearTimeout(timeout);
             controller.abort();
         };
-    }, [marker, onChange]);
+    }, [lat, lng]);
     const handleUseCurrentLocation = () => {
         if (!navigator.geolocation) {
             setGpsError('Geolocation tidak didukung browser ini.');

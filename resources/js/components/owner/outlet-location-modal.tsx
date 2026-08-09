@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,14 +40,14 @@ export default function OutletLocationModal({
     const closeModal = () =>
         closeOutletLocationModal({ resetForm: reset, onClose });
 
-    const location = (() => {
+    const location = useMemo(() => {
         const lat = Number(data.latitude);
         const lng = Number(data.longitude);
 
         return Number.isFinite(lat) && Number.isFinite(lng)
             ? { lat, lng }
             : null;
-    })();
+    }, [data.latitude, data.longitude]);
 
     const setLocation = (change: {
         lat: number;
