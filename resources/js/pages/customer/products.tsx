@@ -685,7 +685,7 @@ function buildRecommendations(families: Family[]): FlavorGroup[] {
     return list.slice(0, 6);
 }
 
-function buildSections(
+export function buildSections(
     families: Family[],
     activeFilter: string,
 ): FamilySection[] {
@@ -705,7 +705,9 @@ function buildSections(
         const flavorMap = new Map<string, Family['variants']>();
 
         for (const v of active) {
-            const key = v.flavor ?? '__none__';
+            // Produk tanpa flavor = produk standalone: satu baris per produk,
+            // bukan digabung jadi satu baris kategori.
+            const key = v.flavor ? v.flavor : `__product__${v.id}`;
             const arr = flavorMap.get(key);
 
             if (arr) {
@@ -718,7 +720,8 @@ function buildSections(
         const flavorGroups: FlavorGroup[] = [];
 
         for (const [key, variants] of flavorMap) {
-            const flavor = key === '__none__' ? null : key;
+            const isStandalone = key.startsWith('__product__');
+            const flavor = isStandalone ? null : key;
             const sorted = [...variants].sort((a, b) => a.price - b.price);
             flavorGroups.push({
                 flavor,
@@ -727,7 +730,11 @@ function buildSections(
                 familyDescription: family.description,
                 variants,
                 lowestPrice: sorted[0]?.price ?? 0,
-                displayLabel: flavor ? `${family.name} ${flavor}` : family.name,
+                displayLabel: isStandalone
+                    ? (sorted[0]?.name ?? family.name)
+                    : flavor
+                      ? `${family.name} ${flavor}`
+                      : family.name,
                 representativeVariant: sorted[0],
             });
         }
