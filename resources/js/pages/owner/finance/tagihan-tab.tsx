@@ -39,10 +39,11 @@ export default function TagihanTab({ kpis, outlets }: any) {
                 return false;
             }
 
-            if (search) {
-                return o.outlet_name
-                    .toLowerCase()
-                    .includes(search.toLowerCase());
+            if (
+                search &&
+                !o.outlet_name.toLowerCase().includes(search.toLowerCase())
+            ) {
+                return false;
             }
 
             if (dueDate && o.nearest_due_date !== dueDate) {
