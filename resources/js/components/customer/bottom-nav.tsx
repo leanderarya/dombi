@@ -11,7 +11,7 @@ export default function CustomerBottomNav() {
     const { url } = usePage();
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40">
+        <nav className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
             <div className="bg-white/95 pb-safe shadow-[0_-1px_3px_rgba(0,0,0,0.06)] backdrop-blur">
                 <div className="mx-auto grid h-14 max-w-lg grid-cols-4">
                     {navItems.map((item) => {
