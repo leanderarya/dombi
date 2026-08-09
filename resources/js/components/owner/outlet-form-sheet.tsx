@@ -57,8 +57,10 @@ export default function OutletFormSheet({
             ...form.data,
             latitude: change.lat.toFixed(7),
             longitude: change.lng.toFixed(7),
-            kelurahan: change.geo.address?.kelurahan || form.data.kelurahan || '',
-            kecamatan: change.geo.address?.kecamatan || form.data.kecamatan || '',
+            kelurahan:
+                change.geo.address?.kelurahan || form.data.kelurahan || '',
+            kecamatan:
+                change.geo.address?.kecamatan || form.data.kecamatan || '',
             city: change.geo.address?.city || form.data.city || '',
             province: change.geo.address?.province || form.data.province || '',
             postal_code:
