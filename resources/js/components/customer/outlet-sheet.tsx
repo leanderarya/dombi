@@ -11,6 +11,7 @@ interface Props {
     fulfillmentType?: 'pickup' | 'delivery';
     onFulfillmentChange?: (type: 'pickup' | 'delivery') => void;
     deliveryDisabled?: boolean;
+    deliveryBadge?: string;
 }
 
 export default function OutletSheet({
@@ -19,6 +20,7 @@ export default function OutletSheet({
     fulfillmentType,
     onFulfillmentChange,
     deliveryDisabled,
+    deliveryBadge,
 }: Props) {
     const { selectedOutlet, selectManual, outlets, loading, error, retry } =
         useOutlet();
@@ -40,6 +42,7 @@ export default function OutletSheet({
                         value={fulfillmentType}
                         onChange={onFulfillmentChange}
                         deliveryDisabled={deliveryDisabled}
+                        deliveryBadge={deliveryBadge}
                         variant="white"
                     />
                     <p className="mt-2 text-center text-[11px] text-text-muted">
