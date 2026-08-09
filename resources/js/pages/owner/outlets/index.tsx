@@ -1,8 +1,8 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { Building } from 'lucide-react';
 import { useState } from 'react';
-import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button, buttonVariants } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
