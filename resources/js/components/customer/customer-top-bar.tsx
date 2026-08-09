@@ -7,6 +7,14 @@ import NotificationSheet from '@/components/shared/notification-sheet';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { useCart } from '@/lib/use-cart';
 
+const DESKTOP_NAV = [
+    { href: '/customer/home', label: 'Beranda' },
+    { href: '/customer/products', label: 'Produk' },
+    { href: '/customer/favorites', label: 'Favorit' },
+    { href: '/customer/orders', label: 'Pesanan' },
+    { href: '/customer/profile', label: 'Akun' },
+];
+
 interface Props {
     addressOverride?: string | null;
     customerName?: string | null;
@@ -17,6 +25,7 @@ export default function CustomerTopBar({
     customerName,
 }: Props) {
     const { auth, guestMode } = usePage<any>().props;
+    const { url } = usePage();
     const { totalItems } = useCart();
     const { summary } = useCustomerLocation();
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -110,6 +119,35 @@ export default function CustomerTopBar({
                         </Link>
                     </div>
                 </div>
+                <nav
+                    className="hidden border-t border-border md:block"
+                    aria-label="Navigasi utama"
+                >
+                    <div className="mx-auto flex max-w-7xl items-center gap-6 px-6 py-2">
+                        {DESKTOP_NAV.map((item) => {
+                            const active =
+                                url === item.href ||
+                                url.startsWith(`${item.href}/`);
+
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    aria-current={
+                                        active ? 'page' : undefined
+                                    }
+                                    className={`text-sm font-semibold ${
+                                        active
+                                            ? 'text-primary'
+                                            : 'text-text-muted hover:text-text'
+                                    }`}
+                                >
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </nav>
             </header>
             <LocationSheet
                 open={sheetOpen}

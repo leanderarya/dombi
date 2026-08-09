@@ -166,25 +166,27 @@ export default function CheckoutIndex({
                 backHref="/customer/products"
             />
 
-            {items.length === 0 ? (
-                <div className="mt-4 rounded-xl border border-border bg-white p-5 text-center">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface">
-                        <ShoppingCart className="h-5 w-5 text-text-subtle" />
-                    </div>
-                    <p className="mt-3 text-sm font-semibold text-text">
-                        Keranjang masih kosong
-                    </p>
-                    <p className="mt-1 text-xs text-text-muted">
-                        Pilih produk untuk mulai belanja.
-                    </p>
-                    <button
-                        onClick={() => router.visit('/customer/products')}
-                        className="mt-4 min-h-11 rounded-lg bg-primary px-5 text-sm font-bold text-white active:opacity-80"
-                    >
-                        Mulai Belanja
-                    </button>
-                </div>
-            ) : (
+            <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-6">
+                <div className="min-w-0">
+                    {items.length === 0 ? (
+                        <div className="mt-4 rounded-xl border border-border bg-white p-5 text-center">
+                            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface">
+                                <ShoppingCart className="h-5 w-5 text-text-subtle" />
+                            </div>
+                            <p className="mt-3 text-sm font-semibold text-text">
+                                Keranjang masih kosong
+                            </p>
+                            <p className="mt-1 text-xs text-text-muted">
+                                Pilih produk untuk mulai belanja.
+                            </p>
+                            <button
+                                onClick={() => router.visit('/customer/products')}
+                                className="mt-4 min-h-11 rounded-lg bg-primary px-5 text-sm font-bold text-white active:opacity-80"
+                            >
+                                Mulai Belanja
+                            </button>
+                        </div>
+                    ) : (
                 <div className="mt-4 rounded-xl border border-border bg-white p-4">
                     <h2 className="mb-3 text-[13px] font-semibold text-text-subtle">
                         Pesanan
@@ -214,9 +216,9 @@ export default function CheckoutIndex({
                         </span>
                     </div>
                 </div>
-            )}
+                    )}
 
-            <section className="mt-4">
+                    <section className="mt-4">
                 {/* Segmented Toggle */}
                 <div className="relative flex rounded-xl bg-surface-muted p-1">
                     <div
@@ -345,7 +347,40 @@ export default function CheckoutIndex({
                 />
             </section>
             {/* Spacer for sticky footer */}
-            <div className="h-24" />
+                    <div className="h-24 lg:hidden" />
+                </div>
+                <aside className="hidden lg:block">
+                    <div className="sticky top-0 rounded-xl border border-border bg-white p-4">
+                        <h2 className="text-sm font-semibold text-text">
+                            Ringkasan
+                        </h2>
+                        <div className="mt-3 flex items-center justify-between text-sm">
+                            <span className="text-text-muted">
+                                {itemCount} item
+                            </span>
+                            <span className="text-xl font-bold text-text tabular-nums">
+                                {formatCurrency(
+                                    subtotal || summary?.subtotal || 0,
+                                )}
+                            </span>
+                        </div>
+                        <div className="mt-4">
+                            <button
+                                type="button"
+                                onClick={submit}
+                                disabled={
+                                    items.length === 0 ||
+                                    !fulfillmentType ||
+                                    processing
+                                }
+                                className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                            >
+                                {processing ? 'Memproses...' : 'Lanjutkan'}
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
         </CustomerMobileLayout>
     );
 }
