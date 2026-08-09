@@ -119,33 +119,36 @@ export default function CustomerTopBar({
                         </Link>
                     </div>
                 </div>
-            </header>
-            <nav
-                className="hidden border-t border-border lg:block"
-                aria-label="Navigasi utama"
-            >
-                <div className="mx-auto flex max-w-7xl items-center gap-6 px-6 py-2">
-                    {DESKTOP_NAV.map((item) => {
-                        const active =
-                            url === item.href || url.startsWith(`${item.href}/`);
+                <nav
+                    className="hidden border-t border-border lg:block"
+                    aria-label="Navigasi utama"
+                >
+                    <div className="mx-auto flex max-w-7xl items-center gap-6 px-6 py-2">
+                        {DESKTOP_NAV.map((item) => {
+                            const active =
+                                url === item.href ||
+                                url.startsWith(`${item.href}/`);
 
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                aria-current={active ? 'page' : undefined}
-                                className={`text-sm font-semibold ${
-                                    active
-                                        ? 'text-primary'
-                                        : 'text-text-muted hover:text-text'
-                                }`}
-                            >
-                                {item.label}
-                            </Link>
-                        );
-                    })}
-                </div>
-            </nav>
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    aria-current={
+                                        active ? 'page' : undefined
+                                    }
+                                    className={`text-sm font-semibold ${
+                                        active
+                                            ? 'text-primary'
+                                            : 'text-text-muted hover:text-text'
+                                    }`}
+                                >
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </nav>
+            </header>
             <LocationSheet
                 open={sheetOpen}
                 onClose={() => setSheetOpen(false)}
