@@ -120,14 +120,29 @@ export default function OutletLocationMap({
                     marker.lng,
                     controller.signal,
                 );
-                setGeo({ loading: false, failed: false, address });
+                const resolved = { loading: false, failed: false, address };
+                setGeo(resolved);
+                onChange({
+                    lat: marker.lat,
+                    lng: marker.lng,
+                    geo: resolved,
+                });
             } catch {
                 if (!controller.signal.aborted) {
+                    const failed = { failed: true, address: null };
                     setGeo((prev) => ({
                         ...prev,
                         loading: false,
-                        failed: true,
+                        ...failed,
                     }));
+                    onChange({
+                        lat: marker.lat,
+                        lng: marker.lng,
+                        geo: {
+                            loading: false,
+                            ...failed,
+                        },
+                    });
                 }
             }
         }, 650);
@@ -136,7 +151,7 @@ export default function OutletLocationMap({
             window.clearTimeout(timeout);
             controller.abort();
         };
-    }, [marker]);
+    }, [marker, onChange]);
     const handleUseCurrentLocation = () => {
         if (!navigator.geolocation) {
             setGpsError('Geolocation tidak didukung browser ini.');
