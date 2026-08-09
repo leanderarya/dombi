@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
+import { gridCols } from '@/components/customer/responsive-layout-helpers';
 import NotificationBell from '@/components/shared/notification-bell';
 import NotificationSheet from '@/components/shared/notification-sheet';
 import PushBanner from '@/components/shared/push-banner';
@@ -68,40 +69,62 @@ export default function Home({ customerName, activeOrders }: any) {
             activeOrder={activeOrder}
         >
             <Head title="Home" />
-            <HeroCarousel
-                hero={hero}
-                outletName={nearestOutlet?.name ?? null}
-                onOpenNotifications={() => setNotificationOpen(true)}
-            />
-            <GreetingCard
-                isLoggedIn={isLoggedIn}
-                customerName={customerName}
-                auth={auth}
-            />
+            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
+                <div className="min-w-0">
+                    <HeroCarousel
+                        hero={hero}
+                        outletName={nearestOutlet?.name ?? null}
+                        onOpenNotifications={() => setNotificationOpen(true)}
+                    />
+                    <GreetingCard
+                        isLoggedIn={isLoggedIn}
+                        customerName={customerName}
+                        auth={auth}
+                    />
 
-            <div className="mt-4">
-                <PushBanner variant="home" />
+                    <div className="lg:hidden">
+                        <div className="mt-4">
+                            <PushBanner variant="home" />
+                        </div>
+
+                        {showPhoneBanner && (
+                            <PhoneBanner
+                                onDismiss={() => {
+                                    setPhoneBannerDismissed(true);
+                                    localStorage.setItem(
+                                        'dombi_phone_banner_dismissed',
+                                        'true',
+                                    );
+                                }}
+                            />
+                        )}
+                    </div>
+
+                    <QuickActions
+                        onPickup={pickup.start}
+                        onDelivery={handleDelivery}
+                        pickupLoading={pickup.loading}
+                    />
+
+                    <PromoBento />
+                </div>
+                <aside className="hidden lg:block">
+                    <div className="space-y-4">
+                        <PushBanner variant="home" />
+                        {showPhoneBanner && (
+                            <PhoneBanner
+                                onDismiss={() => {
+                                    setPhoneBannerDismissed(true);
+                                    localStorage.setItem(
+                                        'dombi_phone_banner_dismissed',
+                                        'true',
+                                    );
+                                }}
+                            />
+                        )}
+                    </div>
+                </aside>
             </div>
-
-            {showPhoneBanner && (
-                <PhoneBanner
-                    onDismiss={() => {
-                        setPhoneBannerDismissed(true);
-                        localStorage.setItem(
-                            'dombi_phone_banner_dismissed',
-                            'true',
-                        );
-                    }}
-                />
-            )}
-
-            <QuickActions
-                onPickup={pickup.start}
-                onDelivery={handleDelivery}
-                pickupLoading={pickup.loading}
-            />
-
-            <PromoBento />
 
             <DeliveryLoginSheet
                 open={deliverySheetOpen}
@@ -309,7 +332,7 @@ function QuickActions({
     return (
         <section className="mt-6">
             <h2 className="px-4 text-sm font-bold text-text">Pesan Sekarang</h2>
-            <div className="mt-3 grid grid-cols-2 gap-3 px-4">
+            <div className={`mt-3 grid ${gridCols(2)} gap-3 px-4`}>
                 <button
                     type="button"
                     onClick={onPickup}
@@ -403,7 +426,7 @@ function PromoBento() {
                 </Link>
             </div>
 
-            <div className="mt-3 grid grid-cols-2 gap-3 px-4">
+            <div className={`mt-3 grid gap-3 px-4 ${gridCols(3)}`}>
                 {PROMO_BENTOS.map((bento) => (
                     <div
                         key={bento.title}

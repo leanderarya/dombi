@@ -16,6 +16,10 @@ import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import OutletSheet from '@/components/customer/outlet-sheet';
 import ProductImage from '@/components/customer/product-image';
+import {
+    gridCols,
+    railAndMain,
+} from '@/components/customer/responsive-layout-helpers';
 import SizeSelectorSheet from '@/components/customer/size-selector-sheet';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
@@ -136,7 +140,7 @@ function ProductsInner() {
     return (
         <>
             <Head title="Dombi Center" />
-            <div className="relative mx-auto min-h-screen w-full max-w-md bg-[#FAFAFA] pb-24 font-sans text-gray-900 shadow-xl">
+            <div className="relative mx-auto min-h-screen w-full max-w-md lg:max-w-7xl bg-[#FAFAFA] pb-24 font-sans text-gray-900 shadow-xl">
                 {/* ── 1. HEADER ── */}
                 <header className="relative rounded-b-3xl bg-primary px-4 pt-safe pb-10 text-white">
                     <div className="mb-4 flex items-center justify-between">
@@ -229,6 +233,8 @@ function ProductsInner() {
                     </button>
                 </div>
 
+                {/* ── MOBILE VIEW (<lg) ── */}
+                <div className="lg:hidden">
                 {/* ── 3. CATEGORY CHIPS ── */}
                 <div className="mx-4 mt-4 mb-3 flex items-center gap-2 overflow-hidden py-1">
                     <button
@@ -343,6 +349,164 @@ function ProductsInner() {
                     ) : (
                         <EmptyState />
                     )}
+                </div>
+                </div>
+
+                {/* ── DESKTOP VIEW (>=lg) ── */}
+                <div
+                    className={`hidden lg:grid ${railAndMain()} px-4 lg:px-8 pt-6`}
+                >
+                    {/* LEFT RAIL */}
+                    <aside className="hidden lg:block space-y-4">
+                        <button
+                            type="button"
+                            onClick={() => setOutletSheetOpen(true)}
+                            className="flex w-full items-center gap-2 rounded-2xl border border-border bg-white p-3 text-left shadow-xs"
+                        >
+                            <Store className="h-5 w-5 text-emerald-700" />
+                            <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-bold text-gray-900">
+                                    {outletName}
+                                </div>
+                                <div className="truncate text-xs text-gray-500">
+                                    {outletAddress}
+                                </div>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-gray-400" />
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                switchTo(
+                                    fulfillmentType === 'pickup'
+                                        ? 'delivery'
+                                        : 'pickup',
+                                )
+                            }
+                            className="flex w-full items-center justify-between rounded-2xl border border-border bg-white p-3 text-left shadow-xs"
+                        >
+                            <span className="text-sm font-semibold text-gray-900">
+                                {fulfillmentType === 'pickup'
+                                    ? 'Pick Up'
+                                    : 'Delivery'}
+                            </span>
+                            <ChevronRight className="h-4 w-4 text-gray-400" />
+                        </button>
+
+                        <div className="space-y-1">
+                            <button
+                                type="button"
+                                onClick={() => setActiveFilter('all')}
+                                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                                    activeFilter === 'all'
+                                        ? 'bg-emerald-50 font-bold text-emerald-700'
+                                        : 'text-gray-600 hover:bg-surface-muted'
+                                }`}
+                            >
+                                Semua
+                            </button>
+                            {filterOptions.map((opt) => (
+                                <button
+                                    key={opt.key}
+                                    type="button"
+                                    onClick={() =>
+                                        setActiveFilter(opt.key)
+                                    }
+                                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                                        activeFilter === opt.key
+                                            ? 'bg-emerald-50 font-bold text-emerald-700'
+                                            : 'text-gray-600 hover:bg-surface-muted'
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    </aside>
+
+                    {/* MAIN AREA */}
+                    <div className="min-w-0">
+                        {loading ? (
+                            <SectionSkeleton />
+                        ) : recommendations.length > 0 ||
+                          familySections.length > 0 ? (
+                            <>
+                                {recommendations.length > 0 && (
+                                    <div>
+                                        <div className="mb-2.5 flex items-center justify-between">
+                                            <h2 className="text-sm font-bold text-gray-900">
+                                                Rekomendasi
+                                            </h2>
+                                            <span className="text-xs font-medium text-gray-400">
+                                                Pilihan Menarik
+                                            </span>
+                                        </div>
+                                        <div className={`grid ${gridCols(3)} gap-3`}>
+                                            {recommendations.map((group) => (
+                                                <ProductCard
+                                                    key={
+                                                        group
+                                                            .representativeVariant
+                                                            .id
+                                                    }
+                                                    group={group}
+                                                    onQuickAdd={
+                                                        group.variants.length >
+                                                        1
+                                                            ? () =>
+                                                                  openSizeSelector(
+                                                                      group,
+                                                                  )
+                                                            : undefined
+                                                    }
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {familySections.map((section) => (
+                                    <section
+                                        key={section.familyId}
+                                        className="mt-6"
+                                    >
+                                        <div className="mb-3 flex items-center justify-between">
+                                            <h2 className="text-lg font-bold text-gray-900">
+                                                {section.familyName}
+                                            </h2>
+                                            <span className="text-xs text-gray-400">
+                                                {section.totalVariants} varian
+                                            </span>
+                                        </div>
+                                        <div className={`grid ${gridCols(3)} gap-3`}>
+                                            {section.flavorGroups.map(
+                                                (group) => (
+                                                    <VariantRow
+                                                        key={`${group.familyId}-${group.flavor ?? 'default'}`}
+                                                        group={group}
+                                                        onQuickAdd={
+                                                            group.variants
+                                                                .length > 1
+                                                                ? () =>
+                                                                      openSizeSelector(
+                                                                          group,
+                                                                      )
+                                                                : undefined
+                                                        }
+                                                    />
+                                                ),
+                                            )}
+                                        </div>
+                                    </section>
+                                ))}
+                            </>
+                        ) : error ? (
+                            <ErrorState message={error} />
+                        ) : (
+                            <EmptyState />
+                        )}
+                    </div>
                 </div>
 
                 {/* ── 7. BOTTOM NAV ── */}
