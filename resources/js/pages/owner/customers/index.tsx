@@ -89,10 +89,10 @@ export default function CustomersIndex({ customers }: any) {
                                                     : 'Guest'}
                                             </StatusBadge>
                                         </TableCell>
-                                        <TableCell className="px-4 py-3 text-right tabular-nums text-text">
+                                        <TableCell className="px-4 py-3 text-right text-text tabular-nums">
                                             {customer.orders_count}
                                         </TableCell>
-                                        <TableCell className="px-4 py-3 text-right font-semibold tabular-nums text-text">
+                                        <TableCell className="px-4 py-3 text-right font-semibold text-text tabular-nums">
                                             {formatCurrency(
                                                 customer.total_spend ?? 0,
                                             )}
