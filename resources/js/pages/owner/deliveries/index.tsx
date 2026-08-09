@@ -6,6 +6,7 @@ import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import {
@@ -134,24 +135,16 @@ export default function OwnerDeliveriesIndex({
                 aria-label="Filter status pengiriman"
                 className="mb-4 flex flex-wrap items-center gap-2"
             >
-                {statusOptions.map((opt) => {
-                    const isActive = (filters.status ?? '') === opt.value;
-
-                    return (
-                        <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setFilter('status', opt.value)}
-                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive
-                                    ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
-                            }`}
-                        >
-                            {opt.label}
-                        </button>
-                    );
-                })}
+                <FilterChips
+                    options={statusOptions.map((o) => ({
+                        key: o.value,
+                        label: o.label,
+                    }))}
+                    active={filters.status ?? ''}
+                    onChange={(key) => setFilter('status', key)}
+                    variant="ring"
+                    size="sm"
+                />
             </div>
 
             {/* Filter controls */}
