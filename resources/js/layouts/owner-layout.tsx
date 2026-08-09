@@ -63,6 +63,11 @@ const navGroups: NavGroup[] = [
                     );
                 },
             },
+            {
+                href: '/owner/customers',
+                label: 'Pelanggan',
+                isActive: (url: string) => url.startsWith('/owner/customers'),
+            },
         ],
     },
     {
