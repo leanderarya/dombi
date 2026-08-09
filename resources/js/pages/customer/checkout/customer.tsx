@@ -602,16 +602,20 @@ export default function CheckoutCustomer({
                 </div>
             )}
 
-            <div className="h-24" />
+            <div className="h-24 lg:hidden" />
                 </div>
                 <aside className="hidden lg:block">
                     <div className="sticky top-0 rounded-xl border border-border bg-white p-4">
-                        <StepButton
-                            label={buttonLabel}
-                            disabled={!canContinue || form.processing}
-                            processing={form.processing}
+                        <button
+                            type="button"
                             onClick={submit}
-                        />
+                            disabled={!canContinue || form.processing}
+                            className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                        >
+                            {form.processing
+                                ? 'Memproses...'
+                                : buttonLabel}
+                        </button>
                     </div>
                 </aside>
             </div>

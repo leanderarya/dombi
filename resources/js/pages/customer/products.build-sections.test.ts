@@ -12,6 +12,8 @@ const variant = (
     size: null,
     price: 1000,
     is_active: true,
+    is_recommended: false,
+    image: null,
     ...over,
 });
 

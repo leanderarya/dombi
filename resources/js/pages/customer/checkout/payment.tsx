@@ -546,7 +546,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
             )}
 
             {/* Spacer for sticky footer */}
-            <div className="h-24" />
+            <div className="h-24 lg:hidden" />
                 </div>
                 <aside className="hidden lg:block">
                     <div className="sticky top-0 rounded-xl border border-border bg-white p-4">
@@ -592,12 +592,14 @@ export default function CheckoutPayment({ draft, summary }: any) {
                             )}
                         </section>
                         <div className="mt-4">
-                            <StepButton
-                                label={ctaLabel}
-                                disabled={processing || deliveryBlocked}
-                                processing={processing}
+                            <button
+                                type="button"
                                 onClick={submit}
-                            />
+                                disabled={processing || deliveryBlocked}
+                                className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                            >
+                                {processing ? 'Memproses...' : ctaLabel}
+                            </button>
                         </div>
                     </div>
                 </aside>
