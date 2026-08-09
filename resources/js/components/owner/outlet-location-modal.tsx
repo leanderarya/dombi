@@ -9,7 +9,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { reverseGeocode } from '@/lib/geocoding';
 import {
     closeOutletLocationModal,
     createOutletLocationFormDefaults,
@@ -34,7 +33,10 @@ export default function OutletLocationModal({
         createOutletLocationFormDefaults(outlet),
     );
 
-    const [geoLoading, setGeoLoading] = useState(false);
+    const [geo, setGeo] = useState<{ loading: boolean; failed: boolean }>({
+        loading: false,
+        failed: false,
+    });
     const closeModal = () =>
         closeOutletLocationModal({ resetForm: reset, onClose });
 
@@ -47,29 +49,22 @@ export default function OutletLocationModal({
             : null;
     })();
 
-    const setLocation = async (point: { lat: number; lng: number }) => {
+    const setLocation = (change: {
+        lat: number;
+        lng: number;
+        geo: { loading: boolean; failed: boolean; address: any };
+    }) => {
         setData((prev) => ({
             ...prev,
-            latitude: String(point.lat.toFixed(7)),
-            longitude: String(point.lng.toFixed(7)),
+            latitude: change.lat.toFixed(7),
+            longitude: change.lng.toFixed(7),
+            kelurahan: change.geo.address?.kelurahan || prev.kelurahan,
+            kecamatan: change.geo.address?.kecamatan || prev.kecamatan,
+            city: change.geo.address?.city || prev.city,
+            province: change.geo.address?.province || prev.province,
+            postal_code: change.geo.address?.postal_code || prev.postal_code,
         }));
-        setGeoLoading(true);
-
-        try {
-            const result = await reverseGeocode(point.lat, point.lng);
-            setData((prev) => ({
-                ...prev,
-                kelurahan: result.kelurahan || prev.kelurahan,
-                kecamatan: result.kecamatan || prev.kecamatan,
-                city: result.city || prev.city,
-                province: result.province || prev.province,
-                postal_code: result.postal_code || prev.postal_code,
-            }));
-        } catch {
-            /* ignore */
-        }
-
-        setGeoLoading(false);
+        setGeo({ loading: change.geo.loading, failed: change.geo.failed });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -109,36 +104,38 @@ export default function OutletLocationModal({
                             onChange={setLocation}
                         />
                     </Suspense>
-                    {(errors.latitude || errors.longitude) && (
+                    {(errors.latitude || errors.longitude || geo.failed) && (
                         <p className="text-xs font-semibold text-red-600">
-                            Pilih lokasi pada peta.
+                            {geo.failed
+                                ? 'Gagal mendeteksi wilayah. Geser marker atau coba lagi. Anda bisa isi manual.'
+                                : 'Pilih lokasi pada peta.'}
                         </p>
                     )}
                     <div className="grid grid-cols-2 gap-3">
                         <InfoBadge
                             label="Kelurahan"
                             value={data.kelurahan}
-                            loading={geoLoading}
+                            loading={geo.loading}
                         />
                         <InfoBadge
                             label="Kecamatan"
                             value={data.kecamatan}
-                            loading={geoLoading}
+                            loading={geo.loading}
                         />
                         <InfoBadge
                             label="Kota"
                             value={data.city}
-                            loading={geoLoading}
+                            loading={geo.loading}
                         />
                         <InfoBadge
                             label="Provinsi"
                             value={data.province}
-                            loading={geoLoading}
+                            loading={geo.loading}
                         />
                         <InfoBadge
                             label="Kode Pos"
                             value={data.postal_code}
-                            loading={geoLoading}
+                            loading={geo.loading}
                             className="col-span-2"
                         />
                     </div>
