@@ -4,7 +4,7 @@ import L from 'leaflet';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import { Search, X } from 'lucide-react';
+import { Locate, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     MapContainer,
@@ -93,6 +93,8 @@ export default function OutletLocationMap({
         address: null,
     });
     const abortRef = useRef<AbortController | null>(null);
+    const [gpsError, setGpsError] = useState<string | null>(null);
+    const [gpsLoading, setGpsLoading] = useState(false);
 
     // Reverse-geocode saat marker bergerak (debounce 650ms + abort)
     useEffect(() => {
@@ -133,6 +135,47 @@ export default function OutletLocationMap({
             controller.abort();
         };
     }, [marker]);
+    const handleUseCurrentLocation = () => {
+        if (!navigator.geolocation) {
+            setGpsError('Geolocation tidak didukung browser ini.');
+
+            return;
+        }
+
+        setGpsLoading(true);
+        setGpsError(null);
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const point = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+                setGpsLoading(false);
+                onChange({ ...point, geo });
+            },
+            (err) => {
+                setGpsLoading(false);
+
+                switch (err.code) {
+                    case err.PERMISSION_DENIED:
+                        setGpsError(
+                            'Izin lokasi ditolak. Aktifkan di pengaturan browser.',
+                        );
+                        break;
+                    case err.POSITION_UNAVAILABLE:
+                        setGpsError('Lokasi tidak tersedia. Coba lagi.');
+                        break;
+                    case err.TIMEOUT:
+                        setGpsError('Timeout. Pastikan GPS aktif.');
+                        break;
+                    default:
+                        setGpsError('Gagal mendapatkan lokasi.');
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+        );
+    };
     const selectedIcon = useMemo(
         () =>
             L.icon({
@@ -174,9 +217,33 @@ export default function OutletLocationMap({
     return (
         <div className="overflow-hidden rounded-lg border border-slate-300 bg-slate-100">
             {!readOnly && (
-                <MapSearchBox
-                    onSelect={(lat, lng) => onChange({ lat, lng, geo })}
-                />
+                <>
+                    <MapSearchBox
+                        onSelect={(lat, lng) => onChange({ lat, lng, geo })}
+                    />
+                    <div className="border-b border-slate-200 bg-white">
+                        <button
+                            type="button"
+                            onClick={handleUseCurrentLocation}
+                            disabled={gpsLoading}
+                            className="flex w-full items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                        >
+                            {gpsLoading ? (
+                                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-600" />
+                            ) : (
+                                <Locate className="h-4 w-4" />
+                            )}
+                            {gpsLoading
+                                ? 'Mengambil lokasi...'
+                                : 'Gunakan Lokasi Saya'}
+                        </button>
+                        {gpsError && (
+                            <div className="px-3 pb-2 text-[11px] font-medium text-red-600">
+                                {gpsError}
+                            </div>
+                        )}
+                    </div>
+                </>
             )}
             <div className="h-[200px] w-full lg:h-[400px]">
                 <MapContainer
