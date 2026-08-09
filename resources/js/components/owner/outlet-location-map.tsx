@@ -22,10 +22,7 @@ import {
     useMapEvents,
 } from 'react-leaflet';
 import { reverseGeocode, searchPlaces } from '@/lib/geocoding';
-import type {
-    PlaceSuggestion,
-    ReverseGeocodeResult,
-} from '@/lib/geocoding';
+import type { PlaceSuggestion, ReverseGeocodeResult } from '@/lib/geocoding';
 
 type LatLng = { lat: number; lng: number };
 
