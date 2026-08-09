@@ -140,7 +140,7 @@ function ProductsInner() {
     return (
         <>
             <Head title="Dombi Center" />
-            <div className="relative mx-auto min-h-screen w-full max-w-md lg:max-w-7xl bg-[#FAFAFA] pb-24 font-sans text-gray-900 shadow-xl">
+            <div className="relative mx-auto min-h-screen w-full max-w-md bg-[#FAFAFA] pb-24 font-sans text-gray-900 shadow-xl lg:max-w-7xl">
                 {/* ── 1. HEADER ── */}
                 <header className="relative rounded-b-3xl bg-primary px-4 pt-safe pb-10 text-white">
                     <div className="mb-4 flex items-center justify-between">
@@ -235,129 +235,129 @@ function ProductsInner() {
 
                 {/* ── MOBILE VIEW (<lg) ── */}
                 <div className="lg:hidden">
-                {/* ── 3. CATEGORY CHIPS ── */}
-                <div className="mx-4 mt-4 mb-3 flex items-center gap-2 overflow-hidden py-1">
-                    <button
-                        type="button"
-                        onClick={() => setActiveFilter('all')}
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all ${
-                            activeFilter === 'all'
-                                ? 'border-emerald-700 bg-emerald-50 text-emerald-700'
-                                : 'border-gray-200 bg-white text-gray-400'
-                        }`}
-                    >
-                        <ThumbsUp className="h-4 w-4" />
-                    </button>
-                    {filterOptions.map((opt) => (
+                    {/* ── 3. CATEGORY CHIPS ── */}
+                    <div className="mx-4 mt-4 mb-3 flex items-center gap-2 overflow-hidden py-1">
                         <button
-                            key={opt.key}
                             type="button"
-                            onClick={() => setActiveFilter(opt.key)}
-                            className={`shrink-0 rounded-full px-4 py-2 text-xs transition-all ${
-                                activeFilter === opt.key
-                                    ? 'bg-emerald-600 font-bold text-white shadow-xs'
-                                    : 'border border-gray-200 bg-white font-medium text-gray-600'
+                            onClick={() => setActiveFilter('all')}
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all ${
+                                activeFilter === 'all'
+                                    ? 'border-emerald-700 bg-emerald-50 text-emerald-700'
+                                    : 'border-gray-200 bg-white text-gray-400'
                             }`}
                         >
-                            {opt.label}
+                            <ThumbsUp className="h-4 w-4" />
                         </button>
-                    ))}
-                </div>
-
-                {/* ── 4. PROMO STRIP BANNER ── */}
-                <div className="mx-4 mb-5 flex items-center justify-between rounded-2xl border border-sky-100 bg-sky-50 p-3">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
-                            <Store className="h-4 w-4" />
-                        </div>
-                        <div>
-                            <h4 className="text-xs font-bold text-gray-900">
-                                New Merchandise
-                            </h4>
-                            <p className="text-[11px] text-gray-500">
-                                Jangan ketinggalan minum dengan gaya baru!
-                            </p>
-                        </div>
+                        {filterOptions.map((opt) => (
+                            <button
+                                key={opt.key}
+                                type="button"
+                                onClick={() => setActiveFilter(opt.key)}
+                                className={`shrink-0 rounded-full px-4 py-2 text-xs transition-all ${
+                                    activeFilter === opt.key
+                                        ? 'bg-emerald-600 font-bold text-white shadow-xs'
+                                        : 'border border-gray-200 bg-white font-medium text-gray-600'
+                                }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
                     </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-sky-500" />
-                </div>
 
-                {/* ── 5. REKOMENDASI (horizontal scroll) ── */}
-                {recommendations.length > 0 && (
-                    <div className="mb-6">
-                        <div className="mb-2.5 flex items-center justify-between px-4">
-                            <h2 className="text-sm font-bold text-gray-900">
-                                Rekomendasi
-                            </h2>
-                            <span className="text-xs font-medium text-gray-400">
-                                Pilihan Menarik
-                            </span>
+                    {/* ── 4. PROMO STRIP BANNER ── */}
+                    <div className="mx-4 mb-5 flex items-center justify-between rounded-2xl border border-sky-100 bg-sky-50 p-3">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
+                                <Store className="h-4 w-4" />
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-bold text-gray-900">
+                                    New Merchandise
+                                </h4>
+                                <p className="text-[11px] text-gray-500">
+                                    Jangan ketinggalan minum dengan gaya baru!
+                                </p>
+                            </div>
                         </div>
-
-                        <div className="scrollbar-none flex gap-3 overflow-x-auto px-4 pr-6 pb-1">
-                            {recommendations.map((group) => (
-                                <ProductCard
-                                    key={group.representativeVariant.id}
-                                    group={group}
-                                    onQuickAdd={
-                                        group.variants.length > 1
-                                            ? () => openSizeSelector(group)
-                                            : undefined
-                                    }
-                                />
-                            ))}
-                        </div>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-sky-500" />
                     </div>
-                )}
 
-                {/* ── 6. SECTIONS ── */}
-                <div className="mb-6 space-y-6 px-4">
-                    {loading ? (
-                        <SectionSkeleton />
-                    ) : familySections.length > 0 ? (
-                        familySections.map((section) => (
-                            <section key={section.familyId}>
-                                <div className="mb-3 flex items-center justify-between">
-                                    <h2 className="text-sm font-bold text-gray-900">
-                                        {section.familyName}
-                                    </h2>
-                                    <span className="text-xs text-gray-400">
-                                        {section.totalVariants} varian
-                                    </span>
-                                </div>
+                    {/* ── 5. REKOMENDASI (horizontal scroll) ── */}
+                    {recommendations.length > 0 && (
+                        <div className="mb-6">
+                            <div className="mb-2.5 flex items-center justify-between px-4">
+                                <h2 className="text-sm font-bold text-gray-900">
+                                    Rekomendasi
+                                </h2>
+                                <span className="text-xs font-medium text-gray-400">
+                                    Pilihan Menarik
+                                </span>
+                            </div>
 
-                                <div className="space-y-3">
-                                    {section.flavorGroups.map((group) => (
-                                        <VariantRow
-                                            key={`${group.familyId}-${group.flavor ?? 'default'}`}
-                                            group={group}
-                                            onQuickAdd={
-                                                group.variants.length > 1
-                                                    ? () =>
-                                                          openSizeSelector(
-                                                              group,
-                                                          )
-                                                    : undefined
-                                            }
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        ))
-                    ) : error ? (
-                        <ErrorState message={error} />
-                    ) : (
-                        <EmptyState />
+                            <div className="scrollbar-none flex gap-3 overflow-x-auto px-4 pr-6 pb-1">
+                                {recommendations.map((group) => (
+                                    <ProductCard
+                                        key={group.representativeVariant.id}
+                                        group={group}
+                                        onQuickAdd={
+                                            group.variants.length > 1
+                                                ? () => openSizeSelector(group)
+                                                : undefined
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     )}
-                </div>
+
+                    {/* ── 6. SECTIONS ── */}
+                    <div className="mb-6 space-y-6 px-4">
+                        {loading ? (
+                            <SectionSkeleton />
+                        ) : familySections.length > 0 ? (
+                            familySections.map((section) => (
+                                <section key={section.familyId}>
+                                    <div className="mb-3 flex items-center justify-between">
+                                        <h2 className="text-sm font-bold text-gray-900">
+                                            {section.familyName}
+                                        </h2>
+                                        <span className="text-xs text-gray-400">
+                                            {section.totalVariants} varian
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {section.flavorGroups.map((group) => (
+                                            <VariantRow
+                                                key={`${group.familyId}-${group.flavor ?? 'default'}`}
+                                                group={group}
+                                                onQuickAdd={
+                                                    group.variants.length > 1
+                                                        ? () =>
+                                                              openSizeSelector(
+                                                                  group,
+                                                              )
+                                                        : undefined
+                                                }
+                                            />
+                                        ))}
+                                    </div>
+                                </section>
+                            ))
+                        ) : error ? (
+                            <ErrorState message={error} />
+                        ) : (
+                            <EmptyState />
+                        )}
+                    </div>
                 </div>
 
                 {/* ── DESKTOP VIEW (>=lg) ── */}
                 <div
-                    className={`hidden lg:grid ${railAndMain()} px-4 lg:px-8 pt-6`}
+                    className={`hidden lg:grid ${railAndMain()} px-4 pt-6 lg:px-8`}
                 >
                     {/* LEFT RAIL */}
-                    <aside className="hidden lg:block space-y-4">
+                    <aside className="hidden space-y-4 lg:block">
                         <button
                             type="button"
                             onClick={() => setOutletSheetOpen(true)}
@@ -417,9 +417,7 @@ function ProductsInner() {
                                 <button
                                     key={opt.key}
                                     type="button"
-                                    onClick={() =>
-                                        setActiveFilter(opt.key)
-                                    }
+                                    onClick={() => setActiveFilter(opt.key)}
                                     className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm ${
                                         activeFilter === opt.key
                                             ? 'bg-emerald-50 font-bold text-emerald-700'
@@ -449,7 +447,9 @@ function ProductsInner() {
                                                 Pilihan Menarik
                                             </span>
                                         </div>
-                                        <div className={`grid ${gridCols(3)} gap-3`}>
+                                        <div
+                                            className={`grid ${gridCols(3)} gap-3`}
+                                        >
                                             {recommendations.map((group) => (
                                                 <ProductCard
                                                     key={
@@ -486,7 +486,9 @@ function ProductsInner() {
                                                 {section.totalVariants} varian
                                             </span>
                                         </div>
-                                        <div className={`grid ${gridCols(3)} gap-3`}>
+                                        <div
+                                            className={`grid ${gridCols(3)} gap-3`}
+                                        >
                                             {section.flavorGroups.map(
                                                 (group) => (
                                                     <VariantRow

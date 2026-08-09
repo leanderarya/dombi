@@ -180,173 +180,187 @@ export default function CheckoutIndex({
                                 Pilih produk untuk mulai belanja.
                             </p>
                             <button
-                                onClick={() => router.visit('/customer/products')}
+                                onClick={() =>
+                                    router.visit('/customer/products')
+                                }
                                 className="mt-4 min-h-11 rounded-lg bg-primary px-5 text-sm font-bold text-white active:opacity-80"
                             >
                                 Mulai Belanja
                             </button>
                         </div>
                     ) : (
-                <div className="mt-4 rounded-xl border border-border bg-white p-4">
-                    <h2 className="mb-3 text-[13px] font-semibold text-text-subtle">
-                        Pesanan
-                    </h2>
-                    {items.map((item) => (
-                        <CheckoutItemCard
-                            key={item.product_id}
-                            name={
-                                item.variant_name
-                                    ? `${item.name} - ${item.variant_name}`
-                                    : item.name
-                            }
-                            price={item.price}
-                            quantity={item.quantity}
-                            onQuantityChange={(qty) =>
-                                updateQuantity(item.product_id, qty)
-                            }
-                            onRemove={() => removeItem(item.product_id)}
-                        />
-                    ))}
-                    <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-                        <span className="text-sm text-text-muted">
-                            {itemCount} item
-                        </span>
-                        <span className="text-2xl font-bold text-text tabular-nums">
-                            {formatCurrency(subtotal || summary?.subtotal || 0)}
-                        </span>
-                    </div>
-                </div>
+                        <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                            <h2 className="mb-3 text-[13px] font-semibold text-text-subtle">
+                                Pesanan
+                            </h2>
+                            {items.map((item) => (
+                                <CheckoutItemCard
+                                    key={item.product_id}
+                                    name={
+                                        item.variant_name
+                                            ? `${item.name} - ${item.variant_name}`
+                                            : item.name
+                                    }
+                                    price={item.price}
+                                    quantity={item.quantity}
+                                    onQuantityChange={(qty) =>
+                                        updateQuantity(item.product_id, qty)
+                                    }
+                                    onRemove={() => removeItem(item.product_id)}
+                                />
+                            ))}
+                            <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                                <span className="text-sm text-text-muted">
+                                    {itemCount} item
+                                </span>
+                                <span className="text-2xl font-bold text-text tabular-nums">
+                                    {formatCurrency(
+                                        subtotal || summary?.subtotal || 0,
+                                    )}
+                                </span>
+                            </div>
+                        </div>
                     )}
 
                     <section className="mt-4">
-                {/* Segmented Toggle */}
-                <div className="relative flex rounded-xl bg-surface-muted p-1">
-                    <div
-                        className="absolute top-1 bottom-1 rounded-lg bg-white shadow-sm transition-all duration-300 ease-in-out"
-                        style={{
-                            left: fulfillmentType === 'pickup' ? '4px' : '50%',
-                            width: 'calc(50% - 4px)',
-                        }}
-                    />
-                    <button
-                        type="button"
-                        onClick={() => saveFulfillment('pickup')}
-                        className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
-                            fulfillmentType === 'pickup'
-                                ? 'text-text'
-                                : 'text-text-muted'
-                        }`}
-                    >
-                        <Store className="h-4 w-4" />
-                        Pickup
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            saveFulfillment('delivery_dombi');
+                        {/* Segmented Toggle */}
+                        <div className="relative flex rounded-xl bg-surface-muted p-1">
+                            <div
+                                className="absolute top-1 bottom-1 rounded-lg bg-white shadow-sm transition-all duration-300 ease-in-out"
+                                style={{
+                                    left:
+                                        fulfillmentType === 'pickup'
+                                            ? '4px'
+                                            : '50%',
+                                    width: 'calc(50% - 4px)',
+                                }}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => saveFulfillment('pickup')}
+                                className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
+                                    fulfillmentType === 'pickup'
+                                        ? 'text-text'
+                                        : 'text-text-muted'
+                                }`}
+                            >
+                                <Store className="h-4 w-4" />
+                                Pickup
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    saveFulfillment('delivery_dombi');
 
-                            if (!isLoggedIn) {
-                                setDeliverySheetOpen(true);
+                                    if (!isLoggedIn) {
+                                        setDeliverySheetOpen(true);
 
-                                return;
-                            }
-                        }}
-                        className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
-                            fulfillmentType === 'delivery_dombi'
-                                ? 'text-text'
-                                : 'text-text-muted'
-                        }`}
-                    >
-                        <Truck className="h-4 w-4" />
-                        Delivery
-                    </button>
-                </div>
-
-                {/* Detail Card */}
-                <div className="mt-3 overflow-hidden rounded-xl border border-border bg-white">
-                    <div
-                        className="flex transition-transform duration-300 ease-in-out"
-                        style={{
-                            transform:
-                                fulfillmentType === 'pickup'
-                                    ? 'translateX(0)'
-                                    : 'translateX(-50%)',
-                            width: '200%',
-                        }}
-                    >
-                        {/* Pickup Detail */}
-                        <div className="w-1/2 shrink-0 p-4">
-                            <div className="flex items-center gap-2">
-                                <Store className="h-4 w-4 text-emerald-600" />
-                                <span className="text-sm font-semibold text-text">
-                                    Ambil di Outlet
-                                </span>
-                            </div>
-                            {nearestOutlet && (
-                                <div className="mt-1.5 text-[11px] text-text-muted">
-                                    {nearestOutlet.name} ·{' '}
-                                    {nearestOutlet.distance_km?.toFixed(1)} km
-                                </div>
-                            )}
-                            <div className="mt-1 text-[11px] font-medium text-emerald-700">
-                                Siap dalam 15-30 menit
-                            </div>
+                                        return;
+                                    }
+                                }}
+                                className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
+                                    fulfillmentType === 'delivery_dombi'
+                                        ? 'text-text'
+                                        : 'text-text-muted'
+                                }`}
+                            >
+                                <Truck className="h-4 w-4" />
+                                Delivery
+                            </button>
                         </div>
-                        {/* Delivery Detail */}
-                        <div className="w-1/2 shrink-0 p-4">
-                            <div className="flex items-center gap-2">
-                                <Truck className="h-4 w-4 text-emerald-600" />
-                                <span className="text-sm font-semibold text-text">
-                                    Kurir Dombi
-                                </span>
-                            </div>
-                            {nearestOutlet && (
-                                <div className="mt-1.5 text-[11px] text-text-muted">
-                                    {nearestOutlet.name} ·{' '}
-                                    {nearestOutlet.distance_km?.toFixed(1)} km
-                                </div>
-                            )}
-                            {deliveryPreview?.delivery_fee !== undefined ? (
-                                <>
-                                    <div className="mt-1.5 text-[11px] text-text-muted">
-                                        Ongkir:{' '}
-                                        <span className="font-bold text-text">
-                                            Rp{' '}
-                                            {deliveryPreview.delivery_fee.toLocaleString(
-                                                'id-ID',
-                                            )}
+
+                        {/* Detail Card */}
+                        <div className="mt-3 overflow-hidden rounded-xl border border-border bg-white">
+                            <div
+                                className="flex transition-transform duration-300 ease-in-out"
+                                style={{
+                                    transform:
+                                        fulfillmentType === 'pickup'
+                                            ? 'translateX(0)'
+                                            : 'translateX(-50%)',
+                                    width: '200%',
+                                }}
+                            >
+                                {/* Pickup Detail */}
+                                <div className="w-1/2 shrink-0 p-4">
+                                    <div className="flex items-center gap-2">
+                                        <Store className="h-4 w-4 text-emerald-600" />
+                                        <span className="text-sm font-semibold text-text">
+                                            Ambil di Outlet
                                         </span>
                                     </div>
+                                    {nearestOutlet && (
+                                        <div className="mt-1.5 text-[11px] text-text-muted">
+                                            {nearestOutlet.name} ·{' '}
+                                            {nearestOutlet.distance_km?.toFixed(
+                                                1,
+                                            )}{' '}
+                                            km
+                                        </div>
+                                    )}
                                     <div className="mt-1 text-[11px] font-medium text-emerald-700">
-                                        Diantar dalam 30-60 menit
+                                        Siap dalam 15-30 menit
                                     </div>
-                                </>
-                            ) : (
-                                <div className="mt-1.5 text-[11px] text-text-muted">
-                                    Masukkan alamat di langkah berikut untuk cek
-                                    ongkir
                                 </div>
-                            )}
+                                {/* Delivery Detail */}
+                                <div className="w-1/2 shrink-0 p-4">
+                                    <div className="flex items-center gap-2">
+                                        <Truck className="h-4 w-4 text-emerald-600" />
+                                        <span className="text-sm font-semibold text-text">
+                                            Kurir Dombi
+                                        </span>
+                                    </div>
+                                    {nearestOutlet && (
+                                        <div className="mt-1.5 text-[11px] text-text-muted">
+                                            {nearestOutlet.name} ·{' '}
+                                            {nearestOutlet.distance_km?.toFixed(
+                                                1,
+                                            )}{' '}
+                                            km
+                                        </div>
+                                    )}
+                                    {deliveryPreview?.delivery_fee !==
+                                    undefined ? (
+                                        <>
+                                            <div className="mt-1.5 text-[11px] text-text-muted">
+                                                Ongkir:{' '}
+                                                <span className="font-bold text-text">
+                                                    Rp{' '}
+                                                    {deliveryPreview.delivery_fee.toLocaleString(
+                                                        'id-ID',
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <div className="mt-1 text-[11px] font-medium text-emerald-700">
+                                                Diantar dalam 30-60 menit
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="mt-1.5 text-[11px] text-text-muted">
+                                            Masukkan alamat di langkah berikut
+                                            untuk cek ongkir
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <DeliveryLoginSheet
-                    open={deliverySheetOpen}
-                    onClose={() => {
-                        if (!isLoggedIn) {
-                            saveFulfillment('pickup');
-                        }
+                        <DeliveryLoginSheet
+                            open={deliverySheetOpen}
+                            onClose={() => {
+                                if (!isLoggedIn) {
+                                    saveFulfillment('pickup');
+                                }
 
-                        setDeliverySheetOpen(false);
-                    }}
-                    onSwitchToPickup={() => {
-                        saveFulfillment('pickup');
-                        setDeliverySheetOpen(false);
-                    }}
-                />
-            </section>
-            {/* Spacer for sticky footer */}
+                                setDeliverySheetOpen(false);
+                            }}
+                            onSwitchToPickup={() => {
+                                saveFulfillment('pickup');
+                                setDeliverySheetOpen(false);
+                            }}
+                        />
+                    </section>
+                    {/* Spacer for sticky footer */}
                     <div className="h-24 lg:hidden" />
                 </div>
                 <aside className="hidden lg:block">
