@@ -11,6 +11,7 @@ export interface PusatVariant {
     selling_price: number;
     margin: number;
     outlet_override_count: number;
+    updated_at: string | null;
 }
 
 export type PusatProduct = PusatVariant;
