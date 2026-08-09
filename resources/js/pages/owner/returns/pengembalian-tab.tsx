@@ -5,6 +5,7 @@ import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
@@ -131,26 +132,13 @@ export default function PengembalianTab({
                 className="mb-4 flex flex-wrap items-center gap-2"
                 aria-label="Filter Status Pengembalian"
             >
-                {RETURN_STATUS_FILTERS.map((f) => {
-                    const isActive = currentStatus === f.key;
-
-                    return (
-                        <button
-                            key={f.key}
-                            type="button"
-                            onClick={() =>
-                                navigate({ status: f.key || undefined })
-                            }
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive
-                                    ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
-                            }`}
-                        >
-                            {f.label}
-                        </button>
-                    );
-                })}
+                <FilterChips
+                    options={RETURN_STATUS_FILTERS}
+                    active={currentStatus}
+                    onChange={(key) => navigate({ status: key || undefined })}
+                    variant="ring"
+                    size="sm"
+                />
             </div>
 
             {/* Filter controls - Collapsible */}

@@ -1,6 +1,7 @@
 import { router, useForm } from '@inertiajs/react';
-import { Bike, Car, Package, Search, Truck, Users } from 'lucide-react';
+import { Bike, Car, Package, Truck, Users } from 'lucide-react';
 import { useState } from 'react';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import {
@@ -131,19 +132,11 @@ export default function CouriersIndex({
                 </div>
 
                 {/* Search */}
-                <div className="flex flex-1 items-center gap-0">
-                    <div className="relative w-full">
-                        <input
-                            type="text"
-                            placeholder="Cari kurir..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            style={{ paddingLeft: 40 }}
-                            className="w-full rounded-xl border border-border bg-surface py-2.5 pr-4 text-sm transition-colors outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
-                        />
-                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" />
-                    </div>
-                </div>
+                <OwnerFilterCard
+                    searchPlaceholder="Cari kurir..."
+                    searchValue={search}
+                    onSearch={setSearch}
+                />
 
                 {/* Courier Cards Grid */}
                 {filtered.length === 0 ? (

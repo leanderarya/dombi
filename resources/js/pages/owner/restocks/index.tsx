@@ -22,6 +22,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
@@ -227,20 +228,13 @@ export default function OwnerRestocksIndex({
                 className="mb-4 flex flex-wrap items-center gap-2"
                 aria-label="Filter Status"
             >
-                {statusFilters.map((sf) => {
-                    const isActive = currentStatus === sf.key;
-
-                    return (
-                        <button
-                            key={sf.key}
-                            type="button"
-                            onClick={() => setFilter('status', sf.key)}
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${isActive ? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
-                        >
-                            {sf.label}
-                        </button>
-                    );
-                })}
+                <FilterChips
+                    variant="ring"
+                    size="sm"
+                    options={statusFilters}
+                    active={currentStatus}
+                    onChange={(key) => setFilter('status', key)}
+                />
             </section>
 
             <OwnerFilterCard

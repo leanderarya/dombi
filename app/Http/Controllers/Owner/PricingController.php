@@ -52,6 +52,7 @@ class PricingController extends Controller
                 'selling_price' => (float) $p->selling_price,
                 'margin' => (float) $p->selling_price - (float) $p->center_price,
                 'outlet_override_count' => OutletProductPrice::where('product_id', $p->id)->count(),
+                'updated_at' => $p->updated_at?->toDateString(),
             ]);
 
         // KPIs
