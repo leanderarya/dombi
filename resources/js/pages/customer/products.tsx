@@ -429,68 +429,83 @@ function ProductsInner() {
                     <div className="min-w-0">
                         {loading ? (
                             <SectionSkeleton />
-                        ) : recommendations.length > 0 ? (
-                            <div>
-                                <div className="mb-2.5 flex items-center justify-between">
-                                    <h2 className="text-sm font-bold text-gray-900">
-                                        Rekomendasi
-                                    </h2>
-                                    <span className="text-xs font-medium text-gray-400">
-                                        Pilihan Menarik
-                                    </span>
-                                </div>
-                                <div className={`grid ${gridCols(3)} gap-3`}>
-                                    {recommendations.map((group) => (
-                                        <ProductCard
-                                            key={
-                                                group.representativeVariant.id
-                                            }
-                                            group={group}
-                                            onQuickAdd={
-                                                group.variants.length > 1
-                                                    ? () =>
-                                                          openSizeSelector(
-                                                              group,
-                                                          )
-                                                    : undefined
-                                            }
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        ) : null}
+                        ) : recommendations.length > 0 ||
+                          familySections.length > 0 ? (
+                            <>
+                                {recommendations.length > 0 && (
+                                    <div>
+                                        <div className="mb-2.5 flex items-center justify-between">
+                                            <h2 className="text-sm font-bold text-gray-900">
+                                                Rekomendasi
+                                            </h2>
+                                            <span className="text-xs font-medium text-gray-400">
+                                                Pilihan Menarik
+                                            </span>
+                                        </div>
+                                        <div className={`grid ${gridCols(3)} gap-3`}>
+                                            {recommendations.map((group) => (
+                                                <ProductCard
+                                                    key={
+                                                        group
+                                                            .representativeVariant
+                                                            .id
+                                                    }
+                                                    group={group}
+                                                    onQuickAdd={
+                                                        group.variants.length >
+                                                        1
+                                                            ? () =>
+                                                                  openSizeSelector(
+                                                                      group,
+                                                                  )
+                                                            : undefined
+                                                    }
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
-                        {familySections.map((section) => (
-                            <section
-                                key={section.familyId}
-                                className="mt-6"
-                            >
-                                <div className="mb-3 flex items-center justify-between">
-                                    <h2 className="text-lg font-bold text-gray-900">
-                                        {section.familyName}
-                                    </h2>
-                                    <span className="text-xs text-gray-400">
-                                        {section.totalVariants} varian
-                                    </span>
-                                </div>
-                                <div className={`grid ${gridCols(3)} gap-3`}>
-                                    {section.flavorGroups.map((group) => (
-                                        <VariantRow
-                                            key={`${group.familyId}-${group.flavor ?? 'default'}`}
-                                            group={group}
-                                            onQuickAdd={
-                                                group.variants.length > 1
-                                                    ? () =>
-                                                          openSizeSelector(
-                                                              group,
-                                                          )
-                                                    : undefined
-                                            }
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        ))}
+                                {familySections.map((section) => (
+                                    <section
+                                        key={section.familyId}
+                                        className="mt-6"
+                                    >
+                                        <div className="mb-3 flex items-center justify-between">
+                                            <h2 className="text-lg font-bold text-gray-900">
+                                                {section.familyName}
+                                            </h2>
+                                            <span className="text-xs text-gray-400">
+                                                {section.totalVariants} varian
+                                            </span>
+                                        </div>
+                                        <div className={`grid ${gridCols(3)} gap-3`}>
+                                            {section.flavorGroups.map(
+                                                (group) => (
+                                                    <VariantRow
+                                                        key={`${group.familyId}-${group.flavor ?? 'default'}`}
+                                                        group={group}
+                                                        onQuickAdd={
+                                                            group.variants
+                                                                .length > 1
+                                                                ? () =>
+                                                                      openSizeSelector(
+                                                                          group,
+                                                                      )
+                                                                : undefined
+                                                        }
+                                                    />
+                                                ),
+                                            )}
+                                        </div>
+                                    </section>
+                                ))}
+                            </>
+                        ) : error ? (
+                            <ErrorState message={error} />
+                        ) : (
+                            <EmptyState />
+                        )}
                     </div>
                 </div>
 
