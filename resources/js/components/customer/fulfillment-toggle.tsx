@@ -2,6 +2,7 @@ interface Props {
     value: 'pickup' | 'delivery';
     onChange: (value: 'pickup' | 'delivery') => void;
     deliveryDisabled?: boolean;
+    deliveryBadge?: string;
     variant?: 'green' | 'white';
 }
 
@@ -9,6 +10,7 @@ export default function FulfillmentToggle({
     value,
     onChange,
     deliveryDisabled,
+    deliveryBadge = 'Tutup',
     variant = 'green',
 }: Props) {
     const containerBg = variant === 'green' ? 'bg-white/20' : 'bg-gray-100';
@@ -47,7 +49,7 @@ export default function FulfillmentToggle({
                     Delivery
                     {deliveryDisabled && (
                         <span className="absolute -top-1.5 -right-1 rounded-full bg-red-500 px-1.5 text-[8px] font-extrabold text-white">
-                            Tutup
+                            {deliveryBadge}
                         </span>
                     )}
                 </button>
