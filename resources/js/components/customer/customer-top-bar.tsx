@@ -120,7 +120,7 @@ export default function CustomerTopBar({
                     </div>
                 </div>
                 <nav
-                    className="hidden border-t border-border lg:block"
+                    className="hidden border-t border-border md:block"
                     aria-label="Navigasi utama"
                 >
                     <div className="mx-auto flex max-w-7xl items-center gap-6 px-6 py-2">
