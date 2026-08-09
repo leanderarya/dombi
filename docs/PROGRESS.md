@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-09
 **Current Branch:** `develop`
-**Status:** Implementation near-complete (61/64 PRD requirements DONE). Release is **CONDITIONAL GO** pending two blockers. See [PRD Gap Report](PRD_GAP_REPORT.md) for the full evidence-backed audit.
+**Status:** Implementation near-complete (62/64 PRD requirements DONE). Both release blockers resolved. Release is **GO** pending operational release evidence. See [PRD Gap Report](PRD_GAP_REPORT.md) for the full evidence-backed audit.
 
 ---
 
@@ -22,12 +22,12 @@
 | Owner Analytics + CSV export | ✅ Done — ANA-1/2/3 |
 | Refund UI (customer + owner) | ✅ Done — REF-1..5 |
 | Product Scope launch invariants | ✅ 10/10 verified in code |
-| **PRD functional coverage** | ✅ **61/64 DONE, 3 PARTIAL, 0 NOT DONE** |
+| **PRD functional coverage** | ✅ **62/64 DONE, 2 PARTIAL, 0 NOT DONE** |
 | Test Suite | ✅ 1210 tests, 1210 passed, 4270 assertions |
 | Frontend tests | ✅ 18 files, 62 tests |
 | Frontend format/lint | ✅ format:check + lint:check pass |
 | Build | ✅ `npm run build` passes |
-| **TypeScript** | ❌ **`npm run types:check` FAILS — 3 errors** (test fixture in `products.build-sections.test.ts` missing `is_recommended`/`image`) |
+| **TypeScript** | ✅ `npm run types:check` passes (fixture fixed) |
 
 ---
 
@@ -38,7 +38,7 @@
 | `php artisan test` | ✅ PASS — 1210/1210, 4270 assertions |
 | `npm run format:check` | ✅ PASS |
 | `npm run lint:check` | ✅ PASS |
-| `npm run types:check` | ❌ **FAIL** — 3 TS errors in `resources/js/pages/customer/products.build-sections.test.ts` |
+| `npm run types:check` | ✅ PASS — fixture fixed |
 | `npm run test` | ✅ PASS — 18 files, 62 tests |
 | `npm run build` | ✅ PASS |
 
@@ -46,7 +46,7 @@
 
 ## What's Done
 
-### PRD functional coverage (61/64 DONE)
+### PRD functional coverage (62/64 DONE)
 Full requirement matrix with per-ID evidence is in [PRD_GAP_REPORT.md](PRD_GAP_REPORT.md). Summary by domain:
 - **Customer** CUST-1..8, PAY-1..6, REF-1..5 — all DONE
 - **Outlet** OUT-1..9 — 6 DONE, OUT-5 PARTIAL (no date filter)
@@ -54,7 +54,7 @@ Full requirement matrix with per-ID evidence is in [PRD_GAP_REPORT.md](PRD_GAP_R
 - **Owner** OWN-1..4, STK-1..5, FIN-1..6, DEL-1..4 — 10 DONE, DEL-3 PARTIAL
 - **Analytics** ANA-1..3 — all DONE
 - **Courier** CR-1..5 — all DONE
-- **System** SYS-1..6 — 3 DONE, SYS-6 PARTIAL (orphaned rate limiters)
+- **System** SYS-1..6 — 4 DONE, SYS-1 PARTIAL (push thin)
 
 ### Product Scope launch invariants — 10/10 verified
 Stock (no oversell, exact-once reservation release), payment idempotency (CAS + terminal guard), authorization scoping, order state machine, refund traceability, unpaid-order guard, ongkir/external-cost separation, courier self-scope. All present in code.
@@ -71,13 +71,13 @@ Stock (no oversell, exact-once reservation release), payment idempotency (CAS + 
 
 ## Release Status
 
-**Recommendation: CONDITIONAL GO** (see [PRD_GAP_REPORT.md](PRD_GAP_REPORT.md)).
+**Recommendation: GO** on code gates (see [PRD_GAP_REPORT.md](PRD_GAP_REPORT.md)). Both code blockers resolved:
 
-### Blocker 1 — TypeScript check fails
-`npm run types:check` reports 3 errors in `resources/js/pages/customer/products.build-sections.test.ts` (test fixture `Variant` objects missing `is_recommended` and `image`). Violates the "CI wajib hijau sebelum deploy" production gate. Low severity (test-only) but must be fixed before release.
+### Blocker 1 — TypeScript check fails 🔒 **RESOLVED**
+`products.build-sections.test.ts` fixture updated (added `is_recommended: false`, `image: null` to the `variant()` helper). `npm run types:check` now passes; the 3 fixture tests still pass.
 
-### Blocker 2 — Guest-cancel rate limiting unenforced (SYS-6)
-`guest-cancel` (3/min/IP) and `guest-cancel-token` (10/10min) rate limiters are defined in `AppServiceProvider` but not wired to any route. Low risk (cancel now requires auth), but the PRD security requirement is not enforced.
+### Blocker 2 — Guest-cancel rate limiting unenforced (SYS-6) 🔒 **RESOLVED**
+`throttle:guest-cancel` (3/min/IP) wired to `customer.orders.cancel`. The orphaned `guest-cancel-token` limiter (depended on a removed token route) was removed. Cancel tests (20) pass.
 
 ### Release evidence still required
 Operational evidence not yet present in `docs/PRODUCTION_CHECKLIST.md` / `docs/BACKUP_RESTORE.md`:
@@ -97,7 +97,7 @@ Operational evidence not yet present in `docs/PRODUCTION_CHECKLIST.md` / `docs/B
 |------|--------|------|
 | OUT-5 date filter on order history | PARTIAL | status filter present, date filter absent |
 | DEL-3 real-time assign margin | PARTIAL | margin bar exists in pricing pages, not in assign-courier sheet |
-| SYS-6 guest-cancel rate limiting | PARTIAL | limiters defined, not wired to route |
+| SYS-6 guest-cancel rate limiting | RESOLVED | `throttle:guest-cancel` wired to cancel route; token limiter removed |
 | Customer return/exchange flow (REF-3/4) | Done but deferred | implemented; outside soft-launch slice per Product Scope |
 | Offline sales + settlement (OUT-7/8) | Done but deferred | implemented; outside single-outlet slice |
 | Offsite S3 backup + restore drill | Waived | Hostinger-only scope; local backup only |
@@ -107,10 +107,8 @@ Operational evidence not yet present in `docs/PRODUCTION_CHECKLIST.md` / `docs/B
 
 ## Recommended Next Actions
 
-1. **Fix TypeScript check** — add `is_recommended`/`image` to test fixtures in `products.build-sections.test.ts` (unblocks CI gate).
-2. **Wire or remove SYS-6 rate limiters** — either attach the two named limiters to the cancel route or remove the orphaned definitions.
-3. **Close release evidence gaps** — staging smoke, DOKU matrix, migration rehearsal, backup restore drill, monitoring, production config.
-4. **Resolve PARTIAL items** — OUT-5 date filter, DEL-3 assign margin, when in scope.
+1. **Close release evidence gaps** — staging smoke, DOKU matrix, migration rehearsal, backup restore drill, monitoring, production config.
+2. **Resolve PARTIAL items** — OUT-5 date filter, DEL-3 assign margin, when in scope.
 
 ---
 
@@ -126,4 +124,4 @@ main (production-stable) — release
 
 ---
 
-*Snapshot: 2026-08-09 | 1210 tests passing | build passes | types:check FAILS (3 errors) | release CONDITIONAL GO*
+*Snapshot: 2026-08-09 | 1210 tests passing | build + types:check pass | release GO on code gates*
