@@ -44,6 +44,7 @@ use App\Http\Controllers\Outlet\SettlementController;
 use App\Http\Controllers\Owner\AnalyticsController as OwnerAnalyticsController;
 use App\Http\Controllers\Owner\CourierController;
 use App\Http\Controllers\Owner\CourierManagementController;
+use App\Http\Controllers\Owner\CustomerController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
 use App\Http\Controllers\Owner\DeliveryController as OwnerDeliveryController;
 use App\Http\Controllers\Owner\DeliveryTierController;
@@ -303,6 +304,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('order-reports/{report}', [App\Http\Controllers\Owner\OrderReportController::class, 'show'])->name('order-reports.show');
         Route::put('order-reports/{report}', [App\Http\Controllers\Owner\OrderReportController::class, 'update'])->name('order-reports.update');
         Route::post('orders/{order}/assign-courier', [OwnerDeliveryController::class, 'assignCourier'])->name('orders.assign-courier');
+        Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
         Route::get('deliveries/{delivery}', [OwnerDeliveryController::class, 'show'])->name('deliveries.show');
         Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
