@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Building, Store } from 'lucide-react';
+import { Building } from 'lucide-react';
 import { useState } from 'react';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -108,35 +109,25 @@ export default function OutletsIndex({ outlets }: any) {
             }
         >
             {/* Filter Bar */}
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="flex flex-1 items-center gap-0">
-                    <div className="relative w-full">
-                        <input
-                            type="text"
-                            placeholder="Cari outlet..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            style={{ paddingLeft: 40 }}
-                            className="w-full rounded-xl border border-border bg-surface py-2.5 pr-4 text-sm transition-colors outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
-                        />
-                        <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" />
-                    </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {filters.map((f) => (
-                        <button
-                            key={f.key}
-                            onClick={() => setFilter(f.key)}
-                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                filter === f.key
-                                    ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
-                            }`}
-                        >
-                            {f.label}
-                        </button>
-                    ))}
-                </div>
+            <OwnerFilterCard
+                searchPlaceholder="Cari outlet..."
+                searchValue={search}
+                onSearch={setSearch}
+            />
+            <div className="mb-4 flex flex-wrap gap-2">
+                {filters.map((f) => (
+                    <button
+                        key={f.key}
+                        onClick={() => setFilter(f.key)}
+                        className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
+                            filter === f.key
+                                ? 'bg-primary/10 text-primary ring-primary/20'
+                                : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
+                        }`}
+                    >
+                        {f.label}
+                    </button>
+                ))}
             </div>
 
             {/* Outlet Cards Grid */}
