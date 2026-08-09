@@ -109,12 +109,5 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('guest-cancel', function (Request $request) {
             return Limit::perMinute(3)->by($request->ip());
         });
-
-        // Guest cancel per-token: 10 per 10 minutes (prevent token replay)
-        RateLimiter::for('guest-cancel-token', function (Request $request) {
-            $token = $request->route('token') ?? $request->input('token', 'unknown');
-
-            return Limit::perMinutes(10, 10)->by('token:'.$token);
-        });
     }
 }
