@@ -363,6 +363,8 @@ export default function CheckoutCustomer({
                 backHref="/customer/checkout"
             />
 
+            <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-6">
+                <div className="min-w-0">
             {/* Customer Info + Recipient — single card */}
             <div className="mt-4 divide-y divide-border/50 rounded-xl border border-border bg-white">
                 <div className="p-4">
@@ -601,6 +603,18 @@ export default function CheckoutCustomer({
             )}
 
             <div className="h-24" />
+                </div>
+                <aside className="hidden lg:block">
+                    <div className="sticky top-0 rounded-xl border border-border bg-white p-4">
+                        <StepButton
+                            label={buttonLabel}
+                            disabled={!canContinue || form.processing}
+                            processing={form.processing}
+                            onClick={submit}
+                        />
+                    </div>
+                </aside>
+            </div>
             <LocationSheet
                 open={locationSheetOpen}
                 onClose={() => setLocationSheetOpen(false)}

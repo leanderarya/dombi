@@ -211,6 +211,8 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 backHref="/customer/checkout/customer"
             />
 
+            <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-6">
+                <div className="min-w-0">
             {/* Error Banner */}
             {submitError && (
                 <div className="mt-4">
@@ -438,45 +440,6 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 )}
             </section>
 
-            {/* Total Card */}
-            <section className="mt-4 rounded-xl bg-primary px-4 py-3 text-white">
-                <div className="space-y-1">
-                    <SummaryRow
-                        label="Subtotal"
-                        value={formatCurrency(summary.subtotal)}
-                    />
-                    {summary.delivery_fee > 0 && (
-                        <SummaryRow
-                            label="Ongkir"
-                            value={formatCurrency(summary.delivery_fee)}
-                        />
-                    )}
-                    <SummaryRow
-                        label="Biaya Layanan"
-                        value={
-                            paymentFee > 0 ? formatCurrency(paymentFee) : 'Rp 0'
-                        }
-                    />
-                </div>
-                <div className="mt-2 flex items-center justify-between border-t border-white/20 pt-2">
-                    <span className="text-sm font-semibold text-white">
-                        Total
-                    </span>
-                    <span className="text-lg font-bold text-white tabular-nums">
-                        {formatCurrency(total)}
-                    </span>
-                </div>
-                {deliveryBlocked && (
-                    <div className="mt-2">
-                        <NoticeBanner
-                            variant="warning"
-                            title="Lokasi di luar jangkauan"
-                            message="Kembali dan ubah lokasi pengiriman Anda."
-                        />
-                    </div>
-                )}
-            </section>
-
             {/* Recipient — only when different */}
             {hasDifferentRecipient && (
                 <section className="mt-4 rounded-xl border border-border bg-white p-4">
@@ -541,6 +504,61 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
             {/* Spacer for sticky footer */}
             <div className="h-24" />
+                </div>
+                <aside className="hidden lg:block">
+                    <div className="sticky top-0 rounded-xl border border-border bg-white p-4">
+                        <section className="bg-primary rounded-xl px-4 py-3 text-white">
+                            <div className="space-y-1">
+                                <SummaryRow
+                                    label="Subtotal"
+                                    value={formatCurrency(summary.subtotal)}
+                                />
+                                {summary.delivery_fee > 0 && (
+                                    <SummaryRow
+                                        label="Ongkir"
+                                        value={formatCurrency(
+                                            summary.delivery_fee,
+                                        )}
+                                    />
+                                )}
+                                <SummaryRow
+                                    label="Biaya Layanan"
+                                    value={
+                                        paymentFee > 0
+                                            ? formatCurrency(paymentFee)
+                                            : 'Rp 0'
+                                    }
+                                />
+                            </div>
+                            <div className="mt-2 flex items-center justify-between border-t border-white/20 pt-2">
+                                <span className="text-sm font-semibold text-white">
+                                    Total
+                                </span>
+                                <span className="text-lg font-bold text-white tabular-nums">
+                                    {formatCurrency(total)}
+                                </span>
+                            </div>
+                            {deliveryBlocked && (
+                                <div className="mt-2">
+                                    <NoticeBanner
+                                        variant="warning"
+                                        title="Lokasi di luar jangkauan"
+                                        message="Kembali dan ubah lokasi pengiriman Anda."
+                                    />
+                                </div>
+                            )}
+                        </section>
+                        <div className="mt-4">
+                            <StepButton
+                                label={ctaLabel}
+                                disabled={processing || deliveryBlocked}
+                                processing={processing}
+                                onClick={submit}
+                            />
+                        </div>
+                    </div>
+                </aside>
+            </div>
         </CustomerMobileLayout>
     );
 }
