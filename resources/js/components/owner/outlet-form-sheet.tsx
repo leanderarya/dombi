@@ -1,20 +1,11 @@
 import { Link } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
-import {
-    lazy,
-    Suspense,
-    useEffect,
-    useEffectEvent,
-    useMemo,
-    useRef,
-    useState,
-} from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PhoneInput from '@/components/ui/phone-input';
 import { Select } from '@/components/ui/select';
-import { reverseGeocode } from '@/lib/geocoding';
 import { cn } from '@/lib/utils';
 
 const OutletLocationMap = lazy(() => import('./outlet-location-map'));
@@ -42,11 +33,11 @@ export default function OutletFormSheet({
     outlet,
     existingOutlets = [],
 }: Props) {
-    const [geocodingState, setGeocodingState] = useState<
-        'idle' | 'loading' | 'success' | 'failed'
-    >('idle');
+    const [geo, setGeo] = useState<{
+        loading: boolean;
+        failed: boolean;
+    }>({ loading: false, failed: false });
     const [notesExpanded, setNotesExpanded] = useState(false);
-    const abortRef = useRef<AbortController | null>(null);
 
     const location = useMemo(() => {
         const lat = Number(form.data.latitude);
@@ -57,60 +48,27 @@ export default function OutletFormSheet({
             : null;
     }, [form.data.latitude, form.data.longitude]);
 
-    const setLocation = (point: { lat: number; lng: number }) => {
+    const setLocation = (change: {
+        lat: number;
+        lng: number;
+        geo: { loading: boolean; failed: boolean; address: any };
+    }) => {
         form.setData({
             ...form.data,
-            latitude: point.lat.toFixed(7),
-            longitude: point.lng.toFixed(7),
+            latitude: change.lat.toFixed(7),
+            longitude: change.lng.toFixed(7),
+            kelurahan: change.geo.address?.kelurahan || form.data.kelurahan || '',
+            kecamatan: change.geo.address?.kecamatan || form.data.kecamatan || '',
+            city: change.geo.address?.city || form.data.city || '',
+            province: change.geo.address?.province || form.data.province || '',
+            postal_code:
+                change.geo.address?.postal_code || form.data.postal_code || '',
+        });
+        setGeo({
+            loading: change.geo.loading,
+            failed: change.geo.failed,
         });
     };
-
-    const updateAddressFields = useEffectEvent(
-        (result: Awaited<ReturnType<typeof reverseGeocode>>) => {
-            form.setData({
-                ...form.data,
-                kelurahan: result.kelurahan || '',
-                kecamatan: result.kecamatan || '',
-                city: result.city || '',
-                province: result.province || '',
-                postal_code: result.postal_code || '',
-            });
-        },
-    );
-
-    // Reverse geocode when marker moves — updates administrative address fields only
-    useEffect(() => {
-        if (!location) {
-            return;
-        }
-
-        abortRef.current?.abort();
-        const controller = new AbortController();
-        abortRef.current = controller;
-
-        const timeout = window.setTimeout(async () => {
-            setGeocodingState('loading');
-
-            try {
-                const result = await reverseGeocode(
-                    location.lat,
-                    location.lng,
-                    controller.signal,
-                );
-                updateAddressFields(result);
-                setGeocodingState('success');
-            } catch {
-                if (!controller.signal.aborted) {
-                    setGeocodingState('failed');
-                }
-            }
-        }, 650);
-
-        return () => {
-            window.clearTimeout(timeout);
-            controller.abort();
-        };
-    }, [location]);
 
     const isEdit = mode === 'edit';
     const title = isEdit ? `Edit ${outlet?.name ?? 'Outlet'}` : 'Tambah Outlet';
@@ -169,44 +127,38 @@ export default function OutletFormSheet({
                                         <InfoBadge
                                             label="Kelurahan"
                                             value={form.data.kelurahan}
-                                            loading={
-                                                geocodingState === 'loading'
-                                            }
+                                            loading={geo.loading}
                                         />
                                         <InfoBadge
                                             label="Kecamatan"
                                             value={form.data.kecamatan}
-                                            loading={
-                                                geocodingState === 'loading'
-                                            }
+                                            loading={geo.loading}
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <InfoBadge
                                             label="Kota/Kabupaten"
                                             value={form.data.city}
-                                            loading={
-                                                geocodingState === 'loading'
-                                            }
+                                            loading={geo.loading}
                                         />
                                         <InfoBadge
                                             label="Provinsi"
                                             value={form.data.province}
-                                            loading={
-                                                geocodingState === 'loading'
-                                            }
+                                            loading={geo.loading}
                                         />
                                     </div>
                                     <InfoBadge
                                         label="Kode Pos"
                                         value={form.data.postal_code}
-                                        loading={geocodingState === 'loading'}
+                                        loading={geo.loading}
                                     />
                                     {(form.errors.kelurahan ||
-                                        form.errors.kecamatan) && (
+                                        form.errors.kecamatan ||
+                                        geo.failed) && (
                                         <p className="text-xs font-semibold text-red-600">
-                                            Data lokasi belum terdeteksi. Geser
-                                            marker pada peta.
+                                            {geo.failed
+                                                ? 'Gagal mendeteksi wilayah. Geser marker atau coba lagi. Anda bisa isi manual.'
+                                                : 'Data lokasi belum terdeteksi. Geser marker pada peta.'}
                                         </p>
                                     )}
                                 </>
