@@ -69,7 +69,9 @@ export default function Home({ customerName, activeOrders }: any) {
             activeOrder={activeOrder}
         >
             <Head title="Home" />
-            <div className={`${showPhoneBanner ? 'lg:grid lg:grid-cols-[1fr_320px] lg:gap-6' : ''}`}>
+            <div
+                className={`${showPhoneBanner ? 'lg:grid lg:grid-cols-[1fr_320px] lg:gap-6' : ''}`}
+            >
                 <div className="min-w-0">
                     <HeroCarousel
                         hero={hero}

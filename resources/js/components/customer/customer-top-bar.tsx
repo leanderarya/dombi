@@ -133,9 +133,7 @@ export default function CustomerTopBar({
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    aria-current={
-                                        active ? 'page' : undefined
-                                    }
+                                    aria-current={active ? 'page' : undefined}
                                     className={`text-sm font-semibold ${
                                         active
                                             ? 'text-primary'
