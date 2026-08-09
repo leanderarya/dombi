@@ -69,7 +69,7 @@ export default function Home({ customerName, activeOrders }: any) {
             activeOrder={activeOrder}
         >
             <Head title="Home" />
-            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
+            <div className={`${showPhoneBanner ? 'lg:grid lg:grid-cols-[1fr_320px] lg:gap-6' : ''}`}>
                 <div className="min-w-0">
                     <HeroCarousel
                         hero={hero}
@@ -108,10 +108,10 @@ export default function Home({ customerName, activeOrders }: any) {
 
                     <PromoBento />
                 </div>
-                <aside className="hidden lg:block">
-                    <div className="space-y-4">
-                        <PushBanner variant="home" />
-                        {showPhoneBanner && (
+                {showPhoneBanner && (
+                    <aside className="hidden lg:block">
+                        <div className="space-y-4">
+                            <PushBanner variant="home" />
                             <PhoneBanner
                                 onDismiss={() => {
                                     setPhoneBannerDismissed(true);
@@ -121,9 +121,9 @@ export default function Home({ customerName, activeOrders }: any) {
                                     );
                                 }}
                             />
-                        )}
-                    </div>
-                </aside>
+                        </div>
+                    </aside>
+                )}
             </div>
 
             <DeliveryLoginSheet
