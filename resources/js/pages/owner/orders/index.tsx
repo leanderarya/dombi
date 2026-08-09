@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
+import FilterChips from '@/components/ui/filter-chips';
 
 const statusFilters = [
     { key: 'all', label: 'Semua' },
@@ -144,28 +145,14 @@ export default function OwnerOrdersIndex({
             </div>
 
             {/* Status Filter Chips */}
-            <div
-                aria-label="Filter status pesanan"
-                className="mb-4 flex flex-wrap items-center gap-2"
-            >
-                {statusFilters.map((sf) => {
-                    const isActive = currentStatus === sf.key;
-
-                    return (
-                        <button
-                            key={sf.key}
-                            type="button"
-                            onClick={() => setFilter('status', sf.key)}
-                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive
-                                    ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
-                            }`}
-                        >
-                            {sf.label}
-                        </button>
-                    );
-                })}
+            <div className="mb-4">
+                <FilterChips
+                    options={statusFilters}
+                    active={currentStatus}
+                    onChange={(key) => setFilter('status', key)}
+                    variant="ring"
+                    size="sm"
+                />
             </div>
 
             {/* Filter controls */}
