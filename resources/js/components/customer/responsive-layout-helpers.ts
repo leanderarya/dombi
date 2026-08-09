@@ -1,5 +1,6 @@
 export function gridCols(count: number): string {
     const base = 'grid-cols-2';
+
     return count >= 3 ? `${base} lg:grid-cols-${count}` : base;
 }
 
