@@ -362,6 +362,7 @@ function ProductsInner() {
                 fulfillmentType={fulfillmentType}
                 onFulfillmentChange={switchTo}
                 deliveryDisabled={!isLoggedIn}
+                deliveryBadge={isLoggedIn ? undefined : 'Login'}
             />
             <DeliveryLoginSheet
                 open={deliveryLoginOpen}
@@ -379,6 +380,7 @@ function ProductsInner() {
                 fulfillmentType={fulfillmentType}
                 onFulfillmentChange={switchTo}
                 deliveryDisabled={!isLoggedIn}
+                deliveryBadge={isLoggedIn ? undefined : 'Login'}
             />
             {totalItems > 0 && <FloatingCartBar />}
         </>
