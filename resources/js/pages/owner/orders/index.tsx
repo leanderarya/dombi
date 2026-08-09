@@ -13,6 +13,7 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
@@ -26,7 +27,6 @@ import {
 } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
-import FilterChips from '@/components/ui/filter-chips';
 
 const statusFilters = [
     { key: 'all', label: 'Semua' },
@@ -182,7 +182,9 @@ export default function OwnerOrdersIndex({
             {currentStatus === 'offline' ? (
                 offlineSales.data.length === 0 ? (
                     <EmptyState
-                        icon={<Package aria-hidden="true" className="h-8 w-8" />}
+                        icon={
+                            <Package aria-hidden="true" className="h-8 w-8" />
+                        }
                         title="Tidak ada penjualan offline"
                         description="Penjualan offline yang dicatat outlet akan muncul di sini"
                     />
@@ -246,15 +248,11 @@ export default function OwnerOrdersIndex({
                                             {sale.created_at
                                                 ? new Date(
                                                       sale.created_at,
-                                                  ).toLocaleDateString(
-                                                      'id-ID',
-                                                  )
+                                                  ).toLocaleDateString('id-ID')
                                                 : '-'}
                                         </TableCell>
                                         <TableCell className="px-4 py-3 text-right font-semibold text-text tabular-nums">
-                                            {formatCurrency(
-                                                sale.total_amount,
-                                            )}
+                                            {formatCurrency(sale.total_amount)}
                                         </TableCell>
                                     </TableRow>
                                 ))}
