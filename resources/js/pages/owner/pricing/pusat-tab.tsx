@@ -52,6 +52,7 @@ export function PusatTab({
 }) {
     const [search, setSearch] = useState('');
     const [marginFilter, setMarginFilter] = useState<MarginFilter>('all');
+    const [updatedAt, setUpdatedAt] = useState('');
     const [sortKey, setSortKey] = useState<SortKey>('name');
     const [sortDir, setSortDir] = useState<SortDir>('asc');
     const [page, setPage] = useState(1);
@@ -108,9 +109,13 @@ export function PusatTab({
                     return false;
                 }
 
+                if (updatedAt && v.updated_at !== updatedAt) {
+                    return false;
+                }
+
                 return true;
             }),
-        [productRows, search, marginFilter],
+        [productRows, search, marginFilter, updatedAt],
     );
 
     const sorted = useMemo(
@@ -220,6 +225,8 @@ export function PusatTab({
                     setSearch(v);
                     setPage(1);
                 }}
+                dateValue={updatedAt}
+                onDateChange={setUpdatedAt}
                 marginOptions={[
                     { value: 'high', label: 'Margin Tinggi (>20rb)' },
                     { value: 'low', label: 'Margin Rendah (<5rb)' },

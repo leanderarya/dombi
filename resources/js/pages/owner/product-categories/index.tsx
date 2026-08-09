@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { Package, Pencil, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
@@ -178,33 +179,25 @@ export default function ProductCategoriesIndex({ categories }: Props) {
             }
         >
             {/* Search + Filter Chips */}
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="relative flex-1">
-                    <input
-                        type="text"
-                        placeholder="Cari kategori..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        style={{ paddingLeft: 40 }}
-                        className="w-full rounded-xl border border-border bg-surface py-2.5 pr-4 text-sm transition-colors outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
-                    />
-                    <Package className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {statusFilters.map((f) => (
-                        <button
-                            key={f.key}
-                            onClick={() => setStatusFilter(f.key)}
-                            className={`flex min-h-11 shrink-0 items-center rounded-full px-3.5 text-xs font-semibold ring-1 transition-all ${
-                                statusFilter === f.key
-                                    ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-emerald-50/40'
-                            }`}
-                        >
-                            {f.label}
-                        </button>
-                    ))}
-                </div>
+            <OwnerFilterCard
+                searchPlaceholder="Cari kategori..."
+                searchValue={search}
+                onSearch={setSearch}
+            />
+            <div className="mb-4 flex flex-wrap gap-2">
+                {statusFilters.map((f) => (
+                    <button
+                        key={f.key}
+                        onClick={() => setStatusFilter(f.key)}
+                        className={`flex min-h-11 shrink-0 items-center rounded-full px-3.5 text-xs font-semibold ring-1 transition-all ${
+                            statusFilter === f.key
+                                ? 'bg-primary/10 text-primary ring-primary/20'
+                                : 'bg-surface text-text-muted ring-border hover:bg-emerald-50/40'
+                        }`}
+                    >
+                        {f.label}
+                    </button>
+                ))}
             </div>
 
             {filtered.length === 0 ? (

@@ -61,9 +61,9 @@ export default function OfflineSalesIndex({ sales, variants }: any) {
                             >
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm font-semibold text-text">
-                                        {sale.variant?.family?.name
-                                            ? `${sale.variant.family.name} - ${sale.variant.name}`
-                                            : (sale.variant?.name ?? '-')}
+                                        {sale.product?.category?.name
+                                            ? `${sale.product.category.name} - ${sale.product.name}`
+                                            : (sale.product?.name ?? '-')}
                                     </span>
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-bold text-text tabular-nums">
@@ -83,6 +83,11 @@ export default function OfflineSalesIndex({ sales, variants }: any) {
                                     <span>
                                         {sale.quantity} x{' '}
                                         {formatCurrency(sale.center_price)}
+                                        {sale.payment_method ? (
+                                            <span className="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-text-muted uppercase">
+                                                {sale.payment_method}
+                                            </span>
+                                        ) : null}
                                     </span>
                                     <span>{formatDate(sale.created_at)}</span>
                                 </div>

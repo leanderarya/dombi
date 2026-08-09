@@ -34,7 +34,7 @@ class OfflineSaleController extends Controller
             ->paginate(20);
 
         $products = OutletInventory::where('outlet_id', $outlet->id)
-            ->where('current_stock', '>', 0)
+            ->whereRaw('current_stock - reserved_stock > 0')
             ->with(['product' => function ($q) {
                 $q->select('id', 'product_category_id', 'name', 'center_price')
                     ->with('category:id,name');
@@ -44,7 +44,7 @@ class OfflineSaleController extends Controller
                 'id' => $inv->product->id,
                 'name' => $inv->product->category?->name.' - '.$inv->product->name,
                 'center_price' => (float) $inv->product->center_price,
-                'stock' => $inv->current_stock,
+                'stock' => $inv->current_stock - $inv->reserved_stock,
             ]);
 
         return Inertia::render('outlet/offline-sales/index', [
@@ -78,10 +78,11 @@ class OfflineSaleController extends Controller
             ->lockForUpdate()
             ->first();
 
-        if (! $inventory || $inventory->current_stock < $validated['quantity']) {
-            $available = $inventory?->current_stock ?? 0;
+        $availableStock = $inventory ? $inventory->current_stock - $inventory->reserved_stock : 0;
+
+        if (! $inventory || $availableStock < $validated['quantity']) {
             throw ValidationException::withMessages([
-                'quantity' => "Stok tidak mencukupi. Tersedia: {$available}",
+                'quantity' => "Stok tidak mencukupi. Tersedia: {$availableStock}",
             ]);
         }
 

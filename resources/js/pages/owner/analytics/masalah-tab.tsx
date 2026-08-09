@@ -46,7 +46,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
     if (reports.data.length === 0) {
         return (
             <div className="space-y-4">
-                <FilterChips
+                <ColorFilterChips
                     activeFilter={activeFilter}
                     onChange={handleFilterChange}
                 />
@@ -66,7 +66,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
 
     return (
         <div className="space-y-4">
-            <FilterChips
+            <ColorFilterChips
                 activeFilter={activeFilter}
                 onChange={handleFilterChange}
             />
@@ -113,7 +113,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
     );
 }
 
-function FilterChips({
+function ColorFilterChips({
     activeFilter,
     onChange,
 }: {

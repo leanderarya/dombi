@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react';
 import FinanceOutletCard from '@/components/owner/finance/finance-outlet-card';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/format';
 
@@ -23,6 +24,7 @@ const STATUS_FILTERS = [
 export default function TagihanTab({ kpis, outlets }: any) {
     const [filter, setFilter] = useState('action_needed');
     const [search, setSearch] = useState('');
+    const [dueDate, setDueDate] = useState('');
 
     const filtered = useMemo(() => {
         return (outlets ?? []).filter((o: any) => {
@@ -37,15 +39,20 @@ export default function TagihanTab({ kpis, outlets }: any) {
                 return false;
             }
 
-            if (search) {
-                return o.outlet_name
-                    .toLowerCase()
-                    .includes(search.toLowerCase());
+            if (
+                search &&
+                !o.outlet_name.toLowerCase().includes(search.toLowerCase())
+            ) {
+                return false;
+            }
+
+            if (dueDate && o.nearest_due_date !== dueDate) {
+                return false;
             }
 
             return true;
         });
-    }, [outlets, filter, search]);
+    }, [outlets, filter, search, dueDate]);
 
     if (!kpis || !outlets) {
         return <SkeletonPage />;
@@ -111,24 +118,13 @@ export default function TagihanTab({ kpis, outlets }: any) {
                 role="group"
                 aria-label="Filter status tagihan"
             >
-                {STATUS_FILTERS.map((sf) => {
-                    const isActive = filter === sf.key;
-
-                    return (
-                        <button
-                            key={sf.key}
-                            type="button"
-                            onClick={() => setFilter(sf.key)}
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive
-                                    ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
-                            }`}
-                        >
-                            {sf.label}
-                        </button>
-                    );
-                })}
+                <FilterChips
+                    options={STATUS_FILTERS}
+                    active={filter}
+                    onChange={setFilter}
+                    variant="ring"
+                    size="sm"
+                />
             </div>
 
             <OwnerFilterCard
@@ -137,6 +133,8 @@ export default function TagihanTab({ kpis, outlets }: any) {
                 searchPlaceholder="Cari outlet..."
                 searchValue={search}
                 onSearch={setSearch}
+                dateValue={dueDate}
+                onDateChange={setDueDate}
             />
 
             {filtered.length === 0 ? (

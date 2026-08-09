@@ -13,6 +13,7 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
@@ -28,16 +29,17 @@ import { formatCurrency } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
 
 const statusFilters = [
-    { key: '', label: 'Semua' },
+    { key: 'all', label: 'Semua' },
     { key: 'needs_action', label: 'Butuh Tindakan' },
     { key: 'active', label: 'Aktif' },
     { key: 'completed', label: 'Selesai' },
     { key: 'cancelled', label: 'Dibatalkan' },
-    { key: 'failed', label: 'Gagal' },
+    { key: 'offline', label: 'Offline' },
 ];
 
 export default function OwnerOrdersIndex({
     orders,
+    offlineSales,
     outlets,
     filters,
     stats,
@@ -143,28 +145,14 @@ export default function OwnerOrdersIndex({
             </div>
 
             {/* Status Filter Chips */}
-            <div
-                aria-label="Filter status pesanan"
-                className="mb-4 flex flex-wrap items-center gap-2"
-            >
-                {statusFilters.map((sf) => {
-                    const isActive = currentStatus === sf.key;
-
-                    return (
-                        <button
-                            key={sf.key}
-                            type="button"
-                            onClick={() => setFilter('status', sf.key)}
-                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive
-                                    ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
-                            }`}
-                        >
-                            {sf.label}
-                        </button>
-                    );
-                })}
+            <div className="mb-4">
+                <FilterChips
+                    options={statusFilters}
+                    active={currentStatus}
+                    onChange={(key) => setFilter('status', key)}
+                    variant="ring"
+                    size="sm"
+                />
             </div>
 
             {/* Filter controls */}
@@ -190,8 +178,89 @@ export default function OwnerOrdersIndex({
                 onDateChange={(val) => setFilter('date', val)}
             />
 
-            {/* Table */}
-            {orders.data.length === 0 ? (
+            {/* Offline sales table */}
+            {currentStatus === 'offline' ? (
+                offlineSales.data.length === 0 ? (
+                    <EmptyState
+                        icon={
+                            <Package aria-hidden="true" className="h-8 w-8" />
+                        }
+                        title="Tidak ada penjualan offline"
+                        description="Penjualan offline yang dicatat outlet akan muncul di sini"
+                    />
+                ) : (
+                    <OwnerTable>
+                        <Table>
+                            <TableHeader>
+                                <tr className="bg-surface-muted/50">
+                                    <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                        Produk
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                        Outlet
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                        Qty
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                        Metode
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                        Tanggal
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
+                                        Total
+                                    </TableHead>
+                                </tr>
+                            </TableHeader>
+                            <TableBody>
+                                {offlineSales.data.map((sale: any) => (
+                                    <TableRow
+                                        key={sale.id}
+                                        className="border-t border-border/20"
+                                    >
+                                        <TableCell className="px-4 py-3">
+                                            <div className="font-medium text-text">
+                                                {sale.product?.name ?? '-'}
+                                            </div>
+                                            {sale.product?.category?.name ? (
+                                                <div className="text-xs text-text-muted">
+                                                    {sale.product.category.name}
+                                                </div>
+                                            ) : null}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
+                                            {sale.outlet?.name ?? '-'}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
+                                            {sale.quantity}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
+                                            {sale.payment_method ? (
+                                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-text-muted uppercase">
+                                                    {sale.payment_method}
+                                                </span>
+                                            ) : (
+                                                '-'
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
+                                            {sale.created_at
+                                                ? new Date(
+                                                      sale.created_at,
+                                                  ).toLocaleDateString('id-ID')
+                                                : '-'}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-right font-semibold text-text tabular-nums">
+                                            {formatCurrency(sale.total_amount)}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </OwnerTable>
+                )
+            ) : orders.data.length === 0 ? (
                 <EmptyState
                     icon={<Package aria-hidden="true" className="h-8 w-8" />}
                     title="Tidak ada pesanan"
@@ -290,7 +359,13 @@ export default function OwnerOrdersIndex({
                 </OwnerTable>
             )}
 
-            <Pagination links={orders.links} />
+            <Pagination
+                links={
+                    currentStatus === 'offline'
+                        ? offlineSales.links
+                        : orders.links
+                }
+            />
 
             <AssignCourierSheet
                 order={assignOrder}
