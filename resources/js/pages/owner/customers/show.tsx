@@ -1,10 +1,4 @@
-import {
-    Clock,
-    DollarSign,
-    Receipt,
-    ShoppingBag,
-    User,
-} from 'lucide-react';
+import { Clock, DollarSign, Receipt, ShoppingBag, User } from 'lucide-react';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
@@ -44,7 +38,7 @@ function StatCard({
                     {icon}
                 </span>
             </div>
-            <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+            <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                 {value}
             </div>
         </div>
@@ -125,9 +119,7 @@ export default function CustomerShow({ customer, orders, stats }: any) {
                                 }
                                 size="sm"
                             >
-                                {customer.is_registered
-                                    ? 'Terdaftar'
-                                    : 'Guest'}
+                                {customer.is_registered ? 'Terdaftar' : 'Guest'}
                             </StatusBadge>
                         }
                     />
@@ -197,7 +189,7 @@ export default function CustomerShow({ customer, orders, stats }: any) {
                                                 <TableCell className="px-4 py-3 text-text-muted">
                                                     {order.outlet?.name ?? '—'}
                                                 </TableCell>
-                                                <TableCell className="px-4 py-3 text-right font-semibold tabular-nums text-text">
+                                                <TableCell className="px-4 py-3 text-right font-semibold text-text tabular-nums">
                                                     {formatCurrency(
                                                         order.total,
                                                     )}
