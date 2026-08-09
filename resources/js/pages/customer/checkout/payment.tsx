@@ -440,6 +440,49 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 )}
             </section>
 
+            {/* Total Card — mobile only */}
+            <div className="lg:hidden">
+                <section className="bg-primary mt-4 rounded-xl px-4 py-3 text-white">
+                    <div className="space-y-1">
+                        <SummaryRow
+                            label="Subtotal"
+                            value={formatCurrency(summary.subtotal)}
+                        />
+                        {summary.delivery_fee > 0 && (
+                            <SummaryRow
+                                label="Ongkir"
+                                value={formatCurrency(summary.delivery_fee)}
+                            />
+                        )}
+                        <SummaryRow
+                            label="Biaya Layanan"
+                            value={
+                                paymentFee > 0
+                                    ? formatCurrency(paymentFee)
+                                    : 'Rp 0'
+                            }
+                        />
+                    </div>
+                    <div className="mt-2 flex items-center justify-between border-t border-white/20 pt-2">
+                        <span className="text-sm font-semibold text-white">
+                            Total
+                        </span>
+                        <span className="text-lg font-bold text-white tabular-nums">
+                            {formatCurrency(total)}
+                        </span>
+                    </div>
+                    {deliveryBlocked && (
+                        <div className="mt-2">
+                            <NoticeBanner
+                                variant="warning"
+                                title="Lokasi di luar jangkauan"
+                                message="Kembali dan ubah lokasi pengiriman Anda."
+                            />
+                        </div>
+                    )}
+                </section>
+            </div>
+
             {/* Recipient — only when different */}
             {hasDifferentRecipient && (
                 <section className="mt-4 rounded-xl border border-border bg-white p-4">
