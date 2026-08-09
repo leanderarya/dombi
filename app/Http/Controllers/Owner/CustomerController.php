@@ -13,7 +13,7 @@ class CustomerController extends Controller
     {
         $customers = Customer::query()
             ->withCount('orders')
-            ->withSum('orders', 'total')
+            ->withSum('orders as total_spend', 'total')
             ->latest()
             ->paginate(15);
 
