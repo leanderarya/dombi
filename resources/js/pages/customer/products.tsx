@@ -377,13 +377,20 @@ function ProductsInner() {
 
                         <button
                             type="button"
-                            onClick={() =>
-                                switchTo(
+                            onClick={() => {
+                                const next =
                                     fulfillmentType === 'pickup'
                                         ? 'delivery'
-                                        : 'pickup',
-                                )
-                            }
+                                        : 'pickup';
+
+                                if (next === 'delivery' && !isLoggedIn) {
+                                    setDeliveryLoginOpen(true);
+
+                                    return;
+                                }
+
+                                switchTo(next);
+                            }}
                             className="flex w-full items-center justify-between rounded-2xl border border-border bg-white p-3 text-left shadow-xs"
                         >
                             <span className="text-sm font-semibold text-gray-900">

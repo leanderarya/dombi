@@ -57,7 +57,7 @@ export default function FloatingCartBar() {
 
     return (
         <div
-            className="fixed inset-x-0 z-30 px-4 transition-[bottom] duration-300 ease-in-out lg:hidden"
+            className="fixed inset-x-0 z-30 px-4 transition-[bottom] duration-300 ease-in-out"
             style={{ bottom }}
         >
             <button
