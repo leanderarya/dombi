@@ -110,6 +110,9 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::post('/location', [CustomerCheckoutController::class, 'storeLocationDraft'])->name('location.store');
         Route::get('/help', fn () => Inertia::render('customer/help'))->name('help');
         Route::get('/about', fn () => Inertia::render('customer/about'))->name('about');
+        Route::get('/coming-soon/{feature}', fn (string $feature) => Inertia::render('customer/coming-soon', [
+            'feature' => $feature,
+        ]))->name('coming-soon');
         Route::get('/outlets', [CustomerOutletController::class, 'index'])->name('outlets.index');
         Route::get('/products', [CustomerProductController::class, 'index'])->name('products.index');
         Route::get('/products/api', [CustomerProductApiController::class, 'index'])->name('products.api');

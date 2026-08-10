@@ -282,8 +282,8 @@ function GreetingCard({
 
                 {isLoggedIn && (
                     <div className="flex items-center gap-2 border-t border-gray-100 pt-3">
-                        <button
-                            type="button"
+                        <Link
+                            href="/customer/coming-soon/poin"
                             className="flex flex-1 items-center justify-between rounded-xl border border-emerald-100 bg-primary-light px-3 py-2 text-left active:opacity-80"
                         >
                             <div className="flex items-center gap-2">
@@ -298,9 +298,9 @@ function GreetingCard({
                                 </span>
                             </div>
                             <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
-                        </button>
-                        <button
-                            type="button"
+                        </Link>
+                        <Link
+                            href="/customer/coming-soon/my-dombi-plan"
                             className="flex flex-1 items-center justify-between rounded-xl border border-sky-100 bg-sky-50 px-3 py-2 text-left active:opacity-80"
                         >
                             <div className="flex items-center gap-2">
@@ -312,7 +312,7 @@ function GreetingCard({
                                 </span>
                             </div>
                             <ChevronRight className="h-3.5 w-3.5 text-sky-400" />
-                        </button>
+                        </Link>
                     </div>
                 )}
             </div>
@@ -395,6 +395,7 @@ const PROMO_BENTOS = [
         icon: <Percent className="h-4 w-4" />,
         iconBg: 'bg-emerald-100 text-primary',
         cta: 'Cek Paket',
+        href: '/customer/coming-soon/my-dombi-plan',
     },
     {
         title: 'Dombi Essentials',
@@ -403,6 +404,7 @@ const PROMO_BENTOS = [
         iconBg: 'bg-amber-100 text-amber-700',
         cta: 'Lihat Merchandise',
         badge: 'Baru',
+        href: '/customer/coming-soon/merch',
     },
     {
         title: 'Catering & Event',
@@ -410,6 +412,7 @@ const PROMO_BENTOS = [
         icon: <Coffee className="h-4 w-4" />,
         iconBg: 'bg-purple-100 text-purple-700',
         cta: 'Pesan Sekarang',
+        href: '/customer/coming-soon/catering',
     },
 ];
 
@@ -430,8 +433,9 @@ function PromoBento() {
 
             <div className={`mt-3 grid gap-3 px-4 ${gridCols(3)}`}>
                 {PROMO_BENTOS.map((bento) => (
-                    <div
+                    <Link
                         key={bento.title}
+                        href={bento.href}
                         className="relative flex flex-col justify-between rounded-2xl border border-border bg-white p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
                     >
                         <div>
@@ -456,7 +460,7 @@ function PromoBento() {
                             <span>{bento.cta}</span>
                             <ArrowRight className="ml-1 h-3 w-3" />
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
         </section>
