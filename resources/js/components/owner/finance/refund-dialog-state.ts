@@ -18,8 +18,7 @@ export interface RefundRollbackDialogState {
 }
 
 type ResettableAction<T> =
-    | { type: 'update'; patch: Partial<T> }
-    | { type: 'reset' };
+    { type: 'update'; patch: Partial<T> } | { type: 'reset' };
 
 export const initialGuestRefundDialogState: GuestRefundDialogState = {
     type: 'bank',
