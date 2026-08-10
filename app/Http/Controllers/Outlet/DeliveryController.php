@@ -20,36 +20,44 @@ class DeliveryController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet, 403);
 
+        $tab = $request->string('tab', 'aktif')->toString();
         $statusFilter = $request->string('status')->toString();
 
-        // Unassigned orders (ready_for_pickup, no delivery)
-        $unassignedOrders = Order::query()
-            ->where('outlet_id', $outlet->id)
-            ->where('status', Order::STATUS_READY_FOR_PICKUP)
-            ->whereIn('fulfillment_type', Order::DELIVERY_FULFILLMENT_TYPES)
-            ->whereDoesntHave('delivery')
-            ->with(['items'])
-            ->orderBy('updated_at')
-            ->get()
-            ->map(function (Order $order) use ($slaService): array {
-                return [
-                    'id' => $order->id,
-                    'order_code' => $order->order_code,
-                    'customer_name' => $order->customer_name,
-                    'total' => $order->total,
-                    'distance_km' => $order->delivery_distance_km,
-                    'created_at' => $order->created_at->toIso8601String(),
-                    'updated_at' => $order->updated_at->toIso8601String(),
-                    'delivery_age' => $order->updated_at->diffInMinutes(now()),
-                    'sla_health' => $slaService->getOrderSlaHealth($order),
-                    'status' => 'waiting_assignment',
-                    'type' => 'order',
-                ];
-            });
+        $activeStatuses = ['waiting_pickup', 'picked_up', 'delivering'];
+        $historyStatuses = ['completed', 'failed'];
+        $statuses = $tab === 'riwayat' ? $historyStatuses : $activeStatuses;
+
+        // Unassigned orders (ready_for_pickup, no delivery) — only relevant in aktif tab
+        $unassignedOrders = $tab === 'riwayat'
+            ? collect()
+            : Order::query()
+                ->where('outlet_id', $outlet->id)
+                ->where('status', Order::STATUS_READY_FOR_PICKUP)
+                ->whereIn('fulfillment_type', Order::DELIVERY_FULFILLMENT_TYPES)
+                ->whereDoesntHave('delivery')
+                ->with(['items'])
+                ->orderBy('updated_at')
+                ->get()
+                ->map(function (Order $order) use ($slaService): array {
+                    return [
+                        'id' => $order->id,
+                        'order_code' => $order->order_code,
+                        'customer_name' => $order->customer_name,
+                        'total' => $order->total,
+                        'distance_km' => $order->delivery_distance_km,
+                        'created_at' => $order->created_at->toIso8601String(),
+                        'updated_at' => $order->updated_at->toIso8601String(),
+                        'delivery_age' => $order->updated_at->diffInMinutes(now()),
+                        'sla_health' => $slaService->getOrderSlaHealth($order),
+                        'status' => 'waiting_assignment',
+                        'type' => 'order',
+                    ];
+                });
 
         // Deliveries for this outlet
         $deliveries = Delivery::query()
             ->whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
+            ->whereIn('status', $statuses)
             ->when($statusFilter, fn ($q) => $q->where('status', $statusFilter))
             ->with(['order:id,order_code,customer_name,customer_address,total,delivery_distance_km,outlet_id', 'courier:id,name'])
             ->orderBy('updated_at', 'desc')
@@ -81,6 +89,7 @@ class DeliveryController extends Controller
             'unassignedOrders' => $unassignedOrders->values(),
             'deliveries' => $deliveries,
             'stats' => $stats,
+            'tab' => $tab,
             'filters' => ['status' => $statusFilter],
         ]);
     }

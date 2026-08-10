@@ -170,12 +170,6 @@ export default function MyCouriers({
         <OutletLayout
             title="Kurir Saya"
             subtitle="Kelola kurir outlet dan kandidat"
-            headerRight={
-                <Button size="md" variant="primary" onClick={openNominate}>
-                    <Plus className="h-4 w-4" />
-                    Calonkan
-                </Button>
-            }
         >
             <Head title="Kurir Saya" />
             <OutletPageShell>
@@ -189,7 +183,18 @@ export default function MyCouriers({
                 />
 
                 {tab === 'aktif' && (
-                    <SectionCard label="Kurir Aktif">
+                    <SectionCard
+                        label="Kurir Aktif"
+                        labelRight={
+                            <button
+                                onClick={openNominate}
+                                className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-hover active:opacity-80"
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                                Calonkan Kurir Baru
+                            </button>
+                        }
+                    >
                         {active.length === 0 ? (
                             <EmptyState
                                 icon={<UserRound className="h-8 w-8" />}
