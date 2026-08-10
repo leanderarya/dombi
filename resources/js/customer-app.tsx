@@ -173,7 +173,7 @@ if (typeof window !== 'undefined') {
         }
 
         onOfflinePage = true;
-        window.location.href = '/offline';
+        window.location.href = '/offline.html';
     });
 
     window.addEventListener('online', () => {
