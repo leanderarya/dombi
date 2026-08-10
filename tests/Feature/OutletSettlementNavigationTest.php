@@ -382,6 +382,60 @@ class OutletSettlementNavigationTest extends TestCase
             );
     }
 
+    // ─── SHOW DETAIL ──────────────────────────────────────────────
+
+    public function test_outlet_can_access_settlement_show(): void
+    {
+        $settlement = Settlement::create([
+            'outlet_id' => $this->context['outlet']->id,
+            'period_type' => 'weekly',
+            'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->toDateString(),
+            'sales_amount' => 100000,
+            'amount_due' => 85000,
+            'net_amount' => -85000,
+            'direction' => 'outlet_pays_owner',
+            'due_date' => now()->addDays(7)->toDateString(),
+            'status' => Settlement::STATUS_GENERATED,
+            'paid_amount' => 0,
+            'adjustment_amount' => 0,
+        ]);
+
+        $this->actingAs($this->context['outletUser'])
+            ->get("/outlet/settlement/{$settlement->id}")
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('outlet/settlement-show')
+                ->where('settlement.direction', 'outlet_pays_owner')
+                ->where('settlement.net_amount', -85000)
+            );
+    }
+
+    public function test_owner_cannot_access_settlement_show(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true, 'must_change_password' => false]);
+        $settlement = Settlement::create([
+            'outlet_id' => $this->context['outlet']->id,
+            'period_type' => 'weekly',
+            'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->toDateString(),
+            'sales_amount' => 100000,
+            'amount_due' => 85000,
+            'net_amount' => -85000,
+            'direction' => 'outlet_pays_owner',
+            'due_date' => now()->addDays(7)->toDateString(),
+            'status' => Settlement::STATUS_GENERATED,
+            'paid_amount' => 0,
+            'adjustment_amount' => 0,
+        ]);
+
+        $this->actingAs($owner)
+            ->get("/outlet/settlement/{$settlement->id}")
+            ->assertRedirect('/owner/dashboard');
+    }
+
     // ─── HELPERS ───────────────────────────────────────────────────
 
     private function makeOutletContext(): array
