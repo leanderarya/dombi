@@ -3,8 +3,7 @@ export interface ResolveDeliveryDialogState {
 }
 
 type ResolveDeliveryDialogAction =
-    | { type: 'confirm-destructive' }
-    | { type: 'reset' };
+    { type: 'confirm-destructive' } | { type: 'reset' };
 
 interface CloseResolveDeliverySheetOptions {
     resetForm: () => void;

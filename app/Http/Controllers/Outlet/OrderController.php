@@ -53,6 +53,9 @@ class OrderController extends Controller
                                 ->orWhere('confirmation_expires_at', '>', now());
                         });
                 })
+                // Critical-first: pending_confirmation (belum expired) paling lama di atas,
+                // lalu order lain per created_at asc. Order yang menunggu konfirmasi terlama = paling urgent.
+                ->orderByRaw("CASE WHEN status = 'pending_confirmation' AND (confirmation_expires_at IS NULL OR confirmation_expires_at > NOW()) THEN 0 ELSE 1 END")
                 ->oldest(),
                 fn ($q) => $q->latest()
             )

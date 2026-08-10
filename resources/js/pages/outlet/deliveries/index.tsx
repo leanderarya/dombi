@@ -23,10 +23,13 @@ import {
 import { usePolling } from '@/lib/use-polling';
 import { runAssignCourierLookup } from './assign-courier-request';
 
-const statusOptions = [
+const activeStatusOptions = [
     { key: 'waiting_pickup', label: 'Menunggu Pickup' },
     { key: 'picked_up', label: 'Picked Up' },
     { key: 'delivering', label: 'Dalam Perjalanan' },
+];
+
+const historyStatusOptions = [
     { key: 'completed', label: 'Selesai' },
     { key: 'failed', label: 'Gagal' },
 ];
@@ -37,15 +40,38 @@ export default function OutletDeliveriesIndex({
     deliveries,
     stats,
     filters,
+    tab = 'aktif',
 }: any) {
     usePolling(20000);
     const { loading } = useInertiaLoading();
     const [assignOpen, setAssignOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [couriers, setCouriers] = useState<any[]>([]);
+    const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
     const courierRequestLifecycleRef = useRef(
         createAssignCourierSheetLifecycle(),
     );
+
+    const isAktif = tab !== 'riwayat';
+    const filterOptions = isAktif ? activeStatusOptions : historyStatusOptions;
+
+    const handleTabChange = (newTab: string) => {
+        setActiveFilter('');
+        router.get(
+            '/outlet/deliveries',
+            { tab: newTab },
+            { preserveState: false, replace: true },
+        );
+    };
+
+    const handleFilterChange = (key: string) => {
+        setActiveFilter(key);
+        router.get(
+            '/outlet/deliveries',
+            { tab, status: key || undefined },
+            { preserveState: true, replace: true },
+        );
+    };
 
     useEffect(() => {
         const lifecycle = courierRequestLifecycleRef.current;
@@ -103,17 +129,41 @@ export default function OutletDeliveriesIndex({
             title="Pengiriman"
             subtitle={outlet.name}
             headerBelow={
-                <FilterChips
-                    options={statusOptions}
-                    active={filters.status ?? ''}
-                    onChange={(key) =>
-                        router.get(
-                            '/outlet/deliveries',
-                            { status: key || undefined },
-                            { preserveState: true, replace: true },
-                        )
-                    }
-                />
+                <div className="space-y-3">
+                    {/* Segmented Control: Aktif / Riwayat */}
+                    <div className="mx-1 flex rounded-xl bg-surface-muted p-1">
+                        <button
+                            onClick={() => handleTabChange('aktif')}
+                            className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
+                                isAktif
+                                    ? 'bg-white text-text shadow-sm'
+                                    : 'text-text-muted'
+                            }`}
+                        >
+                            Aktif
+                            {stats.needsDispatch > 0
+                                ? ` (${stats.needsDispatch})`
+                                : ''}
+                        </button>
+                        <button
+                            onClick={() => handleTabChange('riwayat')}
+                            className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
+                                !isAktif
+                                    ? 'bg-white text-text shadow-sm'
+                                    : 'text-text-muted'
+                            }`}
+                        >
+                            Riwayat
+                        </button>
+                    </div>
+
+                    {/* Filter Chips per tab */}
+                    <FilterChips
+                        options={filterOptions}
+                        active={activeFilter}
+                        onChange={handleFilterChange}
+                    />
+                </div>
             }
         >
             <Head title="Pengiriman" />
@@ -135,30 +185,8 @@ export default function OutletDeliveriesIndex({
                     </div>
                 ) : (
                     <>
-                        {/* Stats */}
-                        <div className="grid grid-cols-2 gap-2">
-                            <StatCard
-                                label="Perlu Dikirim"
-                                value={stats.needsDispatch}
-                                alert={stats.needsDispatch > 0}
-                            />
-                            <StatCard
-                                label="Menunggu Pickup"
-                                value={stats.waitingPickup}
-                            />
-                            <StatCard
-                                label="Dalam Perjalanan"
-                                value={stats.inTransit}
-                            />
-                            <StatCard
-                                label="Gagal"
-                                value={stats.failed}
-                                alert={stats.failed > 0}
-                            />
-                        </div>
-
-                        {/* Unassigned Orders */}
-                        {unassignedOrders.length > 0 && (
+                        {/* Unassigned Orders — aktif tab only */}
+                        {isAktif && unassignedOrders.length > 0 && (
                             <SectionCard label="Perlu Assign Kurir">
                                 {unassignedOrders.map((order: any) => (
                                     <div
@@ -218,7 +246,13 @@ export default function OutletDeliveriesIndex({
                         )}
 
                         {/* Delivery List */}
-                        <SectionCard label="Riwayat Pengiriman">
+                        <SectionCard
+                            label={
+                                isAktif
+                                    ? 'Pengiriman Aktif'
+                                    : 'Riwayat Pengiriman'
+                            }
+                        >
                             {deliveries.data.length === 0 ? (
                                 <EmptyState
                                     icon={
@@ -292,31 +326,5 @@ export default function OutletDeliveriesIndex({
                 />
             )}
         </OutletLayout>
-    );
-}
-
-function StatCard({
-    label,
-    value,
-    alert,
-}: {
-    label: string;
-    value: number;
-    alert?: boolean;
-}) {
-    return (
-        <div className="rounded-xl border border-border bg-white p-3">
-            <div className="flex items-center gap-1">
-                {alert && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                )}
-                <span className="text-xl font-bold text-text tabular-nums">
-                    {value}
-                </span>
-            </div>
-            <div className="text-[11px] font-medium text-text-subtle">
-                {label}
-            </div>
-        </div>
     );
 }
