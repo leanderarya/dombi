@@ -10,22 +10,32 @@ interface Variant {
     stock: number;
 }
 
+interface EditSale {
+    id: number;
+    product_id: number;
+    quantity: number;
+    payment_method: string;
+    notes: string | null;
+}
+
 interface Props {
     open: boolean;
     variants: Variant[];
     onClose: () => void;
+    sale?: EditSale | null;
 }
 
 export default function OfflineSaleDialog({
     open,
     variants = [],
     onClose,
+    sale = null,
 }: Props) {
     const form = useForm({
-        variant_id: '',
-        quantity: 1,
-        payment_method: 'cash',
-        notes: '',
+        variant_id: sale ? String(sale.product_id) : '',
+        quantity: sale ? sale.quantity : 1,
+        payment_method: sale ? sale.payment_method : 'cash',
+        notes: sale?.notes ?? '',
     });
 
     const variantOptions = variants.map((v) => ({
@@ -43,12 +53,18 @@ export default function OfflineSaleDialog({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post('/outlet/offline-sales', {
+        const opts = {
             onSuccess: () => {
                 form.reset();
                 onClose();
             },
-        });
+        };
+
+        if (sale) {
+            form.put(`/outlet/offline-sales/${sale.id}`, opts);
+        } else {
+            form.post('/outlet/offline-sales', opts);
+        }
     };
 
     const qtyValue = form.data.quantity.toString();
@@ -74,7 +90,7 @@ export default function OfflineSaleDialog({
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
                     <h2 className="text-sm font-bold text-text">
-                        Catat Penjualan
+                        {sale ? 'Edit Penjualan' : 'Catat Penjualan'}
                     </h2>
                     <button
                         onClick={onClose}
@@ -185,7 +201,11 @@ export default function OfflineSaleDialog({
                             }
                             className="min-h-11 w-full rounded-lg bg-emerald-600 text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
                         >
-                            {form.processing ? 'Menyimpan...' : 'Simpan'}
+                            {form.processing
+                                ? 'Menyimpan...'
+                                : sale
+                                  ? 'Update'
+                                  : 'Simpan'}
                         </button>
                     </div>
                 </form>
