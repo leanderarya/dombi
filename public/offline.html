@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f8f7f2" />
+    <title>Koneksi Terputus — Dombi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f7f2;
+            color: #111827;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+        }
+        .wrap { max-width: 320px; }
+        .icon {
+            width: 80px; height: 80px; margin: 0 auto 24px;
+            border-radius: 9999px; background: #ecfdf5;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .icon svg { width: 40px; height: 40px; stroke: #059669; }
+        h1 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+        p { font-size: 14px; color: #6b7280; margin-bottom: 32px; line-height: 1.5; }
+        .retry {
+            display: inline-block;
+            background: #059669; color: #fff;
+            border: none; border-radius: 12px;
+            padding: 12px 32px; font-size: 14px; font-weight: 500;
+            cursor: pointer; transition: transform .1s, opacity .1s;
+        }
+        .retry:active { transform: scale(.95); opacity: .8; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="1" y1="1" x2="23" y2="23" />
+                <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+                <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+                <path d="M10.71 5.05A16 16 0 0 1 22.58 9" />
+                <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+                <path d="M12 18h.01" />
+            </svg>
+        </div>
+        <h1>Koneksi Terputus</h1>
+        <p id="msg">Periksa koneksi internet Anda dan coba lagi</p>
+        <button class="retry" id="retry">Coba Lagi</button>
+    </div>
+    <script>
+        var HOME = '/customer/home';
+        var msg = document.getElementById('msg');
+        var retry = document.getElementById('retry');
+
+        function online() {
+            window.location.href = HOME;
+        }
+        function offline() {
+            msg.textContent = 'Periksa koneksi internet Anda dan coba lagi';
+            retry.textContent = 'Coba Lagi';
+        }
+        window.addEventListener('online', online);
+        // Re-check in case SW or connection flaps while page open
+        window.setInterval(function () {
+            if (navigator.onLine) online();
+        }, 3000);
+        retry.addEventListener('click', function () {
+            retry.textContent = 'Menghubungkan…';
+            if (navigator.onLine) return online();
+            // Force a fresh offline check via a no-cache fetch probe
+            fetch(HOME, { cache: 'no-store' }).then(online).catch(offline);
+        });
+    </script>
+</body>
+</html>

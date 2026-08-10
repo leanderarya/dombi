@@ -1,5 +1,5 @@
-const CACHE_NAME = 'dombi-v5';
-const OFFLINE_URL = '/offline';
+const CACHE_NAME = 'dombi-v6';
+const OFFLINE_URL = '/offline.html';
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
