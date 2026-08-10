@@ -265,7 +265,10 @@ function ProductsInner() {
                     </div>
 
                     {/* ── 4. PROMO STRIP BANNER ── */}
-                    <div className="mx-4 mb-5 flex items-center justify-between rounded-2xl border border-sky-100 bg-sky-50 p-3">
+                    <Link
+                        href="/customer/coming-soon/merch"
+                        className="mx-4 mb-5 flex items-center justify-between rounded-2xl border border-sky-100 bg-sky-50 p-3"
+                    >
                         <div className="flex items-center gap-3">
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
                                 <Store className="h-4 w-4" />
@@ -280,7 +283,7 @@ function ProductsInner() {
                             </div>
                         </div>
                         <ChevronRight className="h-4 w-4 shrink-0 text-sky-500" />
-                    </div>
+                    </Link>
 
                     {/* ── 5. REKOMENDASI (horizontal scroll) ── */}
                     {recommendations.length > 0 && (
