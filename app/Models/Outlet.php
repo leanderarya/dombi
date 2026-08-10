@@ -19,6 +19,7 @@ class Outlet extends Model
         'pic_name', 'pic_phone', 'pic_position',
         'operational_notes', 'delivery_radius_km', 'prep_estimate_minutes',
         'status', 'confirmation_timeout_minutes',
+        'bank_name', 'bank_account_number', 'bank_account_holder',
     ];
 
     protected function casts(): array
