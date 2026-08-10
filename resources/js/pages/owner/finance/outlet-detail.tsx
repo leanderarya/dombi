@@ -69,6 +69,9 @@ export default function OutletAccountStatement({
     deliveryStats,
 }: any) {
     const [paymentOpen, setPaymentOpen] = useState(false);
+    const [paymentDirection, setPaymentDirection] = useState<
+        'outlet_pays_owner' | 'owner_pays_outlet'
+    >('outlet_pays_owner');
     const [invoiceOpen, setInvoiceOpen] = useState(false);
 
     if (!outlet || !summary) {
@@ -141,16 +144,40 @@ export default function OutletAccountStatement({
                                 <Send className="h-4 w-4" aria-hidden="true" />
                                 Kirim Tagihan
                             </Button>
-                            <Button
-                                className="min-h-11 flex-1"
-                                onClick={() => setPaymentOpen(true)}
-                            >
-                                <DollarSign
-                                    className="h-4 w-4"
-                                    aria-hidden="true"
-                                />
-                                Catat Pembayaran
-                            </Button>
+                            {(summary.outlet_pays_amount ?? 0) > 0 && (
+                                <Button
+                                    className="min-h-11 flex-1"
+                                    onClick={() => {
+                                        setPaymentDirection(
+                                            'outlet_pays_owner',
+                                        );
+                                        setPaymentOpen(true);
+                                    }}
+                                >
+                                    <DollarSign
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                    />
+                                    Catat Pembayaran
+                                </Button>
+                            )}
+                            {(summary.owner_pays_amount ?? 0) > 0 && (
+                                <Button
+                                    className="min-h-11 flex-1"
+                                    onClick={() => {
+                                        setPaymentDirection(
+                                            'owner_pays_outlet',
+                                        );
+                                        setPaymentOpen(true);
+                                    }}
+                                >
+                                    <DollarSign
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                    />
+                                    Bayar ke Outlet
+                                </Button>
+                            )}
                         </div>
                     )}
 
@@ -480,7 +507,13 @@ export default function OutletAccountStatement({
                     onClose={() => setPaymentOpen(false)}
                     outletId={outlet.id}
                     outletName={outlet.name}
-                    outstanding={summary.outstanding}
+                    outstanding={
+                        paymentDirection === 'owner_pays_outlet'
+                            ? (summary.owner_pays_amount ?? 0)
+                            : (summary.outlet_pays_amount ?? 0)
+                    }
+                    direction={paymentDirection}
+                    outletBank={outlet}
                 />
             )}
 

@@ -53,6 +53,10 @@ class HandleInertiaRequests extends Middleware
                     'role' => $user->role,
                     'must_change_password' => $user->must_change_password,
                     'is_active' => $user->is_active,
+                    'customer' => $user->customer ? [
+                        'id' => $user->customer->id,
+                        'phone' => $user->customer->phone,
+                    ] : null,
                 ] : null,
             ],
             'flash' => [

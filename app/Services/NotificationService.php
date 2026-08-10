@@ -128,6 +128,8 @@ class NotificationService
 
     public const PAYMENT_REJECTED = 'payment.rejected';
 
+    public const PAYOUT_RECORDED = 'payout.recorded';
+
     /**
      * Get the owner user(s) for notification targeting.
      */
@@ -1127,6 +1129,24 @@ class NotificationService
                 title: 'Pembayaran Ditolak',
                 message: "Pembayaran {$payment->reference_number} ditolak. Alasan: {$reason}",
                 data: ['payment_id' => $payment->id, 'amount' => $payment->amount, 'reference_number' => $payment->reference_number, 'reason' => $reason],
+                entityType: 'settlement_payment',
+                entityId: $payment->id
+            );
+        }
+    }
+
+    public function notifyPayoutRecorded(SettlementPayment $payment): void
+    {
+        $outletUser = $this->getOutletUser($payment->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::PAYOUT_RECORDED,
+                title: 'Payout Dibayar',
+                message: 'Owner telah mentransfer Rp '.number_format($payment->amount, 0, ',', '.').' ke rekening outlet Anda.',
+                data: ['payment_id' => $payment->id, 'amount' => $payment->amount, 'reference_number' => $payment->reference_number],
                 entityType: 'settlement_payment',
                 entityId: $payment->id
             );

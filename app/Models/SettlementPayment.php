@@ -11,8 +11,12 @@ class SettlementPayment extends Model
 {
     use HasFactory;
 
+    protected $attributes = [
+        'direction' => 'outlet_pays_owner',
+    ];
+
     protected $fillable = [
-        'outlet_id', 'settlement_id', 'reference_number', 'payment_date', 'amount',
+        'outlet_id', 'direction', 'settlement_id', 'reference_number', 'payment_date', 'amount',
         'payment_method', 'proof_image', 'notes', 'status', 'verified_by', 'verified_at',
         'rejection_reason',
     ];
@@ -65,5 +69,15 @@ class SettlementPayment extends Model
     public function isRejected(): bool
     {
         return $this->status === self::STATUS_REJECTED;
+    }
+
+    public function isPayout(): bool
+    {
+        return $this->direction === Settlement::DIRECTION_OWNER_PAYS;
+    }
+
+    public function isRemittance(): bool
+    {
+        return $this->direction === Settlement::DIRECTION_OUTLET_PAYS;
     }
 }

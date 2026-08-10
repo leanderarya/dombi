@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { CheckCircle, Clock, DollarSign, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import PaymentHistoryCard from '@/components/owner/finance/payment-history-card';
 import PaymentProofModal from '@/components/owner/finance/payment-proof-modal';
@@ -20,7 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
 
 const STATUS_FILTERS = [
-    { key: '', label: 'Semua' },
+    { key: 'all', label: 'Semua' },
     { key: 'pending_verification', label: 'Pending' },
     { key: 'verified', label: 'Diverifikasi' },
     { key: 'rejected', label: 'Ditolak' },
@@ -39,16 +39,6 @@ export default function PembayaranTab({
     const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
     const [verifyTargetId, setVerifyTargetId] = useState<number | null>(null);
     const [batchDialogOpen, setBatchDialogOpen] = useState(false);
-
-    useEffect(() => {
-        if (!statusFilter || statusFilter === 'all') {
-            router.get(
-                '/owner/finance',
-                { tab: 'pembayaran', status: 'pending_verification' },
-                { replace: true, preserveState: true },
-            );
-        }
-    }, [statusFilter]);
 
     if (!payments) {
         return <SkeletonPage />;
@@ -200,9 +190,9 @@ export default function PembayaranTab({
                 aria-label="Filter dan aksi pembayaran"
             >
                 {STATUS_FILTERS.map((sf) => {
-                    const isActive = (statusFilter ?? '') === sf.key;
+                    const isActive = (statusFilter ?? 'all') === sf.key;
                     const colorMap: Record<string, string> = {
-                        '': 'text-text bg-surface-muted ring-border',
+                        all: 'text-text bg-surface-muted ring-border',
                         pending_verification:
                             'text-amber-600 bg-amber-50 ring-amber-200',
                         verified:

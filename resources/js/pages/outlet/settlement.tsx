@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ChartColumn } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ interface Payment {
     payment_date: string;
     status: string;
     notes: string | null;
+    proof_image: string | null;
     rejection_reason: string | null;
     verifier: string | null;
     verified_at: string | null;
@@ -97,6 +99,11 @@ interface Props {
     hasPendingPayment: boolean;
     period: string;
     periodRange: { from: string; to: string } | null;
+    outletBank: {
+        bank_name: string | null;
+        bank_account_number: string | null;
+        bank_account_holder: string | null;
+    };
 }
 
 const periods = [
@@ -125,9 +132,16 @@ export default function OutletSettlement({
     paymentAccounts,
     hasPendingPayment,
     period,
+    outletBank,
 }: Props) {
     const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
+    const [selectedPayment, setSelectedPayment] = useState<any>(null);
     const { loading } = useInertiaLoading();
+    const bankForm = useForm({
+        bank_name: outletBank?.bank_name ?? '',
+        bank_account_number: outletBank?.bank_account_number ?? '',
+        bank_account_holder: outletBank?.bank_account_holder ?? '',
+    });
 
     const handlePeriodChange = (newPeriod: string) => {
         router.get(
@@ -142,7 +156,6 @@ export default function OutletSettlement({
     const hasSales = summary.orders_count > 0;
     const isSettled = reconciliation.outstanding <= 0;
     const visiblePayments = payments.slice(0, 3);
-    const hasMorePayments = payments.length > 3;
 
     return (
         <OutletLayout
@@ -156,7 +169,10 @@ export default function OutletSettlement({
                 />
             }
             actionBarSlot={
-                hasSales && !isSettled && !hasPendingPayment ? (
+                hasSales &&
+                !isSettled &&
+                !hasPendingPayment &&
+                summary.direction === 'outlet_pays_owner' ? (
                     <StickyActionBar
                         actions={[
                             {
@@ -286,7 +302,8 @@ export default function OutletSettlement({
                                             </span>
                                         </div>
                                     </div>
-                                ) : (
+                                ) : summary.direction ===
+                                  'outlet_pays_owner' ? (
                                     <Button
                                         size="lg"
                                         onClick={() =>
@@ -296,7 +313,7 @@ export default function OutletSettlement({
                                     >
                                         Ajukan Pembayaran
                                     </Button>
-                                )}
+                                ) : null}
                             </div>
                         )}
 
@@ -343,6 +360,67 @@ export default function OutletSettlement({
                             </SectionCard>
                         )}
 
+                        {/* Rekening Saya — target payout dari owner */}
+                        <SectionCard label="Rekening Saya (untuk payout)">
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    bankForm.put('/outlet/settlement/bank', {
+                                        onSuccess: () =>
+                                            toast.success(
+                                                'Rekening pembayaran diperbarui.',
+                                            ),
+                                    });
+                                }}
+                                className="mt-2 space-y-2"
+                            >
+                                <input
+                                    type="text"
+                                    placeholder="Nama Bank (cth: BCA)"
+                                    value={bankForm.data.bank_name}
+                                    onChange={(e) =>
+                                        bankForm.setData(
+                                            'bank_name',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Nomor Rekening"
+                                    value={bankForm.data.bank_account_number}
+                                    onChange={(e) =>
+                                        bankForm.setData(
+                                            'bank_account_number',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Atas Nama"
+                                    value={bankForm.data.bank_account_holder}
+                                    onChange={(e) =>
+                                        bankForm.setData(
+                                            'bank_account_holder',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm"
+                                />
+                                <Button
+                                    type="submit"
+                                    size="sm"
+                                    loading={bankForm.processing}
+                                    className="w-full"
+                                >
+                                    Simpan Rekening
+                                </Button>
+                            </form>
+                        </SectionCard>
+
                         {/* ── 2. Settlement Mingguan ── */}
                         {hasTimeline && (
                             <SectionCard label="Settlement Mingguan">
@@ -363,9 +441,12 @@ export default function OutletSettlement({
                             <SectionCard label="Riwayat Pembayaran">
                                 <div className="mt-2 space-y-2">
                                     {visiblePayments.map((payment) => (
-                                        <div
+                                        <button
                                             key={payment.id}
-                                            className="rounded-xl border border-border bg-surface-muted p-3"
+                                            onClick={() =>
+                                                setSelectedPayment(payment)
+                                            }
+                                            className="w-full rounded-xl border border-border bg-surface-muted p-3 text-left transition-colors active:bg-surface"
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div>
@@ -399,22 +480,11 @@ export default function OutletSettlement({
                                                     }
                                                 </StatusBadge>
                                             </div>
-                                            {payment.rejection_reason && (
-                                                <div className="mt-2 rounded-md bg-red-50 p-2 text-xs text-red-700">
-                                                    Ditolak:{' '}
-                                                    {payment.rejection_reason}
-                                                </div>
-                                            )}
-                                        </div>
+                                            <div className="mt-2 text-[11px] font-medium text-primary">
+                                                Lihat Detail →
+                                            </div>
+                                        </button>
                                     ))}
-                                    {hasMorePayments && (
-                                        <Link
-                                            href="/outlet/settlement-payments"
-                                            className="flex min-h-11 items-center justify-center text-xs font-semibold text-primary"
-                                        >
-                                            Lihat Semua Pembayaran →
-                                        </Link>
-                                    )}
                                 </div>
                             </SectionCard>
                         )}
@@ -565,6 +635,12 @@ export default function OutletSettlement({
                 onClose={() => setPaymentSheetOpen(false)}
                 outstanding={reconciliation.outstanding}
             />
+
+            {/* Payment Detail Sheet */}
+            <PaymentDetailSheet
+                payment={selectedPayment}
+                onClose={() => setSelectedPayment(null)}
+            />
         </OutletLayout>
     );
 }
@@ -680,6 +756,20 @@ function TimelineItem({
                         )}
                     </div>
                 </div>
+
+                {entry.outstanding > 0 && (
+                    <Link
+                        href={`/outlet/settlement/${entry.id}`}
+                        className="mt-2 flex items-center justify-between rounded-lg border border-border bg-surface-muted px-3 py-2 active:bg-surface"
+                    >
+                        <span className="text-xs font-medium text-text">
+                            Lihat Detail Settlement
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                            <span aria-hidden>→</span>
+                        </span>
+                    </Link>
+                )}
             </div>
         </div>
     );
@@ -835,5 +925,99 @@ function PaymentSheet({
                 </Button>
             </form>
         </BottomSheet>
+    );
+}
+
+/* ── Payment Detail Sheet ── */
+function PaymentDetailSheet({
+    payment,
+    onClose,
+}: {
+    payment: any;
+    onClose: () => void;
+}) {
+    const open = !!payment;
+
+    return (
+        <BottomSheet
+            open={open}
+            onClose={onClose}
+            title={payment ? `Detail Pembayaran` : ''}
+        >
+            {payment && (
+                <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <div className="text-2xl font-bold text-text tabular-nums">
+                                {formatCurrency(payment.amount)}
+                            </div>
+                            <div className="mt-1 text-xs text-text-muted">
+                                {payment.reference_number}
+                            </div>
+                        </div>
+                        <StatusBadge variant={statusVariants[payment.status]}>
+                            {statusLabels[payment.status]}
+                        </StatusBadge>
+                    </div>
+
+                    <div className="space-y-2 rounded-xl border border-border bg-surface-muted p-3 text-sm">
+                        <Row
+                            label="Tanggal Bayar"
+                            value={formatDate(payment.payment_date)}
+                        />
+                        {payment.verifier && (
+                            <Row
+                                label="Diverifikasi oleh"
+                                value={payment.verifier}
+                            />
+                        )}
+                        {payment.verified_at && (
+                            <Row
+                                label="Waktu Verifikasi"
+                                value={formatDate(payment.verified_at)}
+                            />
+                        )}
+                    </div>
+
+                    {payment.notes && (
+                        <div className="rounded-xl border border-border p-3 text-sm text-text-muted">
+                            <div className="text-[11px] font-semibold tracking-wider text-text-subtle uppercase">
+                                Catatan
+                            </div>
+                            <p className="mt-1">{payment.notes}</p>
+                        </div>
+                    )}
+
+                    {payment.rejection_reason && (
+                        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+                            <div className="text-[11px] font-semibold tracking-wider text-red-600 uppercase">
+                                Alasan Ditolak
+                            </div>
+                            <p className="mt-1">{payment.rejection_reason}</p>
+                        </div>
+                    )}
+
+                    {payment.proof_image && (
+                        <a
+                            href={`/storage/${payment.proof_image}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block w-full rounded-xl bg-primary px-4 py-3 text-center text-sm font-semibold text-white"
+                        >
+                            Lihat Bukti Transfer
+                        </a>
+                    )}
+                </div>
+            )}
+        </BottomSheet>
+    );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="flex items-center justify-between gap-2">
+            <span className="text-text-subtle">{label}</span>
+            <span className="font-medium text-text">{value}</span>
+        </div>
     );
 }

@@ -332,6 +332,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('finance/settlements/{outlet}', [FinanceSettlementController::class, 'outletDetail'])->name('finance.settlements.outlet');
         Route::post('finance/settlements/{outlet}/payments', [FinanceSettlementController::class, 'recordPayment'])->name('finance.settlements.payments');
         Route::post('finance/settlements/{outlet}/send-invoice', [FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
+        Route::post('finance/settlements/{outlet}/payout', [FinanceSettlementController::class, 'recordPayout'])->name('finance.settlements.payout');
         Route::resource('finance/payment-accounts', PaymentAccountController::class)->only(['store', 'update', 'destroy']);
         Route::get('refunds', [RefundController::class, 'index'])->name('refunds.index');
         Route::post('refunds/{order}/destination', [RefundController::class, 'destination'])->name('refunds.destination');
@@ -387,7 +388,9 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::put('/order-reports/{report}', [App\Http\Controllers\Outlet\OrderReportController::class, 'update'])->name('order-reports.update');
         Route::post('/push-subscribe', [PushController::class, 'subscribe'])->name('push-subscribe');
         Route::get('/offline-sales', [OfflineSaleController::class, 'index'])->name('offline-sales.index');
+        Route::get('/offline-sales/{offlineSale}', [OfflineSaleController::class, 'show'])->name('offline-sales.show');
         Route::post('/offline-sales', [OfflineSaleController::class, 'store'])->name('offline-sales.store');
+        Route::put('/offline-sales/{offlineSale}', [OfflineSaleController::class, 'update'])->name('offline-sales.update');
         Route::delete('/offline-sales/{offlineSale}', [OfflineSaleController::class, 'destroy'])->name('offline-sales.destroy');
         Route::get('/scan', [OutletScanController::class, 'index'])->name('scan');
         Route::get('/scan/{order_code}', [OutletScanController::class, 'lookup'])->name('scan.lookup');
@@ -398,6 +401,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('/restocks/{restockRequest}/cancel', [OutletRestockController::class, 'cancel'])->name('restocks.cancel');
         Route::post('restocks/{restockRequest}/confirm-received', [OutletRestockController::class, 'confirmReceived'])->name('restocks.confirm-received');
         Route::get('/settlement', [SettlementController::class, 'index'])->name('settlement.index');
+        Route::get('/settlement/{settlement}', [SettlementController::class, 'show'])->name('settlement.show');
+        Route::put('/settlement/bank', [SettlementController::class, 'updateBank'])->name('settlement.bank.update');
         Route::get('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
         Route::post('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'store'])->name('settlement-payments.store');
         Route::get('/returns', [OutletReturnController::class, 'index'])->name('returns.index');
