@@ -13,7 +13,12 @@ export type OrderStatus =
     | 'expired';
 
 export type PaymentStatus =
-    'unpaid' | 'pending' | 'paid' | 'failed' | 'expired' | 'settled';
+    | 'unpaid'
+    | 'pending'
+    | 'paid'
+    | 'failed'
+    | 'expired'
+    | 'settled';
 
 export interface NormalizedOrder {
     id: number;
