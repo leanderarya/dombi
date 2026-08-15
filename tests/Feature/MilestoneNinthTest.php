@@ -149,8 +149,8 @@ class MilestoneNinthTest extends TestCase
     {
         $this->assertFileExists(base_path('docs/DEPLOYMENT.md'));
         $content = file_get_contents(base_path('docs/DEPLOYMENT.md'));
-        $this->assertStringContainsString('Production Setup', $content);
+        $this->assertStringContainsString('Source of Truth', $content);
         $this->assertStringContainsString('Rollback', $content);
-        $this->assertStringContainsString('Health Check', $content);
+        $this->assertStringContainsString('Health Gate', $content);
     }
 }
