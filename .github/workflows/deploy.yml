@@ -121,6 +121,30 @@ jobs:
         run: |
           echo "Waiting 15s for production to boot"
           sleep 15
-          curl --fail --max-time 30 --retry 3 --retry-delay 5 https://dombicenter.com/up
-          echo "Production /up OK"
-          curl --fail --max-time 30 https://dombicenter.com/api/health || echo "api/health check attempted"
+
+          check_health() {
+            local url="$1"
+            local status
+
+            if ! status="$(curl \
+              --silent \
+              --show-error \
+              --output /dev/null \
+              --max-time 30 \
+              --retry 3 \
+              --retry-delay 5 \
+              --retry-all-errors \
+              --write-out '%{http_code}' \
+              "$url")"; then
+              echo "Health check request failed: $url"
+              return 1
+            fi
+
+            case "$status" in
+              2??) echo "$url OK (HTTP $status)" ;;
+              *) echo "$url returned HTTP $status"; return 1 ;;
+            esac
+          }
+
+          check_health https://app.dombicenter.com/up
+          check_health https://app.dombicenter.com/api/health
