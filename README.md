@@ -65,9 +65,13 @@ php artisan test --testsuite=Feature
 
 ## Deployment
 
-Auto-deploy to staging on push to `develop` branch via GitHub Actions.
+GitHub Actions menjalankan quality gate untuk push dan pull request ke `develop` atau `main`.
 
-**Staging:** https://staging.dombicenter.com
+- Push ke `develop` → deploy staging: `https://staging.dombicenter.com`
+- Push ke `main` → deploy production: `https://app.dombicenter.com`
+
+Detail pre-cutover gate, deployment, health check, APK, dan rollback:
+[Deployment Runbook](docs/DEPLOYMENT.md)
 
 ## Documentation
 
