@@ -14,6 +14,29 @@ otomatis `NO-GO`.
 - [ ] **BLOCKER:** rollback/roll-forward rehearsal berhasil
 - [ ] **BLOCKER:** tidak ada demo credential atau debug mode di production
 
+## Pre-Cutover Gate
+
+Semua item berikut wajib memiliki evidence sebelum merge/push `main`. Bila salah satu
+BLOCKER gagal, checkpoint **PRODUCTION CUTOVER AUTHORIZED** tidak boleh dicentang.
+
+- [ ] **BLOCKER:** DNS `app.dombicenter.com` resolve ke Hostinger yang benar
+- [ ] **BLOCKER:** SSL valid untuk `app.dombicenter.com`
+- [ ] **BLOCKER:** Hostinger document root subdomain `app` dikonfirmasi sebagai
+      `/domains/dombicenter.com/public_html/app/`
+- [ ] **BLOCKER:** production `.env` memiliki `APP_ENV=production`, `APP_DEBUG=false`,
+      `APP_URL=https://app.dombicenter.com`, secure cookie, dan secret production
+- [ ] **BLOCKER:** DOKU Live credential, base URL, callback
+      `https://app.dombicenter.com/payment/doku/notify`, signature, dan nominal diverifikasi
+- [ ] **BLOCKER:** Google OAuth redirect URI
+      `https://app.dombicenter.com/oauth/google/callback` terdaftar dan diuji
+- [ ] **BLOCKER:** staging smoke test selesai dan evidence disimpan
+- [ ] **BLOCKER:** known-good rollback SHA/tag tercatat
+- [ ] **BLOCKER:** **PRODUCTION CUTOVER AUTHORIZED** disetujui operator
+
+Push `main` hanya dilakukan setelah checkpoint terakhir selesai. Item ini adalah gate baru
+untuk domain cutover; item yang diberi `WAIVED` pada audit Hostinger tetap mengikuti waiver
+scope tersebut dan tidak otomatis menjadi blocker baru.
+
 ## Pre-Deploy
 
 - [ ] `APP_ENV=production`, `APP_DEBUG=false`, HTTPS dan secure cookie aktif
@@ -41,11 +64,19 @@ script server tanpa definisi ownership.
 - [ ] Config, route, dan view cache dibuat ulang
 - [ ] Storage link dan permission diverifikasi
 - [ ] Release identifier tercatat
+- [ ] Document root production sudah dicocokkan dengan
+      `/domains/dombicenter.com/public_html/app/`
+- [ ] Workflow production adalah mekanisme canonical; tidak ada upload manual paralel
+- [ ] Production artifact berasal dari commit/tag yang sama dengan release evidence
+- [ ] `/up` pada `https://app.dombicenter.com` mengembalikan HTTP 2xx
+- [ ] `/api/health` pada `https://app.dombicenter.com` mengembalikan HTTP 2xx
+- [ ] Kedua health request memakai timeout 30 detik, maksimal tiga retry, jeda lima detik;
+      kegagalan salah satu endpoint menggagalkan workflow
 
 ## Post-Deploy
 
-- [ ] `/up` merespons sukses
-- [ ] `/api/health` diperiksa oleh owner
+- [ ] `https://app.dombicenter.com/up` merespons HTTP 2xx
+- [ ] `https://app.dombicenter.com/api/health` merespons HTTP 2xx
 - [ ] Homepage dan login dapat dimuat
 - [ ] Smoke order pickup bernilai kecil berhasil end-to-end
 - [ ] Webhook DOKU diterima satu kali dan retry aman
@@ -54,6 +85,8 @@ script server tanpa definisi ownership.
 - [ ] Scheduler heartbeat baru
 - [ ] Queue tidak backlog dan `queue:failed` bersih
 - [ ] Sentry/log tidak menunjukkan error baru
+- [ ] APK production customer dan internal dibangun dengan
+      `CAP_SERVER_URL=https://app.dombicenter.com`; command dan artifact disimpan
 - [ ] Backup setelah deploy berhasil
 
 ## Rollback Trigger
@@ -76,6 +109,11 @@ transaksi yang masuk setelah deploy.
 
 | Evidence | Link/output | Waktu | Operator | Hasil |
 |---|---|---|---|---|
+| DNS/SSL/document root production |  |  |  |  |
+| Runtime `.env` production |  |  |  |  |
+| DOKU Live dan Google OAuth |  |  |  |  |
+| Known-good rollback SHA/tag |  |  |  |  |
+| Production health `/up` + `/api/health` |  |  |  |  |
 | CI commit release |  |  |  |  |
 | Migration rehearsal |  |  |  |  |
 | DOKU sandbox |  |  |  |  |
@@ -129,6 +167,10 @@ Per 2026-07-27 (awal), status adalah `NO-GO`:
 **Status code: GO untuk production Hostinger.**
 
 > Catatan: Untuk scale selanjutnya, offsite S3 + restore drill tetap direkomendasikan, tapi tidak menghalangi rilis Hostinger saat ini.
+
+> Catatan cutover 2026-08-15: status production cutover tetap **NO-GO** sampai seluruh
+> `Pre-Cutover Gate` selesai, known-good rollback SHA/tag tercatat, dan
+> `PRODUCTION CUTOVER AUTHORIZED` disetujui operator.
 
 ## Delivery-Specific Blocker (dari plan launch)
 
