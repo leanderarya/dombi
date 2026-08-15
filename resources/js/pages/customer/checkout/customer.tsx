@@ -15,6 +15,7 @@ import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
 import PhoneInput from '@/components/ui/phone-input';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import { getDeliveryAddressPresentation } from '@/lib/checkout-address-presentation';
 import { applyLocationToForm } from '@/lib/checkout-utils';
 import { useCustomerLocation } from '@/lib/customer-location';
 import type { CustomerLocation } from '@/lib/customer-location';
@@ -336,6 +337,12 @@ export default function CheckoutCustomer({
         [form.data.village, form.data.district, form.data.city]
             .filter(Boolean)
             .join(', ');
+    const addressPresentation = getDeliveryAddressPresentation({
+        hasKnownLocation,
+        selectedAddressLabel,
+        displayAddress,
+        addressDetail: form.data.address_detail,
+    });
 
     return (
         <CustomerMobileLayout
@@ -492,41 +499,67 @@ export default function CheckoutCustomer({
                     {/* Delivery location — compact card */}
                     {isDelivery && (
                         <div className="mt-4 overflow-hidden rounded-xl border border-border bg-white">
-                            {/* Address row */}
+                            <div className="px-4 pt-4">
+                                <h2 className="text-sm font-semibold text-text">
+                                    Alamat Pengiriman
+                                </h2>
+                                <p className="mt-0.5 text-[11px] text-text-muted">
+                                    Wajib diisi untuk menghitung ongkir
+                                </p>
+                            </div>
+
                             <button
                                 type="button"
                                 onClick={() => setLocationSheetOpen(true)}
-                                className="flex w-full items-center gap-3 p-4 text-left transition-colors active:bg-surface-muted"
+                                className={`mx-4 mt-3 mb-4 flex min-h-16 w-[calc(100%-2rem)] items-center gap-3 rounded-xl border p-4 text-left transition-colors active:opacity-80 ${addressPresentation.state === 'empty' ? 'border-primary/30 bg-primary/5' : 'border-border bg-white active:bg-surface-muted'}`}
                             >
                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
                                     <MapPin className="h-4 w-4 text-emerald-600" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    {hasKnownLocation ? (
+                                    {addressPresentation.state === 'empty' ? (
+                                        <>
+                                            <div className="text-sm font-bold text-primary">
+                                                {
+                                                    addressPresentation.actionLabel
+                                                }
+                                            </div>
+                                            <div className="mt-0.5 text-[11px] text-text-muted">
+                                                {addressPresentation.prompt}
+                                            </div>
+                                        </>
+                                    ) : (
                                         <>
                                             <div className="flex items-center gap-1.5">
-                                                {selectedAddressLabel && (
+                                                {addressPresentation.selectedAddressLabel && (
                                                     <span className="text-[11px] font-bold text-emerald-700">
-                                                        {selectedAddressLabel}
+                                                        {
+                                                            addressPresentation.selectedAddressLabel
+                                                        }
                                                     </span>
                                                 )}
                                                 <span className="line-clamp-1 text-xs text-text">
-                                                    {displayAddress}
+                                                    {
+                                                        addressPresentation.displayAddress
+                                                    }
                                                 </span>
                                             </div>
-                                            {form.data.address_detail && (
+                                            {addressPresentation.addressDetail && (
                                                 <div className="mt-0.5 truncate text-[11px] text-text-subtle">
-                                                    {form.data.address_detail}
+                                                    {
+                                                        addressPresentation.addressDetail
+                                                    }
                                                 </div>
                                             )}
                                         </>
-                                    ) : (
-                                        <span className="text-xs font-medium text-primary">
-                                            Pilih Lokasi Pengiriman
-                                        </span>
                                     )}
                                 </div>
-                                <Navigation className="h-4 w-4 shrink-0 text-text-subtle" />
+                                <div className="flex shrink-0 items-center gap-1 text-[11px] font-semibold text-primary">
+                                    <span>
+                                        {addressPresentation.actionLabel}
+                                    </span>
+                                    <Navigation className="h-4 w-4" />
+                                </div>
                             </button>
 
                             {/* Delivery quote — inline */}
