@@ -26,6 +26,34 @@ class MilestoneEighthTest extends TestCase
         $this->assertSame('Dombi', $manifest['short_name']);
         $this->assertSame('standalone', $manifest['display']);
         $this->assertNotEmpty($manifest['icons']);
+
+        $this->assertSame('/customer/', $manifest['id']);
+        $this->assertSame('/customer/home', $manifest['start_url']);
+        $this->assertSame('/customer/', $manifest['scope']);
+    }
+
+    public function test_internal_pwa_manifest_uses_internal_launch_context(): void
+    {
+        $this->assertFileExists(public_path('internal-manifest.json'));
+
+        $manifest = json_decode(file_get_contents(public_path('internal-manifest.json')), true);
+
+        $this->assertSame('/internal', $manifest['id']);
+        $this->assertSame('/login', $manifest['start_url']);
+        $this->assertSame('/', $manifest['scope']);
+        $this->assertSame('standalone', $manifest['display']);
+        $this->assertNotEmpty($manifest['icons']);
+    }
+
+    public function test_pwa_root_templates_use_their_own_manifests(): void
+    {
+        $customerBlade = file_get_contents(resource_path('views/customer-app.blade.php'));
+        $internalBlade = file_get_contents(resource_path('views/internal-app.blade.php'));
+
+        $this->assertStringContainsString('<link rel="manifest" href="/manifest.json">', $customerBlade);
+        $this->assertStringNotContainsString('/internal-manifest.json', $customerBlade);
+        $this->assertStringContainsString('<link rel="manifest" href="/internal-manifest.json">', $internalBlade);
+        $this->assertStringNotContainsString('<link rel="manifest" href="/manifest.json">', $internalBlade);
     }
 
     public function test_service_worker_file_exists(): void
