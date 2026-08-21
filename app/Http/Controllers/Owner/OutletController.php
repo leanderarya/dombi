@@ -70,7 +70,7 @@ class OutletController extends Controller
             'outlet' => $outlet,
             'inventoryHealth' => $outlet->inventories()
                 ->whereNotNull('product_id')
-                ->with('product:id,name,unit')
+                ->with('product:id,name,size')
                 ->latest()
                 ->limit(6)
                 ->get(['id', 'outlet_id', 'product_id', 'current_stock', 'reserved_stock', 'minimum_stock', 'updated_at']),

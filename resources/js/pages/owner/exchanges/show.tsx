@@ -3,6 +3,7 @@ import {
     ArrowLeftRight,
     CheckCircle2,
     Clock,
+    History,
     Package,
     Truck,
     XCircle,
@@ -54,14 +55,14 @@ export default function OwnerExchangesShow({ exchange }: any) {
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                         </div>
@@ -81,7 +82,8 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 approveForm.reset();
                 toast.success('Disetujui');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -92,16 +94,22 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 rejectForm.reset();
                 toast.success('Ditolak');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
     const handleMarkShipped = () => {
-        router.post(`/owner/exchanges/${exchange.id}/mark-shipped`, {}, {
-            preserveScroll: true,
-            onSuccess: () => toast.success('Dikirim'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
-        });
+        router.post(
+            `/owner/exchanges/${exchange.id}/mark-shipped`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Dikirim'),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
+            },
+        );
     };
 
     return (
@@ -115,12 +123,21 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 <div className="space-y-4 lg:col-span-2">
                     {/* Exchange Items */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Item Pengganti"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Item Pengganti
+                        <div className="mb-3 flex items-center gap-2">
+                            <Package
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Item Pengganti
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Produk pengganti yang dikirim beserta nilainya.
+                        </p>
                         {exchange.items?.map((item: any) => (
                             <OwnerDetailRow
                                 key={item.id}
@@ -131,7 +148,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         ))}
                         <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm">
                             <span className="text-text-muted">Nilai Tukar</span>
-                            <span className="font-bold text-primary">
+                            <span className="font-bold text-primary tabular-nums">
                                 {formatCurrency(exchange.exchange_value)}
                             </span>
                         </div>
@@ -140,12 +157,21 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     {/* Linked Return */}
                     {exchange.return_request && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Return Terkait"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Return Terkait
+                            <div className="mb-3 flex items-center gap-2">
+                                <Package
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Return Terkait
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Return sumber dari tukar produk ini.
+                            </p>
                             <OwnerDetailRow
                                 label="Return"
                                 value={`#${exchange.return_request.id}`}
@@ -179,12 +205,21 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     {/* Notes */}
                     {exchange.notes && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Catatan Exchange"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Catatan
+                            <div className="mb-3 flex items-center gap-2">
+                                <Package
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Catatan
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Info tambahan untuk exchange ini.
+                            </p>
                             <p className="text-sm text-text-muted">
                                 {exchange.notes}
                             </p>
@@ -196,12 +231,21 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 <div className="space-y-4">
                     {/* Status + Actions */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Status Exchange"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Status
+                        <div className="mb-3 flex items-center gap-2">
+                            <StatusIcon
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Status
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Status saat ini dan aksi untuk exchange ini.
+                        </p>
                         <div className="mb-3 flex items-center gap-2">
                             <StatusIcon
                                 className="h-4 w-4 text-text-muted"
@@ -230,7 +274,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                             <div className="mt-4 flex gap-2">
                                 <Button
                                     size="sm"
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     aria-label="Setujui Exchange"
                                     onClick={() => setShowApprove(true)}
                                 >
@@ -243,7 +287,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                                 <Button
                                     size="sm"
                                     variant="destructive"
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     aria-label="Tolak Exchange"
                                     onClick={() => setShowReject(true)}
                                 >
@@ -260,7 +304,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                             exchange.status === 'preparing') && (
                             <Button
                                 size="sm"
-                                className="mt-4 w-full"
+                                className="mt-4 min-h-11 w-full"
                                 onClick={handleMarkShipped}
                             >
                                 <Truck
@@ -274,7 +318,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         {exchange.status === 'received' && (
                             <Button
                                 size="sm"
-                                className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700"
+                                className="mt-4 min-h-11 w-full bg-primary text-white hover:bg-primary-hover focus-visible:ring-primary"
                                 onClick={() => setShowComplete(true)}
                             >
                                 <CheckCircle2
@@ -286,7 +330,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         )}
 
                         {exchange.status === 'completed' && (
-                            <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center">
                                 <CheckCircle2
                                     className="mx-auto h-5 w-5 text-emerald-500"
                                     aria-hidden="true"
@@ -298,7 +342,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         )}
 
                         {exchange.status === 'rejected' && (
-                            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-center">
                                 <XCircle
                                     className="mx-auto h-5 w-5 text-red-500"
                                     aria-hidden="true"
@@ -313,12 +357,21 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     {/* Status History / Timeline */}
                     {exchange.status_histories?.length > 0 && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Riwayat Status Exchange"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Riwayat Status
+                            <div className="mb-3 flex items-center gap-2">
+                                <History
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Riwayat Status
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Perjalanan status exchange ini.
+                            </p>
                             <div className="space-y-3">
                                 {exchange.status_histories.map(
                                     (h: any, i: number) => {
@@ -358,7 +411,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                                                             {histStatus.label}
                                                         </StatusBadge>
                                                     </div>
-                                                    <div className="mt-0.5 text-xs text-text-muted">
+                                                    <div className="mt-0.5 text-xs text-text-muted tabular-nums">
                                                         {h.actor?.name} &middot;{' '}
                                                         {formatDate(
                                                             h.created_at,
@@ -400,11 +453,13 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowApprove(false)}
                         >
                             Batal
                         </Button>
                         <Button
+                            className="min-h-11"
                             onClick={handleApprove}
                             disabled={approveForm.processing}
                         >
@@ -434,19 +489,21 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         rows={3}
                     />
                     {rejectForm.errors.reason && (
-                        <div className="text-xs text-red-600">
+                        <div className="text-xs text-red-500">
                             {rejectForm.errors.reason}
                         </div>
                     )}
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowReject(false)}
                         >
                             Batal
                         </Button>
                         <Button
                             variant="destructive"
+                            className="min-h-11"
                             onClick={handleReject}
                             disabled={rejectForm.processing}
                         >
@@ -469,11 +526,13 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowComplete(false)}
                         >
                             Batal
                         </Button>
                         <Button
+                            className="min-h-11"
                             onClick={() =>
                                 router.post(
                                     `/owner/exchanges/${exchange.id}/complete`,
@@ -484,7 +543,12 @@ export default function OwnerExchangesShow({ exchange }: any) {
                                             setShowComplete(false);
                                             toast.success('Selesai');
                                         },
-                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                        onError: (errors) =>
+                                            toast.error(
+                                                Object.values(errors)
+                                                    .flat()
+                                                    .join(', '),
+                                            ),
                                     },
                                 )
                             }

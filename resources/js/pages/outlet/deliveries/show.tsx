@@ -1,15 +1,87 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { useState } from 'react';
 
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
 import DeliveryTimeline from '@/components/operations/delivery-timeline';
+import { Button } from '@/components/ui/button';
+import Dialog from '@/components/ui/dialog';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDeliveryAge } from '@/lib/format';
 import { getDeliveryStatus } from '@/lib/status-labels';
 
+const nextExternalActions: Record<
+    string,
+    Array<{
+        status: string;
+        label: string;
+        destructive?: boolean;
+        requiresReason?: boolean;
+    }>
+> = {
+    waiting_pickup: [{ status: 'picked_up', label: 'Kurir sudah mengambil' }],
+    picked_up: [{ status: 'delivering', label: 'Mulai pengiriman' }],
+    delivering: [
+        { status: 'completed', label: 'Pesanan diterima' },
+        {
+            status: 'failed',
+            label: 'Pengiriman gagal',
+            destructive: true,
+            requiresReason: true,
+        },
+    ],
+    failed: [
+        {
+            status: 'returned_to_outlet',
+            label: 'Konfirmasi kembali ke outlet',
+            requiresReason: true,
+        },
+    ],
+};
+
 export default function OutletDeliveryShow({ delivery }: any) {
     const order = delivery.order;
+    const isExternal = delivery.courier_type === 'eksternal';
+    const actions = nextExternalActions[delivery.status] ?? [];
+
+    const [showReasonInput, setShowReasonInput] = useState<{
+        status: string;
+        label: string;
+    } | null>(null);
+    const [reason, setReason] = useState('');
+
+    function handleAction(status: string, label: string) {
+        const action = actions.find((a) => a.status === status);
+
+        if (action?.requiresReason) {
+            setShowReasonInput({ status, label });
+
+            return;
+        }
+
+        router.post(`/outlet/deliveries/${delivery.id}/status`, { status });
+    }
+
+    function submitWithReason() {
+        if (!showReasonInput || !reason.trim()) {
+            return;
+        }
+
+        router.post(
+            `/outlet/deliveries/${delivery.id}/status`,
+            {
+                status: showReasonInput.status,
+                reason: reason.trim(),
+            },
+            {
+                onSuccess: () => {
+                    setShowReasonInput(null);
+                    setReason('');
+                },
+            },
+        );
+    }
 
     return (
         <OutletLayout title={delivery.order_code} backHref="/outlet/deliveries">
@@ -18,7 +90,10 @@ export default function OutletDeliveryShow({ delivery }: any) {
             {/* Status Strip */}
             <div className="mt-4 mb-4 flex items-center justify-between">
                 <div className="text-sm text-text-muted">
-                    Kurir: {delivery.courier?.name ?? '-'}
+                    Kurir:{' '}
+                    {isExternal
+                        ? `${delivery.external_provider ?? ''} - ${delivery.external_courier_name ?? ''}`
+                        : (delivery.courier?.name ?? '-')}
                 </div>
                 <div className="flex items-center gap-2">
                     <StatusBadge status={delivery.status} />
@@ -27,6 +102,70 @@ export default function OutletDeliveryShow({ delivery }: any) {
                     )}
                 </div>
             </div>
+
+            {/* External Action Buttons */}
+            {isExternal && actions.length > 0 && (
+                <SectionCard label="Perbarui Status Kiriman">
+                    <div className="mt-2 flex flex-wrap gap-2">
+                        {actions.map((action) => (
+                            <button
+                                key={action.status}
+                                type="button"
+                                onClick={() =>
+                                    handleAction(action.status, action.label)
+                                }
+                                className={`min-h-11 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                                    action.destructive
+                                        ? 'bg-red-600 text-white hover:bg-red-700'
+                                        : 'bg-emerald-700 text-white hover:bg-emerald-800'
+                                }`}
+                            >
+                                {action.label}
+                            </button>
+                        ))}
+                    </div>
+                </SectionCard>
+            )}
+
+            {/* Reason Modal */}
+            <Dialog
+                open={!!showReasonInput}
+                onClose={() => {
+                    setShowReasonInput(null);
+                    setReason('');
+                }}
+                title={showReasonInput?.label ?? ''}
+            >
+                <textarea
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Alasan..."
+                    className="w-full rounded-lg border border-border p-3 text-sm"
+                    rows={3}
+                />
+                <div className="mt-3 flex gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                            setShowReasonInput(null);
+                            setReason('');
+                        }}
+                    >
+                        Batal
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="primary"
+                        className="flex-1"
+                        onClick={submitWithReason}
+                        disabled={!reason.trim()}
+                    >
+                        Konfirmasi
+                    </Button>
+                </div>
+            </Dialog>
 
             {/* Customer Info */}
             <SectionCard label="Customer">

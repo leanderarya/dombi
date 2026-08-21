@@ -1,193 +1,140 @@
-# Dombi - Deployment Workflow (Hostinger)
+# Dombi — Deployment Runbook
 
-## Production Setup
+## Source of Truth
 
-## Quick Deploy Steps
+GitHub Actions adalah mekanisme deploy canonical. Jangan mencampur workflow FTP,
+upload manual, dan script server sebagai jalur deploy yang berbeda.
 
-### 1. Pull Latest Changes (Lokal)
+| Environment | Branch    | URL                               | Hostinger target                               | Trigger                                    |
+| ----------- | --------- | --------------------------------- | ---------------------------------------------- | ------------------------------------------ |
+| Staging     | `develop` | `https://staging.dombicenter.com` | `domains/dombicenter.com/public_html/staging/` | Push ke `develop` atau `workflow_dispatch` |
+| Production  | `main`    | `https://app.dombicenter.com`     | `/domains/dombicenter.com/public_html/app/`    | Push ke `main` atau `workflow_dispatch`    |
+
+Production path wajib dikonfirmasi terhadap document root aktual pada Hostinger sebelum
+production cutover diotorisasi. Perubahan ini tidak mengubah DNS, SSL, document root,
+secret, atau `.env` server.
+
+## Pre-Cutover Gate
+
+Jangan push `main` sebelum setiap item memiliki evidence:
+
+- [ ] DNS `app.dombicenter.com` resolve ke Hostinger yang benar.
+- [ ] SSL valid untuk `app.dombicenter.com`.
+- [ ] Document root subdomain `app` sama dengan `/domains/dombicenter.com/public_html/app/`.
+- [ ] Production `.env` berisi `APP_ENV=production`, `APP_DEBUG=false`,
+      `APP_URL=https://app.dombicenter.com`, secure cookie, dan secret production.
+- [ ] DOKU Live client ID/API key, base URL, callback
+      `https://app.dombicenter.com/payment/doku/notify`, signature, dan nominal diverifikasi.
+- [ ] Google OAuth redirect URI `https://app.dombicenter.com/oauth/google/callback`
+      terdaftar dan diuji.
+- [ ] Staging smoke test selesai.
+- [ ] Known-good release SHA/tag tercatat untuk rollback.
+- [ ] Checkpoint `PRODUCTION CUTOVER AUTHORIZED` disetujui operator.
+
+## Staging Deploy
+
+Push ke `develop` menjalankan `.github/workflows/deploy-staging.yml`.
+Workflow menjalankan quality gate, build frontend, deploy code melalui SSH ke staging,
+menjalankan dependency install dan migration, membersihkan cache, memasang storage link,
+mengunggah `public/build`, lalu memeriksa:
+
+```text
+https://staging.dombicenter.com/up
+https://staging.dombicenter.com/api/health
+```
+
+Simpan commit SHA, workflow run, hasil health check, dan hasil smoke test sebagai staging
+evidence sebelum melanjutkan ke pre-cutover gate.
+
+## Production Deploy
+
+Setelah pre-cutover gate lengkap, merge `develop` ke `main` sesuai proses repository lalu
+push `main`. Workflow `.github/workflows/deploy.yml` akan:
+
+1. Menunggu quality gate.
+2. Membangun Composer production dependencies dan frontend assets.
+3. Mengunggah tree production melalui FTP ke `/domains/dombicenter.com/public_html/app/`.
+4. Menjalankan post-deploy SSH pada `domains/dombicenter.com/public_html/app`.
+5. Menjalankan `composer install`, `php artisan migrate --force`, clear cache, dan storage link.
+6. Menjalankan production health gate.
+
+Tidak ada upload manual atau copy `.env` dari repository dalam jalur ini. Workflow mengecualikan
+`.env*`; production `.env` harus sudah tersedia dan benar di server.
+
+## Health Gate
+
+Deployment hanya dianggap sehat bila kedua endpoint berikut mengembalikan HTTP 2xx:
+
+```text
+https://app.dombicenter.com/up
+https://app.dombicenter.com/api/health
+```
+
+Setiap request memakai timeout 30 detik, maksimal tiga retry setelah request awal, dan jeda
+retry lima detik. Non-2xx, timeout, atau kegagalan koneksi pada salah satu endpoint menggagalkan
+job production.
+
+Health gate bukan pengganti smoke test bisnis. Setelah job berhasil, uji homepage, login,
+canary order bernilai kecil, DOKU callback/webhook, queue, dan log.
+
+## Production APK
+
+Default build tetap memakai staging untuk mencegah accidental production build. Build APK production
+harus menetapkan server URL secara eksplisit:
 
 ```bash
-cd /Users/aryaajisadda/Herd/dombi
-git pull origin main
+CAP_SERVER_URL=https://app.dombicenter.com ./scripts/build-apk.sh customer
+CAP_SERVER_URL=https://app.dombicenter.com ./scripts/build-apk.sh internal
 ```
 
-### 2. Build Frontend (Lokal)
+Simpan command, commit SHA, dan artifact APK sebagai release evidence. APK yang sudah terpasang
+mempertahankan URL yang dibake saat build; web domain cutover tidak mengubah APK lama.
+
+## Rollback
+
+Rollback code hanya ke artifact atau commit/tag known-good yang tercatat pada release evidence.
+Jangan memakai `git checkout HEAD~1` pada server dan jangan menjalankan `migration:rollback`
+otomatis.
+
+Tentukan ref yang sudah diverifikasi, lalu jalankan production workflow pada ref tersebut:
 
 ```bash
-npm run build
+read -r -p 'Known-good branch atau tag: ' KNOWN_GOOD_REF
+gh workflow run deploy.yml --ref "$KNOWN_GOOD_REF"
+gh run watch
 ```
 
-Output: `public/build/` folder
+Catat ref, commit SHA, waktu, operator, dan workflow run ID. Setelah redeploy, ulangi health gate,
+homepage/login, canary flow, webhook, queue, dan pemeriksaan log.
 
-### 3. Upload ke Server
+Rollback code tidak membatalkan migration atau transaksi production. Migration ditangani dengan
+roll-forward bila memungkinkan. Restore database hanya boleh diputuskan operator release/owner
+setelah impact review terhadap transaksi yang masuk.
 
-Upload `public/build/` folder ke `/public_html/public/build/` via:
-- Hostinger File Manager
-- FTP/SFTP
-- rsync (jika ada SSH access)
+## Rollback Triggers
 
-### 4. Upload Backend Changes (jika ada file PHP yang berubah)
+Hentikan traffic atau rollback bila terjadi:
 
-Upload file PHP yang berubah ke server, sesuai path structure.
-
-### 5. Clear Cache di Server
-
-```bash
-/opt/alt/php83/usr/bin/php artisan config:cache
-/opt/alt/php83/usr/bin/php artisan route:cache
-/opt/alt/php83/usr/bin/php artisan view:cache
-```
-
----
-
-## Full Deployment (Pertama Kali / Reset)
-
-### Step 1: Upload Semua File
-
-Upload seluruh project ke `/public_html/` kecuali:
-- `node_modules/`
-- `.git/`
-- `tests/`
-- `.env.example`
-
-### Step 2: Setup Environment
-
-```bash
-# Copy .env.production ke .env
-cp .env.production .env
-
-# Edit .env dengan credentials Hostinger
-# - DB_DATABASE, DB_USERNAME, DB_PASSWORD
-# - APP_URL=https://lightcyan-mink-255361.hostingersite.com
-# - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-```
-
-### Step 3: Install Dependencies
-
-```bash
-/opt/alt/php83/usr/bin/php /opt/alt/php83/usr/bin/composer install --optimize-autoloader --no-dev
-```
-
-### Step 4: Generate APP_KEY (jika belum ada)
-
-```bash
-/opt/alt/php83/usr/bin/php artisan key:generate
-```
-
-### Step 5: Run Migrations
-
-```bash
-/opt/alt/php83/usr/bin/php artisan migrate --force
-```
-
-### Step 6: Seed Database
-
-```bash
-/opt/alt/php83/usr/bin/php artisan db:seed --force
-```
-
-### Step 7: Create Storage Symlink
-
-```bash
-/opt/alt/php83/usr/bin/php artisan storage:link
-```
-
-### Step 8: Cache Configuration
-
-```bash
-/opt/alt/php83/usr/bin/php artisan config:cache
-/opt/alt/php83/usr/bin/php artisan route:cache
-/opt/alt/php83/usr/bin/php artisan view:cache
-```
-
-### Step 9: Set Permissions
-
-```bash
-chmod -R 755 storage/
-chmod -R 755 bootstrap/cache/
-```
-
-### Step 10: Setup Cron Job
-
-Via Hostinger Control Panel → Advanced → Cron Jobs:
-
-```
-* * * * * cd /home/username/public_html && /opt/alt/php83/usr/bin/php artisan schedule:run >> /dev/null 2>&1
-```
-
----
-
-## Verification Checklist
-
-### Health Check
-
-- [ ] Homepage loads: `https://lightcyan-mink-255361.hostingersite.com/`
-- [ ] Login works: `/login`
-- [ ] Customer flow: browse → checkout → order
-- [ ] Owner dashboard: `/owner/dashboard`
-- [ ] Outlet dashboard: `/outlet/dashboard`
-- [ ] Courier dashboard: `/courier/dashboard`
-- [ ] No errors in `storage/logs/laravel.log`
-
----
+- pembayaran ganda atau salah nominal;
+- oversell atau stock corruption;
+- authorization bypass;
+- migration membuat aplikasi tidak dapat digunakan;
+- error rate critical journey melewati ambang pilot;
+- webhook atau queue berhenti tanpa recovery cepat.
 
 ## Troubleshooting
 
-### Rollback
-
-If critical issues are found after deployment:
+Periksa log dan cache hanya melalui server production yang benar:
 
 ```bash
-# Revert to previous version
-git checkout HEAD~1
-npm run build
-# Upload previous build to server
-```
-
-### 500 Error
-
-```bash
-# Check error log
 tail -f storage/logs/laravel.log
-
-# Clear all cache
 /opt/alt/php83/usr/bin/php artisan cache:clear
 /opt/alt/php83/usr/bin/php artisan config:clear
 /opt/alt/php83/usr/bin/php artisan route:clear
 /opt/alt/php83/usr/bin/php artisan view:clear
-
-# Re-cache
 /opt/alt/php83/usr/bin/php artisan config:cache
 /opt/alt/php83/usr/bin/php artisan route:cache
+/opt/alt/php83/usr/bin/php artisan view:cache
 ```
 
-### Assets Not Loading
-
-```bash
-# Verify build folder exists
-ls -la public/build/
-
-# Clear browser cache
-# Verify .env APP_URL is correct
-```
-
-### Database Connection Failed
-
-```bash
-# Check .env database credentials
-cat .env | grep DB_
-
-# Test connection
-/opt/alt/php83/usr/bin/php artisan tinker --execute="DB::connection()->getPdo(); echo 'Connected';"
-```
-
----
-
-## Akun Demo
-
-| Role | Email | Password |
-|------|-------|----------|
-| Owner | `owner@example.com` | `password` |
-| Outlet Tembalang | `outlet.tembalang@example.com` | `password` |
-| Outlet Banyumanik | `outlet.banyumanik@example.com` | `password` |
-| Courier | `courier@example.com` | `password` |
+Jangan menaruh credential production, demo password, atau isi `.env` ke repository.

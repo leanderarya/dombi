@@ -1,4 +1,4 @@
-import { Send, DollarSign } from 'lucide-react';
+import { FileText, Send, DollarSign } from 'lucide-react';
 import { useState } from 'react';
 import InvoiceModal from '@/components/owner/invoice-modal';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
@@ -12,18 +12,18 @@ import { formatCurrency } from '@/lib/format';
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
     generated: {
         label: 'Belum Bayar',
-        className: 'bg-slate-100 text-text-muted',
+        className: 'bg-surface-muted text-text-muted',
     },
     pending: {
         label: 'Belum Bayar',
-        className: 'bg-slate-100 text-text-muted',
+        className: 'bg-surface-muted text-text-muted',
     },
     due_today: {
         label: 'Jatuh Tempo',
         className: 'bg-amber-50 text-amber-700',
     },
     overdue: { label: 'Terlambat', className: 'bg-red-50 text-red-700' },
-    partial: { label: 'Sebagian', className: 'bg-blue-50 text-blue-700' },
+    partial: { label: 'Sebagian', className: 'bg-primary/10 text-primary' },
     paid: { label: 'Lunas', className: 'bg-emerald-50 text-emerald-700' },
 };
 
@@ -69,6 +69,9 @@ export default function OutletAccountStatement({
     deliveryStats,
 }: any) {
     const [paymentOpen, setPaymentOpen] = useState(false);
+    const [paymentDirection, setPaymentDirection] = useState<
+        'outlet_pays_owner' | 'owner_pays_outlet'
+    >('outlet_pays_owner');
     const [invoiceOpen, setInvoiceOpen] = useState(false);
 
     if (!outlet || !summary) {
@@ -80,12 +83,12 @@ export default function OutletAccountStatement({
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
                         </div>
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-6 w-full" />
                             <Skeleton className="h-6 w-full" />
@@ -93,7 +96,7 @@ export default function OutletAccountStatement({
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-6 w-3/4" />
@@ -130,37 +133,70 @@ export default function OutletAccountStatement({
                 <div className="space-y-4 lg:col-span-2">
                     {summary.outstanding > 0 && (
                         <div
-                            className="sticky top-0 z-20 flex gap-3 rounded-xl bg-surface p-3 shadow-card"
+                            className="sticky top-0 z-20 flex gap-3 rounded-2xl border border-border bg-surface p-4"
                             aria-label="Aksi tagihan"
                         >
                             <Button
                                 variant="outline"
-                                className="flex-1"
+                                className="min-h-11 flex-1"
                                 onClick={() => setInvoiceOpen(true)}
                             >
                                 <Send className="h-4 w-4" aria-hidden="true" />
                                 Kirim Tagihan
                             </Button>
-                            <Button
-                                className="flex-1"
-                                onClick={() => setPaymentOpen(true)}
-                            >
-                                <DollarSign
-                                    className="h-4 w-4"
-                                    aria-hidden="true"
-                                />
-                                Catat Pembayaran
-                            </Button>
+                            {(summary.outlet_pays_amount ?? 0) > 0 && (
+                                <Button
+                                    className="min-h-11 flex-1"
+                                    onClick={() => {
+                                        setPaymentDirection(
+                                            'outlet_pays_owner',
+                                        );
+                                        setPaymentOpen(true);
+                                    }}
+                                >
+                                    <DollarSign
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                    />
+                                    Catat Pembayaran
+                                </Button>
+                            )}
+                            {(summary.owner_pays_amount ?? 0) > 0 && (
+                                <Button
+                                    className="min-h-11 flex-1"
+                                    onClick={() => {
+                                        setPaymentDirection(
+                                            'owner_pays_outlet',
+                                        );
+                                        setPaymentOpen(true);
+                                    }}
+                                >
+                                    <DollarSign
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                    />
+                                    Bayar ke Outlet
+                                </Button>
+                            )}
                         </div>
                     )}
 
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Daftar Tagihan"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Daftar Tagihan
+                        <div className="mb-3 flex items-center gap-2">
+                            <FileText
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Daftar Tagihan
+                            </h3>
                         </div>
+                        <p className="mb-4 text-xs text-text-muted">
+                            Tagihan periodik outlet
+                        </p>
                         {settlements.length === 0 ? (
                             <p className="py-6 text-center text-sm text-text-muted">
                                 Tidak ada tagihan.
@@ -178,7 +214,7 @@ export default function OutletAccountStatement({
                                     return (
                                         <div
                                             key={s.id}
-                                            className="rounded-xl bg-surface p-4 shadow-card transition-all duration-200"
+                                            className="rounded-xl border border-border bg-surface p-4 transition-all duration-200"
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div>
@@ -207,7 +243,7 @@ export default function OutletAccountStatement({
                                                     )}
                                                 </span>
                                             </div>
-                                            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted">
+                                            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted tabular-nums">
                                                 <span>
                                                     Produk:{' '}
                                                     {formatCurrency(
@@ -219,10 +255,27 @@ export default function OutletAccountStatement({
                                                         <span className="text-text-subtle">
                                                             &middot;
                                                         </span>
-                                                        <span className="text-blue-600">
+                                                        <span className="text-primary">
                                                             Ongkir:{' '}
                                                             {formatCurrency(
                                                                 s.delivery_fee_amount,
+                                                            )}
+                                                        </span>
+                                                    </>
+                                                )}
+                                                {s.direction ===
+                                                    'owner_pays_outlet' && (
+                                                    <>
+                                                        <span className="text-text-subtle">
+                                                            &middot;
+                                                        </span>
+                                                        <span className="font-semibold text-emerald-600">
+                                                            Owner bayar:{' '}
+                                                            {formatCurrency(
+                                                                Math.abs(
+                                                                    s.net_amount ??
+                                                                        0,
+                                                                ),
                                                             )}
                                                         </span>
                                                     </>
@@ -252,7 +305,7 @@ export default function OutletAccountStatement({
                                             </div>
                                             {s.overpaid_amount > 0 && (
                                                 <div className="mt-2">
-                                                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                                                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
                                                         Kelebihan{' '}
                                                         {formatCurrency(
                                                             s.overpaid_amount,
@@ -270,12 +323,21 @@ export default function OutletAccountStatement({
 
                 <div className="space-y-4">
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Status tagihan"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Status
+                        <div className="mb-3 flex items-center gap-2">
+                            <DollarSign
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Status
+                            </h3>
                         </div>
+                        <p className="mb-4 text-xs text-text-muted">
+                            Ringkasan status tagihan outlet
+                        </p>
                         <div className="flex items-center gap-2">
                             <StatusBadge variant={statusVariant} size="md">
                                 {statusLabel}
@@ -290,10 +352,20 @@ export default function OutletAccountStatement({
                                 label="Kurir Dombi"
                                 value={
                                     <span className="text-right">
-                                        <span>{deliveryStats?.dombi_count ?? 0} transaksi</span>
-                                        <span className="ml-2">{formatCurrency(deliveryStats?.dombi_fee ?? 0)}</span>
-                                        <span className="ml-2 text-emerald-600 font-semibold">
-                                            Net +{formatCurrency(deliveryStats?.dombi_net ?? 0)}
+                                        <span>
+                                            {deliveryStats?.dombi_count ?? 0}{' '}
+                                            transaksi
+                                        </span>
+                                        <span className="ml-2">
+                                            {formatCurrency(
+                                                deliveryStats?.dombi_fee ?? 0,
+                                            )}
+                                        </span>
+                                        <span className="ml-2 font-semibold text-emerald-600">
+                                            Net +
+                                            {formatCurrency(
+                                                deliveryStats?.dombi_net ?? 0,
+                                            )}
                                         </span>
                                     </span>
                                 }
@@ -302,23 +374,96 @@ export default function OutletAccountStatement({
                             <OwnerDetailRow
                                 label="Biaya Gojek/Grab"
                                 value={
-                                    !deliveryStats || deliveryStats.eksternal_count === 0 ? (
-                                        <span className="text-text-muted">Belum ada transaksi</span>
+                                    !deliveryStats ||
+                                    deliveryStats.eksternal_count === 0 ? (
+                                        <span className="text-text-muted">
+                                            Belum ada transaksi
+                                        </span>
                                     ) : (
-                                        <span className="text-right block">
-                                            <span>{deliveryStats.eksternal_count} transaksi</span>
-                                            <span className="ml-2">Fee {formatCurrency(deliveryStats.eksternal_fee ?? 0)}</span>
-                                            <span className="ml-2">Cost {formatCurrency(deliveryStats.eksternal_cost ?? 0)}</span>
-                                            <span className={`ml-2 font-semibold ${(deliveryStats.eksternal_net ?? 0) < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                                                Net {(deliveryStats.eksternal_net ?? 0) >= 0 ? '+' : ''}{formatCurrency(deliveryStats.eksternal_net ?? 0)}
+                                        <span className="block text-right">
+                                            <span>
+                                                {deliveryStats.eksternal_count}{' '}
+                                                transaksi
                                             </span>
-                                            {(deliveryStats.eksternal_net ?? 0) < 0 && (
-                                                <span className="ml-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-700">Rugi</span>
+                                            <span className="ml-2">
+                                                Fee{' '}
+                                                {formatCurrency(
+                                                    deliveryStats.eksternal_fee ??
+                                                        0,
+                                                )}
+                                            </span>
+                                            <span className="ml-2">
+                                                Cost{' '}
+                                                {formatCurrency(
+                                                    deliveryStats.eksternal_cost ??
+                                                        0,
+                                                )}
+                                            </span>
+                                            <span
+                                                className={`ml-2 font-semibold ${(deliveryStats.eksternal_net ?? 0) < 0 ? 'text-red-600' : 'text-emerald-600'}`}
+                                            >
+                                                Net{' '}
+                                                {(deliveryStats.eksternal_net ??
+                                                    0) >= 0
+                                                    ? '+'
+                                                    : ''}
+                                                {formatCurrency(
+                                                    deliveryStats.eksternal_net ??
+                                                        0,
+                                                )}
+                                            </span>
+                                            {(deliveryStats.eksternal_net ??
+                                                0) < 0 && (
+                                                <span className="ml-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
+                                                    Rugi
+                                                </span>
                                             )}
                                         </span>
                                     )
                                 }
                             />
+                            <OwnerDetailRow
+                                label="Net Settlement"
+                                value={
+                                    <span
+                                        className={`font-semibold ${(summary.net_amount ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
+                                    >
+                                        {(summary.net_amount ?? 0) >= 0
+                                            ? 'Owner bayar '
+                                            : 'Outlet bayar '}
+                                        {formatCurrency(
+                                            Math.abs(summary.net_amount ?? 0),
+                                        )}
+                                    </span>
+                                }
+                                bold
+                            />
+                            {(() => {
+                                const b = summary.breakdown ?? {};
+
+                                return (
+                                    <div className="ml-3 space-y-1 border-l-2 border-border pl-3">
+                                        <OwnerDetailRow
+                                            label="Online Share"
+                                            value={formatCurrency(
+                                                b.online_outlet_share ?? 0,
+                                            )}
+                                        />
+                                        <OwnerDetailRow
+                                            label="Biaya Kurir"
+                                            value={`-${formatCurrency(b.delivery_cost ?? 0)}`}
+                                        />
+                                        <OwnerDetailRow
+                                            label="Refund"
+                                            value={`-${formatCurrency(b.refund ?? 0)}`}
+                                        />
+                                        <OwnerDetailRow
+                                            label="Setoran Offline"
+                                            value={`-${formatCurrency(b.offline_sales ?? 0)}`}
+                                        />
+                                    </div>
+                                );
+                            })()}
                             <OwnerDetailRow
                                 label="Sisa"
                                 value={
@@ -332,7 +477,7 @@ export default function OutletAccountStatement({
                                 <OwnerDetailRow
                                     label="Kelebihan"
                                     value={
-                                        <span className="text-blue-600">
+                                        <span className="text-primary">
                                             {formatCurrency(summary.overpaid)}
                                         </span>
                                     }
@@ -362,7 +507,13 @@ export default function OutletAccountStatement({
                     onClose={() => setPaymentOpen(false)}
                     outletId={outlet.id}
                     outletName={outlet.name}
-                    outstanding={summary.outstanding}
+                    outstanding={
+                        paymentDirection === 'owner_pays_outlet'
+                            ? (summary.owner_pays_amount ?? 0)
+                            : (summary.outlet_pays_amount ?? 0)
+                    }
+                    direction={paymentDirection}
+                    outletBank={outlet}
                 />
             )}
 
@@ -370,7 +521,6 @@ export default function OutletAccountStatement({
                 <InvoiceModal
                     open={invoiceOpen}
                     onClose={() => setInvoiceOpen(false)}
-                    outletId={outlet.id}
                     outletName={outlet.name}
                     totalOutstanding={summary.outstanding}
                     unpaidBreakdown={unpaidBreakdown}

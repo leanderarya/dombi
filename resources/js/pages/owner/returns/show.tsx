@@ -1,5 +1,13 @@
 import { useForm, router } from '@inertiajs/react';
-import { CheckCircle2, Clock, Package, XCircle } from 'lucide-react';
+import {
+    CheckCircle2,
+    Clock,
+    FileText,
+    History,
+    Package,
+    RefreshCw,
+    XCircle,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
@@ -44,14 +52,14 @@ export default function OwnerReturnsShow({ return: ret }: any) {
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                         </div>
@@ -71,7 +79,8 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 approveForm.reset();
                 toast.success('Disetujui');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -82,24 +91,22 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 rejectForm.reset();
                 toast.success('Ditolak');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
     const handleMarkReceived = () => {
-        router.post(`/owner/returns/${ret.id}/mark-received`, {}, {
-            preserveScroll: true,
-            onSuccess: () => toast.success('Diterima'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
-        });
-    };
-
-    const handleComplete = () => {
-        router.post(`/owner/returns/${ret.id}/complete`, {}, {
-            preserveScroll: true,
-            onSuccess: () => toast.success('Selesai'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
-        });
+        router.post(
+            `/owner/returns/${ret.id}/mark-received`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Diterima'),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
+            },
+        );
     };
 
     return (
@@ -113,9 +120,21 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 <div className="space-y-4 lg:col-span-2">
                     {/* Info */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Informasi Return"
                     >
+                        <div className="mb-3 flex items-center gap-2">
+                            <FileText
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Informasi Return
+                            </h3>
+                        </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Detail alasan dan nilai return ini.
+                        </p>
                         <OwnerDetailRow
                             label="Alasan"
                             value={ret.reason_label ?? ret.reason}
@@ -136,12 +155,21 @@ export default function OwnerReturnsShow({ return: ret }: any) {
 
                     {/* Items */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Item Return"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Item Return
+                        <div className="mb-3 flex items-center gap-2">
+                            <Package
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Item Return
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Produk yang dikembalikan beserta nilainya.
+                        </p>
                         {ret.items?.map((item: any) => (
                             <OwnerDetailRow
                                 key={item.id}
@@ -157,12 +185,21 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 <div className="space-y-4">
                     {/* Status + Actions */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Status Return"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Status
+                        <div className="mb-3 flex items-center gap-2">
+                            <RefreshCw
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Status
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Status saat ini dan aksi untuk return ini.
+                        </p>
                         <div className="mb-3 flex items-center gap-2">
                             <StatusIcon
                                 className="h-4 w-4 text-text-muted"
@@ -187,7 +224,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                             <div className="mt-4 flex gap-2">
                                 <Button
                                     size="sm"
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     aria-label="Setujui Return"
                                     onClick={() => setShowApprove(true)}
                                 >
@@ -200,7 +237,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                 <Button
                                     size="sm"
                                     variant="destructive"
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     aria-label="Tolak Return"
                                     onClick={() => setShowReject(true)}
                                 >
@@ -216,7 +253,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         {ret.status === 'approved' && (
                             <Button
                                 size="sm"
-                                className="mt-4 w-full"
+                                className="mt-4 min-h-11 w-full"
                                 onClick={handleMarkReceived}
                             >
                                 <Package
@@ -228,21 +265,228 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         )}
 
                         {ret.status === 'received_at_center' && (
-                            <Button
-                                size="sm"
-                                className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700"
-                                onClick={handleComplete}
-                            >
-                                <CheckCircle2
-                                    className="mr-1 h-3.5 w-3.5"
-                                    aria-hidden="true"
-                                />
-                                Selesai & Sesuaikan Settlement
-                            </Button>
+                            <>
+                                <div className="mt-4 mb-3 flex items-center gap-2">
+                                    <Package
+                                        className="h-4 w-4 text-primary"
+                                        aria-hidden="true"
+                                    />
+                                    <h3 className="font-heading text-base font-bold text-text">
+                                        Status Item
+                                    </h3>
+                                </div>
+                                {ret.items?.map((item: any) => {
+                                    const isDecided = item.disposition !== null;
+                                    const isStored =
+                                        item.disposition === 'stored';
+
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className="mb-2 flex items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3"
+                                        >
+                                            <div className="min-w-0 flex-1">
+                                                <div className="truncate text-sm font-medium text-text tabular-nums">
+                                                    {displayProductName(
+                                                        item.variant,
+                                                    )}{' '}
+                                                    x{item.quantity}
+                                                </div>
+                                                <div className="text-xs text-text-muted tabular-nums">
+                                                    {formatCurrency(
+                                                        item.subtotal,
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="ml-3 shrink-0">
+                                                {isDecided ? (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span
+                                                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                                                isStored
+                                                                    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                                                                    : 'bg-red-50 text-red-700 ring-1 ring-red-200'
+                                                            }`}
+                                                        >
+                                                            {isStored
+                                                                ? '✓ Disimpan'
+                                                                : '✗ Dibuang'}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                router.post(
+                                                                    `/owner/returns/${ret.id}/items/${item.id}/${isStored ? 'dispose' : 'store'}`,
+                                                                    {},
+                                                                    {
+                                                                        preserveScroll: true,
+                                                                        onSuccess:
+                                                                            () =>
+                                                                                toast.success(
+                                                                                    isStored
+                                                                                        ? 'Diubah menjadi dibuang'
+                                                                                        : 'Diubah menjadi disimpan',
+                                                                                ),
+                                                                        onError:
+                                                                            (
+                                                                                errors,
+                                                                            ) =>
+                                                                                toast.error(
+                                                                                    Object.values(
+                                                                                        errors,
+                                                                                    )
+                                                                                        .flat()
+                                                                                        .join(
+                                                                                            ', ',
+                                                                                        ),
+                                                                                ),
+                                                                    },
+                                                                );
+                                                            }}
+                                                            className="min-h-11 rounded-md border border-border bg-surface px-2 py-1 text-[11px] font-medium text-text-muted hover:bg-surface-muted"
+                                                        >
+                                                            Ubah
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                router.post(
+                                                                    `/owner/returns/${ret.id}/items/${item.id}/store`,
+                                                                    {},
+                                                                    {
+                                                                        preserveScroll: true,
+                                                                        onSuccess:
+                                                                            () =>
+                                                                                toast.success(
+                                                                                    'Item disimpan',
+                                                                                ),
+                                                                        onError:
+                                                                            (
+                                                                                errors,
+                                                                            ) =>
+                                                                                toast.error(
+                                                                                    Object.values(
+                                                                                        errors,
+                                                                                    )
+                                                                                        .flat()
+                                                                                        .join(
+                                                                                            ', ',
+                                                                                        ),
+                                                                                ),
+                                                                    },
+                                                                );
+                                                            }}
+                                                            className="rounded-md bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 transition-colors hover:bg-emerald-100"
+                                                        >
+                                                            Simpan
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                router.post(
+                                                                    `/owner/returns/${ret.id}/items/${item.id}/dispose`,
+                                                                    {},
+                                                                    {
+                                                                        preserveScroll: true,
+                                                                        onSuccess:
+                                                                            () =>
+                                                                                toast.success(
+                                                                                    'Item dibuang',
+                                                                                ),
+                                                                        onError:
+                                                                            (
+                                                                                errors,
+                                                                            ) =>
+                                                                                toast.error(
+                                                                                    Object.values(
+                                                                                        errors,
+                                                                                    )
+                                                                                        .flat()
+                                                                                        .join(
+                                                                                            ', ',
+                                                                                        ),
+                                                                                ),
+                                                                    },
+                                                                );
+                                                            }}
+                                                            className="rounded-md bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 ring-1 ring-red-200 transition-colors hover:bg-red-100"
+                                                        >
+                                                            Buang
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                {/* Progress + Complete */}
+                                {(() => {
+                                    const total = ret.items?.length ?? 0;
+                                    const decided =
+                                        ret.items?.filter(
+                                            (i: any) => i.disposition !== null,
+                                        ).length ?? 0;
+                                    const allDecided = decided === total;
+
+                                    return (
+                                        <div className="mt-3 space-y-3">
+                                            <div className="text-xs text-text-muted tabular-nums">
+                                                {allDecided
+                                                    ? 'Semua item sudah ditentukan'
+                                                    : `${decided}/${total} item ditentukan`}
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                className={`min-h-11 w-full ${
+                                                    allDecided
+                                                        ? 'bg-primary hover:bg-primary-hover'
+                                                        : 'cursor-not-allowed bg-border text-text-muted'
+                                                }`}
+                                                disabled={!allDecided}
+                                                onClick={() => {
+                                                    router.post(
+                                                        `/owner/returns/${ret.id}/complete`,
+                                                        {},
+                                                        {
+                                                            preserveScroll: true,
+                                                            onSuccess: () =>
+                                                                toast.success(
+                                                                    'Return selesai',
+                                                                ),
+                                                            onError: (errors) =>
+                                                                toast.error(
+                                                                    Object.values(
+                                                                        errors,
+                                                                    )
+                                                                        .flat()
+                                                                        .join(
+                                                                            ', ',
+                                                                        ),
+                                                                ),
+                                                        },
+                                                    );
+                                                }}
+                                            >
+                                                <CheckCircle2
+                                                    className="mr-1 h-3.5 w-3.5"
+                                                    aria-hidden="true"
+                                                />
+                                                {allDecided
+                                                    ? 'Selesai & Sesuaikan Settlement'
+                                                    : `Selesaikan (${decided}/${total})`}
+                                            </Button>
+                                        </div>
+                                    );
+                                })()}
+                            </>
                         )}
 
                         {ret.status === 'completed' && (
-                            <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center">
                                 <CheckCircle2
                                     className="mx-auto h-5 w-5 text-emerald-500"
                                     aria-hidden="true"
@@ -254,7 +498,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         )}
 
                         {ret.status === 'rejected' && (
-                            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-center">
                                 <XCircle
                                     className="mx-auto h-5 w-5 text-red-500"
                                     aria-hidden="true"
@@ -269,12 +513,21 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                     {/* Status History / Timeline */}
                     {ret.status_histories?.length > 0 && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Riwayat Status Return"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Riwayat Status
+                            <div className="mb-3 flex items-center gap-2">
+                                <History
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Riwayat Status
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Perjalanan status return ini.
+                            </p>
                             <div className="space-y-3">
                                 {ret.status_histories.map(
                                     (h: any, i: number) => {
@@ -312,7 +565,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                             {histStatus.label}
                                                         </StatusBadge>
                                                     </div>
-                                                    <div className="mt-0.5 text-xs text-text-muted">
+                                                    <div className="mt-0.5 text-xs text-text-muted tabular-nums">
                                                         {h.actor?.name} &middot;{' '}
                                                         {formatDate(
                                                             h.created_at,
@@ -354,11 +607,13 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowApprove(false)}
                         >
                             Batal
                         </Button>
                         <Button
+                            className="min-h-11"
                             onClick={handleApprove}
                             disabled={approveForm.processing}
                         >
@@ -388,19 +643,21 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         rows={3}
                     />
                     {rejectForm.errors.reason && (
-                        <div className="text-xs text-red-600">
+                        <div className="text-xs text-red-500">
                             {rejectForm.errors.reason}
                         </div>
                     )}
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowReject(false)}
                         >
                             Batal
                         </Button>
                         <Button
                             variant="destructive"
+                            className="min-h-11"
                             onClick={handleReject}
                             disabled={rejectForm.processing}
                         >

@@ -46,7 +46,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
     if (reports.data.length === 0) {
         return (
             <div className="space-y-4">
-                <FilterChips
+                <ColorFilterChips
                     activeFilter={activeFilter}
                     onChange={handleFilterChange}
                 />
@@ -66,7 +66,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
 
     return (
         <div className="space-y-4">
-            <FilterChips
+            <ColorFilterChips
                 activeFilter={activeFilter}
                 onChange={handleFilterChange}
             />
@@ -113,7 +113,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
     );
 }
 
-function FilterChips({
+function ColorFilterChips({
     activeFilter,
     onChange,
 }: {
@@ -142,7 +142,7 @@ function FilterChips({
                         activeFilter === option.key
                             ? (colorMap[option.key] ??
                               'bg-primary/10 text-primary ring-primary/20')
-                            : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                            : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                     }`}
                 >
                     {option.label}

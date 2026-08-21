@@ -39,6 +39,7 @@ class SocialAuthController extends Controller
 
         return Socialite::driver('google')
             ->scopes(['openid', 'email', 'profile'])
+            ->with(['prompt' => 'select_account'])
             ->redirect();
     }
 

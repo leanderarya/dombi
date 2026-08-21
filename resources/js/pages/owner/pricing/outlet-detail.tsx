@@ -1,8 +1,9 @@
 import { router } from '@inertiajs/react';
 import { Copy, Package, Pencil, Plus, RotateCcw } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { MarginBarInline } from '@/components/owner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -15,8 +16,15 @@ import {
 import EmptyState from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/select';
 import { SkeletonList } from '@/components/ui/skeleton';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
-import { marginColor } from '@/lib/pricing-utils';
 import { OutletPriceModal } from './pricing-modals';
 import { BulkPanel, CopyPanel, PaginationBar } from './pricing-shared';
 import type {
@@ -27,6 +35,22 @@ import type {
     SortDir,
     SortKey,
 } from './types';
+
+function SortMarker({
+    col,
+    activeCol,
+    direction,
+}: {
+    col: SortKey;
+    activeCol: SortKey;
+    direction: SortDir;
+}) {
+    return activeCol === col ? (
+        <span className="ml-0.5 text-[10px] text-primary">
+            {direction === 'asc' ? '▲' : '▼'}
+        </span>
+    ) : null;
+}
 
 export default function OutletDetail({
     outlet,
@@ -65,37 +89,55 @@ export default function OutletDetail({
         setConfirmOpen(true);
     };
 
-    if (!prices) return <SkeletonList count={5} />;
-
     // Summary stats
-    const customCount = prices.filter((p) => p.has_override).length;
+    const priceRows = useMemo(() => prices ?? [], [prices]);
+    const customCount = priceRows.filter((p) => p.has_override).length;
     const avgMargin =
-        prices.length > 0
-            ? prices.reduce((sum, p) => sum + p.margin, 0) / prices.length
+        priceRows.length > 0
+            ? priceRows.reduce((sum, p) => sum + p.margin, 0) / priceRows.length
             : 0;
-    const negativeCount = prices.filter((p) => p.margin < 0).length;
+    const negativeCount = priceRows.filter((p) => p.margin < 0).length;
 
     const filtered = useMemo(
         () =>
-            prices.filter((p) => {
+            priceRows.filter((p) => {
                 if (search) {
                     const q = search.toLowerCase();
-                    if (
-                        !p.name.toLowerCase().includes(q) &&
-                        !(p.family_name ?? '').toLowerCase().includes(q)
-                    )
+                    const haystack = [
+                        p.name,
+                        p.category_name,
+                        p.family_name,
+                        p.sku,
+                        p.flavor,
+                        p.size,
+                    ]
+                        .filter(Boolean)
+                        .join(' ')
+                        .toLowerCase();
+
+                    if (!haystack.includes(q)) {
                         return false;
+                    }
                 }
-                if (marginFilter === 'high' && p.margin <= 20000) return false;
+
+                if (marginFilter === 'high' && p.margin <= 20000) {
+                    return false;
+                }
+
                 if (
                     marginFilter === 'low' &&
                     (p.margin < 5000 || p.margin > 20000)
-                )
+                ) {
                     return false;
-                if (marginFilter === 'negative' && p.margin >= 0) return false;
+                }
+
+                if (marginFilter === 'negative' && p.margin >= 0) {
+                    return false;
+                }
+
                 return true;
             }),
-        [prices, search, marginFilter],
+        [priceRows, search, marginFilter],
     );
 
     const sorted = useMemo(
@@ -107,6 +149,7 @@ export default function OutletDetail({
                     typeof av === 'string'
                         ? av.localeCompare(String(bv))
                         : Number(av) - Number(bv);
+
                 return sortDir === 'asc' ? cmp : -cmp;
             }),
         [filtered, sortKey, sortDir],
@@ -123,6 +166,7 @@ export default function OutletDetail({
             setSortKey(key);
             setSortDir('asc');
         }
+
         setPage(1);
     };
 
@@ -131,11 +175,19 @@ export default function OutletDetail({
         [sorted],
     );
 
+    if (!prices) {
+        return <SkeletonList count={5} />;
+    }
+
     const handleSave = (newPrice: number) => {
-        if (!selectedRow || isNaN(newPrice)) return;
+        if (!selectedRow || isNaN(newPrice)) {
+            return;
+        }
+
         setSaving(true);
+        const pid = selectedRow.product_id ?? selectedRow.variant_id;
         router.patch(
-            `/owner/pricing/outlets/${outlet.id}/variants/${selectedRow.variant_id}`,
+            `/owner/pricing/outlets/${outlet.id}/products/${pid}`,
             { selling_price: newPrice },
             {
                 onFinish: () => {
@@ -147,11 +199,11 @@ export default function OutletDetail({
         );
     };
 
-    const handleReset = (variantId: number, name: string) => {
+    const handleReset = (productId: number, name: string) => {
         showConfirm('Reset Harga', `Kembalikan ${name} ke harga pusat?`, () => {
             setSaving(true);
             router.delete(
-                `/owner/pricing/outlets/${outlet.id}/variants/${variantId}`,
+                `/owner/pricing/outlets/${outlet.id}/products/${productId}`,
                 { onFinish: () => setSaving(false) },
             );
         });
@@ -159,7 +211,11 @@ export default function OutletDetail({
 
     const handleBulkUpdate = () => {
         const amount = parseFloat(bulkAmount);
-        if (isNaN(amount)) return;
+
+        if (isNaN(amount)) {
+            return;
+        }
+
         showConfirm(
             'Atur Massal',
             `${sorted.length} produk akan diperbarui. Lanjutkan?`,
@@ -181,7 +237,10 @@ export default function OutletDetail({
     };
 
     const handleCopy = () => {
-        if (!copySource) return;
+        if (!copySource) {
+            return;
+        }
+
         setSaving(true);
         router.post(
             `/owner/pricing/outlets/${outlet.id}/copy`,
@@ -197,59 +256,53 @@ export default function OutletDetail({
     };
 
     const handleOutletChange = (outletId: string) => {
-        if (outletId)
+        if (outletId) {
             router.reload({
                 only: ['outletPrices', 'selectedOutlet'],
                 data: { tab: 'outlet', outlet_id: outletId },
             });
+        }
     };
-
-    const SortMarker = ({ col }: { col: SortKey }) =>
-        sortKey === col ? (
-            <span className="ml-0.5 text-[10px] text-primary">
-                {sortDir === 'asc' ? '▲' : '▼'}
-            </span>
-        ) : null;
 
     return (
         <div>
             {/* Outlet Summary KPIs */}
             <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <div className="rounded-xl bg-surface p-4 shadow-card">
+                <div className="rounded-xl border border-border bg-surface p-4">
                     <div className="text-[11px] font-medium text-text-muted">
                         Total Produk
                     </div>
-                    <div className="mt-1 text-xl font-bold text-text tabular-nums">
+                    <div className="font-heading mt-1 text-xl font-bold text-text tabular-nums">
                         {prices.length}
                     </div>
                 </div>
-                <div className="rounded-xl bg-surface p-4 shadow-card">
+                <div className="rounded-xl border border-border bg-surface p-4">
                     <div className="text-[11px] font-medium text-text-muted">
                         Harga Custom
                     </div>
-                    <div className="mt-1 text-xl font-bold text-text tabular-nums">
+                    <div className="font-heading mt-1 text-xl font-bold text-text tabular-nums">
                         {customCount}
                     </div>
-                    <div className="text-[11px] text-blue-600">
+                    <div className="text-[11px] text-text-muted">
                         {customCount > 0
                             ? `${customCount}/${prices.length} produk`
                             : 'Semua standar'}
                     </div>
                 </div>
-                <div className="rounded-xl bg-surface p-4 shadow-card">
+                <div className="rounded-xl border border-border bg-surface p-4">
                     <div className="text-[11px] font-medium text-text-muted">
                         Rata-rata Margin
                     </div>
-                    <div className="mt-1 text-xl font-bold text-text tabular-nums">
+                    <div className="font-heading mt-1 text-xl font-bold text-text tabular-nums">
                         {formatCurrency(Math.round(avgMargin))}
                     </div>
                 </div>
-                <div className="rounded-xl bg-surface p-4 shadow-card">
+                <div className="rounded-xl border border-border bg-surface p-4">
                     <div className="text-[11px] font-medium text-text-muted">
                         Margin Negatif
                     </div>
                     <div
-                        className={`mt-1 text-xl font-bold tabular-nums ${negativeCount > 0 ? 'text-red-600' : 'text-text'}`}
+                        className={`font-heading mt-1 text-xl font-bold tabular-nums ${negativeCount > 0 ? 'text-red-600' : 'text-text'}`}
                     >
                         {negativeCount}
                     </div>
@@ -287,12 +340,13 @@ export default function OutletDetail({
                                 value: String(o.id),
                                 label: o.name,
                             }))}
-                            className="w-44"
+                            className="min-h-11 w-44"
                         />
                         <Button
                             type="button"
                             variant="secondary"
                             size="sm"
+                            className="min-h-11"
                             icon={Plus}
                             onClick={() => setBulkOpen(!bulkOpen)}
                             aria-label="Atur semua harga"
@@ -304,6 +358,7 @@ export default function OutletDetail({
                                 type="button"
                                 variant="secondary"
                                 size="sm"
+                                className="min-h-11"
                                 icon={Copy}
                                 onClick={() => setCopyOpen(!copyOpen)}
                                 aria-label="Salin harga dari outlet lain"
@@ -345,7 +400,7 @@ export default function OutletDetail({
 
             {paginated.length === 0 ? (
                 <EmptyState
-                    icon={<Package className="h-8 w-8 text-text-subtle" />}
+                    icon={<Package className="h-8 w-8 text-text-muted" />}
                     title={
                         search || marginFilter !== 'all'
                             ? 'Produk tidak ditemukan'
@@ -358,56 +413,74 @@ export default function OutletDetail({
                     }
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-border/30 bg-surface-muted/50">
-                                <th
-                                    className="cursor-pointer px-6 py-3.5 text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
+                <OwnerTable minWidth="700px">
+                    <Table>
+                        <TableHeader>
+                            <tr className="border-b border-border/30 bg-primary/5">
+                                <TableHead
+                                    className="cursor-pointer px-6 py-3.5 text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
                                     onClick={() => toggleSort('name')}
                                 >
                                     Produk
-                                    <SortMarker col="name" />
-                                </th>
-                                <th
-                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
+                                    <SortMarker
+                                        col="name"
+                                        activeCol={sortKey}
+                                        direction={sortDir}
+                                    />
+                                </TableHead>
+                                <TableHead
+                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
                                     onClick={() => toggleSort('center_price')}
                                 >
                                     HPP
-                                    <SortMarker col="center_price" />
-                                </th>
-                                <th
-                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
+                                    <SortMarker
+                                        col="center_price"
+                                        activeCol={sortKey}
+                                        direction={sortDir}
+                                    />
+                                </TableHead>
+                                <TableHead
+                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
                                     onClick={() => toggleSort('selling_price')}
                                 >
                                     Harga Jual
-                                    <SortMarker col="selling_price" />
-                                </th>
-                                <th
-                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
+                                    <SortMarker
+                                        col="selling_price"
+                                        activeCol={sortKey}
+                                        direction={sortDir}
+                                    />
+                                </TableHead>
+                                <TableHead
+                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
                                     onClick={() => toggleSort('margin')}
                                 >
                                     Margin
-                                    <SortMarker col="margin" />
-                                </th>
-                                <th className="px-6 py-3.5 text-center text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                    <SortMarker
+                                        col="margin"
+                                        activeCol={sortKey}
+                                        direction={sortDir}
+                                    />
+                                </TableHead>
+                                <TableHead className="px-6 py-3.5 text-center text-[11px] font-semibold tracking-wider text-primary uppercase">
                                     Aksi
-                                </th>
+                                </TableHead>
                             </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/20">
+                        </TableHeader>
+                        <TableBody>
                             {paginated.map((row) => (
-                                <tr
-                                    key={row.variant_id}
-                                    className="hover:bg-mint-wash transition-colors"
+                                <TableRow
+                                    key={row.product_id}
+                                    className="transition-colors hover:bg-emerald-50/40"
                                 >
-                                    <td className="px-6 py-4">
+                                    <TableCell className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <span className="font-semibold text-text">
-                                                {row.name}
+                                                {row.category_name
+                                                    ? `${row.category_name} - ${row.name}`
+                                                    : row.name}
                                             </span>
                                             {row.has_override ? (
-                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">
+                                                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
                                                     Custom
                                                 </span>
                                             ) : (
@@ -416,38 +489,49 @@ export default function OutletDetail({
                                                 </span>
                                             )}
                                         </div>
-                                        {row.family_name && (
+                                        {(row.category_name ||
+                                            row.flavor ||
+                                            row.size ||
+                                            row.sku) && (
                                             <div className="mt-0.5 text-xs text-text-muted">
-                                                {row.family_name}
+                                                {[
+                                                    row.category_name,
+                                                    row.flavor,
+                                                    row.size,
+                                                    row.sku,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' • ')}
                                             </div>
                                         )}
-                                    </td>
-                                    <td className="px-6 py-4 text-right text-text-muted tabular-nums">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4 text-right text-text-muted tabular-nums">
                                         {formatCurrency(row.center_price)}
-                                    </td>
-                                    <td className="px-6 py-4 text-right text-base font-bold text-text tabular-nums">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4 text-right text-base font-bold text-text tabular-nums">
                                         {formatCurrency(row.selling_price)}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4 text-right">
                                         <MarginBarInline
                                             margin={row.margin}
                                             maxMargin={maxMargin}
                                             sellingPrice={row.selling_price}
                                         />
-                                    </td>
-                                    <td className="px-6 py-4">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4">
                                         <div className="flex items-center justify-center gap-1">
                                             {row.has_override && (
                                                 <button
                                                     type="button"
                                                     onClick={() =>
                                                         handleReset(
-                                                            row.variant_id,
+                                                            row.product_id ??
+                                                                row.variant_id!,
                                                             row.name,
                                                         )
                                                     }
                                                     title="Reset ke harga pusat"
-                                                    className="rounded-lg p-1.5 text-text-subtle transition-colors hover:bg-red-50 hover:text-red-600"
+                                                    className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-text-subtle transition-colors hover:bg-red-50 hover:text-red-600"
                                                 >
                                                     <RotateCcw className="h-3.5 w-3.5" />
                                                 </button>
@@ -459,17 +543,17 @@ export default function OutletDetail({
                                                     setModalOpen(true);
                                                 }}
                                                 title="Ubah harga"
-                                                className="hover:bg-mint-wash rounded-lg p-1.5 text-text-subtle transition-colors hover:text-primary"
+                                                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-text-subtle transition-colors hover:bg-emerald-50/40 hover:text-primary"
                                             >
                                                 <Pencil className="h-3.5 w-3.5" />
                                             </button>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             {totalPages > 1 && (

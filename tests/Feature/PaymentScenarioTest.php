@@ -403,9 +403,7 @@ class PaymentScenarioTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-'.uniqid(),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
@@ -432,7 +430,7 @@ class PaymentScenarioTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 2,
-            'price' => $product->price,
+            'price' => $product->selling_price,
             'subtotal' => 50000,
         ]);
 

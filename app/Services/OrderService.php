@@ -10,7 +10,6 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -46,11 +45,11 @@ class OrderService
                 $adjustments = [];
 
                 foreach ($items as $index => $item) {
-                    $variantId = $item['product_variant_id'];
+                    $productId = $item['product_id'];
                     $requestedQty = $item['quantity'];
 
                     $inventory = OutletInventory::query()
-                        ->where('product_variant_id', $variantId)
+                        ->where('product_id', $productId)
                         ->where('outlet_id', $outletId)
                         ->lockForUpdate()
                         ->first();
@@ -63,7 +62,7 @@ class OrderService
 
                     if ($availableStock <= 0) {
                         $adjustments[] = [
-                            'variant_id' => $variantId,
+                            'product_id' => $productId,
                             'original_qty' => $requestedQty,
                             'adjusted_qty' => 0,
                             'available_stock' => 0,
@@ -71,7 +70,7 @@ class OrderService
                         unset($items[$index]);
                     } elseif ($availableStock < $requestedQty) {
                         $adjustments[] = [
-                            'variant_id' => $variantId,
+                            'product_id' => $productId,
                             'original_qty' => $requestedQty,
                             'adjusted_qty' => $availableStock,
                             'available_stock' => $availableStock,
@@ -104,26 +103,18 @@ class OrderService
             $gatewayFee = (float) ($payload['gateway_fee'] ?? $paymentFee);
             $absorbedFee = (float) ($payload['absorbed_fee'] ?? 0);
 
-            // Try each outlet until reservation succeeds
-            $order = null;
-            foreach ($candidates as $outlet) {
-                try {
-                    $order = $this->createOrderWithReservation(
-                        $customer, $outlet, $items, $payload, $fulfillmentType, $address,
-                        $subtotal, $deliveryFee, $deliveryDistance, $paymentFee, $gatewayFee, $absorbedFee,
-                    );
-                    break;
-                } catch (ValidationException $e) {
-                    // Stock was taken between snapshot and reservation — try next outlet
-                    continue;
-                }
-            }
+            $candidate = $candidates->first();
 
-            if (! $order) {
+            if (! $candidate) {
                 throw ValidationException::withMessages([
                     'items' => 'Stok produk tidak tersedia di outlet terdekat maupun outlet lain.',
                 ]);
             }
+
+            $order = $this->createOrderWithReservation(
+                $customer, $candidate, $items, $payload, $fulfillmentType, $address,
+                $subtotal, $deliveryFee, $deliveryDistance, $paymentFee, $gatewayFee, $absorbedFee,
+            );
 
             return $order;
         });
@@ -196,6 +187,43 @@ class OrderService
 
     private function getCandidateOutlets(array $items, string $fulfillmentType, ?CustomerAddress $address, array $payload): Collection
     {
+        if ($this->isDelivery($fulfillmentType) && ! empty($payload['selected_outlet_id'])) {
+            $selectedOutletId = (int) $payload['selected_outlet_id'];
+
+            $latitude = $address?->latitude !== null ? (float) $address->latitude : 0.0;
+            $longitude = $address?->longitude !== null ? (float) $address->longitude : 0.0;
+
+            // Lock inventory rows during eligibility so concurrent checkouts can't both
+            // pass the stock check and over-reserve (delivery_ojol has no quote display
+            // path, but assignment below still enforces the selected outlet).
+            $selectedOutlet = Outlet::query()
+                ->where('status', 'active')
+                ->with(['inventories' => fn ($q) => $q->where('is_active', true)->lockForUpdate()])
+                ->find($selectedOutletId);
+
+            if (! $selectedOutlet) {
+                throw ValidationException::withMessages([
+                    'selected_outlet_id' => 'Outlet terpilih tidak tersedia.',
+                ]);
+            }
+
+            $eligibility = $this->resolveDeliveryOutletEligibility(
+                $selectedOutlet->id,
+                $latitude,
+                $longitude,
+                $items,
+                $selectedOutlet,
+            );
+
+            if (! $eligibility['eligible']) {
+                throw ValidationException::withMessages([
+                    'selected_outlet_id' => $eligibility['reason'] ?? 'Outlet terpilih tidak tersedia untuk pesanan ini.',
+                ]);
+            }
+
+            return collect([$selectedOutlet]);
+        }
+
         if ($fulfillmentType === 'pickup' && ! empty($payload['selected_outlet_id'])) {
             $selectedOutlet = Outlet::query()
                 ->where('status', 'active')
@@ -225,6 +253,11 @@ class OrderService
         );
     }
 
+    private function isDelivery(string $fulfillmentType): bool
+    {
+        return in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
+    }
+
     public function previewAvailableOutlet(array $items, ?string $fulfillmentType, ?array $location = null): ?Outlet
     {
         $builtItems = $this->buildOrderItems($items);
@@ -247,7 +280,6 @@ class OrderService
     {
         $items = $previousOrder->items->map(function ($item) {
             return [
-                'product_variant_id' => $item->product_variant_id,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
             ];
@@ -265,35 +297,35 @@ class OrderService
     /**
      * Restore cart items from a previous order.
      *
-     * Validates variants exist and are active, checks stock availability,
+     * Validates products exist and are active, checks stock availability,
      * and returns validated items with current pricing.
      *
      * @return array{items: array, warnings: array}
      */
     public function restoreCartFromOrder(Order $order): array
     {
-        $order->load('items.variant');
+        $order->load('items.product');
 
         $restoredItems = [];
         $warnings = [];
 
         foreach ($order->items as $item) {
-            $variant = $item->variant;
+            $product = $item->product;
             $originalQuantity = (int) $item->quantity;
-            $originalName = $item->product_name.($item->variant_name_snapshot ? " {$item->variant_name_snapshot}" : '');
+            $originalName = $item->product_name ?? $product?->name ?? 'Produk';
 
-            // Check variant exists and is active
-            if (! $variant || ! $variant->is_active) {
+            // Check product exists and is active
+            if (! $product || ! $product->is_active) {
                 $warnings[] = "{$originalName} sudah tidak tersedia.";
 
                 continue;
             }
 
             // Use current pricing, not old snapshot
-            $currentPrice = (float) $variant->selling_price;
+            $currentPrice = (float) $product->selling_price;
 
             // Check stock availability across all active outlets
-            $availableStock = $this->getMaxAvailableStock($variant->id);
+            $availableStock = $this->getMaxAvailableStock($product->id);
             $restoredQuantity = min($originalQuantity, $availableStock);
 
             if ($restoredQuantity <= 0) {
@@ -307,7 +339,7 @@ class OrderService
             }
 
             $restoredItems[] = [
-                'product_variant_id' => $variant->id,
+                'product_id' => $product->id,
                 'quantity' => $restoredQuantity,
             ];
         }
@@ -319,12 +351,12 @@ class OrderService
     }
 
     /**
-     * Get maximum available stock for a variant across all active outlets.
+     * Get maximum available stock for a product across all active outlets.
      */
-    private function getMaxAvailableStock(int $variantId): int
+    private function getMaxAvailableStock(int $productId): int
     {
         return (int) OutletInventory::query()
-            ->where('product_variant_id', $variantId)
+            ->where('product_id', $productId)
             ->whereHas('outlet', fn ($q) => $q->where('status', 'active'))
             ->selectRaw('MAX(current_stock - reserved_stock) as max_available')
             ->value('max_available') ?? 0;
@@ -391,8 +423,9 @@ class OrderService
                 ->findOrFail($payload['address_id']);
         }
 
-        CustomerAddress::where('customer_id', $customer->id)->update(['is_default' => false]);
-
+        // Manual delivery: build a transient (non-persisted) address so the order
+        // snapshot is correct but no saved address is auto-created. Saved addresses
+        // are only created when the user explicitly saves them.
         $addressLine = trim((string) $payload['address_line']);
         $houseNumber = trim((string) ($payload['house_number'] ?? ''));
 
@@ -400,9 +433,8 @@ class OrderService
             $addressLine = trim($addressLine.' '.$houseNumber);
         }
 
-        $deliveryNotes = $payload['delivery_notes'] ?? null;
-
-        return $customer->addresses()->create([
+        return new CustomerAddress([
+            'customer_id' => $customer->id,
             'label' => 'Alamat Checkout',
             'recipient_name' => $payload['customer_name'] ?? $customer->name,
             'phone' => $payload['phone_number'] ?? $customer->phone,
@@ -419,75 +451,50 @@ class OrderService
             'latitude' => $payload['latitude'] ?? null,
             'longitude' => $payload['longitude'] ?? null,
             'landmark' => $payload['landmark'] ?? null,
-            'delivery_notes' => $deliveryNotes,
-            'is_default' => true,
+            'delivery_notes' => $payload['delivery_notes'] ?? null,
+            'is_default' => false,
         ]);
     }
 
     private function buildOrderItems(array $rawItems): array
     {
-        // Support both product_id (legacy) and product_variant_id (new)
-        $variantIds = collect($rawItems)->pluck('product_variant_id')->filter()->all();
         $productIds = collect($rawItems)->pluck('product_id')->filter()->all();
-
-        $variants = ProductVariant::query()
-            ->whereIn('id', $variantIds)
-            ->where('is_active', true)
-            ->with('family')
-            ->get()
-            ->keyBy('id');
 
         $products = Product::query()
             ->whereIn('id', $productIds)
             ->where('is_active', true)
+            ->with('category')
             ->get()
             ->keyBy('id');
 
-        return collect($rawItems)->map(function (array $item) use ($variants, $products): array {
+        return collect($rawItems)->map(function (array $item) use ($products): array {
             $quantity = (int) $item['quantity'];
 
-            // Prefer variant over product
-            if (! empty($item['product_variant_id'])) {
-                $variant = $variants->get((int) $item['product_variant_id']);
-
-                if (! $variant) {
-                    throw ValidationException::withMessages(['items' => 'Varian produk tidak ditemukan atau tidak aktif.']);
-                }
-
-                return [
-                    'product_id' => $variant->product_id,
-                    'product_variant_id' => $variant->id,
-                    'product_name' => $variant->family?->name ?? $variant->name,
-                    'variant_name_snapshot' => $variant->name,
-                    'quantity' => $quantity,
-                    'price' => $variant->selling_price,
-                    'center_price_snapshot' => $variant->center_price,
-                    'selling_price_snapshot' => $variant->selling_price,
-                    'outlet_margin_snapshot' => $variant->outlet_margin,
-                    'subtotal' => $quantity * (float) $variant->selling_price,
-                ];
+            $productId = (int) ($item['product_id'] ?? 0);
+            if (! $productId) {
+                throw ValidationException::withMessages(['items' => 'Produk tidak ditemukan atau tidak aktif.']);
             }
 
-            // Legacy product flow
-            $product = $products->get((int) $item['product_id']);
+            $product = $products->get($productId);
 
             if (! $product) {
                 throw ValidationException::withMessages(['items' => 'Produk tidak ditemukan atau tidak aktif.']);
             }
 
-            $price = $product->selling_price > 0 ? $product->selling_price : $product->price;
+            $price = (float) $product->selling_price;
+            $centerPrice = (float) $product->center_price;
 
             return [
                 'product_id' => $product->id,
-                'product_variant_id' => null,
                 'product_name' => $product->name,
+                'product_name_snapshot' => $product->name,
                 'variant_name_snapshot' => null,
                 'quantity' => $quantity,
                 'price' => $price,
-                'center_price_snapshot' => $product->center_price > 0 ? $product->center_price : $product->price,
+                'center_price_snapshot' => $centerPrice,
                 'selling_price_snapshot' => $price,
-                'outlet_margin_snapshot' => $product->selling_price > 0 ? $product->selling_price - $product->center_price : 0,
-                'subtotal' => $quantity * (float) $price,
+                'outlet_margin_snapshot' => $price - $centerPrice,
+                'subtotal' => $quantity * $price,
             ];
         })->values()->all();
     }
@@ -495,6 +502,53 @@ class OrderService
     private function shouldUseDeliveryAddress(?string $fulfillmentType): bool
     {
         return in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
+    }
+
+    /**
+     * Validate that a selected outlet can fulfil a delivery order.
+     *
+     * @return array{eligible: bool, reason: string|null}
+     */
+    public function resolveDeliveryOutletEligibility(
+        int $outletId,
+        float $latitude,
+        float $longitude,
+        array $items,
+        ?Outlet $outlet = null,
+    ): array {
+        $outlet ??= Outlet::query()
+            ->with('inventories')
+            ->find($outletId);
+
+        if (! $outlet) {
+            return ['eligible' => false, 'reason' => 'Outlet tidak ditemukan. Silakan pilih ulang outlet Anda.'];
+        }
+
+        if ((string) $outlet->status !== 'active') {
+            return ['eligible' => false, 'reason' => 'Outlet tidak aktif. Silakan pilih outlet lain.'];
+        }
+
+        if (! $outlet->isOpen()) {
+            return ['eligible' => false, 'reason' => 'Outlet sedang tutup. Pesanan dapat dibuat pada jam operasional.'];
+        }
+
+        if ($outlet->latitude !== null && $outlet->longitude !== null && $outlet->delivery_radius_km) {
+            $distance = $this->outletAssignmentService->calculateDistance(
+                $latitude,
+                $longitude,
+                (float) $outlet->latitude,
+                (float) $outlet->longitude,
+            );
+            if ($distance > $outlet->delivery_radius_km) {
+                return ['eligible' => false, 'reason' => "Lokasi Anda di luar area pengiriman outlet ini (radius {$outlet->delivery_radius_km} km)."];
+            }
+        }
+
+        if (! $this->outletAssignmentService->outletHasEnoughStock($outlet, $items, false)) {
+            return ['eligible' => false, 'reason' => 'Stok produk tidak mencukupi di outlet terpilih.'];
+        }
+
+        return ['eligible' => true, 'reason' => null];
     }
 
     private function pickupAddressLabel(Outlet $outlet, string $fulfillmentType): string
@@ -512,18 +566,18 @@ class OrderService
      */
     private function applyOutletPricing(array $items, int $outletId): array
     {
-        $variantIds = collect($items)->pluck('product_variant_id')->filter()->all();
-        $variants = ProductVariant::whereIn('id', $variantIds)->get()->keyBy('id');
+        $productIds = collect($items)->pluck('product_id')->filter()->all();
+        $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
 
-        return array_map(function (array $item) use ($variants, $outletId) {
-            $variantId = $item['product_variant_id'] ?? null;
-            if (! $variantId || ! isset($variants[$variantId])) {
+        return array_map(function (array $item) use ($products, $outletId) {
+            $productId = $item['product_id'] ?? null;
+            if (! $productId || ! isset($products[$productId])) {
                 return $item;
             }
 
-            $variant = $variants[$variantId];
-            $outletPrice = $this->pricingService->getSellingPrice($variant, $outletId);
-            $centerPrice = (float) $variant->center_price;
+            $product = $products[$productId];
+            $outletPrice = $this->pricingService->getSellingPrice($product, $outletId);
+            $centerPrice = (float) $product->center_price;
             $quantity = (int) $item['quantity'];
 
             $item['price'] = $outletPrice;

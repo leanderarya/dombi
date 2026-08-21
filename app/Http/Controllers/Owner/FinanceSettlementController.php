@@ -9,6 +9,7 @@ use App\Models\PaymentAccount;
 use App\Models\Settlement;
 use App\Models\SettlementAuditLog;
 use App\Models\SettlementPayment;
+use App\Services\NotificationService;
 use App\Services\RefundPayloadService;
 use App\Services\SettlementPaymentService;
 use App\Services\SettlementReconciliationService;
@@ -57,6 +58,11 @@ class FinanceSettlementController extends Controller
                     'total_due' => 0,
                     'total_paid' => 0,
                     'total_outstanding' => 0,
+                    'net_amount' => 0,
+                    'online_outlet_share' => 0,
+                    'delivery_cost' => 0,
+                    'refund' => 0,
+                    'offline_sales' => 0,
                     'nearest_due_date' => null,
                     'has_overdue' => false,
                     'settlement_count' => 0,
@@ -65,6 +71,11 @@ class FinanceSettlementController extends Controller
             $settlementMap[$oid]['total_due'] += (float) $s->amount_due;
             $settlementMap[$oid]['total_paid'] += (float) $s->paid_amount;
             $settlementMap[$oid]['total_outstanding'] += (float) $s->outstanding_amount;
+            $settlementMap[$oid]['net_amount'] += (float) $s->net_amount;
+            $settlementMap[$oid]['online_outlet_share'] += (float) $s->total_online_share;
+            $settlementMap[$oid]['delivery_cost'] += (float) $s->total_delivery_cost;
+            $settlementMap[$oid]['refund'] += (float) $s->total_refund;
+            $settlementMap[$oid]['offline_sales'] += (float) $s->total_offline_sales;
             $settlementMap[$oid]['settlement_count']++;
 
             $dueDate = $s->due_date->toDateString();
@@ -103,6 +114,14 @@ class FinanceSettlementController extends Controller
                     'total_due' => 0,
                     'total_paid' => 0,
                     'total_outstanding' => 0,
+                    'net_amount' => 0,
+                    'direction' => 'outlet_pays_owner',
+                    'breakdown' => [
+                        'online_outlet_share' => 0,
+                        'delivery_cost' => 0,
+                        'refund' => 0,
+                        'offline_sales' => 0,
+                    ],
                     'nearest_due_date' => null,
                     'display_status' => $displayStatus,
                     'sort_order' => $sortOrder,
@@ -134,6 +153,14 @@ class FinanceSettlementController extends Controller
                     'total_due' => (float) $data['total_due'],
                     'total_paid' => (float) $data['total_paid'],
                     'total_outstanding' => (float) $outstanding,
+                    'net_amount' => (float) $data['net_amount'],
+                    'direction' => (float) $data['net_amount'] >= 0 ? 'owner_pays_outlet' : 'outlet_pays_owner',
+                    'breakdown' => [
+                        'online_outlet_share' => (float) $data['online_outlet_share'],
+                        'delivery_cost' => (float) $data['delivery_cost'],
+                        'refund' => (float) $data['refund'],
+                        'offline_sales' => (float) $data['offline_sales'],
+                    ],
                     'nearest_due_date' => $data['nearest_due_date'],
                     'display_status' => $displayStatus,
                     'sort_order' => $sortOrder,
@@ -237,7 +264,7 @@ class FinanceSettlementController extends Controller
         foreach ($validQueues as $queue) {
             $refundCounts[$queue] = 0;
         }
-        Order::refundable()->chunk(200, function ($orders) use (&$refundCounts, $validQueues): void {
+        Order::refundable()->chunk(200, function ($orders) use (&$refundCounts): void {
             foreach ($orders as $order) {
                 $queue = $this->refundPayloads->queueState($order);
                 if ($queue !== null && isset($refundCounts[$queue])) {
@@ -325,7 +352,11 @@ class FinanceSettlementController extends Controller
         ])->values();
 
         return Inertia::render('owner/finance/outlet-detail', [
-            'outlet' => $outlet->only(['id', 'name']),
+            'outlet' => array_merge($outlet->only(['id', 'name']), [
+                'bank_name' => $outlet->bank_name,
+                'bank_account_number' => $outlet->bank_account_number,
+                'bank_account_holder' => $outlet->bank_account_holder,
+            ]),
             'settlements' => $settlements->map(fn (Settlement $s) => [
                 'id' => $s->id,
                 'period_label' => $s->period_label,
@@ -337,6 +368,14 @@ class FinanceSettlementController extends Controller
                 'paid_amount' => (float) $s->paid_amount,
                 'outstanding' => (float) $s->outstanding_amount,
                 'overpaid_amount' => (float) $s->overpaid_amount,
+                'net_amount' => (float) $s->net_amount,
+                'direction' => $s->direction,
+                'breakdown' => [
+                    'online_outlet_share' => (float) $s->total_online_share,
+                    'delivery_cost' => (float) $s->total_delivery_cost,
+                    'refund' => (float) $s->total_refund,
+                    'offline_sales' => (float) $s->total_offline_sales,
+                ],
                 'due_date' => $s->due_date->toDateString(),
                 'status' => $s->status,
             ]),
@@ -347,6 +386,16 @@ class FinanceSettlementController extends Controller
                 'paid_total' => (float) $paidTotal,
                 'outstanding' => (float) $outstanding,
                 'overpaid' => (float) $settlements->sum('overpaid_amount'),
+                'net_amount' => (float) $settlements->sum('net_amount'),
+                'direction' => $settlements->sum('net_amount') >= 0 ? 'owner_pays_outlet' : 'outlet_pays_owner',
+                'owner_pays_amount' => (float) $settlements->filter(fn (Settlement $s) => $s->direction === Settlement::DIRECTION_OWNER_PAYS && $s->status !== Settlement::STATUS_PAID)->sum('outstanding_amount'),
+                'outlet_pays_amount' => (float) $settlements->filter(fn (Settlement $s) => $s->direction === Settlement::DIRECTION_OUTLET_PAYS && $s->status !== Settlement::STATUS_PAID)->sum('outstanding_amount'),
+                'breakdown' => [
+                    'online_outlet_share' => (float) $settlements->sum('total_online_share'),
+                    'delivery_cost' => (float) $settlements->sum('total_delivery_cost'),
+                    'refund' => (float) $settlements->sum('total_refund'),
+                    'offline_sales' => (float) $settlements->sum('total_offline_sales'),
+                ],
                 'oldest_due_date' => $oldestUnpaid?->due_date?->toDateString(),
                 'days_overdue' => $daysOverdue,
                 'display_status' => $displayStatus,
@@ -379,9 +428,10 @@ class FinanceSettlementController extends Controller
         }
 
         // Create a single payment record, immediately verified
-        $payment = DB::transaction(function () use ($validated, $outlet, $request, $proofPath) {
+        $payment = DB::transaction(function () use ($validated, $outlet, $request, $proofPath, $paymentService) {
             $payment = SettlementPayment::create([
                 'outlet_id' => $outlet->id,
+                'direction' => Settlement::DIRECTION_OUTLET_PAYS,
                 'reference_number' => $validated['reference_number'] ?? 'PAY-'.strtoupper(Str::random(8)),
                 'payment_date' => now()->toDateString(),
                 'amount' => $validated['amount'],
@@ -394,12 +444,63 @@ class FinanceSettlementController extends Controller
             ]);
 
             // FIFO allocate to unpaid settlements
-            $paymentService->fifoAllocate($outlet->id, (float) $validated['amount'], $payment->id);
+            $paymentService->fifoAllocate($outlet->id, (float) $validated['amount'], $payment->id, Settlement::DIRECTION_OUTLET_PAYS);
 
             return $payment;
         });
 
         return back()->with('success', 'Pembayaran berhasil dicatat dan diverifikasi.');
+    }
+
+    /**
+     * Record an owner→outlet payout (owner pays profit to outlet).
+     * Authoritative — immediately verified, FIFO-allocated to owner_pays_outlet settlements.
+     */
+    public function recordPayout(
+        Request $request,
+        Outlet $outlet,
+        SettlementPaymentService $paymentService,
+        NotificationService $notificationService,
+    ): RedirectResponse {
+        // Guard: outlet must have outstanding owner_pays_outlet settlements
+        $hasReceiver = Settlement::where('outlet_id', $outlet->id)
+            ->where('period_type', 'weekly')
+            ->where('direction', Settlement::DIRECTION_OWNER_PAYS)
+            ->where('status', '!=', Settlement::STATUS_PAID)
+            ->exists();
+
+        if (! $hasReceiver) {
+            return back()->with('error', 'Outlet tidak memiliki profit yang belum dibayar owner.');
+        }
+
+        $validated = $request->validate([
+            'amount' => ['required', 'numeric', 'min:1'],
+            'reference_number' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $payment = DB::transaction(function () use ($validated, $outlet, $request, $paymentService) {
+            $payment = SettlementPayment::create([
+                'outlet_id' => $outlet->id,
+                'direction' => Settlement::DIRECTION_OWNER_PAYS,
+                'reference_number' => $validated['reference_number'] ?? 'PO-'.strtoupper(Str::random(8)),
+                'payment_date' => now()->toDateString(),
+                'amount' => $validated['amount'],
+                'payment_method' => 'transfer_bank',
+                'notes' => $validated['notes'] ?? null,
+                'status' => SettlementPayment::STATUS_VERIFIED,
+                'verified_by' => $request->user()->id,
+                'verified_at' => now(),
+            ]);
+
+            $paymentService->fifoAllocate($outlet->id, (float) $validated['amount'], $payment->id, Settlement::DIRECTION_OWNER_PAYS);
+
+            return $payment;
+        });
+
+        $notificationService->notifyPayoutRecorded($payment);
+
+        return back()->with('success', 'Payout berhasil dicatat dan dibayarkan ke outlet.');
     }
 
     /**
@@ -451,12 +552,18 @@ class FinanceSettlementController extends Controller
                     $s->outlet->name,
                     $s->period_label,
                     $s->due_date->format('d/m/Y'),
-                    $s->sales_amount,
-                    $s->delivery_fee_amount,
-                    $s->amount_due,
-                    $s->paid_amount,
-                    $s->outstanding_amount,
-                    $s->status,
+                    'Rp '.number_format($s->sales_amount, 0, ',', '.'),
+                    'Rp '.number_format($s->delivery_fee_amount, 0, ',', '.'),
+                    'Rp '.number_format($s->amount_due, 0, ',', '.'),
+                    'Rp '.number_format($s->paid_amount, 0, ',', '.'),
+                    'Rp '.number_format($s->outstanding_amount, 0, ',', '.'),
+                    match ($s->status) {
+                        'pending' => 'Menunggu',
+                        'partial' => 'Sebagian',
+                        'paid' => 'Lunas',
+                        'overdue' => 'Jatuh Tempo',
+                        default => $s->status,
+                    },
                 ]);
             }
 

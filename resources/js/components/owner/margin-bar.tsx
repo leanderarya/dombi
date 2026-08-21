@@ -47,6 +47,7 @@ export default function MarginBar({
 
 export function MarginBarInline({ margin, maxMargin, sellingPrice }: Props) {
     const sp = sellingPrice ?? 0;
+
     if (sp <= 0 && margin <= 0) {
         return (
             <span className="font-bold text-red-600 tabular-nums">

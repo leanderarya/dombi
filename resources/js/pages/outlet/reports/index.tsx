@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { CheckCircle, Download, LoaderCircle } from 'lucide-react';
 import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import { Button } from '@/components/ui/button';
 import FilterChips from '@/components/ui/filter-chips';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
@@ -114,19 +115,17 @@ export default function OutletReports({ outlet, preview }: Props) {
                     </div>
                 )}
 
-                <button
+                <Button
                     type="button"
-                    onClick={handleDownload}
+                    variant="primary"
                     disabled={isDownloading}
-                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-60"
+                    loading={isDownloading}
+                    icon={isDownloading ? LoaderCircle : Download}
+                    className="w-full"
+                    onClick={handleDownload}
                 >
-                    {isDownloading ? (
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                    ) : (
-                        <Download className="h-4 w-4" />
-                    )}
-                    {isDownloading ? 'Menyiapkan...' : 'Download CSV'}
-                </button>
+                    Download CSV
+                </Button>
 
                 {/* Preview Summary */}
                 {preview && preview.total_orders > 0 && (

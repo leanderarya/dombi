@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ExchangeRequest;
 use App\Models\Outlet;
 use App\Models\ReturnRequest;
+use App\Models\ReturnRequestItem;
 use App\Services\ExchangeService;
 use App\Services\ReturnService;
 use Illuminate\Http\RedirectResponse;
@@ -27,7 +28,7 @@ class ReturnController extends Controller
 
     private function pengembalianTab(Request $request): Response
     {
-        $query = ReturnRequest::with(['outlet', 'requester', 'items.variant'])
+        $query = ReturnRequest::with(['outlet', 'requester', 'items.product'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -76,7 +77,7 @@ class ReturnController extends Controller
 
     private function penukaranTab(Request $request): Response
     {
-        $query = ExchangeRequest::with(['outlet', 'requester', 'items.variant', 'returnRequest'])
+        $query = ExchangeRequest::with(['outlet', 'requester', 'items.product', 'returnRequest'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -120,7 +121,7 @@ class ReturnController extends Controller
 
     public function show(ReturnRequest $returnRequest): Response
     {
-        $returnRequest->load(['outlet', 'requester', 'reviewer', 'receiver', 'items.variant', 'statusHistories.actor']);
+        $returnRequest->load(['outlet', 'requester', 'reviewer', 'receiver', 'items.product', 'statusHistories.actor']);
 
         return Inertia::render('owner/returns/show', [
             'return' => $returnRequest,
@@ -159,5 +160,19 @@ class ReturnController extends Controller
         $service->completeReturn($returnRequest, $request->user());
 
         return redirect()->route('owner.returns.show', $returnRequest)->with('success', 'Return completed and settlement adjusted.');
+    }
+
+    public function disposeItem(Request $request, ReturnRequest $returnRequest, ReturnRequestItem $item, ReturnService $service): RedirectResponse
+    {
+        $service->disposeItem($returnRequest, $item, $request->user());
+
+        return redirect()->back()->with('success', 'Item dibuang.');
+    }
+
+    public function storeItem(Request $request, ReturnRequest $returnRequest, ReturnRequestItem $item, ReturnService $service): RedirectResponse
+    {
+        $service->storeItem($returnRequest, $item, $request->user());
+
+        return redirect()->back()->with('success', 'Item disimpan.');
     }
 }

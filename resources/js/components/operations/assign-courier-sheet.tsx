@@ -1,12 +1,15 @@
 import { useForm } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { formatCurrency } from '@/lib/format';
+import { createInitialAssignCourierSheetState } from './assign-courier-sheet-lifecycle';
 
 interface Courier {
     id: number;
     name: string;
     active_deliveries?: number;
+    is_online?: boolean;
+    at_capacity?: boolean;
 }
 
 interface Props {
@@ -25,57 +28,92 @@ export default function AssignCourierSheet({
     onClose,
     assignUrl,
 }: Props) {
-    const [selectedCourier, setSelectedCourier] = useState<number | null>(null);
-    const form = useForm({ courier_id: '' });
+    if (!open || !order) {
+        return null;
+    }
+
+    return (
+        <AssignCourierSheetContent
+            order={order}
+            couriers={couriers}
+            onClose={onClose}
+            assignUrl={assignUrl}
+        />
+    );
+}
+
+function disabledReason(courier: Courier): string | null {
+    if (courier.is_online === false) {
+        return 'Sedang offline';
+    }
+
+    if (courier.at_capacity) {
+        return 'Kapasitas penuh';
+    }
+
+    return null;
+}
+
+function AssignCourierSheetContent({
+    order,
+    couriers,
+    onClose,
+    assignUrl,
+}: Omit<Props, 'open'>) {
+    const [sheetState, setSheetState] = useState(
+        createInitialAssignCourierSheetState,
+    );
+    const form = useForm<{ courier_type: string; courier_id: string }>({
+        courier_type: 'dombi',
+        courier_id: '',
+    });
+
+    const closeSheet = useCallback(() => {
+        form.cancel();
+        form.reset();
+        setSheetState(createInitialAssignCourierSheetState());
+        onClose();
+    }, [form, onClose]);
 
     useEffect(() => {
-        if (!open) {
-            setSelectedCourier(null);
-            form.reset();
-        }
-    }, [open]);
-
-    useEffect(() => {
-        if (open) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
+        document.body.style.overflow = 'hidden';
 
         return () => {
             document.body.style.overflow = '';
         };
-    }, [open]);
+    }, []);
 
     useEffect(() => {
-        if (!open) {
-            return;
-        }
-
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                onClose();
+                closeSheet();
             }
         };
         document.addEventListener('keydown', handler);
 
         return () => document.removeEventListener('keydown', handler);
-    }, [open, onClose]);
+    }, [closeSheet]);
 
-    if (!open || !order) {
-        return null;
-    }
+    useEffect(() => form.cancel, [form.cancel]);
 
     const submitUrl = assignUrl ?? `/owner/orders/${order.id}/assign-courier`;
 
     function handleSubmit() {
+        const { selectedCourier } = sheetState;
+
         if (!selectedCourier) {
             return;
         }
 
-        form.transform(() => ({ courier_id: String(selectedCourier) }));
+        form.transform(() => ({
+            courier_type: 'dombi',
+            courier_id: String(selectedCourier),
+        }));
         form.post(submitUrl, {
-            onSuccess: () => onClose(),
+            onSuccess: closeSheet,
+            onError: () => {
+                // errors are surfaced below the list and via flash toasts
+            },
             preserveScroll: true,
         });
     }
@@ -86,7 +124,10 @@ export default function AssignCourierSheet({
             role="dialog"
             aria-modal="true"
         >
-            <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+            <div
+                className="absolute inset-0 bg-black/40"
+                onClick={closeSheet}
+            />
             <div
                 className="relative w-full max-w-lg animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-safe"
                 style={{ maxHeight: '80vh', overflowY: 'auto' }}
@@ -135,23 +176,26 @@ export default function AssignCourierSheet({
                             ) : (
                                 couriers.map((courier) => {
                                     const isSelected =
-                                        selectedCourier === courier.id;
-                                    const activeCount =
-                                        courier.active_deliveries ?? 0;
-                                    const isBusy = activeCount >= 3;
+                                        sheetState.selectedCourier ===
+                                        courier.id;
+                                    const reason = disabledReason(courier);
+                                    const isDisabled = reason !== null;
 
                                     return (
                                         <button
                                             key={courier.id}
                                             type="button"
+                                            disabled={isDisabled}
                                             onClick={() =>
-                                                setSelectedCourier(courier.id)
+                                                setSheetState({
+                                                    selectedCourier: courier.id,
+                                                })
                                             }
                                             className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all duration-150 active:opacity-80 ${
                                                 isSelected
                                                     ? 'border-emerald-300 bg-emerald-50/30'
                                                     : 'border-slate-200 bg-white'
-                                            } ${isBusy ? 'opacity-60' : ''}`}
+                                            } ${isDisabled ? 'opacity-60' : ''}`}
                                         >
                                             <div
                                                 className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}
@@ -168,18 +212,11 @@ export default function AssignCourierSheet({
                                                     {courier.name}
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <span
-                                                        className={`text-[11px] ${activeCount === 0 ? 'text-emerald-600' : isBusy ? 'text-amber-600' : 'text-blue-600'}`}
-                                                    >
-                                                        {activeCount === 0
-                                                            ? 'Tersedia'
-                                                            : `${activeCount} tugas aktif`}
+                                                    <span className="text-[11px] text-slate-500">
+                                                        {isDisabled
+                                                            ? reason
+                                                            : 'Tersedia'}
                                                     </span>
-                                                    {isBusy && (
-                                                        <span className="rounded bg-amber-100 px-1 py-0.5 text-[11px] font-bold text-amber-700">
-                                                            Sibuk
-                                                        </span>
-                                                    )}
                                                 </div>
                                             </div>
                                         </button>
@@ -189,17 +226,26 @@ export default function AssignCourierSheet({
                         </div>
                     </div>
 
-                    {form.errors.courier_id && (
-                        <p className="mt-2 text-xs text-red-600">
-                            {form.errors.courier_id}
-                        </p>
+                    {(form.errors.courier_id || form.errors.courier_type) && (
+                        <div className="mt-2 space-y-1">
+                            {[form.errors.courier_type, form.errors.courier_id]
+                                .filter(Boolean)
+                                .map((err) => (
+                                    <p
+                                        key={err}
+                                        className="text-xs text-red-600"
+                                    >
+                                        {err}
+                                    </p>
+                                ))}
+                        </div>
                     )}
 
                     {/* Actions */}
                     <div className="mt-4 flex gap-2">
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={closeSheet}
                             className="flex min-h-[48px] flex-1 items-center justify-center rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 transition-all duration-150 active:bg-slate-50 active:opacity-80"
                         >
                             Batal
@@ -207,7 +253,9 @@ export default function AssignCourierSheet({
                         <button
                             type="button"
                             onClick={handleSubmit}
-                            disabled={!selectedCourier || form.processing}
+                            disabled={
+                                !sheetState.selectedCourier || form.processing
+                            }
                             className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-bold text-white transition-all duration-150 active:bg-emerald-800 active:opacity-80 disabled:bg-slate-300"
                         >
                             {form.processing

@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import OutletList from './outlet-list';
 import OutletDetail from './outlet-detail';
+import OutletList from './outlet-list';
 import type { OtherOutlet, OutletData, OutletPriceRow } from './types';
 
 export function OutletTab({

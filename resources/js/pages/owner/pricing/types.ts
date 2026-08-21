@@ -1,17 +1,24 @@
 export interface PusatVariant {
-    variant_id: number;
+    product_id: number;
+    variant_id?: number; // backward compat
     name: string;
-    family_name: string | null;
+    category_name: string | null;
+    family_name?: string | null; // backward compat
     flavor: string | null;
     size: string | null;
+    sku?: string | null;
     center_price: number;
     selling_price: number;
     margin: number;
     outlet_override_count: number;
+    updated_at: string | null;
 }
 
+export type PusatProduct = PusatVariant;
+
 export interface PusatKpis {
-    total_variants: number;
+    total_variants?: number; // backward compat
+    total_products: number;
     avg_hpp: number;
     avg_margin: number;
     negative_margin_count: number;
@@ -21,16 +28,20 @@ export interface OutletData {
     id: number;
     name: string;
     override_count: number;
-    total_variants: number;
+    total_variants?: number; // backward compat
+    total_products: number;
     all_standard: boolean;
 }
 
 export interface OutletPriceRow {
-    variant_id: number;
+    product_id: number;
+    variant_id?: number; // backward compat
     name: string;
-    family_name: string | null;
+    category_name: string | null;
+    family_name?: string | null; // backward compat
     flavor: string | null;
     size: string | null;
+    sku?: string | null;
     center_price: number;
     selling_price: number;
     margin: number;

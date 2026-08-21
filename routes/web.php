@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Courier\CourierAvailabilityController;
 use App\Http\Controllers\Courier\DeliveryController as CourierDeliveryController;
 use App\Http\Controllers\Courier\LocationController;
+use App\Http\Controllers\CourierInvitationController;
 use App\Http\Controllers\Customer\AccountPromotionController;
 use App\Http\Controllers\Customer\AddressController as CustomerAddressController;
 use App\Http\Controllers\Customer\CartController;
@@ -13,8 +14,6 @@ use App\Http\Controllers\Customer\CheckoutController as CustomerCheckoutControll
 use App\Http\Controllers\Customer\CustomerOutletController;
 use App\Http\Controllers\Customer\CustomerProductApiController;
 use App\Http\Controllers\Customer\FavoriteController;
-use App\Http\Controllers\CustomerOfflineController;
-use App\Http\Controllers\Customer\GuestOrderController;
 use App\Http\Controllers\Customer\GuestOrderRecoveryController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
@@ -22,16 +21,18 @@ use App\Http\Controllers\Customer\OrderReportController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
 use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\Customer\RecipientController;
+use App\Http\Controllers\CustomerOfflineController;
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\DevRoleSwitcherController;
 use App\Http\Controllers\DokuPaymentController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PushController as UnifiedPushController;
 use App\Http\Controllers\Outlet\AnalyticsController as OutletAnalyticsController;
+use App\Http\Controllers\Outlet\CourierController as OutletCourierController;
 use App\Http\Controllers\Outlet\DashboardController;
 use App\Http\Controllers\Outlet\DeliveryController as OutletDeliveryController;
 use App\Http\Controllers\Outlet\ExchangeController as OutletExchangeController;
 use App\Http\Controllers\Outlet\InventoryController as OutletInventoryController;
+use App\Http\Controllers\Outlet\MyCourierController;
 use App\Http\Controllers\Outlet\OfflineSaleController;
 use App\Http\Controllers\Outlet\OrderController as OutletOrderController;
 use App\Http\Controllers\Outlet\PushController;
@@ -39,12 +40,14 @@ use App\Http\Controllers\Outlet\ReportController as OutletReportController;
 use App\Http\Controllers\Outlet\RestockController as OutletRestockController;
 use App\Http\Controllers\Outlet\ReturnController as OutletReturnController;
 use App\Http\Controllers\Outlet\ScanController as OutletScanController;
-use App\Http\Controllers\Outlet\CourierController as OutletCourierController;
 use App\Http\Controllers\Outlet\SettlementController;
 use App\Http\Controllers\Owner\AnalyticsController as OwnerAnalyticsController;
-use App\Http\Controllers\Owner\DeliveryTierController;
+use App\Http\Controllers\Owner\CourierController;
+use App\Http\Controllers\Owner\CourierManagementController;
+use App\Http\Controllers\Owner\CustomerController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
 use App\Http\Controllers\Owner\DeliveryController as OwnerDeliveryController;
+use App\Http\Controllers\Owner\DeliveryTierController;
 use App\Http\Controllers\Owner\ExchangeController as OwnerExchangeController;
 use App\Http\Controllers\Owner\FinanceSettlementController;
 use App\Http\Controllers\Owner\InventoryController as OwnerInventoryController;
@@ -55,21 +58,20 @@ use App\Http\Controllers\Owner\OutletOperatingHoursController;
 use App\Http\Controllers\Owner\OutletProductController;
 use App\Http\Controllers\Owner\PaymentAccountController;
 use App\Http\Controllers\Owner\PricingController;
+use App\Http\Controllers\Owner\ProductCategoryController as OwnerProductCategoryController;
 use App\Http\Controllers\Owner\ProductController as OwnerProductController;
-use App\Http\Controllers\Owner\ProductFamilyController;
-use App\Http\Controllers\Owner\ProductVariantController;
+use App\Http\Controllers\Owner\ProductFlavorGroupController as OwnerProductFlavorGroupController;
 use App\Http\Controllers\Owner\ProfileController as OwnerProfileController;
+use App\Http\Controllers\Owner\RefundController;
 use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\RestockController as OwnerRestockController;
-use App\Http\Controllers\Owner\RefundController;
 use App\Http\Controllers\Owner\ReturnController as OwnerReturnController;
 use App\Http\Controllers\Owner\SettlementPaymentController;
-
+use App\Http\Controllers\PushController as UnifiedPushController;
+use App\Http\Controllers\RefundProofController;
 use App\Http\Controllers\SystemController;
-
-use App\Models\Outlet;
-
 use App\Http\Controllers\TrackController;
+use App\Models\Outlet;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -98,7 +100,7 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
     }
 
     Route::get('/track/{token}', TrackController::class)->middleware('throttle:track')->name('track');
-    Route::get('/offline', [\App\Http\Controllers\CustomerOfflineController::class, 'index'])->name('offline');
+    Route::get('/offline', [CustomerOfflineController::class, 'index'])->name('offline');
 
     // Customer routes
     Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->group(function (): void {
@@ -108,10 +110,15 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::post('/location', [CustomerCheckoutController::class, 'storeLocationDraft'])->name('location.store');
         Route::get('/help', fn () => Inertia::render('customer/help'))->name('help');
         Route::get('/about', fn () => Inertia::render('customer/about'))->name('about');
+        Route::get('/coming-soon/{feature}', fn (string $feature) => Inertia::render('customer/coming-soon', [
+            'feature' => $feature,
+        ]))->name('coming-soon');
         Route::get('/outlets', [CustomerOutletController::class, 'index'])->name('outlets.index');
         Route::get('/products', [CustomerProductController::class, 'index'])->name('products.index');
         Route::get('/products/api', [CustomerProductApiController::class, 'index'])->name('products.api');
-        Route::get('/products/{family}', [CustomerProductController::class, 'show'])->name('products.show');
+        Route::get('/products/{category}', [CustomerProductController::class, 'show'])->name('products.show');
+        // Legacy alias for old {family} param
+        Route::get('/products/family/{family}', [CustomerProductController::class, 'show'])->name('products.show.legacy');
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
         Route::post('/select-outlet', [CartController::class, 'selectOutlet'])->name('select-outlet');
@@ -123,6 +130,8 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::get('/checkout/validate-stock', [CustomerCheckoutController::class, 'validateStock'])->name('checkout.validate-stock');
         Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
         Route::get('/orders/{order}/confirmation/{token}', [CustomerOrderController::class, 'confirmation'])->name('orders.confirmation');
+        // Favorites view — guest can see localStorage favorites; toggle/merge require account
+        Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
         Route::get('/orders/confirm/{orderCode}', [CustomerOrderController::class, 'confirm'])->name('orders.confirm');
         Route::post('/orders/recovery', GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
 
@@ -148,7 +157,7 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
         Route::patch('orders/{order}/refund-destination', [CustomerOrderController::class, 'updateRefundDestination'])
             ->name('orders.refund-destination.update');
-        Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
+        Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->middleware('throttle:guest-cancel')->name('orders.cancel');
         Route::post('/orders/{order}/report', [OrderReportController::class, 'store'])->name('orders.report')->middleware('throttle:order-report');
         Route::get('/addresses', [CustomerAddressController::class, 'index'])->name('addresses.index');
         Route::get('/addresses/api', [CustomerAddressController::class, 'apiIndex'])->name('addresses.api');
@@ -165,7 +174,6 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::delete('/recipients/{recipient}', [RecipientController::class, 'destroy'])->name('recipients.destroy');
 
         // Favorites (server-persisted per account)
-        Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
         Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
         Route::post('/favorites/merge', [FavoriteController::class, 'merge'])->name('favorites.merge');
     });
@@ -190,8 +198,8 @@ Route::match(['get', 'post'], '/payment/doku/redirect', [DokuPaymentController::
 
 // Courier invitation — no auth required
 Route::middleware('internal.inertia')->group(function (): void {
-    Route::get('/courier/invite/{token}', [App\Http\Controllers\CourierInvitationController::class, 'show'])->name('courier.invite.show');
-    Route::post('/courier/invite/{token}', [App\Http\Controllers\CourierInvitationController::class, 'accept'])->name('courier.invite.accept');
+    Route::get('/courier/invite/{token}', [CourierInvitationController::class, 'show'])->name('courier.invite.show');
+    Route::post('/courier/invite/{token}', [CourierInvitationController::class, 'accept'])->name('courier.invite.accept');
 });
 
 Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): void {
@@ -253,24 +261,36 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('outlets/{outlet}/products', [OutletProductController::class, 'index'])->name('outlets.products.index');
         Route::get('outlets/{outlet}/products/available', [OutletProductController::class, 'availableProducts'])->name('outlets.products.available');
         Route::post('outlets/{outlet}/products', [OutletProductController::class, 'addProducts'])->name('outlets.products.add');
-        Route::put('outlets/{outlet}/products/{variantId}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle');
-        Route::delete('outlets/{outlet}/products/{variantId}', [OutletProductController::class, 'remove'])->name('outlets.products.remove');
+        Route::put('outlets/{outlet}/products/{product}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle');
+        Route::put('outlets/{outlet}/products/{productId}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle.legacy.product');
+        Route::put('outlets/{outlet}/products/{variantId}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle.legacy');
+        Route::delete('outlets/{outlet}/products/{product}', [OutletProductController::class, 'remove'])->name('outlets.products.remove');
+        Route::delete('outlets/{outlet}/products/{productId}', [OutletProductController::class, 'remove'])->name('outlets.products.remove.legacy.product');
+        Route::delete('outlets/{outlet}/products/{variantId}', [OutletProductController::class, 'remove'])->name('outlets.products.remove.legacy');
         Route::post('outlets/{outlet}/products/bulk-assign', [OutletProductController::class, 'bulkAssign'])->name('outlets.products.bulk-assign');
         Route::post('outlets/{outlet}/restock', [OutletProductController::class, 'restock'])->name('outlets.products.restock');
         Route::resource('products', OwnerProductController::class)->except(['show']);
-        Route::resource('product-families', ProductFamilyController::class)->parameters(['product-families' => 'family'])->except(['create', 'edit']);
-        Route::post('product-families/{family}/variants', [ProductVariantController::class, 'store'])->name('product-families.variants.store');
-        Route::post('product-families/{family}/variants/bulk-update', [ProductVariantController::class, 'bulkUpdate'])->name('product-families.variants.bulk-update');
-        Route::put('variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
-        Route::delete('variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
-        Route::patch('variants/{variant}/toggle', [ProductVariantController::class, 'toggle'])->name('variants.toggle');
+        Route::get('products/{product}', [OwnerProductController::class, 'show'])->name('products.show');
+        // New ProductCategory / Product domain – Task 12 canonical routes
+        Route::resource('product-categories', OwnerProductCategoryController::class)->parameters(['product-categories' => 'category'])->except(['create', 'edit']);
+        Route::post('product-categories/{category}/products', [OwnerProductController::class, 'store'])->name('product-categories.products.store');
+        Route::post('product-categories/{category}/products/bulk', [OwnerProductController::class, 'bulkStore'])->name('product-categories.products.bulk');
+        Route::post('product-categories/{category}/products/bulk-store', [OwnerProductController::class, 'bulkStore'])->name('product-categories.products.bulk-store'); // backward compat alias – distinct URI
+        Route::post('product-categories/{category}/products/bulk-size', [OwnerProductController::class, 'bulkSize'])->name('product-categories.products.bulk-size');
+        Route::post('product-categories/{category}/products/bulk-update', [OwnerProductController::class, 'bulkUpdate'])->name('product-categories.products.bulk-update');
+        Route::delete('products/{product}', [OwnerProductController::class, 'destroy'])->name('products.destroy');
+        Route::patch('products/{product}/toggle', [OwnerProductController::class, 'toggle'])->name('products.toggle');
+        Route::post('products/{product}/duplicate', [OwnerProductController::class, 'duplicate'])->name('products.duplicate');
+        Route::patch('product-flavor-groups/{flavorGroup}/image', [OwnerProductFlavorGroupController::class, 'updateImage'])->name('product-flavor-groups.image.update');
+        Route::delete('products/{product}/image', [OwnerProductController::class, 'deleteImage'])->name('products.image.destroy');
+        Route::delete('product-flavor-groups/{flavorGroup}/image', [OwnerProductFlavorGroupController::class, 'deleteImage'])->name('product-flavor-groups.image.destroy');
         Route::get('pricing/outlets/compare', [PricingController::class, 'compare'])->name('pricing.outlets.compare');
         Route::get('pricing', [PricingController::class, 'index'])->name('pricing.index');
         Route::get('pricing/outlets/{outlet}', [PricingController::class, 'show'])->name('pricing.outlets.show');
-        Route::patch('pricing/variants/{variant}', [PricingController::class, 'updateGlobal'])->name('pricing.variants.update');
-        Route::get('pricing/variants/{variant}/impact', [PricingController::class, 'getImpact'])->name('pricing.variants.impact');
-        Route::patch('pricing/outlets/{outlet}/variants/{variant}', [PricingController::class, 'updateOutlet'])->name('pricing.outlets.variants.update');
-        Route::delete('pricing/outlets/{outlet}/variants/{variant}', [PricingController::class, 'resetOutlet'])->name('pricing.outlets.variants.reset');
+        Route::patch('pricing/products/{product}', [PricingController::class, 'updateGlobal'])->name('pricing.products.update');
+        Route::get('pricing/products/{product}/impact', [PricingController::class, 'getImpact'])->name('pricing.products.impact');
+        Route::patch('pricing/outlets/{outlet}/products/{product}', [PricingController::class, 'updateOutlet'])->name('pricing.outlets.products.update');
+        Route::delete('pricing/outlets/{outlet}/products/{product}', [PricingController::class, 'resetOutlet'])->name('pricing.outlets.products.reset');
         Route::post('pricing/outlets/{outlet}/bulk-update', [PricingController::class, 'bulkUpdate'])->name('pricing.outlets.bulk-update');
         Route::post('pricing/outlets/{outlet}/copy', [PricingController::class, 'copy'])->name('pricing.outlets.copy');
         Route::get('inventories', [OwnerInventoryController::class, 'index'])->name('inventories.index');
@@ -278,19 +298,24 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('inventories', [OwnerInventoryController::class, 'store'])->name('inventories.store');
         Route::get('inventories/{inventory}/edit', [OwnerInventoryController::class, 'edit'])->name('inventories.edit');
         Route::put('inventories/{inventory}', [OwnerInventoryController::class, 'update'])->name('inventories.update');
-        Route::patch('inventories/central-stock/{variant}', [OwnerInventoryController::class, 'updateCenterStock'])->name('inventories.central-stock.update');
+        Route::patch('inventories/central-stock/{product}', [OwnerInventoryController::class, 'updateCenterStock'])->name('inventories.central-stock.update');
+        Route::patch('inventories/central-stock/variant/{variant}', [OwnerInventoryController::class, 'updateCenterStock'])->name('inventories.central-stock.update.legacy');
         Route::post('inventories/remind-stock', [OwnerInventoryController::class, 'remindStock'])->name('inventories.remind-stock');
         Route::get('orders', [OwnerOrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{order}', [OwnerOrderController::class, 'show'])->name('orders.show');
+        Route::post('orders/{order}/cancel', [OwnerOrderController::class, 'cancel'])->name('orders.cancel');
         Route::get('order-reports/{report}', [App\Http\Controllers\Owner\OrderReportController::class, 'show'])->name('order-reports.show');
         Route::put('order-reports/{report}', [App\Http\Controllers\Owner\OrderReportController::class, 'update'])->name('order-reports.update');
         Route::post('orders/{order}/assign-courier', [OwnerDeliveryController::class, 'assignCourier'])->name('orders.assign-courier');
+        Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
         Route::get('deliveries/{delivery}', [OwnerDeliveryController::class, 'show'])->name('deliveries.show');
         Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
-        Route::resource('delivery-tiers', DeliveryTierController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('delivery-tiers', DeliveryTierController::class)->parameters(['delivery-tiers' => 'tier'])->only(['index', 'store', 'update', 'destroy']);
         Route::patch('delivery-tiers/{tier}/toggle', [DeliveryTierController::class, 'toggle'])->name('delivery-tiers.toggle');
-        Route::resource('couriers', \App\Http\Controllers\Owner\CourierController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy']);
+        Route::get('couriers/management', [CourierManagementController::class, 'index'])->name('couriers.management.index');
+        Route::resource('couriers', CourierController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy']);
         Route::get('reports/export-csv', [ReportController::class, 'exportCsv'])->middleware('throttle:export')->name('reports.export-csv');
         Route::get('reports/orders/export', [ReportController::class, 'exportOrders'])->name('reports.orders.export');
         Route::get('reports/settlements/export', [ReportController::class, 'exportSettlements'])->name('reports.settlements.export');
@@ -307,6 +332,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('finance/settlements/{outlet}', [FinanceSettlementController::class, 'outletDetail'])->name('finance.settlements.outlet');
         Route::post('finance/settlements/{outlet}/payments', [FinanceSettlementController::class, 'recordPayment'])->name('finance.settlements.payments');
         Route::post('finance/settlements/{outlet}/send-invoice', [FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
+        Route::post('finance/settlements/{outlet}/payout', [FinanceSettlementController::class, 'recordPayout'])->name('finance.settlements.payout');
         Route::resource('finance/payment-accounts', PaymentAccountController::class)->only(['store', 'update', 'destroy']);
         Route::get('refunds', [RefundController::class, 'index'])->name('refunds.index');
         Route::post('refunds/{order}/destination', [RefundController::class, 'destination'])->name('refunds.destination');
@@ -314,12 +340,15 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('refunds/{order}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
         Route::post('refunds/{order}/rollback', [RefundController::class, 'rollback'])->name('refunds.rollback');
         Route::post('refunds/{order}/complete', [RefundController::class, 'complete'])->name('refunds.complete');
+        Route::post('refunds/{order}/complete-direct', [RefundController::class, 'completeDirect'])->name('refunds.complete-direct');
         Route::get('returns', [OwnerReturnController::class, 'index'])->name('returns.index');
         Route::get('returns/{returnRequest}', [OwnerReturnController::class, 'show'])->name('returns.show');
         Route::post('returns/{returnRequest}/approve', [OwnerReturnController::class, 'approve'])->name('returns.approve');
         Route::post('returns/{returnRequest}/reject', [OwnerReturnController::class, 'reject'])->name('returns.reject');
         Route::post('returns/{returnRequest}/mark-received', [OwnerReturnController::class, 'markReceived'])->name('returns.mark-received');
         Route::post('returns/{returnRequest}/complete', [OwnerReturnController::class, 'complete'])->name('returns.complete');
+        Route::post('returns/{returnRequest}/items/{item}/dispose', [OwnerReturnController::class, 'disposeItem'])->name('returns.dispose-item');
+        Route::post('returns/{returnRequest}/items/{item}/store', [OwnerReturnController::class, 'storeItem'])->name('returns.store-item');
         Route::get('exchanges', [OwnerExchangeController::class, 'index'])->name('exchanges.index');
         Route::get('exchanges/{exchangeRequest}', [OwnerExchangeController::class, 'show'])->name('exchanges.show');
         Route::post('exchanges/{exchangeRequest}/approve', [OwnerExchangeController::class, 'approve'])->name('exchanges.approve');
@@ -327,14 +356,14 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('exchanges/{exchangeRequest}/mark-preparing', [OwnerExchangeController::class, 'markPreparing'])->name('exchanges.mark-preparing');
         Route::post('exchanges/{exchangeRequest}/mark-shipped', [OwnerExchangeController::class, 'markShipped'])->name('exchanges.mark-shipped');
         Route::post('exchanges/{exchangeRequest}/complete', [OwnerExchangeController::class, 'complete'])->name('exchanges.complete');
-        Route::get('couriers/management', [\App\Http\Controllers\Owner\CourierManagementController::class, 'index'])->name('couriers.management.index');
-        Route::post('couriers/{profile}/approve', [\App\Http\Controllers\Owner\CourierManagementController::class, 'approve'])->name('couriers.approve');
-        Route::post('couriers/{profile}/reject', [\App\Http\Controllers\Owner\CourierManagementController::class, 'reject'])->name('couriers.reject');
-        Route::put('couriers/{profile}/outlets', [\App\Http\Controllers\Owner\CourierManagementController::class, 'updateAssignments'])->name('couriers.outlets');
+        Route::post('couriers/{profile}/approve', [CourierManagementController::class, 'approve'])->name('couriers.approve');
+        Route::post('couriers/{profile}/reject', [CourierManagementController::class, 'reject'])->name('couriers.reject');
+        Route::post('couriers/{profile}/classify', [CourierManagementController::class, 'classifyLegacyProfile'])->name('couriers.classify');
+        Route::put('couriers/{profile}/outlets', [CourierManagementController::class, 'updateAssignments'])->name('couriers.outlets');
     });
 
     // Proof streaming — authenticated role-aware
-    Route::get('/refunds/{order}/proof', [App\Http\Controllers\RefundProofController::class, '__invoke'])->name('refunds.proof');
+    Route::get('/refunds/{order}/proof', [RefundProofController::class, '__invoke'])->name('refunds.proof');
 
     // Outlet routes
     Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')->name('outlet.')->group(function (): void {
@@ -345,6 +374,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/deliveries', [OutletDeliveryController::class, 'index'])->name('deliveries.index');
         Route::get('/deliveries/{delivery}', [OutletDeliveryController::class, 'show'])->name('deliveries.show');
         Route::post('/deliveries/{delivery}/confirm-return', [OutletDeliveryController::class, 'confirmReturn'])->name('deliveries.confirm-return');
+        Route::post('/deliveries/{delivery}/status', [OutletDeliveryController::class, 'updateExternalStatus'])->name('deliveries.status');
         Route::get('/orders', [OutletOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/pending-count', [OutletOrderController::class, 'pendingCount'])->name('orders.pending-count');
         Route::get('/orders/{order}', [OutletOrderController::class, 'show'])->name('orders.show');
@@ -358,7 +388,9 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::put('/order-reports/{report}', [App\Http\Controllers\Outlet\OrderReportController::class, 'update'])->name('order-reports.update');
         Route::post('/push-subscribe', [PushController::class, 'subscribe'])->name('push-subscribe');
         Route::get('/offline-sales', [OfflineSaleController::class, 'index'])->name('offline-sales.index');
+        Route::get('/offline-sales/{offlineSale}', [OfflineSaleController::class, 'show'])->name('offline-sales.show');
         Route::post('/offline-sales', [OfflineSaleController::class, 'store'])->name('offline-sales.store');
+        Route::put('/offline-sales/{offlineSale}', [OfflineSaleController::class, 'update'])->name('offline-sales.update');
         Route::delete('/offline-sales/{offlineSale}', [OfflineSaleController::class, 'destroy'])->name('offline-sales.destroy');
         Route::get('/scan', [OutletScanController::class, 'index'])->name('scan');
         Route::get('/scan/{order_code}', [OutletScanController::class, 'lookup'])->name('scan.lookup');
@@ -369,6 +401,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('/restocks/{restockRequest}/cancel', [OutletRestockController::class, 'cancel'])->name('restocks.cancel');
         Route::post('restocks/{restockRequest}/confirm-received', [OutletRestockController::class, 'confirmReceived'])->name('restocks.confirm-received');
         Route::get('/settlement', [SettlementController::class, 'index'])->name('settlement.index');
+        Route::get('/settlement/{settlement}', [SettlementController::class, 'show'])->name('settlement.show');
+        Route::put('/settlement/bank', [SettlementController::class, 'updateBank'])->name('settlement.bank.update');
         Route::get('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
         Route::post('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'store'])->name('settlement-payments.store');
         Route::get('/returns', [OutletReturnController::class, 'index'])->name('returns.index');
@@ -385,8 +419,10 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/analytics', [OutletAnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('/reports', [OutletReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/sales/export', [OutletReportController::class, 'export'])->name('reports.sales.export');
-        Route::get('/my-couriers', [\App\Http\Controllers\Outlet\MyCourierController::class, 'index'])->name('my-couriers.index');
-        Route::post('/my-couriers/nominate', [\App\Http\Controllers\Outlet\MyCourierController::class, 'nominate'])->name('my-couriers.nominate');
+        Route::get('/my-couriers', [MyCourierController::class, 'index'])->name('my-couriers.index');
+        Route::post('/my-couriers/nominate', [MyCourierController::class, 'nominate'])->name('my-couriers.nominate');
+        Route::put('/my-couriers/{profile}/resubmit', [MyCourierController::class, 'resubmit'])->name('my-couriers.resubmit');
+        Route::post('/my-couriers/{profile}/invitation/regenerate', [MyCourierController::class, 'regenerateInvitation'])->name('my-couriers.invitation.regenerate');
     });
 
     // Courier routes

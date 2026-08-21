@@ -4,8 +4,15 @@ import L from 'leaflet';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import { Search, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Locate, Search, X } from 'lucide-react';
+import {
+    useCallback,
+    useEffect,
+    useEffectEvent,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import {
     MapContainer,
     Marker,
@@ -14,10 +21,22 @@ import {
     useMap,
     useMapEvents,
 } from 'react-leaflet';
-import { searchPlaces } from '@/lib/geocoding';
-import type { PlaceSuggestion } from '@/lib/geocoding';
+import { reverseGeocode, searchPlaces } from '@/lib/geocoding';
+import type { PlaceSuggestion, ReverseGeocodeResult } from '@/lib/geocoding';
 
 type LatLng = { lat: number; lng: number };
+
+type GeoStatus = {
+    loading: boolean;
+    failed: boolean;
+    address: ReverseGeocodeResult | null;
+};
+
+type LocationChange = {
+    lat: number;
+    lng: number;
+    geo: GeoStatus;
+};
 
 type ExistingOutlet = {
     id: number;
@@ -29,7 +48,7 @@ type ExistingOutlet = {
 
 interface Props {
     value?: LatLng | null;
-    onChange: (value: LatLng) => void;
+    onChange: (change: LocationChange) => void;
     readOnly?: boolean;
     existingOutlets?: ExistingOutlet[];
 }
@@ -71,6 +90,118 @@ export default function OutletLocationMap({
 }: Props) {
     const marker = value?.lat && value?.lng ? value : null;
     const center = marker ?? SEMARANG_CENTER;
+    const lat = marker?.lat;
+    const lng = marker?.lng;
+    const emitChange = useEffectEvent(onChange);
+
+    const [geo, setGeo] = useState<GeoStatus>({
+        loading: false,
+        failed: false,
+        address: null,
+    });
+    const abortRef = useRef<AbortController | null>(null);
+    // ponytail: popupRef typed `any` (react-leaflet Popup ref) — keep simple
+    const popupRef = useRef<any>(null);
+    const [gpsError, setGpsError] = useState<string | null>(null);
+    const [gpsLoading, setGpsLoading] = useState(false);
+
+    // Reverse-geocode saat marker bergerak (debounce 650ms + abort)
+    // Deps on primitive coords (lat/lng) — onChange read via useEffectEvent so
+    // a new onChange identity won't re-fire the loop.
+    useEffect(() => {
+        if (lat === undefined || lng === undefined) {
+            return;
+        }
+
+        abortRef.current?.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
+
+        // ponytail: sync loading reset per brief; rule wants it in callback but
+        // that would delay the loading flag past the 650ms debounce
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setGeo((prev) => ({ ...prev, loading: true, failed: false }));
+
+        const timeout = window.setTimeout(async () => {
+            try {
+                const address = await reverseGeocode(
+                    lat,
+                    lng,
+                    controller.signal,
+                );
+                const resolved = { loading: false, failed: false, address };
+                setGeo(resolved);
+                emitChange({
+                    lat,
+                    lng,
+                    geo: resolved,
+                });
+            } catch {
+                if (!controller.signal.aborted) {
+                    const failed = { failed: true, address: null };
+                    setGeo((prev) => ({
+                        ...prev,
+                        loading: false,
+                        ...failed,
+                    }));
+                    emitChange({
+                        lat,
+                        lng,
+                        geo: {
+                            loading: false,
+                            ...failed,
+                        },
+                    });
+                }
+            }
+        }, 650);
+
+        return () => {
+            window.clearTimeout(timeout);
+            controller.abort();
+        };
+    }, [lat, lng]);
+    const handleUseCurrentLocation = () => {
+        if (!navigator.geolocation) {
+            setGpsError('Geolocation tidak didukung browser ini.');
+
+            return;
+        }
+
+        setGpsLoading(true);
+        setGpsError(null);
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const point = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+                setGpsLoading(false);
+                onChange({ ...point, geo });
+            },
+            (err) => {
+                setGpsLoading(false);
+
+                switch (err.code) {
+                    case err.PERMISSION_DENIED:
+                        setGpsError(
+                            'Izin lokasi ditolak. Aktifkan di pengaturan browser.',
+                        );
+                        break;
+                    case err.POSITION_UNAVAILABLE:
+                        setGpsError('Lokasi tidak tersedia. Coba lagi.');
+                        break;
+                    case err.TIMEOUT:
+                        setGpsError('Timeout. Pastikan GPS aktif.');
+                        break;
+                    default:
+                        setGpsError('Gagal mendapatkan lokasi.');
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+        );
+    };
     const selectedIcon = useMemo(
         () =>
             L.icon({
@@ -112,7 +243,33 @@ export default function OutletLocationMap({
     return (
         <div className="overflow-hidden rounded-lg border border-slate-300 bg-slate-100">
             {!readOnly && (
-                <MapSearchBox onSelect={(lat, lng) => onChange({ lat, lng })} />
+                <>
+                    <MapSearchBox
+                        onSelect={(lat, lng) => onChange({ lat, lng, geo })}
+                    />
+                    <div className="border-b border-slate-200 bg-white">
+                        <button
+                            type="button"
+                            onClick={handleUseCurrentLocation}
+                            disabled={gpsLoading}
+                            className="flex w-full items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                        >
+                            {gpsLoading ? (
+                                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-600" />
+                            ) : (
+                                <Locate className="h-4 w-4" />
+                            )}
+                            {gpsLoading
+                                ? 'Mengambil lokasi...'
+                                : 'Gunakan Lokasi Saya'}
+                        </button>
+                        {gpsError && (
+                            <div className="px-3 pb-2 text-[11px] font-medium text-red-600">
+                                {gpsError}
+                            </div>
+                        )}
+                    </div>
+                </>
             )}
             <div className="h-[200px] w-full lg:h-[400px]">
                 <MapContainer
@@ -134,7 +291,9 @@ export default function OutletLocationMap({
                         position={marker}
                     />
                     <MapCenter position={marker} />
-                    {!readOnly && <MapClickHandler onChange={onChange} />}
+                    {!readOnly && (
+                        <MapClickHandler onChange={onChange} geo={geo} />
+                    )}
 
                     {/* Existing outlet markers */}
                     {existingOutlets.map((o) => (
@@ -170,9 +329,30 @@ export default function OutletLocationMap({
                                     onChange({
                                         lat: point.lat,
                                         lng: point.lng,
+                                        geo,
                                     });
                                 },
                             }}
+                        >
+                            {!readOnly && (
+                                <Popup ref={popupRef}>
+                                    <MapPreviewContent
+                                        lat={marker.lat}
+                                        lng={marker.lng}
+                                        geo={geo}
+                                        onConfirm={() =>
+                                            popupRef.current?.close()
+                                        }
+                                    />
+                                </Popup>
+                            )}
+                        </Marker>
+                    )}
+                    {!readOnly && (
+                        <AutoOpenPopup
+                            popupRef={popupRef}
+                            marker={marker}
+                            readOnly={readOnly}
                         />
                     )}
                 </MapContainer>
@@ -196,6 +376,49 @@ export default function OutletLocationMap({
                         : SEMARANG_CENTER.lng.toFixed(2)}
                 </span>
             </div>
+        </div>
+    );
+}
+
+function MapPreviewContent({
+    lat,
+    lng,
+    geo,
+    onConfirm,
+}: {
+    lat: number;
+    lng: number;
+    geo: GeoStatus;
+    onConfirm: () => void;
+}) {
+    return (
+        <div className="w-56 p-1 text-xs">
+            <div className="font-bold text-slate-900 tabular-nums">
+                {lat.toFixed(6)} · {lng.toFixed(6)}
+            </div>
+            {geo.loading && (
+                <div className="mt-1 flex items-center gap-1.5 text-slate-500">
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-600" />
+                    Mendeteksi alamat...
+                </div>
+            )}
+            {geo.failed && (
+                <div className="mt-1 text-red-600">
+                    Gagal mendeteksi wilayah. Geser marker atau coba lagi.
+                </div>
+            )}
+            {!geo.loading && !geo.failed && geo.address && (
+                <div className="mt-1 text-slate-600">
+                    {geo.address.formatted_address}
+                </div>
+            )}
+            <button
+                type="button"
+                onClick={onConfirm}
+                className="mt-2 w-full rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+            >
+                Simpan Lokasi
+            </button>
         </div>
     );
 }
@@ -316,12 +539,42 @@ function MapSearchBox({
     );
 }
 
-function MapClickHandler({ onChange }: { onChange: (value: LatLng) => void }) {
+function MapClickHandler({
+    onChange,
+    geo,
+}: {
+    onChange: (change: LocationChange) => void;
+    geo: GeoStatus;
+}) {
     useMapEvents({
         click(event) {
-            onChange({ lat: event.latlng.lat, lng: event.latlng.lng });
+            onChange({
+                lat: event.latlng.lat,
+                lng: event.latlng.lng,
+                geo,
+            });
         },
     });
+
+    return null;
+}
+
+function AutoOpenPopup({
+    popupRef,
+    marker,
+    readOnly,
+}: {
+    popupRef: React.MutableRefObject<any>;
+    marker: LatLng | null;
+    readOnly: boolean;
+}) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (marker && !readOnly && popupRef.current) {
+            popupRef.current.openOn(map);
+        }
+    }, [map, marker, readOnly, popupRef]);
 
     return null;
 }
@@ -387,8 +640,8 @@ function MapFitBounds({
         if (existingOutlets.length >= 2) {
             const bounds = L.latLngBounds(
                 existingOutlets.map((o) => [
-                    parseFloat(o.latitude),
-                    parseFloat(o.longitude),
+                    Number(o.latitude),
+                    Number(o.longitude),
                 ]),
             );
             map.fitBounds(bounds, { maxZoom: MARKER_ZOOM, padding: [40, 40] });
@@ -396,8 +649,8 @@ function MapFitBounds({
         } else if (existingOutlets.length === 1) {
             map.setView(
                 [
-                    parseFloat(existingOutlets[0].latitude),
-                    parseFloat(existingOutlets[0].longitude),
+                    Number(existingOutlets[0].latitude),
+                    Number(existingOutlets[0].longitude),
                 ],
                 MARKER_ZOOM,
                 { animate: false },

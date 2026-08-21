@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 interface Props {
     title?: string;
+    titleClassName?: string;
     subtitle?: string;
     backHref?: string;
     /** Rendered on the right side of the header */
@@ -16,10 +17,10 @@ interface Props {
     onMenuClick?: () => void;
 }
 
-export default function PageHeader({ title, subtitle, backHref, right, below, transparent, onMenuClick }: Props) {
+export default function PageHeader({ title, titleClassName, subtitle, backHref, right, below, transparent, onMenuClick }: Props) {
     return (
         <header className={`sticky top-0 z-30 pt-safe ${transparent ? '' : 'border-b border-border bg-surface/95 backdrop-blur'}`}>
-            <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+            <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3 lg:max-w-4xl">
                 {/* Left side: back button, hamburger, or spacer */}
                 <div className="flex items-center gap-1">
                     {backHref && (
@@ -27,7 +28,7 @@ export default function PageHeader({ title, subtitle, backHref, right, below, tr
                             <ChevronLeft className="h-5 w-5" />
                         </Link>
                     )}
-                    {onMenuClick && (
+                    {!backHref && onMenuClick && (
                         <button
                             type="button"
                             onClick={onMenuClick}
@@ -42,7 +43,7 @@ export default function PageHeader({ title, subtitle, backHref, right, below, tr
 
                 {title ? (
                     <div className="text-center">
-                        <div className="text-sm font-semibold text-text">{title}</div>
+                        <div className={`text-sm font-semibold text-text ${titleClassName ?? ''}`}>{title}</div>
                         {subtitle && <div className="text-xs text-text-muted">{subtitle}</div>}
                     </div>
                 ) : (
@@ -52,7 +53,7 @@ export default function PageHeader({ title, subtitle, backHref, right, below, tr
                 {right ?? <div className="w-11" />}
             </div>
             {below && (
-                <div className="mx-auto max-w-lg px-4 pb-3">
+                <div className="mx-auto max-w-2xl px-4 pb-3 lg:max-w-4xl">
                     {below}
                 </div>
             )}

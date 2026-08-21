@@ -57,7 +57,7 @@ export default function OutletSettlementPayments({ payments }: Props) {
         setErrors({});
 
         const formData = new FormData();
-        formData.append('amount', amount);
+        formData.append('amount', amount.replace(/[.,]/g, ''));
         formData.append('reference_number', referenceNumber);
         formData.append('payment_date', paymentDate);
 
@@ -103,7 +103,11 @@ export default function OutletSettlementPayments({ payments }: Props) {
             <Head title="Riwayat Pembayaran" />
             <OutletPageShell>
                 <div className="flex items-center justify-between">
-                    <Button size="lg" onClick={() => setShowForm(!showForm)}>
+                    <Button
+                        size="lg"
+                        onClick={() => setShowForm(!showForm)}
+                        className="min-h-11"
+                    >
                         {showForm ? 'Batal' : 'Bayar'}
                     </Button>
                 </div>
@@ -120,11 +124,15 @@ export default function OutletSettlementPayments({ payments }: Props) {
 
                         <div className="space-y-3">
                             <Input
-                                type="number"
+                                type="text"
+                                inputMode="numeric"
                                 label="Jumlah (Rp)"
                                 value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                min="1"
+                                onChange={(e) =>
+                                    setAmount(
+                                        e.target.value.replace(/[^0-9.]/g, ''),
+                                    )
+                                }
                                 required
                                 placeholder="1200000"
                                 error={errors.amount}
@@ -174,7 +182,7 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                             e.target.files?.[0] || null,
                                         )
                                     }
-                                    className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                                    className="w-full rounded-[0.625rem] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                                 />
                                 {errors.proof_image && (
                                     <p className="mt-1 text-xs text-danger">
@@ -187,7 +195,7 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                 type="submit"
                                 size="lg"
                                 loading={saving}
-                                className="w-full"
+                                className="min-h-11 w-full"
                             >
                                 Kirim Pembayaran
                             </Button>

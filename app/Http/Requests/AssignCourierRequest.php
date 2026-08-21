@@ -39,6 +39,11 @@ class AssignCourierRequest extends FormRequest
             'external_courier_phone' => ['nullable', 'string', 'max:20'],
             'external_plate_number' => ['nullable', 'string', 'max:20'],
             'courier_cost' => ['required_if:courier_type,eksternal', 'numeric', 'min:0'],
+            'external_provider' => [
+                'required_if:courier_type,eksternal',
+                Rule::in(['gojek', 'grab']),
+            ],
+            'external_reference' => ['nullable', 'string', 'max:100'],
         ];
     }
 }

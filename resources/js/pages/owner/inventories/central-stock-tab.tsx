@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
+import OwnerTable from '@/components/owner/owner-table';
 import SortableTh from '@/components/owner/sortable-th';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +16,14 @@ import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell,
+} from '@/components/ui/table';
 import { displayProductName } from '@/lib/display';
 import { formatCurrency } from '@/lib/format';
 
@@ -39,9 +47,11 @@ const STOCK_FILTERS: { key: StockFilter; label: string }[] = [
 
 export default function CentralStockTab({
     variants,
+    products,
     stats,
 }: {
-    variants?: any[];
+    variants?: any[]; // backward compat
+    products?: any[];
     stats?: any;
 }) {
     const [search, setSearch] = useState('');
@@ -53,6 +63,11 @@ export default function CentralStockTab({
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const [stockFilter, setStockFilter] = useState<StockFilter>('all');
 
+    const productList = useMemo(
+        () => products ?? variants ?? [],
+        [products, variants],
+    );
+
     const toggleSort = (key: SortKey) => {
         if (sortKey === key) {
             setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -62,21 +77,26 @@ export default function CentralStockTab({
         }
     };
 
-    if (!variants || !stats)
-        return (
-            <div className="h-20 animate-pulse rounded-lg border border-border bg-surface" />
-        );
-
     const filtered = useMemo(() => {
-        let list = variants.filter(Boolean);
+        let list = (productList ?? []).filter(Boolean);
 
         if (search) {
             const q = search.toLowerCase();
-            list = list.filter(
-                (v: any) =>
-                    v.name.toLowerCase().includes(q) ||
-                    (v.sku ?? '').toLowerCase().includes(q),
-            );
+            list = list.filter((v: any) => {
+                const haystack = [
+                    v.name,
+                    v.category_name,
+                    v.family_name,
+                    v.sku,
+                    v.flavor,
+                    v.size,
+                ]
+                    .filter(Boolean)
+                    .join(' ')
+                    .toLowerCase();
+
+                return haystack.includes(q);
+            });
         }
 
         switch (stockFilter) {
@@ -94,7 +114,7 @@ export default function CentralStockTab({
         }
 
         return list;
-    }, [variants, search, stockFilter]);
+    }, [productList, search, stockFilter]);
 
     const sorted = useMemo(
         () =>
@@ -105,34 +125,71 @@ export default function CentralStockTab({
                     typeof av === 'string'
                         ? av.localeCompare(String(bv))
                         : Number(av) - Number(bv);
+
                 return sortDir === 'asc' ? cmp : -cmp;
             }),
         [filtered, sortKey, sortDir],
     );
 
+    if (!variants || !stats) {
+        return (
+            <div className="h-20 animate-pulse rounded-lg border border-border bg-surface" />
+        );
+    }
+
     return (
         <>
-            <OwnerKpiStrip
-                cols={4}
-                items={[
-                    { label: 'Total Variant', value: stats.total_variants },
-                    { label: 'Total Stok', value: `${stats.total_stock} pcs` },
-                    {
-                        label: 'Stok Habis',
-                        value: stats.zero_stock,
-                        sublabel:
-                            stats.zero_stock > 0 ? 'Perlu tindakan' : undefined,
-                        sublabelColor: 'text-red-500',
-                    },
-                    {
-                        label: 'Stok Rendah',
-                        value: stats.low_stock,
-                        sublabel:
-                            stats.low_stock > 0 ? 'Perlu tindakan' : undefined,
-                        sublabelColor: 'text-amber-500',
-                    },
-                ]}
-            />
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <span className="text-xs font-medium text-text-muted">
+                        Total Varian
+                    </span>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {stats.total_variants}
+                    </div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <span className="text-xs font-medium text-text-muted">
+                        Total Stok
+                    </span>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {stats.total_stock}{' '}
+                        <span className="text-sm font-normal text-text-muted">
+                            pcs
+                        </span>
+                    </div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <span className="text-xs font-medium text-text-muted">
+                        Stok Habis
+                    </span>
+                    <div
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.zero_stock > 0 ? 'text-red-600' : 'text-text'}`}
+                    >
+                        {stats.zero_stock}
+                    </div>
+                    {stats.zero_stock > 0 && (
+                        <p className="text-[11px] text-red-500">
+                            Perlu tindakan
+                        </p>
+                    )}
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <span className="text-xs font-medium text-text-muted">
+                        Stok Rendah
+                    </span>
+                    <div
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.low_stock > 0 ? 'text-amber-600' : 'text-text'}`}
+                    >
+                        {stats.low_stock}
+                    </div>
+                    {stats.low_stock > 0 && (
+                        <p className="text-[11px] text-amber-500">
+                            Perlu tindakan
+                        </p>
+                    )}
+                </div>
+            </div>
 
             <OwnerFilterCard
                 collapsible
@@ -152,7 +209,7 @@ export default function CentralStockTab({
                         key={f.key}
                         type="button"
                         onClick={() => setStockFilter(f.key)}
-                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${stockFilter === f.key ? 'bg-emerald-50 text-emerald-600 ring-emerald-200' : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'}`}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${stockFilter === f.key ? 'bg-emerald-50 text-emerald-600 ring-emerald-200' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
                     >
                         {f.label}
                     </button>
@@ -165,12 +222,9 @@ export default function CentralStockTab({
                     description="Coba ubah kata kunci pencarian"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table
-                        className="w-full min-w-[600px]"
-                        aria-label="Stok Pusat"
-                    >
-                        <thead>
+                <OwnerTable minWidth="600px">
+                    <Table>
+                        <TableHeader>
                             <tr className="bg-surface-muted/50">
                                 <SortableTh
                                     label="Produk / SKU"
@@ -192,26 +246,26 @@ export default function CentralStockTab({
                                     align="right"
                                     onClick={() => toggleSort('center_price')}
                                 />
-                                <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
                                     Status
-                                </th>
-                                <th className="w-20 px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                </TableHead>
+                                <TableHead className="w-20 px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
                                     Aksi
-                                </th>
+                                </TableHead>
                             </tr>
-                        </thead>
-                        <tbody>
+                        </TableHeader>
+                        <TableBody>
                             {sorted.map((v: any) => {
                                 const isZero = v.center_stock <= 0;
                                 const isLow =
                                     v.center_stock > 0 && v.center_stock <= 10;
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={v.id}
-                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors"
+                                        className="border-t border-border/20 transition-colors hover:bg-mint-wash"
                                     >
-                                        <td className="px-3 py-3">
+                                        <TableCell className="px-3 py-3">
                                             <span className="font-bold text-text">
                                                 {displayProductName(v)}
                                             </span>
@@ -220,16 +274,16 @@ export default function CentralStockTab({
                                                     {v.sku}
                                                 </span>
                                             )}
-                                        </td>
-                                        <td
+                                        </TableCell>
+                                        <TableCell
                                             className={`px-3 py-3 text-right font-bold tabular-nums ${isZero ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}
                                         >
                                             {v.center_stock} pcs
-                                        </td>
-                                        <td className="px-3 py-3 text-right text-text-muted tabular-nums">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3 text-right text-text-muted tabular-nums">
                                             {formatCurrency(v.center_price)}
-                                        </td>
-                                        <td className="px-3 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3">
                                             <StatusBadge
                                                 variant={
                                                     isZero
@@ -246,8 +300,8 @@ export default function CentralStockTab({
                                                       ? 'Rendah'
                                                       : 'Aman'}
                                             </StatusBadge>
-                                        </td>
-                                        <td className="px-3 py-3 text-right">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3 text-right">
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
@@ -261,19 +315,21 @@ export default function CentralStockTab({
                                             >
                                                 Edit
                                             </Button>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Dialog
                 open={!!editModal}
                 onOpenChange={(isOpen) => {
-                    if (!isOpen) setEditModal(null);
+                    if (!isOpen) {
+                        setEditModal(null);
+                    }
                 }}
             >
                 <DialogContent className="max-w-sm">
@@ -315,7 +371,10 @@ export default function CentralStockTab({
                         </Button>
                         <Button
                             onClick={() => {
-                                if (!editModal) return;
+                                if (!editModal) {
+                                    return;
+                                }
+
                                 setSaving(true);
                                 router.patch(
                                     `/owner/inventories/central-stock/${editModal.id}`,

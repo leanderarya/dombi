@@ -1,22 +1,44 @@
-import { router, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
-import { ChevronDown, ChevronUp, MapPin, Truck } from 'lucide-react';
+import { useForm } from '@inertiajs/react';
+import {
+    ChevronDown,
+    ChevronUp,
+    Clock,
+    MapPin,
+    ShoppingBag,
+    Truck,
+    User,
+} from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OrderStatusChip from '@/components/owner/order-status-chip';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
 import { isDifferentRecipient } from '@/lib/recipient';
 import { getOrderStatus } from '@/lib/status-labels';
 
 export default function OwnerOrderShow({ order, couriers }: any) {
-    const form = useForm({ courier_id: couriers[0]?.id ?? '' });
+    const form = useForm({
+        courier_id: couriers[0]?.id ?? '',
+        courier_type: 'dombi',
+    });
     const [resolveOpen, setResolveOpen] = useState(false);
+    const [cancelOpen, setCancelOpen] = useState(false);
+    const cancelForm = useForm({ reason: '', notes: '' });
     const [showFullTimeline, setShowFullTimeline] = useState(false);
 
     if (!order) {
@@ -28,12 +50,12 @@ export default function OwnerOrderShow({ order, couriers }: any) {
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
                         </div>
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-6 w-full" />
                             <Skeleton className="h-6 w-full" />
@@ -41,7 +63,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-6 w-3/4" />
@@ -69,10 +91,16 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     {/* Items */}
                     <div
                         aria-label="Item pesanan"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Item
+                        <div className="mb-3 flex items-center gap-2">
+                            <ShoppingBag
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Item
+                            </h3>
                         </div>
                         {order.items.map((item: any) => (
                             <OwnerDetailRow
@@ -123,7 +151,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 absorb), CC selalu customer.
                             </div>
                         </div>
-                        <div className="mt-2 rounded-lg bg-surface-muted p-3 text-right text-lg font-bold tabular-nums">
+                        <div className="font-heading mt-2 rounded-xl border border-border bg-surface-muted/50 p-3 text-right text-base font-bold tabular-nums">
                             {formatCurrency(order.total)}
                         </div>
                     </div>
@@ -131,16 +159,22 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     {/* Customer */}
                     <div
                         aria-label="Informasi pelanggan"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            {isDifferentRecipient(order)
-                                ? 'Pemesan'
-                                : 'Customer'}
+                        <div className="mb-3 flex items-center gap-2">
+                            <User
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                {isDifferentRecipient(order)
+                                    ? 'Pemesan'
+                                    : 'Customer'}
+                            </h3>
                         </div>
                         <OwnerDetailRow
-                            label="Nama"
-                            value={order.customer_name}
+                            label="ID Pesanan"
+                            value={order.order_code}
                         />
                         <OwnerDetailRow
                             label="Telepon"
@@ -166,8 +200,14 @@ export default function OwnerOrderShow({ order, couriers }: any) {
 
                         {isDifferentRecipient(order) && (
                             <>
-                                <div className="mt-3 mb-3 text-xs font-semibold text-text-subtle">
-                                    Penerima
+                                <div className="mb-3 flex items-center gap-2">
+                                    <User
+                                        aria-hidden="true"
+                                        className="h-4 w-4 text-primary"
+                                    />
+                                    <h3 className="font-heading text-base font-bold text-text">
+                                        Penerima
+                                    </h3>
                                 </div>
                                 <OwnerDetailRow
                                     label="Nama"
@@ -185,7 +225,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-3 inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary-light px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                                className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/20 bg-primary-light px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
                             >
                                 <MapPin
                                     aria-hidden="true"
@@ -202,10 +242,16 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     {/* Timeline */}
                     <div
                         aria-label="Linimasa pesanan"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Linimasa
+                        <div className="mb-3 flex items-center gap-2">
+                            <Clock
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Linimasa
+                            </h3>
                         </div>
                         {lastHistory && (
                             <div className="flex items-center gap-2">
@@ -221,7 +267,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                             .label
                                     }
                                 </StatusBadge>
-                                <span className="text-xs text-text-subtle">
+                                <span className="text-xs text-text-subtle tabular-nums">
                                     {new Date(
                                         lastHistory.created_at,
                                     ).toLocaleString('id-ID')}
@@ -234,7 +280,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                     onClick={() =>
                                         setShowFullTimeline(!showFullTimeline)
                                     }
-                                    className="mt-2 flex items-center gap-1 text-xs font-medium text-primary"
+                                    className="mt-2 flex min-h-11 items-center gap-1 px-2 text-xs font-medium text-primary"
                                 >
                                     {showFullTimeline ? (
                                         <>
@@ -246,7 +292,10 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                         </>
                                     ) : (
                                         <>
-                                            Lihat Semua ({olderHistories.length}
+                                            Lihat Semua (
+                                            <span className="tabular-nums">
+                                                {olderHistories.length}
+                                            </span>
                                             ){' '}
                                             <ChevronDown
                                                 aria-hidden="true"
@@ -278,7 +327,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                                         }
                                                     </StatusBadge>
                                                 </div>
-                                                <div className="text-xs text-text-subtle">
+                                                <div className="text-xs text-text-subtle tabular-nums">
                                                     {new Date(
                                                         h.created_at,
                                                     ).toLocaleString('id-ID')}
@@ -300,16 +349,28 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                     `/owner/orders/${order.id}/assign-courier`,
                                     {
                                         preserveScroll: true,
-                                        onSuccess: () => toast.success('Kurir ditugaskan'),
-                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                        onSuccess: () =>
+                                            toast.success('Kurir ditugaskan'),
+                                        onError: (errors) =>
+                                            toast.error(
+                                                Object.values(errors)
+                                                    .flat()
+                                                    .join(', '),
+                                            ),
                                     },
                                 );
                             }}
                             aria-label="Form assign kurir"
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Assign Kurir
+                            <div className="mb-3 flex items-center gap-2">
+                                <Truck
+                                    aria-hidden="true"
+                                    className="h-4 w-4 text-primary"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Assign Kurir
+                                </h3>
                             </div>
                             <Select
                                 value={String(form.data.courier_id)}
@@ -322,7 +383,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 }))}
                             />
                             <Button
-                                className="mt-3 w-full"
+                                className="mt-3 min-h-11 w-full"
                                 loading={form.processing}
                             >
                                 <Truck aria-hidden="true" className="h-4 w-4" />
@@ -335,10 +396,16 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     {order.delivery && (
                         <div
                             aria-label="Informasi kurir"
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Kurir
+                            <div className="mb-3 flex items-center gap-2">
+                                <Truck
+                                    aria-hidden="true"
+                                    className="h-4 w-4 text-primary"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Kurir
+                                </h3>
                             </div>
                             <OwnerDetailRow
                                 label="Nama"
@@ -356,10 +423,26 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                         ].includes(order.delivery?.status ?? '')) && (
                         <Button
                             variant="destructive"
-                            className="w-full"
+                            className="min-h-11 w-full"
                             onClick={() => setResolveOpen(true)}
                         >
                             Selesaikan Masalah
+                        </Button>
+                    )}
+
+                    {/* Cancel */}
+                    {[
+                        'confirmed',
+                        'preparing',
+                        'ready_for_pickup',
+                        'failed_delivery',
+                    ].includes(order.status) && (
+                        <Button
+                            variant="destructive"
+                            className="min-h-11 w-full"
+                            onClick={() => setCancelOpen(true)}
+                        >
+                            Batalkan Pesanan
                         </Button>
                     )}
                 </div>
@@ -371,6 +454,102 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     onClose={() => setResolveOpen(false)}
                 />
             )}
+            <Dialog
+                open={cancelOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setCancelOpen(false);
+                        cancelForm.reset();
+                    }
+                }}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Batalkan Pesanan</DialogTitle>
+                        <DialogDescription>
+                            Pilih alasan pembatalan pesanan ini.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                        <Select
+                            placeholder="Pilih alasan..."
+                            value={cancelForm.data.reason}
+                            onChange={(e) =>
+                                cancelForm.setData('reason', e.target.value)
+                            }
+                            options={[
+                                {
+                                    value: 'Stok Tidak Tersedia',
+                                    label: 'Stok Tidak Tersedia',
+                                },
+                                {
+                                    value: 'Produk Rusak',
+                                    label: 'Produk Rusak',
+                                },
+                                {
+                                    value: 'Outlet Tutup',
+                                    label: 'Outlet Tutup',
+                                },
+                                {
+                                    value: 'Gangguan Operasional',
+                                    label: 'Gangguan Operasional',
+                                },
+                                {
+                                    value: 'Permintaan Customer',
+                                    label: 'Permintaan Customer',
+                                },
+                                { value: 'Lainnya', label: 'Lainnya' },
+                            ]}
+                        />
+                        <Textarea
+                            placeholder="Catatan (opsional)"
+                            value={cancelForm.data.notes}
+                            onChange={(e) =>
+                                cancelForm.setData('notes', e.target.value)
+                            }
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            className="min-h-11"
+                            onClick={() => {
+                                setCancelOpen(false);
+                                cancelForm.reset();
+                            }}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            className="min-h-11"
+                            disabled={!cancelForm.data.reason}
+                            loading={cancelForm.processing}
+                            onClick={() => {
+                                cancelForm.post(
+                                    `/owner/orders/${order.id}/cancel`,
+                                    {
+                                        preserveScroll: true,
+                                        onSuccess: () => {
+                                            setCancelOpen(false);
+                                            cancelForm.reset();
+                                            toast.success('Pesanan dibatalkan');
+                                        },
+                                        onError: (errors) =>
+                                            toast.error(
+                                                Object.values(errors)
+                                                    .flat()
+                                                    .join(', '),
+                                            ),
+                                    },
+                                );
+                            }}
+                        >
+                            Ya, Batalkan
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </OwnerPageShell>
     );
 }

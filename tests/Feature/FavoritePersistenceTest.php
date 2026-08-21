@@ -5,8 +5,7 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\Favorite;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -22,13 +21,13 @@ class FavoritePersistenceTest extends TestCase
         $variant = $this->createVariant();
 
         $this->actingAs($user)
-            ->postJson('/customer/favorites/toggle', ['product_variant_id' => $variant->id])
+            ->postJson('/customer/favorites/toggle', ['product_id' => $variant->id])
             ->assertOk()
             ->assertJson(['favorited' => true]);
 
         $this->assertDatabaseHas('favorites', [
             'customer_id' => $customer->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
         ]);
     }
 
@@ -38,18 +37,18 @@ class FavoritePersistenceTest extends TestCase
         $variant = $this->createVariant();
 
         // Add favorite
-        Favorite::create(['customer_id' => $customer->id, 'product_variant_id' => $variant->id]);
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant->id]);
 
         // Verify it's in the list
         $this->actingAs($user)
             ->getJson('/customer/favorites')
             ->assertOk()
-            ->assertJson(['variant_ids' => [$variant->id]]);
+            ->assertJson(['product_ids' => [$variant->id]]);
 
         // Favorite persists in DB regardless of session
         $this->assertDatabaseHas('favorites', [
             'customer_id' => $customer->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
         ]);
     }
 
@@ -59,19 +58,19 @@ class FavoritePersistenceTest extends TestCase
         $variant = $this->createVariant();
 
         // User has a favorite in DB
-        Favorite::create(['customer_id' => $customer->id, 'product_variant_id' => $variant->id]);
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant->id]);
 
         // Guest's actions (localStorage) cannot affect user's server favorites
         // Verify user's favorite is still there
         $this->actingAs($user)
             ->getJson('/customer/favorites')
             ->assertOk()
-            ->assertJson(['variant_ids' => [$variant->id]]);
+            ->assertJson(['product_ids' => [$variant->id]]);
 
         // DB unchanged
         $this->assertDatabaseHas('favorites', [
             'customer_id' => $customer->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
         ]);
     }
 
@@ -82,24 +81,24 @@ class FavoritePersistenceTest extends TestCase
         $variant2 = $this->createVariant();
 
         // User already has variant1 as favorite
-        Favorite::create(['customer_id' => $customer->id, 'product_variant_id' => $variant1->id]);
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant1->id]);
 
         // Guest had variant2 — merge it
         $this->actingAs($user)
-            ->postJson('/customer/favorites/merge', ['variant_ids' => [$variant2->id]])
+            ->postJson('/customer/favorites/merge', ['product_ids' => [$variant2->id]])
             ->assertOk()
             ->assertJson(['merged' => true]);
 
         // Both should be in favorites (union)
-        $this->assertDatabaseHas('favorites', ['customer_id' => $customer->id, 'product_variant_id' => $variant1->id]);
-        $this->assertDatabaseHas('favorites', ['customer_id' => $customer->id, 'product_variant_id' => $variant2->id]);
+        $this->assertDatabaseHas('favorites', ['customer_id' => $customer->id, 'product_id' => $variant1->id]);
+        $this->assertDatabaseHas('favorites', ['customer_id' => $customer->id, 'product_id' => $variant2->id]);
 
         // Response includes both
         $this->actingAs($user)
             ->getJson('/customer/favorites')
             ->assertOk()
             ->assertJson(fn ($json) => $json
-                ->where('variant_ids', [$variant1->id, $variant2->id])
+                ->where('product_ids', [$variant1->id, $variant2->id])
                 ->etc()
             );
     }
@@ -110,15 +109,15 @@ class FavoritePersistenceTest extends TestCase
         $variant = $this->createVariant();
 
         // User already has this favorite
-        Favorite::create(['customer_id' => $customer->id, 'product_variant_id' => $variant->id]);
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant->id]);
 
         // Merge with same variant — should not duplicate
         $this->actingAs($user)
-            ->postJson('/customer/favorites/merge', ['variant_ids' => [$variant->id]])
+            ->postJson('/customer/favorites/merge', ['product_ids' => [$variant->id]])
             ->assertOk();
 
         $count = Favorite::where('customer_id', $customer->id)
-            ->where('product_variant_id', $variant->id)
+            ->where('product_id', $variant->id)
             ->count();
 
         $this->assertSame(1, $count);
@@ -131,24 +130,24 @@ class FavoritePersistenceTest extends TestCase
         $variant = $this->createVariant();
 
         // customer2 has a favorite
-        Favorite::create(['customer_id' => $customer2->id, 'product_variant_id' => $variant->id]);
+        Favorite::create(['customer_id' => $customer2->id, 'product_id' => $variant->id]);
 
         // user1 should NOT see customer2's favorites
         $this->actingAs($user1)
             ->getJson('/customer/favorites')
             ->assertOk()
-            ->assertJson(['variant_ids' => []]);
+            ->assertJson(['product_ids' => []]);
 
         // user1 should NOT be able to remove customer2's favorite
         $this->actingAs($user1)
-            ->postJson('/customer/favorites/toggle', ['product_variant_id' => $variant->id])
+            ->postJson('/customer/favorites/toggle', ['product_id' => $variant->id])
             ->assertOk()
             ->assertJson(['favorited' => true]); // creates for user1, doesn't affect user2
 
         // customer2's favorite still exists
         $this->assertDatabaseHas('favorites', [
             'customer_id' => $customer2->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
         ]);
     }
 
@@ -157,16 +156,16 @@ class FavoritePersistenceTest extends TestCase
         [$user, $customer] = $this->createUserWithCustomer();
         $variant = $this->createVariant();
 
-        Favorite::create(['customer_id' => $customer->id, 'product_variant_id' => $variant->id]);
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant->id]);
 
         $this->actingAs($user)
-            ->postJson('/customer/favorites/toggle', ['product_variant_id' => $variant->id])
+            ->postJson('/customer/favorites/toggle', ['product_id' => $variant->id])
             ->assertOk()
             ->assertJson(['favorited' => false]);
 
         $this->assertDatabaseMissing('favorites', [
             'customer_id' => $customer->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
         ]);
     }
 
@@ -177,17 +176,17 @@ class FavoritePersistenceTest extends TestCase
 
         // Toggle twice — should create only one record
         $this->actingAs($user)
-            ->postJson('/customer/favorites/toggle', ['product_variant_id' => $variant->id])
+            ->postJson('/customer/favorites/toggle', ['product_id' => $variant->id])
             ->assertOk();
 
         $this->actingAs($user)
-            ->postJson('/customer/favorites/toggle', ['product_variant_id' => $variant->id])
+            ->postJson('/customer/favorites/toggle', ['product_id' => $variant->id])
             ->assertOk();
 
         // Should be removed (toggled off), not duplicated
         $this->assertDatabaseMissing('favorites', [
             'customer_id' => $customer->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
         ]);
     }
 
@@ -195,7 +194,7 @@ class FavoritePersistenceTest extends TestCase
     {
         $variant = $this->createVariant();
 
-        $this->postJson('/customer/favorites/merge', ['variant_ids' => [$variant->id]])
+        $this->postJson('/customer/favorites/merge', ['product_ids' => [$variant->id]])
             ->assertUnauthorized();
     }
 
@@ -263,13 +262,13 @@ class FavoritePersistenceTest extends TestCase
         $variant = $this->createVariant();
 
         $this->actingAs($user)
-            ->postJson('/customer/favorites/toggle', ['product_variant_id' => $variant->id])
+            ->postJson('/customer/favorites/toggle', ['product_id' => $variant->id])
             ->assertOk()
             ->assertJson(['favorited' => true]);
 
         $this->assertDatabaseHas('favorites', [
             'customer_id' => $customer->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
         ]);
     }
 
@@ -280,15 +279,15 @@ class FavoritePersistenceTest extends TestCase
         $variant2 = $this->createVariant();
 
         // User has favorites on server
-        Favorite::create(['customer_id' => $customer->id, 'product_variant_id' => $variant1->id]);
-        Favorite::create(['customer_id' => $customer->id, 'product_variant_id' => $variant2->id]);
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant1->id]);
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant2->id]);
 
         // Simulate re-login: fetch favorites again
         $this->actingAs($user)
             ->getJson('/customer/favorites')
             ->assertOk()
             ->assertJson(fn ($json) => $json
-                ->where('variant_ids', [$variant1->id, $variant2->id])
+                ->where('product_ids', [$variant1->id, $variant2->id])
                 ->etc()
             );
 
@@ -302,24 +301,24 @@ class FavoritePersistenceTest extends TestCase
         $variant = $this->createVariant();
 
         // User has a favorite
-        Favorite::create(['customer_id' => $customer->id, 'product_variant_id' => $variant->id]);
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant->id]);
 
         // Merge with empty array (simulates empty guest store on login)
         $this->actingAs($user)
-            ->postJson('/customer/favorites/merge', ['variant_ids' => []])
+            ->postJson('/customer/favorites/merge', ['product_ids' => []])
             ->assertOk();
 
         // Favorite still exists
         $this->assertDatabaseHas('favorites', [
             'customer_id' => $customer->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
         ]);
 
         // List still returns it
         $this->actingAs($user)
             ->getJson('/customer/favorites')
             ->assertOk()
-            ->assertJson(['variant_ids' => [$variant->id]]);
+            ->assertJson(['product_ids' => [$variant->id]]);
     }
 
     public function test_login_merge_is_union_not_replace(): void
@@ -330,18 +329,18 @@ class FavoritePersistenceTest extends TestCase
         $variant3 = $this->createVariant();
 
         // User already has variant1 and variant2
-        Favorite::create(['customer_id' => $customer->id, 'product_variant_id' => $variant1->id]);
-        Favorite::create(['customer_id' => $customer->id, 'product_variant_id' => $variant2->id]);
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant1->id]);
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant2->id]);
 
         // Guest had variant2 (overlap) and variant3 (new)
         $this->actingAs($user)
-            ->postJson('/customer/favorites/merge', ['variant_ids' => [$variant2->id, $variant3->id]])
+            ->postJson('/customer/favorites/merge', ['product_ids' => [$variant2->id, $variant3->id]])
             ->assertOk();
 
         // All three should exist (union)
-        $this->assertDatabaseHas('favorites', ['customer_id' => $customer->id, 'product_variant_id' => $variant1->id]);
-        $this->assertDatabaseHas('favorites', ['customer_id' => $customer->id, 'product_variant_id' => $variant2->id]);
-        $this->assertDatabaseHas('favorites', ['customer_id' => $customer->id, 'product_variant_id' => $variant3->id]);
+        $this->assertDatabaseHas('favorites', ['customer_id' => $customer->id, 'product_id' => $variant1->id]);
+        $this->assertDatabaseHas('favorites', ['customer_id' => $customer->id, 'product_id' => $variant2->id]);
+        $this->assertDatabaseHas('favorites', ['customer_id' => $customer->id, 'product_id' => $variant3->id]);
         $this->assertDatabaseCount('favorites', 3);
     }
 
@@ -350,7 +349,7 @@ class FavoritePersistenceTest extends TestCase
         [$user, $customer] = $this->createUserWithCustomer();
         $variant = $this->createVariant();
 
-        Favorite::create(['customer_id' => $customer->id, 'product_variant_id' => $variant->id]);
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant->id]);
 
         // Logout (server-side session invalidation)
         $this->actingAs($user)->post('/logout');
@@ -358,7 +357,7 @@ class FavoritePersistenceTest extends TestCase
         // Favorite still in DB
         $this->assertDatabaseHas('favorites', [
             'customer_id' => $customer->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
         ]);
     }
 
@@ -385,23 +384,21 @@ class FavoritePersistenceTest extends TestCase
         return [$user, $customer];
     }
 
-    private function createVariant(): ProductVariant
+    private function createVariant(): Product
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Family '.uniqid(),
             'is_active' => true,
         ]);
 
         $product = Product::create([
             'name' => 'Test Product '.uniqid(),
-            'slug' => 'test-'.uniqid(),
-            'unit' => 'pcs',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        return ProductVariant::create([
-            'product_family_id' => $family->id,
+        return Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Variant '.uniqid(),
             'selling_price' => 25000,

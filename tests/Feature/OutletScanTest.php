@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
+use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -211,6 +212,14 @@ class OutletScanTest extends TestCase
             'fulfillment_type' => 'pickup',
         ]);
 
+        // Must have inventory record for complete-pickup stock management
+        OutletInventory::create([
+            'outlet_id' => $outlet->id,
+            'product_id' => $order->items->first()->product_id,
+            'current_stock' => 10,
+            'reserved_stock' => 2,
+        ]);
+
         // Step 1: Scan lookup returns order
         $this->actingAs($user)
             ->get("/outlet/scan/{$order->order_code}")
@@ -276,9 +285,7 @@ class OutletScanTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-scan-'.uniqid(),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
@@ -304,7 +311,7 @@ class OutletScanTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 2,
-            'price' => $product->price,
+            'price' => $product->selling_price,
             'subtotal' => 50000,
         ]);
 

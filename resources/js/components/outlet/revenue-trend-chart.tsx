@@ -22,14 +22,17 @@ function formatYAxisTick(value: number): string {
     if (value >= 1_000_000) {
         return `${(value / 1_000_000).toFixed(1)}Jt`;
     }
+
     if (value >= 1_000) {
         return `${Math.round(value / 1_000)}K`;
     }
+
     return `${value}`;
 }
 
 function formatXAxisTick(value: string): string {
     const parts = value.split('-');
+
     return `${String(parseInt(parts[2], 10)).padStart(2, '0')}/${parseInt(parts[1], 10)}`;
 }
 
@@ -40,7 +43,9 @@ interface ChartTooltipProps {
 }
 
 function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
-    if (!active || !payload?.length) return null;
+    if (!active || !payload?.length) {
+        return null;
+    }
 
     const date = new Date(label ?? '');
     const formattedDate = date.toLocaleDateString('id-ID', {

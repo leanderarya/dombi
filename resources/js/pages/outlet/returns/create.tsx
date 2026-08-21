@@ -1,5 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
-import { useState, useRef } from 'react';
+import { X } from 'lucide-react';
+import { useState, useRef, useMemo } from 'react';
+import { toast } from 'sonner';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 
@@ -7,7 +9,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
     const form = useForm({
         reason: '',
         notes: '',
-        items: [] as { product_variant_id: number; quantity: number }[],
+        items: [] as { product_id: number; quantity: number }[],
         evidence_images: [] as File[],
     });
 
@@ -15,7 +17,18 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
         Map<number, number>
     >(new Map());
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [search, setSearch] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const filteredVariants = useMemo(
+        () =>
+            variants.filter((v: any) =>
+                (v.full_name ?? v.name)
+                    .toLowerCase()
+                    .includes(search.toLowerCase()),
+            ),
+        [variants, search],
+    );
     const selectedSummary = Array.from(selectedVariants.entries()).reduce(
         (summary, [variantId, quantity]) => {
             const variant = variants.find((v: any) => v.id === variantId);
@@ -47,7 +60,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
         form.setData(
             'items',
             Array.from(next.entries()).map(([id, qty]) => ({
-                product_variant_id: id,
+                product_id: id,
                 quantity: qty,
             })),
         );
@@ -62,7 +75,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
         form.setData(
             'items',
             Array.from(next.entries()).map(([id, q]) => ({
-                product_variant_id: id,
+                product_id: id,
                 quantity: q,
             })),
         );
@@ -72,7 +85,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
         const files = Array.from(e.target.files || []);
 
         if (files.length + form.data.evidence_images.length > 5) {
-            alert('Maksimal 5 foto');
+            toast.error('Maksimal 5 foto');
 
             return;
         }
@@ -165,9 +178,9 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                                 <button
                                     type="button"
                                     onClick={() => removeImage(index)}
-                                    className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white"
+                                    className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white"
                                 >
-                                    ×
+                                    <X className="h-3.5 w-3.5" />
                                 </button>
                             </div>
                         ))}
@@ -214,8 +227,15 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                     <label className="text-sm font-semibold text-text">
                         Pilih Produk
                     </label>
+                    <input
+                        type="text"
+                        placeholder="Cari produk..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="mt-2 w-full rounded-xl border border-border p-3 text-sm"
+                    />
                     <div className="mt-2 space-y-2">
-                        {variants.map((v: any) => {
+                        {filteredVariants.map((v: any) => {
                             const isSelected = selectedVariants.has(v.id);
                             const availableStock = Number(
                                 v.available_stock ?? 0,
@@ -265,10 +285,23 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                                             >
                                                 -
                                             </button>
-                                            <span className="w-8 text-center text-sm font-bold">
-                                                {selectedVariants.get(v.id) ??
-                                                    1}
-                                            </span>
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                max={availableStock}
+                                                value={
+                                                    selectedVariants.get(
+                                                        v.id,
+                                                    ) ?? 1
+                                                }
+                                                onChange={(e) =>
+                                                    updateQuantity(
+                                                        v.id,
+                                                        Number(e.target.value),
+                                                    )
+                                                }
+                                                className="w-14 [appearance:textfield] text-center text-sm font-bold tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                            />
                                             <button
                                                 onClick={() =>
                                                     updateQuantity(
@@ -304,11 +337,18 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                             {form.errors.items}
                         </div>
                     )}
+                    {Object.keys(form.errors)
+                        .filter((k) => k !== 'items')
+                        .map((k) => (
+                            <div key={k} className="mt-1 text-xs text-red-600">
+                                {form.errors[k as keyof typeof form.errors]}
+                            </div>
+                        ))}
                 </div>
             </div>
 
             {/* Sticky Submit */}
-            <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0))] z-30 border-t border-border bg-white/95 pt-3 pb-3 backdrop-blur">
+            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 pt-3 pb-3 backdrop-blur">
                 <div className="mx-auto max-w-lg px-4">
                     <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-surface-muted px-3 py-2">
                         <div>

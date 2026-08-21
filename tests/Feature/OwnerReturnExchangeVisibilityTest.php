@@ -6,8 +6,7 @@ use App\Models\ExchangeRequest;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\ReturnRequest;
 use App\Models\User;
 use App\Services\ExchangeService;
@@ -39,7 +38,8 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
     public function test_submitted_exchange_appears_in_owner_index(): void
     {
         $context = $this->makeContext();
-        $exchange = $this->createExchange($context);
+        $return = $this->createReceivedReturn($context);
+        $exchange = $this->createExchange($context, $return);
 
         $this->actingAs($context['owner'])
             ->get('/owner/exchanges')
@@ -55,8 +55,9 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
     public function test_owner_dashboard_pending_counts_update_for_submitted_requests(): void
     {
         $context = $this->makeContext();
+        $return = $this->createReceivedReturn($context);
         $this->createReturn($context);
-        $this->createExchange($context);
+        $this->createExchange($context, $return);
 
         $this->actingAs($context['owner'])
             ->get('/owner/dashboard')
@@ -93,7 +94,8 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
     public function test_owner_notification_created_for_submitted_exchange(): void
     {
         $context = $this->makeContext();
-        $exchange = $this->createExchange($context);
+        $return = $this->createReceivedReturn($context);
+        $exchange = $this->createExchange($context, $return);
 
         $this->assertDatabaseHas('notifications', [
             'user_type' => 'owner',
@@ -124,7 +126,8 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
     public function test_rejecting_exchange_removes_pending_counts(): void
     {
         $context = $this->makeContext();
-        $exchange = $this->createExchange($context);
+        $return = $this->createReceivedReturn($context);
+        $exchange = $this->createExchange($context, $return);
 
         $this->actingAs($context['owner'])
             ->post(route('owner.exchanges.reject', $exchange), ['reason' => 'Tidak sesuai kebutuhan'])
@@ -143,15 +146,32 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
         return app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'reason' => 'slow_moving',
             'notes' => 'Produk lambat bergerak',
-            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 4]],
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => 4]],
         ]);
     }
 
-    private function createExchange(array $context): ExchangeRequest
+    private function createReceivedReturn(array $context, int $quantity = 2): ReturnRequest
+    {
+        $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'reason' => 'slow_moving',
+            'notes' => 'Return linked to exchange test',
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => $quantity]],
+        ]);
+        $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
+        $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
+        $return->fresh('items')->items->each(
+            fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $context['owner'])
+        );
+
+        return $return->fresh();
+    }
+
+    private function createExchange(array $context, ReturnRequest $return): ExchangeRequest
     {
         return app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
             'notes' => 'Perlu penggantian produk',
-            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 2]],
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => 2]],
         ]);
     }
 
@@ -173,15 +193,13 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
 
         $product = Product::create([
             'name' => 'Biogoat 1L',
-            'slug' => uniqid('biogoat-'),
-            'unit' => 'botol',
-            'price' => 55000,
+            'selling_price' => 55000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create(['name' => 'Biogoat', 'brand' => 'Dombi']);
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $family = ProductCategory::create(['name' => 'Biogoat', 'brand' => 'Dombi']);
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Biogoat 1L',
             'flavor' => 'Original',
@@ -194,7 +212,7 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 12,
             'reserved_stock' => 0,
             'minimum_stock' => 2,

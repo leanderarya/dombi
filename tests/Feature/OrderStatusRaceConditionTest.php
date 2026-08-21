@@ -7,8 +7,7 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\User;
 use App\Services\OrderStatusService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -92,7 +91,7 @@ class OrderStatusRaceConditionTest extends TestCase
         [$order, $outletUser] = $this->makePendingConfirmationContext();
 
         $initialReserved = OutletInventory::where('outlet_id', $order->outlet_id)
-            ->where('product_variant_id', $order->items->first()->product_variant_id)
+            ->where('product_id', $order->items->first()->product_id)
             ->first()
             ->reserved_stock;
 
@@ -101,7 +100,7 @@ class OrderStatusRaceConditionTest extends TestCase
 
         // Verify stock was released exactly once
         $finalReserved = OutletInventory::where('outlet_id', $order->outlet_id)
-            ->where('product_variant_id', $order->items->first()->product_variant_id)
+            ->where('product_id', $order->items->first()->product_id)
             ->first()
             ->reserved_stock;
 
@@ -113,7 +112,7 @@ class OrderStatusRaceConditionTest extends TestCase
         [$order] = $this->makePendingConfirmationContext();
 
         $initialReserved = OutletInventory::where('outlet_id', $order->outlet_id)
-            ->where('product_variant_id', $order->items->first()->product_variant_id)
+            ->where('product_id', $order->items->first()->product_id)
             ->first()
             ->reserved_stock;
 
@@ -122,7 +121,7 @@ class OrderStatusRaceConditionTest extends TestCase
 
         // Verify stock was released exactly once
         $finalReserved = OutletInventory::where('outlet_id', $order->outlet_id)
-            ->where('product_variant_id', $order->items->first()->product_variant_id)
+            ->where('product_id', $order->items->first()->product_id)
             ->first()
             ->reserved_stock;
 
@@ -156,15 +155,13 @@ class OrderStatusRaceConditionTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Race 500ml',
-            'slug' => uniqid('susu-race-'),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create(['name' => 'Susu Kambing Race', 'brand' => 'Dombi']);
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $family = ProductCategory::create(['name' => 'Susu Kambing Race', 'brand' => 'Dombi']);
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Susu Race 500ml Original',
             'flavor' => 'Original',
@@ -177,7 +174,7 @@ class OrderStatusRaceConditionTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 2,
             'minimum_stock' => 0,
@@ -198,8 +195,7 @@ class OrderStatusRaceConditionTest extends TestCase
         ]);
 
         $order->items()->create([
-            'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'product_name' => $product->name,
             'quantity' => 2,
             'price' => 25000,

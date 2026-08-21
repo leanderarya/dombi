@@ -7,9 +7,9 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\OutletOperatingHours;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -118,7 +118,7 @@ class CompletedOrderCtaTest extends TestCase
         $cart = session('checkout.cart');
         $this->assertNotNull($cart);
         $this->assertCount(1, $cart);
-        $this->assertEquals($context['variant']->id, $cart[0]['product_variant_id']);
+        $this->assertEquals($context['variant']->id, $cart[0]['product_id']);
         $this->assertEquals(2, $cart[0]['quantity']);
 
         // Verify no new order was created
@@ -135,7 +135,7 @@ class CompletedOrderCtaTest extends TestCase
 
         $cart = session('checkout.cart');
         $this->assertNotNull($cart);
-        $this->assertEquals($context['variant']->id, $cart[0]['product_variant_id']);
+        $this->assertEquals($context['variant']->id, $cart[0]['product_id']);
     }
 
     public function test_reorder_redirects_to_checkout(): void
@@ -189,7 +189,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('completed');
 
         // Reduce stock to 1 (original order was 2)
-        $inventory = OutletInventory::where('product_variant_id', $context['variant']->id)->first();
+        $inventory = OutletInventory::where('product_id', $context['variant']->id)->first();
         $inventory->update(['current_stock' => 1]);
 
         $response = $this->actingAs($context['user'])
@@ -209,7 +209,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('completed');
 
         // Change price
-        $context['variant']->update(['selling_price' => 30000]);
+        $context['variant']->update(['price' => 30000]);
 
         $response = $this->actingAs($context['user'])
             ->post('/customer/orders/'.$context['order']->id.'/repeat');
@@ -236,7 +236,7 @@ class CompletedOrderCtaTest extends TestCase
         $cart = session('checkout.cart');
         $this->assertNotNull($cart);
         $this->assertCount(1, $cart);
-        $this->assertEquals($context['variant']->id, $cart[0]['product_variant_id']);
+        $this->assertEquals($context['variant']->id, $cart[0]['product_id']);
     }
 
     public function test_restore_cart_endpoint_works_for_failed_order(): void
@@ -292,16 +292,14 @@ class CompletedOrderCtaTest extends TestCase
         $order = $context['order'];
 
         // Add a second variant
-        $family2 = ProductFamily::create(['name' => 'Test Family 2', 'is_active' => true]);
+        $family2 = ProductCategory::create(['name' => 'Test Family 2', 'is_active' => true]);
         $product2 = Product::create([
             'name' => 'Test Product 2',
-            'slug' => 'test-product-2-'.uniqid(),
-            'unit' => 'botol',
-            'price' => 15000,
+            'selling_price' => 15000,
             'is_active' => true,
         ]);
-        $variant2 = ProductVariant::create([
-            'product_family_id' => $family2->id,
+        $variant2 = Product::create([
+            'product_category_id' => $family2->id,
             'product_id' => $product2->id,
             'name' => 'Test Variant 2',
             'center_price' => 10000,
@@ -312,7 +310,7 @@ class CompletedOrderCtaTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $context['outlet']->id,
             'product_id' => $product2->id,
-            'product_variant_id' => $variant2->id,
+            'product_id' => $variant2->id,
             'current_stock' => 50,
             'reserved_stock' => 0,
             'minimum_stock' => 0,
@@ -320,12 +318,13 @@ class CompletedOrderCtaTest extends TestCase
 
         OrderItem::create([
             'order_id' => $order->id,
-            'product_id' => $product2->id,
-            'product_variant_id' => $variant2->id,
+            'product_id' => $variant2->id,
             'product_name' => $product2->name,
             'variant_name_snapshot' => $variant2->name,
             'quantity' => 1,
             'price' => 15000,
+            'price' => 15000,
+
             'subtotal' => 15000,
         ]);
 
@@ -362,23 +361,29 @@ class CompletedOrderCtaTest extends TestCase
             'status' => 'active',
         ]);
 
+        OutletOperatingHours::create([
+            'outlet_id' => $outlet->id,
+            'day_of_week' => (int) now('Asia/Jakarta')->format('w'),
+            'open_time' => '00:00',
+            'close_time' => '23:59',
+            'is_closed' => false,
+        ]);
+
         $product = Product::create([
             'name' => 'Test Product',
-            'slug' => 'test-product-'.uniqid(),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
         // Create a product family for the variant
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Test Family',
             'is_active' => true,
         ]);
 
         // Create a variant linked to the product
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Test Variant',
             'center_price' => 20000,
@@ -390,7 +395,7 @@ class CompletedOrderCtaTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 100,
             'reserved_stock' => 0,
             'minimum_stock' => 0,
@@ -413,11 +418,11 @@ class CompletedOrderCtaTest extends TestCase
 
         OrderItem::create([
             'order_id' => $order->id,
-            'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'product_name' => $product->name,
             'variant_name_snapshot' => $variant->name,
             'quantity' => 2,
+            'price' => 25000,
             'price' => 25000,
             'subtotal' => 50000,
         ]);
@@ -430,5 +435,31 @@ class CompletedOrderCtaTest extends TestCase
             'variant' => $variant,
             'order' => $order->fresh('items'),
         ];
+    }
+
+    public function test_restore_cart_is_blocked_when_outlet_closed(): void
+    {
+        $context = $this->createOrderContext('completed');
+
+        $context['outlet']->operatingHours()->update(['is_closed' => true]);
+
+        $response = $this->actingAs($context['user'])
+            ->get('/customer/orders/'.$context['order']->id.'/restore-cart');
+
+        $response->assertRedirect('/customer/orders/'.$context['order']->id);
+        $response->assertSessionHas('error');
+        $this->assertNull(session('checkout.cart'));
+    }
+
+    public function test_restore_cart_sets_order_outlet_in_checkout_session(): void
+    {
+        $context = $this->createOrderContext('completed');
+
+        $this->actingAs($context['user'])
+            ->get('/customer/orders/'.$context['order']->id.'/restore-cart')
+            ->assertRedirect('/customer/checkout');
+
+        $this->assertEquals($context['outlet']->id, session('checkout.fulfillment.selected_outlet_id'));
+        $this->assertEquals($context['outlet']->id, session('checkout.selected_outlet_id'));
     }
 }

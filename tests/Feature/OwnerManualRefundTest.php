@@ -2,10 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Enums\PaymentStatus;
 use App\Models\Customer;
 use App\Models\Order;
-use App\Models\PaymentTransaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -81,7 +79,7 @@ class OwnerManualRefundTest extends TestCase
             'refund_started_at' => now(),
         ]);
 
-        $file = \Illuminate\Http\UploadedFile::fake()->image('proof.jpg');
+        $file = UploadedFile::fake()->image('proof.jpg');
 
         $response = $this->actingAs($this->owner)->post("/owner/refunds/{$order->id}/complete", [
             'proof' => $file,

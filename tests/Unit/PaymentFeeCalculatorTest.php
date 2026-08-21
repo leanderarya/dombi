@@ -13,7 +13,7 @@ class PaymentFeeCalculatorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->calc = new PaymentFeeCalculator();
+        $this->calc = new PaymentFeeCalculator;
     }
 
     public function test_below_threshold_qris_fee_fully_absorbed_by_dombi(): void

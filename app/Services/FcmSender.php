@@ -11,12 +11,12 @@ class FcmSender
     public function send(string $token, string $title, string $body, array $data = []): void
     {
         $serverKey = config('services.fcm.server_key');
-        if (!$serverKey) {
+        if (! $serverKey) {
             return;
         }
 
         $response = Http::withHeaders([
-            'Authorization' => 'key=' . $serverKey,
+            'Authorization' => 'key='.$serverKey,
             'Content-Type' => 'application/json',
         ])->post('https://fcm.googleapis.com/fcm/send', [
             'to' => $token,

@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\OutletInventory;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\RestockRequest;
 use App\Models\StockMovement;
 use App\Models\User;
@@ -30,10 +30,9 @@ class RestockService
             ]);
 
             foreach ($payload['items'] as $item) {
-                $variant = ProductVariant::find($item['product_variant_id']);
+                $product = Product::find($item['product_id'] ?? null);
                 $request->items()->create([
-                    'product_id' => $variant?->product_id,
-                    'product_variant_id' => $item['product_variant_id'],
+                    'product_id' => $product?->id ?? $item['product_id'],
                     'requested_quantity' => $item['requested_quantity'],
                 ]);
             }
@@ -41,7 +40,7 @@ class RestockService
             $request->load('outlet');
             $this->notificationService->notifyRestockCreated($request);
 
-            return $request->load(['outlet', 'items.variant.family']);
+            return $request->load(['outlet', 'items.product']);
         });
     }
 
@@ -75,10 +74,10 @@ class RestockService
             foreach ($request->items as $requestItem) {
                 $approvedQuantity = (int) ($approvedByItemId->get($requestItem->id)['approved_quantity'] ?? 0);
                 if ($approvedQuantity > 0) {
-                    $variant = \App\Models\ProductVariant::lockForUpdate()->find($requestItem->product_variant_id);
-                    if ($variant && $variant->center_stock < $approvedQuantity) {
-                        throw \Illuminate\Validation\ValidationException::withMessages([
-                            'items' => "Stok pusat tidak cukup untuk {$variant->name}. Tersedia: {$variant->center_stock}, diminta: {$approvedQuantity}",
+                    $product = Product::lockForUpdate()->find($requestItem->product_id);
+                    if ($product && $product->center_stock < $approvedQuantity) {
+                        throw ValidationException::withMessages([
+                            'items' => "Stok pusat tidak cukup untuk {$product->name}. Tersedia: {$product->center_stock}, diminta: {$approvedQuantity}",
                         ]);
                     }
                 }
@@ -94,7 +93,7 @@ class RestockService
 
             $this->notificationService->notifyRestockApproved($request->fresh());
 
-            return $request->fresh(['outlet', 'items.variant.family']);
+            return $request->fresh(['outlet', 'items.product']);
         });
     }
 
@@ -136,7 +135,7 @@ class RestockService
 
             $this->notificationService->notifyRestockRejected($request->fresh(), $reason);
 
-            return $request->fresh(['outlet', 'items.variant.family']);
+            return $request->fresh(['outlet', 'items.product']);
         });
     }
 
@@ -154,23 +153,22 @@ class RestockService
                     continue;
                 }
 
-                $variant = ProductVariant::query()->lockForUpdate()->findOrFail($item->product_variant_id);
-                $before = (int) $variant->center_stock;
+                $product = Product::query()->lockForUpdate()->findOrFail($item->product_id);
+                $before = (int) $product->center_stock;
                 $quantity = (int) $item->approved_quantity;
 
                 if ($before < $quantity) {
                     throw ValidationException::withMessages([
-                        'inventory' => "Stok pusat untuk {$variant->name} hanya {$before}. Tidak cukup untuk distribusi {$quantity}.",
+                        'inventory' => "Stok pusat untuk {$product->name} hanya {$before}. Tidak cukup untuk distribusi {$quantity}.",
                     ]);
                 }
 
-                $variant->decrement('center_stock', $quantity);
-                $after = (int) $variant->fresh()->center_stock;
+                $product->decrement('center_stock', $quantity);
+                $after = (int) $product->fresh()->center_stock;
 
                 StockMovement::create([
                     'outlet_id' => null,
                     'product_id' => $item->product_id,
-                    'product_variant_id' => $item->product_variant_id,
                     'type' => 'distribution_out',
                     'quantity' => -$quantity,
                     'before_stock' => $before,
@@ -185,12 +183,12 @@ class RestockService
 
                 $outletInventory = OutletInventory::query()
                     ->where('outlet_id', $request->outlet_id)
-                    ->where('product_variant_id', $item->product_variant_id)
+                    ->where('product_id', $item->product_id)
                     ->first();
 
                 StockMovement::create([
                     'outlet_id' => $request->outlet_id,
-                    'product_variant_id' => $item->product_variant_id,
+                    'product_id' => $item->product_id,
                     'type' => 'in_transit',
                     'quantity' => $quantity,
                     'before_stock' => $outletInventory?->current_stock ?? 0,
@@ -212,7 +210,7 @@ class RestockService
 
             $this->notificationService->notifyRestockShipped($request->fresh());
 
-            return $request->fresh(['outlet', 'items.variant.family']);
+            return $request->fresh(['outlet', 'items.product']);
         });
     }
 
@@ -227,7 +225,7 @@ class RestockService
             abort_unless($outletUser->outlet?->id === $request->outlet_id, 403);
 
             if (in_array($request->status, ['completed'], true)) {
-                return $request->fresh(['outlet', 'items.variant.family']);
+                return $request->fresh(['outlet', 'items.product']);
             }
 
             if ($request->status !== 'shipped') {
@@ -241,14 +239,14 @@ class RestockService
 
                 $inventory = OutletInventory::query()
                     ->where('outlet_id', $request->outlet_id)
-                    ->where('product_variant_id', $item->product_variant_id)
+                    ->where('product_id', $item->product_id)
                     ->lockForUpdate()
                     ->first();
 
                 if (! $inventory) {
                     $inventory = OutletInventory::create([
                         'outlet_id' => $request->outlet_id,
-                        'product_variant_id' => $item->product_variant_id,
+                        'product_id' => $item->product_id,
                         'current_stock' => 0,
                         'reserved_stock' => 0,
                         'minimum_stock' => 0,
@@ -264,7 +262,6 @@ class RestockService
                 StockMovement::create([
                     'outlet_id' => $request->outlet_id,
                     'product_id' => $item->product_id,
-                    'product_variant_id' => $item->product_variant_id,
                     'type' => 'restock_in',
                     'quantity' => $item->approved_quantity,
                     'before_stock' => $beforeStock,
@@ -288,7 +285,7 @@ class RestockService
 
             $this->notificationService->notifyRestockReceived($request->fresh());
 
-            return $request->fresh(['outlet', 'items.variant.family']);
+            return $request->fresh(['outlet', 'items.product']);
         });
     }
 }

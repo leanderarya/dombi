@@ -51,6 +51,10 @@ php artisan serve
 
 ## Testing
 
+Pull requests and pushes to `develop` or `main` run the GitHub Actions
+`Quality Gate`: PHP tests on disposable MySQL 8, PHP formatting, frontend
+format/lint/type checks, Vitest, and the production frontend build.
+
 ```bash
 # Run all tests
 php artisan test
@@ -61,15 +65,26 @@ php artisan test --testsuite=Feature
 
 ## Deployment
 
-Auto-deploy to staging on push to `develop` branch via GitHub Actions.
+GitHub Actions menjalankan quality gate untuk push dan pull request ke `develop` atau `main`.
 
-**Staging:** https://staging.dombicenter.com
+- Push ke `develop` → deploy staging: `https://staging.dombicenter.com`
+- Push ke `main` → deploy production: `https://app.dombicenter.com`
+
+Detail pre-cutover gate, deployment, health check, APK, dan rollback:
+[Deployment Runbook](docs/DEPLOYMENT.md)
 
 ## Documentation
 
-- [Testing Guide](docs/TESTING.md) - Comprehensive testing guide for all roles
+- [Product Scope](docs/PRODUCT_SCOPE.md) - Scope soft launch dan batas fitur
+- [Production Checklist](docs/PRODUCTION_CHECKLIST.md) - Gate go/no-go berbasis bukti
+- [Test Strategy](docs/TEST_STRATEGY.md) - Pengujian berbasis risiko
+- [Runbook](docs/RUNBOOK.md) - Operasi dan penanganan insiden
 - [Product Images](docs/PRODUCT-IMAGES.md) - Image management guide
 - [DOKU Payment](docs/doku-payment.md) - Payment integration docs
+
+`PRD.md`, `PROGRESS.md`, `ROADMAP.md`, `TESTING.md`, dan `DEPLOYMENT.md` memuat
+snapshot serta riwayat lama. Jangan gunakan dokumen tersebut sebagai keputusan
+release tanpa memverifikasinya terhadap empat dokumen operasional di atas.
 
 ## License
 

@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
-import { useGoogleLogin } from '@/hooks/use-google-login';
 import { useState } from 'react';
+import { useGoogleLogin } from '@/hooks/use-google-login';
 
 export default function Welcome() {
     const [loading, setLoading] = useState(false);
@@ -96,8 +96,8 @@ export default function Welcome() {
             {/* SECTION 4 — SUBTITLE */}
             <div className="px-8 pt-3">
                 <p className="text-center text-sm leading-relaxed text-text-muted">
-                    Nikmati belanja kebutuhan harian berkualitas langsung
-                    dari Dombi.
+                    Nikmati belanja kebutuhan harian berkualitas langsung dari
+                    Dombi.
                 </p>
             </div>
 

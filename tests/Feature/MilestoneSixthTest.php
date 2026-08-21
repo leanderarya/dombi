@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Exceptions\InsufficientStockException;
+use App\Models\CourierProfile;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Delivery;
@@ -10,8 +11,7 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Services\DeliveryService;
@@ -36,12 +36,12 @@ class MilestoneSixthTest extends TestCase
         // Create order - this should reserve stock atomically
         $order = app(OrderService::class)->createCustomerOrder($context['customer'], [
             'address_id' => $context['address']->id,
-            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 3]],
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => 3]],
             'payment_method' => 'qris',
         ]);
 
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
+            ->where('product_id', $context['variant']->id)
             ->first();
 
         $this->assertSame(10, $inventory->current_stock);
@@ -64,7 +64,7 @@ class MilestoneSixthTest extends TestCase
         $context = $this->makeCompletedDeliveryContext(quantity: 2);
 
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
+            ->where('product_id', $context['variant']->id)
             ->first();
 
         $this->assertSame(8, $inventory->current_stock);
@@ -90,7 +90,7 @@ class MilestoneSixthTest extends TestCase
 
         // Corrupt the stock state to simulate a bug
         OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
+            ->where('product_id', $context['variant']->id)
             ->update(['current_stock' => 2]);
 
         $deliveryService = app(DeliveryService::class);
@@ -108,7 +108,7 @@ class MilestoneSixthTest extends TestCase
 
         // Corrupt reserved_stock
         OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
+            ->where('product_id', $context['variant']->id)
             ->update(['reserved_stock' => 1]);
 
         $deliveryService = app(DeliveryService::class);
@@ -139,7 +139,7 @@ class MilestoneSixthTest extends TestCase
         $this->assertSame(0, Delivery::where('order_id', $context['order']->id)->count());
         // Reserved stock released
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
+            ->where('product_id', $context['variant']->id)
             ->first();
         $this->assertSame(0, $inventory->reserved_stock);
     }
@@ -157,7 +157,7 @@ class MilestoneSixthTest extends TestCase
 
         $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'preparing']);
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
+            ->where('product_id', $context['variant']->id)
             ->first();
         $this->assertSame(2, $inventory->reserved_stock);
     }
@@ -175,7 +175,7 @@ class MilestoneSixthTest extends TestCase
 
         $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'cancelled_by_outlet']);
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
+            ->where('product_id', $context['variant']->id)
             ->first();
         $this->assertSame(0, $inventory->reserved_stock);
     }
@@ -285,13 +285,13 @@ class MilestoneSixthTest extends TestCase
 
         $order1 = app(OrderService::class)->createCustomerOrder($context['customer'], [
             'address_id' => $context['address']->id,
-            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 1]],
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => 1]],
             'payment_method' => 'qris',
         ]);
 
         $order2 = app(OrderService::class)->createCustomerOrder($context['customer'], [
             'address_id' => $context['address']->id,
-            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 1]],
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => 1]],
             'payment_method' => 'qris',
         ]);
 
@@ -366,15 +366,13 @@ class MilestoneSixthTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => uniqid('susu-kambing-'),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $family = ProductCategory::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Original 500ml',
             'flavor' => 'Original',
@@ -388,7 +386,7 @@ class MilestoneSixthTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 0,
             'minimum_stock' => 1,
@@ -412,16 +410,26 @@ class MilestoneSixthTest extends TestCase
 
         $order = app(OrderService::class)->createCustomerOrder($context['customer'], [
             'address_id' => $context['address']->id,
-            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => $quantity]],
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => $quantity]],
             'payment_method' => 'qris',
         ]);
+        // Mark as paid so forward transitions (confirmed, preparing, etc.) are allowed
+        $order->update(['payment_status' => 'paid', 'paid_at' => now()]);
 
-        return [...$context, 'order' => $order];
+        return [...$context, 'order' => $order->fresh()];
     }
 
     private function makeReadyForPickupOrder(int $quantity): array
     {
         $context = $this->makeOrderContext($quantity);
+        CourierProfile::firstOrCreate([
+            'user_id' => $context['courier']->id,
+            'outlet_id' => $context['outlet']->id,
+        ], [
+            'courier_source' => 'outlet',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
+        ]);
+        $context['order']->update(['payment_status' => 'paid', 'paid_at' => now()]);
         $orderStatusService = app(OrderStatusService::class);
         $orderStatusService->updateStatus($context['order'], 'confirmed', $context['outletUser']);
         $orderStatusService->updateStatus($context['order']->fresh(), 'preparing', $context['outletUser']);
@@ -437,7 +445,7 @@ class MilestoneSixthTest extends TestCase
         $delivery = $deliveryService->assignCourier($context['order'], $context['courier'], $context['owner']);
         $deliveryService->confirmPickup($delivery, $context['courier']);
         $deliveryService->startDelivery($delivery, $context['courier']);
-        $delivery = $deliveryService->failDelivery($delivery, $context['courier'], 'Alamat tidak ditemukan');
+        $delivery = $deliveryService->failDelivery($delivery->fresh(), $context['courier'], 'Alamat tidak ditemukan');
 
         return [...$context, 'delivery' => $delivery->fresh()];
     }
@@ -471,15 +479,13 @@ class MilestoneSixthTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => uniqid('susu-kambing-'),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $family = ProductCategory::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Original 500ml',
             'flavor' => 'Original',
@@ -493,7 +499,7 @@ class MilestoneSixthTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 2,
             'reserved_stock' => 0,
             'minimum_stock' => 2,
@@ -501,10 +507,9 @@ class MilestoneSixthTest extends TestCase
 
         $restock = app(RestockService::class)->createRequest($outletUser, [
             'notes' => 'Perlu restock',
-            'items' => [['product_variant_id' => $variant->id, 'requested_quantity' => 6]],
+            'items' => [['product_id' => $variant->id, 'requested_quantity' => 6]],
         ])->load('items');
 
         return compact('owner', 'outletUser', 'outlet', 'product', 'variant', 'restock');
     }
-
 }

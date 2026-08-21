@@ -15,7 +15,7 @@ class CompleteManualRefundRequestTest extends TestCase
 
     private function rules(): array
     {
-        return (new CompleteManualRefundRequest())->rules();
+        return (new CompleteManualRefundRequest)->rules();
     }
 
     private function assertValidation(array $data, bool $shouldPass): void
@@ -90,7 +90,7 @@ class CompleteManualRefundRequestTest extends TestCase
     public function test_non_owner_authorize_returns_false(): void
     {
         $user = User::factory()->create(['role' => 'customer']);
-        $request = new CompleteManualRefundRequest();
+        $request = new CompleteManualRefundRequest;
         $request->setUserResolver(fn () => $user);
 
         $this->assertFalse($request->authorize());
@@ -99,7 +99,7 @@ class CompleteManualRefundRequestTest extends TestCase
     public function test_owner_authorize_returns_true(): void
     {
         $owner = User::factory()->create(['role' => 'owner']);
-        $request = new CompleteManualRefundRequest();
+        $request = new CompleteManualRefundRequest;
         $request->setUserResolver(fn () => $owner);
 
         $this->assertTrue($request->authorize());

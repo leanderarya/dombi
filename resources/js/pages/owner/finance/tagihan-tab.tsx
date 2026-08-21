@@ -1,9 +1,15 @@
-import { DollarSign, Store, PartyPopper } from 'lucide-react';
+import {
+    CalendarClock,
+    PartyPopper,
+    Receipt,
+    Store,
+    StoreIcon,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import FinanceOutletCard from '@/components/owner/finance/finance-outlet-card';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/format';
 
@@ -18,13 +24,10 @@ const STATUS_FILTERS = [
 export default function TagihanTab({ kpis, outlets }: any) {
     const [filter, setFilter] = useState('action_needed');
     const [search, setSearch] = useState('');
-
-    if (!kpis || !outlets) {
-        return <SkeletonPage />;
-    }
+    const [dueDate, setDueDate] = useState('');
 
     const filtered = useMemo(() => {
-        return outlets.filter((o: any) => {
+        return (outlets ?? []).filter((o: any) => {
             if (filter === 'action_needed') {
                 if (
                     o.display_status !== 'overdue' &&
@@ -36,83 +39,92 @@ export default function TagihanTab({ kpis, outlets }: any) {
                 return false;
             }
 
-            if (search) {
-                return o.outlet_name
-                    .toLowerCase()
-                    .includes(search.toLowerCase());
+            if (
+                search &&
+                !o.outlet_name.toLowerCase().includes(search.toLowerCase())
+            ) {
+                return false;
+            }
+
+            if (dueDate && o.nearest_due_date !== dueDate) {
+                return false;
             }
 
             return true;
         });
-    }, [outlets, filter, search]);
+    }, [outlets, filter, search, dueDate]);
+
+    if (!kpis || !outlets) {
+        return <SkeletonPage />;
+    }
 
     return (
         <>
-            <OwnerKpiStrip
-                items={[
-                    {
-                        label: 'Belum Dibayar',
-                        value: formatCurrency(kpis.total_unpaid),
-                        valueClassName:
-                            kpis.total_unpaid > 0
-                                ? 'text-red-600'
-                                : 'text-text',
-                    },
-                    {
-                        label: 'Outlet',
-                        value: kpis.outlets_unpaid,
-                        sublabel:
-                            kpis.outlets_unpaid > 0
-                                ? 'Memiliki tagihan'
-                                : 'Semua lunas',
-                        sublabelColor:
-                            kpis.outlets_unpaid > 0
-                                ? 'text-amber-600'
-                                : 'text-emerald-600',
-                    },
-                    {
-                        label: 'Jatuh Tempo',
-                        value: formatCurrency(kpis.due_this_week),
-                        valueClassName:
-                            kpis.due_this_week > 0
-                                ? 'text-orange-600'
-                                : 'text-text',
-                    },
-                ]}
-            />
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Belum Dibayar
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                            <Receipt className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.total_unpaid > 0 ? 'text-red-600' : 'text-text'}`}
+                    >
+                        {formatCurrency(kpis.total_unpaid)}
+                    </div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Outlet
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                            <StoreIcon className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {kpis.outlets_unpaid}
+                    </div>
+                    <p
+                        className={`text-[11px] ${kpis.outlets_unpaid > 0 ? 'text-amber-600' : 'text-emerald-600'}`}
+                    >
+                        {kpis.outlets_unpaid > 0
+                            ? 'Memiliki tagihan'
+                            : 'Semua lunas'}
+                    </p>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Jatuh Tempo
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                            <CalendarClock className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.due_this_week > 0 ? 'text-orange-600' : 'text-text'}`}
+                    >
+                        {formatCurrency(kpis.due_this_week)}
+                    </div>
+                </div>
+            </div>
 
             <div
                 className="mb-4 flex flex-wrap items-center gap-2"
                 role="group"
                 aria-label="Filter status tagihan"
             >
-                {STATUS_FILTERS.map((sf) => {
-                    const isActive = filter === sf.key;
-                    const colorMap: Record<string, string> = {
-                        '': 'text-text bg-surface-muted ring-border',
-                        action_needed:
-                            'text-amber-600 bg-amber-50 ring-amber-200',
-                        overdue: 'text-red-600 bg-red-50 ring-red-200',
-                        unpaid: 'text-blue-600 bg-blue-50 ring-blue-200',
-                        paid: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
-                    };
-
-                    return (
-                        <button
-                            key={sf.key}
-                            type="button"
-                            onClick={() => setFilter(sf.key)}
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive
-                                    ? (colorMap[sf.key] ??
-                                      'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
-                            }`}
-                        >
-                            {sf.label}
-                        </button>
-                    );
-                })}
+                <FilterChips
+                    options={STATUS_FILTERS}
+                    active={filter}
+                    onChange={setFilter}
+                    variant="ring"
+                    size="sm"
+                />
             </div>
 
             <OwnerFilterCard
@@ -121,6 +133,8 @@ export default function TagihanTab({ kpis, outlets }: any) {
                 searchPlaceholder="Cari outlet..."
                 searchValue={search}
                 onSearch={setSearch}
+                dateValue={dueDate}
+                onDateChange={setDueDate}
             />
 
             {filtered.length === 0 ? (
@@ -166,6 +180,8 @@ export default function TagihanTab({ kpis, outlets }: any) {
                             totalSales={o.total_sales}
                             totalOutstanding={o.total_outstanding}
                             totalPaid={o.total_paid}
+                            netAmount={o.net_amount}
+                            direction={o.direction ?? 'outlet_pays_owner'}
                             displayStatus={o.display_status}
                             nearestDueDate={o.nearest_due_date}
                         />

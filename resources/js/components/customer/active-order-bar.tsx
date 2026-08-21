@@ -1,6 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, Package, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import type { RefundBadge } from '@/lib/active-order-card-state';
+import { getActiveRefundPresentation } from '@/lib/active-order-card-state';
 import { orderStatusLabel } from '@/lib/customer-status';
 
 const DISMISS_KEY = 'dombi_active_order_dismissed';
@@ -22,17 +24,20 @@ function setDismissedOrderCode(code: string): void {
 }
 
 interface Props {
-    order?: any;
+    order?: {
+        id: number;
+        order_code: string;
+        status: string;
+        outlet?: { name: string } | null;
+        refund_badge?: RefundBadge | null;
+    };
 }
 
 export default function ActiveOrderBar({ order }: Props) {
-    const [dismissed, setDismissed] = useState(
-        () => getDismissedOrderCode() === order?.order_code,
+    const [dismissedOrderCode, setDismissedOrderCodeState] = useState(
+        getDismissedOrderCode,
     );
-
-    useEffect(() => {
-        setDismissed(getDismissedOrderCode() === order?.order_code);
-    }, [order?.order_code]);
+    const dismissed = dismissedOrderCode === order?.order_code;
 
     if (!order || dismissed) {
         return null;
@@ -40,10 +45,13 @@ export default function ActiveOrderBar({ order }: Props) {
 
     const handleDismiss = () => {
         setDismissedOrderCode(order.order_code);
-        setDismissed(true);
+        setDismissedOrderCodeState(order.order_code);
     };
 
     const bottom = 'calc(4.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem)';
+    const refundPresentation = getActiveRefundPresentation(
+        order.refund_badge ?? null,
+    );
 
     return (
         <div
@@ -61,16 +69,19 @@ export default function ActiveOrderBar({ order }: Props) {
                 >
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-white">
-                            Pesanan Aktif
+                            {refundPresentation.primaryLabel ?? 'Pesanan Aktif'}
                         </span>
                         <span
                             className={
-                                order.status === 'pending_confirmation'
-                                    ? 'text-[11px] font-bold text-amber-400'
-                                    : 'text-[11px] font-bold text-emerald-400'
+                                refundPresentation.active
+                                    ? 'text-[11px] font-bold text-blue-400'
+                                    : order.status === 'pending_confirmation'
+                                      ? 'text-[11px] font-bold text-amber-400'
+                                      : 'text-[11px] font-bold text-emerald-400'
                             }
                         >
-                            {orderStatusLabel(order.status)}
+                            {refundPresentation.detailLabel ??
+                                orderStatusLabel(order.status)}
                         </span>
                     </div>
                     <div className="mt-0.5 truncate text-[11px] text-white/60">

@@ -9,11 +9,12 @@ class OfflineSale extends Model
 {
     protected $fillable = [
         'outlet_id',
-        'product_variant_id',
+        'product_id',
         'quantity',
         'center_price',
         'total_amount',
         'notes',
+        'payment_method',
         'created_by',
     ];
 
@@ -31,9 +32,9 @@ class OfflineSale extends Model
         return $this->belongsTo(Outlet::class);
     }
 
-    public function variant(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
     public function creator(): BelongsTo

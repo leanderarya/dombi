@@ -1,7 +1,6 @@
 import { useForm } from '@inertiajs/react';
-import { useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -9,8 +8,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 
 interface Props {
     outlet: any;
@@ -19,16 +18,22 @@ interface Props {
     onSuccess: () => void;
 }
 
-export default function OutletStatusModal({ outlet, open, onClose, onSuccess }: Props) {
+export default function OutletStatusModal({
+    outlet,
+    open,
+    onClose,
+    onSuccess,
+}: Props) {
     const { data, setData, patch, processing, errors, reset } = useForm({
         status: outlet.status ?? 'active',
         delivery_radius_km: outlet.delivery_radius_km ?? '',
         prep_estimate_minutes: outlet.prep_estimate_minutes ?? '',
     });
 
-    useEffect(() => {
-        if (!open) reset();
-    }, [open]);
+    const closeModal = () => {
+        reset();
+        onClose();
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,14 +42,15 @@ export default function OutletStatusModal({ outlet, open, onClose, onSuccess }: 
             onSuccess: () => {
                 toast.success('Status & area layanan diperbarui');
                 onSuccess();
-                onClose();
+                closeModal();
             },
-            onError: (errs) => toast.error(Object.values(errs).flat().join(', ')),
+            onError: (errs) =>
+                toast.error(Object.values(errs).flat().join(', ')),
         });
     };
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && closeModal()}>
             <DialogContent className="z-[2000]" overlayClassName="z-[1999]">
                 <DialogHeader>
                     <DialogTitle>Edit Status & Area Layanan</DialogTitle>
@@ -57,15 +63,44 @@ export default function OutletStatusModal({ outlet, open, onClose, onSuccess }: 
                         options={[
                             { value: 'active', label: 'Aktif' },
                             { value: 'inactive', label: 'Nonaktif' },
-                            { value: 'temporarily_closed', label: 'Tutup Sementara' },
+                            {
+                                value: 'temporarily_closed',
+                                label: 'Tutup Sementara',
+                            },
                         ]}
                         error={errors.status}
                     />
-                    <Input label="Radius Pengiriman (km)" type="number" value={data.delivery_radius_km} onChange={(e) => setData('delivery_radius_km', e.target.value)} error={errors.delivery_radius_km} />
-                    <Input label="Estimasi Persiapan (menit)" type="number" value={data.prep_estimate_minutes} onChange={(e) => setData('prep_estimate_minutes', e.target.value)} error={errors.prep_estimate_minutes} />
+                    <Input
+                        label="Radius Pengiriman (km)"
+                        type="number"
+                        value={data.delivery_radius_km}
+                        onChange={(e) =>
+                            setData('delivery_radius_km', e.target.value)
+                        }
+                        error={errors.delivery_radius_km}
+                    />
+                    <Input
+                        label="Estimasi Persiapan (menit)"
+                        type="number"
+                        value={data.prep_estimate_minutes}
+                        onChange={(e) =>
+                            setData('prep_estimate_minutes', e.target.value)
+                        }
+                        error={errors.prep_estimate_minutes}
+                    />
                     <DialogFooter>
-                        <Button variant="outline" type="button" onClick={onClose}>Batal</Button>
-                        <Button variant="primary" type="submit" disabled={processing}>
+                        <Button
+                            variant="outline"
+                            type="button"
+                            onClick={closeModal}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            variant="primary"
+                            type="submit"
+                            disabled={processing}
+                        >
                             {processing ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </DialogFooter>

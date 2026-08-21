@@ -35,8 +35,11 @@ class CourierService
 
             CourierProfile::create([
                 'user_id' => $courier->id,
-                'invitation_status' => 'pending',
+                'courier_source' => 'pusat',
+                'outlet_id' => null,
+                'invitation_status' => CourierProfile::STATUS_AWAITING_ACTIVATION,
                 'invited_at' => now(),
+                'accepted_at' => null,
             ]);
 
             $invitation = $this->invitationService->create($courier, $owner, $data['phone']);
@@ -71,12 +74,12 @@ class CourierService
 
     private function generateEmail(string $phone): string
     {
-        $base = 'courier.' . $phone . '@dombi.local';
+        $base = 'courier.'.$phone.'@dombi.local';
         $email = $base;
         $counter = 1;
 
         while (User::where('email', $email)->exists()) {
-            $email = 'courier.' . $phone . '.' . $counter . '@dombi.local';
+            $email = 'courier.'.$phone.'.'.$counter.'@dombi.local';
             $counter++;
         }
 

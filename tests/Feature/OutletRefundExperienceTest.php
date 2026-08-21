@@ -2,9 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
 use App\Models\Order;
-use App\Models\PaymentTransaction;
+use App\Models\Outlet;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -15,7 +14,7 @@ class OutletRefundExperienceTest extends TestCase
 
     public function test_outlet_list_has_refund_badges(): void
     {
-        $outlet = \App\Models\Outlet::factory()->create();
+        $outlet = Outlet::factory()->create();
         $outletUser = User::factory()->create(['role' => 'outlet', 'outlet_id' => $outlet->id]);
 
         $order = Order::factory()->create([

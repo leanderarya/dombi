@@ -15,6 +15,7 @@ class WebhookSecurityTest extends TestCase
     {
         $doku = app(DokuService::class);
         $doku->refreshKeysForTest(Config::get('doku.client_id'), Config::get('doku.api_key'));
+
         return $doku;
     }
 
