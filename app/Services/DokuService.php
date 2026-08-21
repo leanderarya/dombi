@@ -2,16 +2,13 @@
 
 namespace App\Services;
 
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Exceptions\DokuPaymentException;
 use App\Models\Order;
 use App\Models\PaymentTransaction;
-use App\Services\NotificationService;
-use App\Services\OrderStatusService;
-use App\Services\PaymentStatusService;
-use App\Services\RefundService;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class DokuService
@@ -193,12 +190,14 @@ class DokuService
         $clientId = $clientIdHeader ?? $payload['client_id'] ?? $this->clientId;
         if (! hash_equals($clientId, $this->clientId)) {
             Log::warning('DOKU webhook: client id mismatch', ['provided' => $clientId]);
+
             return false;
         }
 
         $timestamp = $timestampHeader ?? $payload['timestamp'] ?? '';
         if (! $this->isTimestampFresh($timestamp)) {
             Log::warning('DOKU webhook: stale timestamp', ['timestamp' => $timestamp]);
+
             return false;
         }
 
@@ -234,6 +233,7 @@ class DokuService
             return false;
         }
         $diff = abs(now('UTC')->getTimestamp() - $parsed->getTimestamp());
+
         return $diff <= (int) config('doku.webhook_max_age_seconds', 300);
     }
 
@@ -252,6 +252,7 @@ class DokuService
             .'Request-Timestamp:'.$timestamp."\n"
             .'Request-Target:'.$endpoint."\n"
             .'Digest:'.$digest;
+
         return 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, $this->secretKey, true));
     }
 
@@ -326,6 +327,7 @@ class DokuService
         if ($lastErr) {
             Log::warning('DOKU call exhausted retries', ['error' => $lastErr->getMessage()]);
         }
+
         return null;
     }
 
@@ -383,14 +385,16 @@ class DokuService
      */
     private function mapPaymentMethod(?string $method): string
     {
-        $enum = \App\Enums\PaymentMethod::tryFrom($method ?? '') ?? \App\Enums\PaymentMethod::Qris;
+        $enum = PaymentMethod::tryFrom($method ?? '') ?? PaymentMethod::Qris;
+
         return $enum->dokuType();
     }
 
     private function channelInfo(?string $method): ?array
     {
-        $enum = \App\Enums\PaymentMethod::tryFrom($method ?? '') ?? \App\Enums\PaymentMethod::Qris;
+        $enum = PaymentMethod::tryFrom($method ?? '') ?? PaymentMethod::Qris;
         $channel = config("doku.methods.{$enum->value}.channel");
+
         return $channel ? ['channel' => $channel] : null;
     }
 
@@ -420,6 +424,7 @@ class DokuService
 
                 $this->refundService->request($locked, 'system', null, 'late_payment');
             });
+
             return;
         }
 
@@ -447,6 +452,7 @@ class DokuService
 
         if ($to === PaymentStatus::Paid) {
             $this->markOrderPaid($order);
+
             return;
         }
 

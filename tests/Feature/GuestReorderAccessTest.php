@@ -7,9 +7,9 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\OutletOperatingHours;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -232,21 +232,27 @@ class GuestReorderAccessTest extends TestCase
             'status' => 'active',
         ]);
 
+        OutletOperatingHours::create([
+            'outlet_id' => $outlet->id,
+            'day_of_week' => (int) now('Asia/Jakarta')->format('w'),
+            'open_time' => '00:00',
+            'close_time' => '23:59',
+            'is_closed' => false,
+        ]);
+
         $product = Product::create([
             'name' => 'Test Product',
-            'slug' => 'test-product-'.uniqid(),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Test Family',
             'is_active' => true,
         ]);
 
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Test Variant',
             'center_price' => 20000,
@@ -256,8 +262,7 @@ class GuestReorderAccessTest extends TestCase
 
         OutletInventory::create([
             'outlet_id' => $outlet->id,
-            'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 100,
             'reserved_stock' => 0,
             'minimum_stock' => 0,
@@ -280,12 +285,12 @@ class GuestReorderAccessTest extends TestCase
 
         OrderItem::create([
             'order_id' => $order->id,
-            'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'product_name' => $product->name,
             'variant_name_snapshot' => $variant->name,
             'quantity' => 2,
             'price' => 25000,
+            'selling_price_snapshot' => 25000,
             'subtotal' => 50000,
         ]);
 

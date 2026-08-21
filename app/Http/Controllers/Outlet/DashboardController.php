@@ -102,7 +102,7 @@ class DashboardController extends Controller
         return Inertia::render('outlet/dashboard', [
             'outlet' => $outlet,
             'stats' => $stats,
-            'lowStockItems' => OutletInventory::with('product:id,name,unit')
+            'lowStockItems' => OutletInventory::with('product:id,name')
                 ->where('outlet_id', $outlet->id)
                 ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
                 ->get(['id', 'product_id', 'current_stock', 'reserved_stock', 'minimum_stock']),

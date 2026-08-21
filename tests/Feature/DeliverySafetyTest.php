@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CourierProfile;
 use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\DeliveryStatusHistory;
@@ -37,6 +38,20 @@ class DeliverySafetyTest extends TestCase
         ]);
         $outletUser->update(['outlet_id' => $outlet->id]);
 
+        CourierProfile::create([
+            'user_id' => $courier->id,
+            'courier_source' => 'outlet',
+            'outlet_id' => $outlet->id,
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
+        ]);
+
+        CourierProfile::create([
+            'user_id' => $courier2->id,
+            'courier_source' => 'outlet',
+            'outlet_id' => $outlet->id,
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
+        ]);
+
         return compact('owner', 'courier', 'courier2', 'customer', 'outlet', 'outletUser');
     }
 
@@ -48,6 +63,7 @@ class DeliverySafetyTest extends TestCase
             'order_code' => 'ORD-'.strtoupper(substr(uniqid(), -6)),
             'status' => 'ready_for_pickup',
             'fulfillment_type' => 'delivery_dombi',
+            'payment_status' => 'paid',
             'subtotal' => 25000,
             'delivery_fee' => 5000,
             'total' => 30000,

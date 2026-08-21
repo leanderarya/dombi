@@ -19,7 +19,7 @@ export default function OwnerSegmentedTabs({
 }: Props) {
     return (
         <div
-            className={`bg-mint-wash mb-6 inline-flex rounded-lg p-1 ${className}`}
+            className={`mb-6 inline-flex rounded-lg bg-surface-muted p-1 ${className}`}
         >
             {tabs.map((tab) => (
                 <button

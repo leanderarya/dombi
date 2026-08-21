@@ -52,6 +52,8 @@ class NotificationTest extends TestCase
             'outlet_id' => $this->outlet->id,
             'order_code' => 'ORD-TEST-001',
             'status' => 'pending_confirmation',
+            'payment_status' => 'paid',
+            'paid_at' => now(),
             'subtotal' => 50000,
             'total' => 55000,
             'customer_name' => 'Test Customer',

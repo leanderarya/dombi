@@ -129,8 +129,8 @@ class SettlementExportTest extends TestCase
 
         $this->assertStringContainsString($this->context['outlet']->name, $csv);
         $this->assertStringContainsString('Outlet Kedua', $csv);
-        $this->assertStringContainsString('160000', $csv);
-        $this->assertStringContainsString('80000', $csv);
+        $this->assertStringContainsString('Rp 160.000', $csv);
+        $this->assertStringContainsString('Rp 80.000', $csv);
     }
 
     // ─── HELPERS ───────────────────────────────────────────────────

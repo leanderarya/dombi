@@ -9,6 +9,8 @@ interface Props {
     totalSales: number;
     totalOutstanding: number;
     totalPaid: number;
+    netAmount: number;
+    direction: string;
     displayStatus: string;
     nearestDueDate: string | null;
 }
@@ -19,6 +21,8 @@ export default function FinanceOutletCard({
     totalSales,
     totalOutstanding,
     totalPaid,
+    netAmount,
+    direction,
     displayStatus,
     nearestDueDate,
 }: Props) {
@@ -51,10 +55,22 @@ export default function FinanceOutletCard({
                     {totalSales > 0 && (
                         <span>Penjualan: {formatCurrency(totalSales)}</span>
                     )}
-                    {totalOutstanding > 0 && (
-                        <span className="font-semibold text-red-600">
-                            Sisa: {formatCurrency(totalOutstanding)}
+                    {netAmount > 0 && direction === 'owner_pays_outlet' && (
+                        <span className="font-semibold text-emerald-600">
+                            Owner bayar: {formatCurrency(netAmount)}
                         </span>
+                    )}
+                    {netAmount > 0 && direction === 'owner_pays_outlet' ? (
+                        <span className="font-semibold text-emerald-600">
+                            Belum dibayar owner:{' '}
+                            {formatCurrency(netAmount - totalPaid)}
+                        </span>
+                    ) : (
+                        totalOutstanding > 0 && (
+                            <span className="font-semibold text-red-600">
+                                Sisa: {formatCurrency(totalOutstanding)}
+                            </span>
+                        )
                     )}
                     {totalPaid > 0 && (
                         <span className="text-emerald-600">

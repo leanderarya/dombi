@@ -1,12 +1,11 @@
 import { Link } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PhoneInput from '@/components/ui/phone-input';
 import { Select } from '@/components/ui/select';
-import { reverseGeocode } from '@/lib/geocoding';
 import { cn } from '@/lib/utils';
 
 const OutletLocationMap = lazy(() => import('./outlet-location-map'));
@@ -34,11 +33,11 @@ export default function OutletFormSheet({
     outlet,
     existingOutlets = [],
 }: Props) {
-    const [geocodingState, setGeocodingState] = useState<
-        'idle' | 'loading' | 'success' | 'failed'
-    >('idle');
+    const [geo, setGeo] = useState<{
+        loading: boolean;
+        failed: boolean;
+    }>({ loading: false, failed: false });
     const [notesExpanded, setNotesExpanded] = useState(false);
-    const abortRef = useRef<AbortController | null>(null);
 
     const location = useMemo(() => {
         const lat = Number(form.data.latitude);
@@ -49,54 +48,29 @@ export default function OutletFormSheet({
             : null;
     }, [form.data.latitude, form.data.longitude]);
 
-    const setLocation = (point: { lat: number; lng: number }) => {
+    const setLocation = (change: {
+        lat: number;
+        lng: number;
+        geo: { loading: boolean; failed: boolean; address: any };
+    }) => {
         form.setData({
             ...form.data,
-            latitude: point.lat.toFixed(7),
-            longitude: point.lng.toFixed(7),
+            latitude: change.lat.toFixed(7),
+            longitude: change.lng.toFixed(7),
+            kelurahan:
+                change.geo.address?.kelurahan || form.data.kelurahan || '',
+            kecamatan:
+                change.geo.address?.kecamatan || form.data.kecamatan || '',
+            city: change.geo.address?.city || form.data.city || '',
+            province: change.geo.address?.province || form.data.province || '',
+            postal_code:
+                change.geo.address?.postal_code || form.data.postal_code || '',
+        });
+        setGeo({
+            loading: change.geo.loading,
+            failed: change.geo.failed,
         });
     };
-
-    // Reverse geocode when marker moves — updates administrative address fields only
-    useEffect(() => {
-        if (!location) {
-            return;
-        }
-
-        abortRef.current?.abort();
-        const controller = new AbortController();
-        abortRef.current = controller;
-
-        const timeout = window.setTimeout(async () => {
-            setGeocodingState('loading');
-
-            try {
-                const result = await reverseGeocode(
-                    location.lat,
-                    location.lng,
-                    controller.signal,
-                );
-                form.setData({
-                    ...form.data,
-                    kelurahan: result.kelurahan || '',
-                    kecamatan: result.kecamatan || '',
-                    city: result.city || '',
-                    province: result.province || '',
-                    postal_code: result.postal_code || '',
-                });
-                setGeocodingState('success');
-            } catch (error) {
-                if (!controller.signal.aborted) {
-                    setGeocodingState('failed');
-                }
-            }
-        }, 650);
-
-        return () => {
-            window.clearTimeout(timeout);
-            controller.abort();
-        };
-    }, [location?.lat, location?.lng]);
 
     const isEdit = mode === 'edit';
     const title = isEdit ? `Edit ${outlet?.name ?? 'Outlet'}` : 'Tambah Outlet';
@@ -107,10 +81,8 @@ export default function OutletFormSheet({
             {/* Header */}
             <div className="mb-5 flex items-start justify-between gap-3">
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-900">
-                        {title}
-                    </h1>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <h1 className="text-xl font-semibold text-text">{title}</h1>
+                    <p className="mt-1 text-xs text-text-muted">
                         {isEdit
                             ? 'Perbarui informasi outlet.'
                             : 'Pilih lokasi pada peta, lalu isi informasi outlet.'}
@@ -157,53 +129,47 @@ export default function OutletFormSheet({
                                         <InfoBadge
                                             label="Kelurahan"
                                             value={form.data.kelurahan}
-                                            loading={
-                                                geocodingState === 'loading'
-                                            }
+                                            loading={geo.loading}
                                         />
                                         <InfoBadge
                                             label="Kecamatan"
                                             value={form.data.kecamatan}
-                                            loading={
-                                                geocodingState === 'loading'
-                                            }
+                                            loading={geo.loading}
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-3">
                                         <InfoBadge
                                             label="Kota/Kabupaten"
                                             value={form.data.city}
-                                            loading={
-                                                geocodingState === 'loading'
-                                            }
+                                            loading={geo.loading}
                                         />
                                         <InfoBadge
                                             label="Provinsi"
                                             value={form.data.province}
-                                            loading={
-                                                geocodingState === 'loading'
-                                            }
+                                            loading={geo.loading}
                                         />
                                     </div>
                                     <InfoBadge
                                         label="Kode Pos"
                                         value={form.data.postal_code}
-                                        loading={geocodingState === 'loading'}
+                                        loading={geo.loading}
                                     />
                                     {(form.errors.kelurahan ||
-                                        form.errors.kecamatan) && (
+                                        form.errors.kecamatan ||
+                                        geo.failed) && (
                                         <p className="text-xs font-semibold text-red-600">
-                                            Data lokasi belum terdeteksi. Geser
-                                            marker pada peta.
+                                            {geo.failed
+                                                ? 'Gagal mendeteksi wilayah. Geser marker atau coba lagi. Anda bisa isi manual.'
+                                                : 'Data lokasi belum terdeteksi. Geser marker pada peta.'}
                                         </p>
                                     )}
                                 </>
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-6 text-center">
-                                    <div className="text-sm text-slate-500">
+                                    <div className="text-sm text-text-muted">
                                         Pilih lokasi pada peta terlebih dahulu.
                                     </div>
-                                    <div className="mt-1 text-xs text-slate-400">
+                                    <div className="mt-1 text-xs text-text-muted">
                                         Klik pada peta atau cari alamat di kolom
                                         pencarian.
                                     </div>
@@ -228,7 +194,7 @@ export default function OutletFormSheet({
                         </Section>
 
                         {/* Section 4: Catatan Internal (collapsible) */}
-                        <div className="rounded-lg border border-slate-200 bg-white">
+                        <div className="rounded-2xl border border-border bg-surface">
                             <button
                                 type="button"
                                 onClick={() => setNotesExpanded(!notesExpanded)}
@@ -236,20 +202,20 @@ export default function OutletFormSheet({
                                 className="flex w-full items-center justify-between px-4 py-3 text-left"
                             >
                                 <div>
-                                    <div className="text-base font-semibold text-slate-900">
+                                    <div className="font-heading text-base font-bold text-text">
                                         Catatan Internal
                                     </div>
-                                    <div className="text-xs text-slate-500">
+                                    <div className="text-xs text-text-muted">
                                         Opsional. Catatan akses, jam ramai, atau
                                         patokan lokasi.
                                     </div>
                                 </div>
                                 <ChevronDown
-                                    className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${notesExpanded ? 'rotate-180' : ''}`}
+                                    className={`h-4 w-4 shrink-0 text-text-muted transition-transform ${notesExpanded ? 'rotate-180' : ''}`}
                                 />
                             </button>
                             {notesExpanded && (
-                                <div className="border-t border-slate-100 px-4 py-3">
+                                <div className="border-t border-border px-4 py-3">
                                     <TextArea
                                         label="Catatan"
                                         value={
@@ -333,7 +299,7 @@ export default function OutletFormSheet({
                         </div>
 
                         {/* Action Bar */}
-                        <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-white px-4 py-3 lg:-mx-6 lg:px-6">
+                        <div className="sticky bottom-0 -mx-4 border-t border-border bg-surface px-4 py-3 lg:-mx-6 lg:px-6">
                             <div className="flex items-center gap-3">
                                 <Link
                                     href="/owner/outlets"
@@ -342,7 +308,7 @@ export default function OutletFormSheet({
                                             variant: 'secondary',
                                             size: 'lg',
                                         }),
-                                        'flex-1',
+                                        'min-h-11 flex-1',
                                     )}
                                 >
                                     Batal
@@ -352,7 +318,7 @@ export default function OutletFormSheet({
                                     variant="primary"
                                     size="lg"
                                     disabled={form.processing}
-                                    className="flex-[2]"
+                                    className="min-h-11 flex-[2]"
                                 >
                                     {form.processing
                                         ? 'Menyimpan...'
@@ -370,7 +336,7 @@ export default function OutletFormSheet({
                         >
                             <Suspense
                                 fallback={
-                                    <div className="flex h-[300px] items-center justify-center rounded-lg border border-slate-300 bg-slate-50 text-xs font-semibold text-slate-500 lg:h-[400px]">
+                                    <div className="flex h-[300px] items-center justify-center rounded-2xl border border-border bg-surface-muted text-xs font-semibold text-text-muted lg:h-[400px]">
                                         Loading peta...
                                     </div>
                                 }
@@ -406,10 +372,12 @@ function Section({
     children: ReactNode;
 }) {
     return (
-        <section className="rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+        <section className="rounded-2xl border border-border bg-surface p-5">
+            <h2 className="font-heading text-base font-bold text-text">
+                {title}
+            </h2>
             {subtitle && (
-                <p className="mt-1 text-xs leading-5 text-slate-500">
+                <p className="mt-1 text-xs leading-5 text-text-muted">
                     {subtitle}
                 </p>
             )}
@@ -428,12 +396,12 @@ function InfoBadge({
     loading?: boolean;
 }) {
     return (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-            <div className="text-xs font-bold tracking-wider text-slate-400 uppercase">
+        <div className="rounded-xl border border-border bg-surface-muted px-3 py-2">
+            <div className="text-xs font-bold tracking-wider text-text-muted uppercase">
                 {label}
             </div>
             <div
-                className={`mt-0.5 text-sm font-medium ${loading ? 'text-slate-400' : 'text-slate-900'}`}
+                className={`mt-0.5 text-sm font-medium tabular-nums ${loading ? 'text-text-muted' : 'text-text'}`}
             >
                 {loading ? 'Mendeteksi...' : value || '-'}
             </div>
@@ -485,7 +453,7 @@ function TextArea({
 }) {
     return (
         <label className="block">
-            <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+            <span className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                 {label} {required && <span className="text-red-500">*</span>}
             </span>
             <textarea
@@ -493,7 +461,7 @@ function TextArea({
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
                 rows={2}
-                className="mt-1.5 min-h-16 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                className="mt-1.5 min-h-16 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 required={required}
             />
             {error && (

@@ -1,8 +1,8 @@
 import { Copy, Check, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import OwnerModalShell from '@/components/owner/owner-modal-shell';
-import { formatCurrency } from '@/lib/format';
 import { copyToClipboard } from '@/lib/clipboard';
+import { formatCurrency } from '@/lib/format';
 
 interface UnpaidItem {
     id: number;
@@ -16,7 +16,6 @@ interface UnpaidItem {
 interface Props {
     open: boolean;
     onClose: () => void;
-    outletId: number;
     outletName: string;
     totalOutstanding: number;
     unpaidBreakdown: UnpaidItem[];
@@ -25,7 +24,6 @@ interface Props {
 export default function InvoiceModal({
     open,
     onClose,
-    outletId,
     outletName,
     totalOutstanding,
     unpaidBreakdown,

@@ -79,6 +79,7 @@ class TrackController extends Controller
                 'total' => (float) $order->total,
                 'subtotal' => (float) $order->subtotal,
                 'delivery_fee' => (float) $order->delivery_fee,
+                'payment_fee' => (float) ($order->payment_fee ?? 0),
                 'payment_method' => $order->payment_method,
                 'confirmation_expires_at' => $order->confirmation_expires_at?->toISOString(),
                 'payment_status' => $order->payment_status,

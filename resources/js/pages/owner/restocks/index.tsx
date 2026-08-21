@@ -1,9 +1,16 @@
 import { router, useForm } from '@inertiajs/react';
-import { CheckCircle2, XCircle } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import {
+    CheckCircle,
+    CheckCircle2,
+    Clock,
+    Package,
+    Truck,
+    XCircle,
+} from 'lucide-react';
+import { useEffect, useEffectEvent, useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
 import SortableTh from '@/components/owner/sortable-th';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,9 +22,18 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { displayProductName } from '@/lib/display';
 import { formatDate } from '@/lib/format';
@@ -32,17 +48,21 @@ const statusFilters = [
     { key: 'cancelled', label: 'Dibatalkan' },
 ];
 
-const colorMap: Record<string, string> = {
-    '': 'text-text bg-surface-muted ring-border',
-    requested: 'text-amber-600 bg-amber-50 ring-amber-200',
-    preparing: 'text-purple-600 bg-purple-50 ring-purple-200',
-    shipped: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
-    completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
-    rejected: 'text-red-600 bg-red-50 ring-red-200',
-    cancelled: 'text-gray-600 bg-gray-50 ring-gray-200',
-};
-
 type SortKey = 'id' | 'outlet' | 'items' | 'date';
+
+interface RestockDetailItem {
+    id: number;
+    approved_quantity?: number | null;
+    requested_quantity: number;
+}
+
+interface RestockDetailResponse {
+    restock: {
+        owner_notes?: string | null;
+        items?: RestockDetailItem[];
+    };
+    centralStock?: Record<number, number>;
+}
 
 export default function OwnerRestocksIndex({
     restocks,
@@ -52,8 +72,6 @@ export default function OwnerRestocksIndex({
     const [sortKey, setSortKey] = useState<SortKey>('id');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
     const [approveModal, setApproveModal] = useState<any>(null);
-    const [rejectModal, setRejectModal] = useState<any>(null);
-    const [loadingDetail, setLoadingDetail] = useState(false);
 
     const toggleSort = (key: SortKey) => {
         if (sortKey === key) {
@@ -64,18 +82,7 @@ export default function OwnerRestocksIndex({
         }
     };
 
-    if (!restocks || !filters) {
-        return (
-            <OwnerPageShell
-                title="Restocks"
-                subtitle="Kelola permintaan restock dari outlet"
-            >
-                <SkeletonPage />
-            </OwnerPageShell>
-        );
-    }
-
-    const currentStatus = filters.status ?? '';
+    const currentStatus = filters?.status ?? '';
 
     const setFilter = (key: string, value: string) => {
         router.get(
@@ -87,7 +94,7 @@ export default function OwnerRestocksIndex({
 
     const sorted = useMemo(
         () =>
-            [...restocks.data].sort((a: any, b: any) => {
+            [...(restocks?.data ?? [])].sort((a: any, b: any) => {
                 let av: any, bv: any;
 
                 switch (sortKey) {
@@ -116,10 +123,22 @@ export default function OwnerRestocksIndex({
                     typeof av === 'string'
                         ? av.localeCompare(String(bv))
                         : Number(av) - Number(bv);
+
                 return sortDir === 'asc' ? cmp : -cmp;
             }),
-        [restocks.data, sortKey, sortDir],
+        [restocks?.data, sortKey, sortDir],
     );
+
+    if (!restocks || !filters) {
+        return (
+            <OwnerPageShell
+                title="Restocks"
+                subtitle="Kelola permintaan restock dari outlet"
+            >
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
 
     const handleOpenApprove = (restock: any) => {
         setApproveModal(restock);
@@ -143,40 +162,79 @@ export default function OwnerRestocksIndex({
             title="Restocks"
             subtitle="Kelola permintaan restock dari outlet"
         >
-            <OwnerKpiStrip
-                cols={4}
-                items={[
-                    {
-                        label: 'Menunggu',
-                        value: requestedCount,
-                        sublabel:
-                            requestedCount > 0 ? 'Perlu ditinjau' : undefined,
-                        sublabelColor: 'text-amber-600',
-                    },
-                    { label: 'Disiapkan', value: preparingCount },
-                    { label: 'Dikirim', value: shippedCount },
-                    { label: 'Selesai', value: completedCount },
-                ]}
-            />
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Menunggu
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                            <Clock className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${requestedCount > 0 ? 'text-amber-600' : 'text-text'}`}
+                    >
+                        {requestedCount}
+                    </div>
+                    {requestedCount > 0 && (
+                        <p className="text-[11px] text-amber-500">
+                            Perlu ditinjau
+                        </p>
+                    )}
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Disiapkan
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                            <Package className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {preparingCount}
+                    </div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Dikirim
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                            <Truck className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {shippedCount}
+                    </div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Selesai
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                            <CheckCircle className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                        {completedCount}
+                    </div>
+                </div>
+            </div>
 
             <section
                 className="mb-4 flex flex-wrap items-center gap-2"
                 aria-label="Filter Status"
             >
-                {statusFilters.map((sf) => {
-                    const isActive = currentStatus === sf.key;
-
-                    return (
-                        <button
-                            key={sf.key}
-                            type="button"
-                            onClick={() => setFilter('status', sf.key)}
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${isActive ? (colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20') : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'}`}
-                        >
-                            {sf.label}
-                        </button>
-                    );
-                })}
+                <FilterChips
+                    variant="ring"
+                    size="sm"
+                    options={statusFilters}
+                    active={currentStatus}
+                    onChange={(key) => setFilter('status', key)}
+                />
             </section>
 
             <OwnerFilterCard
@@ -201,13 +259,10 @@ export default function OwnerRestocksIndex({
                     description="Permintaan restock akan muncul di sini setelah diajukan outlet"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table
-                        className="w-full min-w-[600px]"
-                        aria-label="Daftar Restock"
-                    >
-                        <thead>
-                            <tr className="bg-surface-muted/50">
+                <OwnerTable minWidth="600px">
+                    <Table aria-label="Daftar Restock">
+                        <TableHeader>
+                            <TableRow className="bg-surface-muted/50">
                                 <SortableTh
                                     label="Kode"
                                     active={sortKey === 'id'}
@@ -220,9 +275,9 @@ export default function OwnerRestocksIndex({
                                     dir={sortDir}
                                     onClick={() => toggleSort('outlet')}
                                 />
-                                <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
                                     Status
-                                </th>
+                                </TableHead>
                                 <SortableTh
                                     label="Items"
                                     active={sortKey === 'items'}
@@ -235,36 +290,36 @@ export default function OwnerRestocksIndex({
                                     dir={sortDir}
                                     onClick={() => toggleSort('date')}
                                 />
-                                <th className="w-28 px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="w-28 px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
                                     Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {sorted.map((r: any) => (
-                                <tr
+                                <TableRow
                                     key={r.id}
-                                    className="hover:bg-mint-wash border-t border-border/20 transition-colors"
+                                    className="border-t border-border/20 transition-colors hover:bg-mint-wash"
                                 >
-                                    <td className="px-3 py-3 font-bold text-text tabular-nums">
+                                    <TableCell className="px-3 py-3 font-bold text-text tabular-nums">
                                         #{r.id}
-                                    </td>
-                                    <td className="px-3 py-3 text-text-muted">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-text-muted">
                                         {r.outlet?.name ?? '—'}
-                                    </td>
-                                    <td className="px-3 py-3">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3">
                                         <StatusBadge
                                             status={r.status}
                                             size="sm"
                                         />
-                                    </td>
-                                    <td className="px-3 py-3 text-text-muted">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-text-muted">
                                         {r.items?.length ?? 0} item
-                                    </td>
-                                    <td className="px-3 py-3 text-text-muted">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-text-muted">
                                         {formatDate(r.created_at)}
-                                    </td>
-                                    <td className="px-3 py-3 text-right">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             {r.status === 'requested' ? (
                                                 <Button
@@ -273,7 +328,7 @@ export default function OwnerRestocksIndex({
                                                         handleOpenApprove(r)
                                                     }
                                                 >
-                                                    Approve
+                                                    Setujui
                                                 </Button>
                                             ) : (
                                                 <Button
@@ -287,22 +342,24 @@ export default function OwnerRestocksIndex({
                                                 </Button>
                                             )}
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Pagination links={restocks.links} />
 
             {/* Approve/Detail Modal */}
-            <RestockActionModal
-                restock={approveModal}
-                onClose={() => setApproveModal(null)}
-                onSuccess={() => setApproveModal(null)}
-            />
+            {approveModal && (
+                <RestockActionModal
+                    restock={approveModal}
+                    onClose={() => setApproveModal(null)}
+                    onSuccess={() => setApproveModal(null)}
+                />
+            )}
         </OwnerPageShell>
     );
 }
@@ -318,11 +375,10 @@ function RestockActionModal({
     onSuccess: () => void;
 }) {
     const [detail, setDetail] = useState<any>(null);
-    const [inventories, setInventories] = useState<any[]>([]);
     const [centralStock, setCentralStock] = useState<Record<number, number>>(
         {},
     );
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [showReject, setShowReject] = useState(false);
 
     const approveForm = useForm({
@@ -330,11 +386,24 @@ function RestockActionModal({
         items: [] as any[],
     });
     const rejectForm = useForm({ rejected_reason: '' });
+    const restockId = restock.id;
+    const hydrateDetail = useEffectEvent((data: RestockDetailResponse) => {
+        setDetail(data.restock);
+        setCentralStock(data.centralStock ?? {});
+        approveForm.setData({
+            owner_notes: data.restock.owner_notes ?? '',
+            items: (data.restock.items ?? []).map((item) => ({
+                restock_request_item_id: item.id,
+                approved_quantity:
+                    item.approved_quantity ?? item.requested_quantity,
+            })),
+        });
+    });
 
     useEffect(() => {
-        if (!restock) return;
-        setLoading(true);
-        fetch(`/owner/restocks/${restock.id}`, {
+        let cancelled = false;
+
+        fetch(`/owner/restocks/${restockId}`, {
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -342,23 +411,23 @@ function RestockActionModal({
         })
             .then((r) => r.json())
             .then((data) => {
-                setDetail(data.restock);
-                setInventories(data.inventories ?? []);
-                setCentralStock(data.centralStock ?? {});
-                approveForm.setData({
-                    owner_notes: data.restock.owner_notes ?? '',
-                    items: (data.restock.items ?? []).map((item: any) => ({
-                        restock_request_item_id: item.id,
-                        approved_quantity:
-                            item.approved_quantity ?? item.requested_quantity,
-                    })),
-                });
-                setLoading(false);
+                if (!cancelled) {
+                    hydrateDetail(data);
+                }
             })
-            .catch(() => setLoading(false));
-    }, [restock?.id]);
+            .catch(() => {
+                // Keep the dialog available so the owner can close and retry.
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            });
 
-    if (!restock) return null;
+        return () => {
+            cancelled = true;
+        };
+    }, [restockId]);
 
     const isRequested = restock.status === 'requested';
 
@@ -385,13 +454,15 @@ function RestockActionModal({
             <Dialog
                 open={true}
                 onOpenChange={(open) => {
-                    if (!open) onClose();
+                    if (!open) {
+                        onClose();
+                    }
                 }}
             >
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
                         <DialogTitle>
-                            {isRequested ? 'Approve Restock' : 'Detail Restock'}{' '}
+                            {isRequested ? 'Setujui Restock' : 'Detail Restock'}{' '}
                             #{restock.id}
                         </DialogTitle>
                         <DialogDescription>
@@ -490,7 +561,7 @@ function RestockActionModal({
                                                                           items as any,
                                                                       );
                                                                   }}
-                                                                  className="h-7 w-16 rounded border border-border px-1.5 text-right text-xs font-semibold outline-none focus:border-primary"
+                                                                  className="h-11 w-20 rounded border border-border px-1.5 text-right text-xs font-semibold outline-none focus:border-primary"
                                                               />
                                                           </td>
                                                           <td

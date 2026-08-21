@@ -53,7 +53,7 @@ function PageHeader({
             <div className="flex items-center gap-3">
                 <button
                     onClick={toggle}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                    className="hidden h-8 w-8 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted hover:text-text md:flex"
                     aria-label={
                         collapsed ? 'Expand sidebar' : 'Collapse sidebar'
                     }

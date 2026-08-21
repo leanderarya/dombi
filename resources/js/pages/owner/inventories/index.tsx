@@ -1,10 +1,20 @@
 import { router, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
-import { Bell, Check, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+    AlertCircle,
+    AlertTriangle,
+    Bell,
+    Check,
+    CheckCircle,
+    ChevronDown,
+    ChevronRight,
+    Package,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerSegmentedTabs from '@/components/owner/owner-segmented-tabs';
+import OwnerTable from '@/components/owner/owner-table';
 import SortableTh from '@/components/owner/sortable-th';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,9 +29,17 @@ import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell,
+} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
 import { displayProductName } from '@/lib/display';
+import { cn } from '@/lib/utils';
 import CentralStockTab from './central-stock-tab';
 
 const TABS = [
@@ -36,6 +54,7 @@ function getCsrfToken(): string {
     const el = document.querySelector(
         'meta[name="csrf-token"]',
     ) as HTMLMetaElement;
+
     return el?.content ?? '';
 }
 
@@ -46,6 +65,7 @@ function buildProductGroups(outletSections: any[]) {
         {
             variantId: number;
             variant: any;
+            product: any;
             outlets: any[];
             totalStock: number;
             criticalCount: number;
@@ -57,12 +77,16 @@ function buildProductGroups(outletSections: any[]) {
 
     for (const section of outletSections ?? []) {
         for (const item of section.inventories ?? []) {
-            const variantId = item.product_variant_id ?? item.variant?.id;
-            if (!variantId) continue;
+            const productId = item.product_id ?? item.variant?.id ?? null;
 
-            const entry = map.get(variantId) ?? {
-                variantId,
+            if (!productId) {
+                continue;
+            }
+
+            const entry = map.get(productId) ?? {
+                variantId: productId,
                 variant: item.variant,
+                product: item.product ?? item.variant,
                 outlets: [] as any[],
                 totalStock: 0,
                 criticalCount: 0,
@@ -81,18 +105,27 @@ function buildProductGroups(outletSections: any[]) {
             const stock = item.current_stock ?? 0;
             const available = stock - (item.reserved_stock ?? 0);
             entry.totalStock += stock;
-            if (available <= 0) entry.criticalCount++;
-            else if (available <= (item.minimum_stock ?? 0)) entry.lowCount++;
-            else entry.healthyCount++;
 
-            map.set(variantId, entry);
+            if (available <= 0) {
+                entry.criticalCount++;
+            } else if (available <= (item.minimum_stock ?? 0)) {
+                entry.lowCount++;
+            } else {
+                entry.healthyCount++;
+            }
+
+            map.set(productId, entry);
         }
     }
 
     for (const entry of map.values()) {
-        if (entry.criticalCount > 0) entry.overallStatus = 'critical';
-        else if (entry.lowCount > 0) entry.overallStatus = 'low';
-        else entry.overallStatus = 'healthy';
+        if (entry.criticalCount > 0) {
+            entry.overallStatus = 'critical';
+        } else if (entry.lowCount > 0) {
+            entry.overallStatus = 'low';
+        } else {
+            entry.overallStatus = 'healthy';
+        }
     }
 
     return Array.from(map.values());
@@ -139,14 +172,19 @@ export default function InventoriesIndex({
 
     const handleEdit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editItem) return;
+
+        if (!editItem) {
+            return;
+        }
+
         editForm.put(`/owner/inventories/${editItem.id}`, {
             onSuccess: () => {
                 setEditItem(null);
                 editForm.reset();
                 toast.success('Stok diperbarui');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -158,17 +196,6 @@ export default function InventoriesIndex({
             { preserveState: true, replace: true },
         );
     };
-
-    if (!outletSections && !centralStock) {
-        return (
-            <OwnerPageShell
-                title="Inventaris"
-                subtitle="Pantau stok semua outlet dan pusat"
-            >
-                <SkeletonPage />
-            </OwnerPageShell>
-        );
-    }
 
     const outletList = useMemo(
         () =>
@@ -190,10 +217,13 @@ export default function InventoriesIndex({
         if (search) {
             const q = search.toLowerCase();
             result = result.filter((g) => {
-                const name = displayProductName(g.variant).toLowerCase();
+                const name = displayProductName(
+                    g.variant ?? g.product,
+                ).toLowerCase();
+
                 return (
                     name.includes(q) ||
-                    (g.variant?.sku ?? '').toLowerCase().includes(q) ||
+                    (g.variant ?? g.product)?.sku?.toLowerCase().includes(q) ||
                     g.outlets.some((o: any) =>
                         o.outlet_name.toLowerCase().includes(q),
                     )
@@ -219,8 +249,8 @@ export default function InventoriesIndex({
 
                 switch (sortKey) {
                     case 'name':
-                        av = displayProductName(a.variant);
-                        bv = displayProductName(b.variant);
+                        av = displayProductName(a.variant ?? a.product);
+                        bv = displayProductName(b.variant ?? b.product);
                         break;
                     case 'total_stock':
                         av = a.totalStock;
@@ -231,23 +261,41 @@ export default function InventoriesIndex({
                         bv = statusToNum(b.overallStatus);
                         break;
                     default:
-                        av = displayProductName(a.variant);
-                        bv = displayProductName(b.variant);
+                        av = displayProductName(a.variant ?? a.product);
+                        bv = displayProductName(b.variant ?? b.product);
                 }
+
                 const cmp =
                     typeof av === 'string'
                         ? av.localeCompare(String(bv))
                         : Number(av) - Number(bv);
+
                 return sortDir === 'asc' ? cmp : -cmp;
             }),
         [filtered, sortKey, sortDir],
     );
 
+    if (!outletSections && !centralStock) {
+        return (
+            <OwnerPageShell
+                title="Inventaris"
+                subtitle="Pantau stok semua outlet dan pusat"
+            >
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
+
     const toggleExpand = (variantId: number) => {
         setExpandedIds((prev) => {
             const next = new Set(prev);
-            if (next.has(variantId)) next.delete(variantId);
-            else next.add(variantId);
+
+            if (next.has(variantId)) {
+                next.delete(variantId);
+            } else {
+                next.add(variantId);
+            }
+
             return next;
         });
     };
@@ -258,7 +306,7 @@ export default function InventoriesIndex({
         isCritical: boolean,
     ) => {
         const outlet = outletList.find((o: any) => o.id === row.outlet_id);
-        const variantId = row.product_variant_id ?? row.variant?.id;
+        const variantId = row.product_id;
 
         fetch('/owner/inventories/remind-stock', {
             method: 'POST',
@@ -270,7 +318,7 @@ export default function InventoriesIndex({
             },
             body: JSON.stringify({
                 outlet_id: row.outlet_id,
-                product_variant_id: variantId,
+                product_id: variantId,
             }),
         })
             .then((r) => r.json())
@@ -293,28 +341,12 @@ export default function InventoriesIndex({
             title="Inventaris"
             subtitle="Pantau stok semua outlet dan pusat"
         >
-            <div
-                className="mb-5 inline-flex rounded-lg bg-surface-muted p-1"
-                role="tablist"
-            >
-                {TABS.map((t) => (
-                    <button
-                        key={t.key}
-                        type="button"
-                        role="tab"
-                        aria-selected={activeTab === t.key}
-                        onClick={() => handleTabChange(t.key)}
-                        className={cn(
-                            'relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200',
-                            activeTab === t.key
-                                ? 'bg-surface text-text'
-                                : 'text-text-muted hover:text-text',
-                        )}
-                    >
-                        {t.label}
-                    </button>
-                ))}
-            </div>
+            <OwnerSegmentedTabs
+                tabs={TABS.map((t) => ({ key: t.key, label: t.label }))}
+                activeTab={activeTab}
+                onChange={(key) => handleTabChange(key as TabKey)}
+                className="mb-5"
+            />
 
             {activeTab === 'pusat' && (
                 <CentralStockTab variants={centralStock} stats={centralStats} />
@@ -322,32 +354,74 @@ export default function InventoriesIndex({
 
             {activeTab === 'outlet' && (
                 <>
-                    <OwnerKpiStrip
-                        cols={4}
-                        items={[
-                            { label: 'Total SKU', value: stats.totalSku },
-                            {
-                                label: 'Stok Kritis',
-                                value: stats.critical,
-                                sublabel:
-                                    stats.critical > 0 ? '≤ 2 pcs' : undefined,
-                                sublabelColor: 'text-red-500',
-                            },
-                            {
-                                label: 'Stok Rendah',
-                                value: stats.lowStock,
-                                sublabel:
-                                    stats.lowStock > 0
-                                        ? '≤ minimum'
-                                        : undefined,
-                                sublabelColor: 'text-amber-500',
-                            },
-                            {
-                                label: 'Stok Sehat',
-                                value: stats.totalSku - stats.lowStock,
-                            },
-                        ]}
-                    />
+                    <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                        <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">
+                                    Total SKU
+                                </span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                                    <Package className="h-5 w-5" />
+                                </span>
+                            </div>
+                            <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                                {stats.totalSku}
+                            </div>
+                        </div>
+                        <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">
+                                    Stok Kritis
+                                </span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                                    <AlertTriangle className="h-5 w-5" />
+                                </span>
+                            </div>
+                            <div
+                                className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.critical > 0 ? 'text-red-600' : 'text-text'}`}
+                            >
+                                {stats.critical}
+                            </div>
+                            {stats.critical > 0 && (
+                                <p className="text-[11px] text-red-500">
+                                    ≤ 2 pcs
+                                </p>
+                            )}
+                        </div>
+                        <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">
+                                    Stok Rendah
+                                </span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                                    <AlertCircle className="h-5 w-5" />
+                                </span>
+                            </div>
+                            <div
+                                className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.lowStock > 0 ? 'text-amber-600' : 'text-text'}`}
+                            >
+                                {stats.lowStock}
+                            </div>
+                            {stats.lowStock > 0 && (
+                                <p className="text-[11px] text-amber-500">
+                                    ≤ minimum
+                                </p>
+                            )}
+                        </div>
+                        <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">
+                                    Stok Sehat
+                                </span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                                    <CheckCircle className="h-5 w-5" />
+                                </span>
+                            </div>
+                            <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                                {stats.totalSku - stats.lowStock}
+                            </div>
+                        </div>
+                    </div>
 
                     <OwnerFilterCard
                         collapsible
@@ -376,23 +450,20 @@ export default function InventoriesIndex({
                             description="Coba ubah filter atau kata kunci"
                         />
                     ) : (
-                        <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                            <table
-                                className="w-full min-w-[700px]"
-                                aria-label="Stok Outlet — Grup per Produk"
-                            >
-                                <thead>
+                        <OwnerTable minWidth="700px">
+                            <Table>
+                                <TableHeader>
                                     <tr className="bg-surface-muted/50">
-                                        <th className="w-8 px-3 py-2.5" />
+                                        <TableHead className="w-8 px-3 py-2.5" />
                                         <SortableTh
                                             label="Produk"
                                             active={sortKey === 'name'}
                                             dir={sortDir}
                                             onClick={() => toggleSort('name')}
                                         />
-                                        <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                        <TableHead className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
                                             Status Outlet
-                                        </th>
+                                        </TableHead>
                                         <SortableTh
                                             label="Total Stok"
                                             active={sortKey === 'total_stock'}
@@ -409,14 +480,14 @@ export default function InventoriesIndex({
                                             onClick={() => toggleSort('status')}
                                         />
                                     </tr>
-                                </thead>
-                                <tbody>
+                                </TableHeader>
+                                <TableBody>
                                     {sorted.map((group) => {
                                         const isExpanded = expandedIds.has(
                                             group.variantId,
                                         );
                                         const productName = displayProductName(
-                                            group.variant,
+                                            group.variant ?? group.product,
                                         );
                                         const statusVariant =
                                             group.overallStatus === 'critical'
@@ -435,6 +506,7 @@ export default function InventoriesIndex({
                                             ...group.outlets,
                                         ].sort((a: any, b: any) => {
                                             let av: any, bv: any;
+
                                             switch (subSortKey) {
                                                 case 'outlet_name':
                                                     av = a.outlet_name;
@@ -470,12 +542,14 @@ export default function InventoriesIndex({
                                                     av = a.outlet_name;
                                                     bv = b.outlet_name;
                                             }
+
                                             const cmp =
                                                 typeof av === 'string'
                                                     ? av.localeCompare(
                                                           String(bv),
                                                       )
                                                     : Number(av) - Number(bv);
+
                                             return subSortDir === 'asc'
                                                 ? cmp
                                                 : -cmp;
@@ -483,37 +557,41 @@ export default function InventoriesIndex({
 
                                         return (
                                             <>
-                                                <tr
+                                                <TableRow
                                                     key={group.variantId}
-                                                    className="hover:bg-mint-wash cursor-pointer border-t border-border/20 transition-colors"
+                                                    className="cursor-pointer border-t border-border/20 transition-colors hover:bg-mint-wash"
                                                     onClick={() =>
                                                         toggleExpand(
                                                             group.variantId,
                                                         )
                                                     }
                                                 >
-                                                    <td className="px-3 py-3 text-center">
+                                                    <TableCell className="px-3 py-3 text-center">
                                                         {isExpanded ? (
                                                             <ChevronDown className="mx-auto h-4 w-4 text-text-muted" />
                                                         ) : (
                                                             <ChevronRight className="mx-auto h-4 w-4 text-text-muted" />
                                                         )}
-                                                    </td>
-                                                    <td className="px-3 py-3">
+                                                    </TableCell>
+                                                    <TableCell className="px-3 py-3">
                                                         <span className="font-bold text-text">
                                                             {productName}
                                                         </span>
-                                                        {group.variant?.sku && (
+                                                        {(
+                                                            group.variant ??
+                                                            group.product
+                                                        )?.sku && (
                                                             <span className="ml-1 text-xs text-text-muted">
                                                                 {
-                                                                    group
-                                                                        .variant
-                                                                        .sku
+                                                                    (
+                                                                        group.variant ??
+                                                                        group.product
+                                                                    ).sku
                                                                 }
                                                             </span>
                                                         )}
-                                                    </td>
-                                                    <td className="px-3 py-3">
+                                                    </TableCell>
+                                                    <TableCell className="px-3 py-3">
                                                         <div className="flex items-center gap-1.5">
                                                             <div className="flex gap-0.5">
                                                                 {group.outlets.map(
@@ -529,6 +607,7 @@ export default function InventoriesIndex({
                                                                                         0)
                                                                                   ? 'low'
                                                                                   : 'healthy';
+
                                                                         return (
                                                                             <span
                                                                                 key={
@@ -565,8 +644,8 @@ export default function InventoriesIndex({
                                                                     ` · ${group.lowCount} rendah`}
                                                             </span>
                                                         </div>
-                                                    </td>
-                                                    <td
+                                                    </TableCell>
+                                                    <TableCell
                                                         className={cn(
                                                             'px-3 py-3 text-right font-bold tabular-nums',
                                                             group.overallStatus ===
@@ -579,8 +658,8 @@ export default function InventoriesIndex({
                                                         )}
                                                     >
                                                         {group.totalStock} pcs
-                                                    </td>
-                                                    <td className="px-3 py-3">
+                                                    </TableCell>
+                                                    <TableCell className="px-3 py-3">
                                                         <StatusBadge
                                                             variant={
                                                                 statusVariant
@@ -589,15 +668,15 @@ export default function InventoriesIndex({
                                                         >
                                                             {statusLabel}
                                                         </StatusBadge>
-                                                    </td>
-                                                </tr>
+                                                    </TableCell>
+                                                </TableRow>
 
                                                 {isExpanded && (
-                                                    <tr
+                                                    <TableRow
                                                         key={`${group.variantId}-sub`}
                                                         className="border-t border-border/50 bg-surface-muted/30"
                                                     >
-                                                        <td
+                                                        <TableCell
                                                             colSpan={5}
                                                             className="px-0 py-0"
                                                         >
@@ -691,9 +770,10 @@ export default function InventoriesIndex({
                                                                                             0);
                                                                                 const variantName =
                                                                                     displayProductName(
-                                                                                        row.variant,
+                                                                                        row.product ??
+                                                                                            row.variant,
                                                                                     );
-                                                                                const remindKey = `${row.outlet_id}-${row.product_variant_id ?? row.variant?.id}`;
+                                                                                const remindKey = `${row.outlet_id}-${row.product_id}`;
                                                                                 const reminded =
                                                                                     remindedIds.has(
                                                                                         remindKey,
@@ -704,7 +784,7 @@ export default function InventoriesIndex({
                                                                                         key={
                                                                                             row.id
                                                                                         }
-                                                                                        className="hover:bg-mint-wash border-t border-border/30 transition-colors"
+                                                                                        className="border-t border-border/30 transition-colors hover:bg-mint-wash"
                                                                                     >
                                                                                         <td className="px-3 py-2.5" />
                                                                                         <td className="px-3 py-2.5 text-sm font-medium text-text">
@@ -809,15 +889,15 @@ export default function InventoriesIndex({
                                                                     </tbody>
                                                                 </table>
                                                             </div>
-                                                        </td>
-                                                    </tr>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 )}
                                             </>
                                         );
                                     })}
-                                </tbody>
-                            </table>
-                        </div>
+                                </TableBody>
+                            </Table>
+                        </OwnerTable>
                     )}
                 </>
             )}
@@ -830,8 +910,10 @@ export default function InventoriesIndex({
                     <DialogHeader>
                         <DialogTitle>Edit Stok</DialogTitle>
                         <DialogDescription>
-                            {displayProductName(editItem?.variant)} —{' '}
-                            {editItem?.outlet_name}
+                            {displayProductName(
+                                editItem?.product ?? editItem?.variant,
+                            )}{' '}
+                            — {editItem?.outlet_name}
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleEdit} className="space-y-4">

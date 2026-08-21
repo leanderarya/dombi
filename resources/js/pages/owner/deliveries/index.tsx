@@ -1,13 +1,22 @@
 import { router } from '@inertiajs/react';
-import { MapPin, Package } from 'lucide-react';
+import { CheckCircle, MapPin, Package, Truck, XCircle } from 'lucide-react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell,
+} from '@/components/ui/table';
 import { formatDate } from '@/lib/format';
 
 const statusOptions = [
@@ -30,7 +39,7 @@ export default function OwnerDeliveriesIndex({
         return (
             <OwnerPageShell
                 title="Pengiriman"
-                subtitle="Kelola pengiriman dari semua outlet"
+                subtitle="Lacak status pengiriman pesanan"
             >
                 <SkeletonPage />
             </OwnerPageShell>
@@ -48,85 +57,101 @@ export default function OwnerDeliveriesIndex({
     return (
         <OwnerPageShell
             title="Pengiriman"
-            subtitle="Kelola pengiriman dari semua outlet"
+            subtitle="Lacak status pengiriman pesanan"
         >
             {/* KPI Strip */}
-            <OwnerKpiStrip
-                cols={4}
-                items={[
-                    {
-                        label: 'Total',
-                        value: stats.total_today,
-                        sublabel:
-                            (stats.total_today ?? 0) > 0
-                                ? 'Hari ini'
-                                : undefined,
-                        sublabelColor: 'text-blue-600',
-                    },
-                    {
-                        label: 'Aktif',
-                        value: stats.active,
-                        sublabel:
-                            (stats.active ?? 0) > 0
-                                ? 'Sedang berjalan'
-                                : undefined,
-                        sublabelColor: 'text-blue-600',
-                    },
-                    { label: 'Selesai', value: stats.completed_today },
-                    {
-                        label: 'Gagal',
-                        value: stats.failed_today,
-                        sublabel:
-                            (stats.failed_today ?? 0) > 0
-                                ? 'Perlu ditinjau'
-                                : undefined,
-                        sublabelColor: 'text-red-600',
-                    },
-                ]}
-            />
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Pengiriman Aktif
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                            <Truck className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {stats.active ?? 0}
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                        Sedang berjalan
+                    </p>
+                </div>
 
-            {/* Status Pills */}
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Selesai Hari Ini
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                            <CheckCircle className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {stats.completed_today ?? 0}
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                        Berhasil dikirim
+                    </p>
+                </div>
+
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Gagal
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                            <XCircle className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-red-600 tabular-nums sm:text-2xl">
+                        {stats.failed_today ?? 0}
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                        Perlu ditinjau
+                    </p>
+                </div>
+
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Total Hari Ini
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                            <Package className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {stats.total_today ?? 0}
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                        Semua pengiriman
+                    </p>
+                </div>
+            </div>
+
+            {/* Status Filter Chips */}
             <div
                 aria-label="Filter status pengiriman"
                 className="mb-4 flex flex-wrap items-center gap-2"
             >
-                {statusOptions.map((opt) => {
-                    const isActive = (filters.status ?? '') === opt.value;
-                    const colorMap: Record<string, string> = {
-                        '': 'text-text bg-surface-muted ring-border',
-                        waiting_pickup:
-                            'text-amber-600 bg-amber-50 ring-amber-200',
-                        picked_up: 'text-blue-600 bg-blue-50 ring-blue-200',
-                        delivering:
-                            'text-indigo-600 bg-indigo-50 ring-indigo-200',
-                        completed:
-                            'text-emerald-600 bg-emerald-50 ring-emerald-200',
-                        failed: 'text-red-600 bg-red-50 ring-red-200',
-                    };
-
-                    return (
-                        <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setFilter('status', opt.value)}
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive
-                                    ? (colorMap[opt.value] ??
-                                      'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
-                            }`}
-                        >
-                            {opt.label}
-                        </button>
-                    );
-                })}
+                <FilterChips
+                    options={statusOptions.map((o) => ({
+                        key: o.value,
+                        label: o.label,
+                    }))}
+                    active={filters.status ?? ''}
+                    onChange={(key) => setFilter('status', key)}
+                    variant="ring"
+                    size="sm"
+                />
             </div>
 
             {/* Filter controls */}
             <OwnerFilterCard
                 collapsible
                 defaultExpanded={false}
-                searchPlaceholder="Cari kode..."
+                searchPlaceholder="Cari kode atau pelanggan..."
                 searchValue={filters.search ?? ''}
                 onSearch={(val) => setFilter('search', val)}
                 outletOptions={outlets?.map((o: any) => ({
@@ -153,34 +178,34 @@ export default function OwnerDeliveriesIndex({
                     description="Pengiriman akan muncul di sini setelah kurir di-assign ke pesanan"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table
+                <OwnerTable>
+                    <Table
                         aria-label="Daftar pengiriman"
                         className="w-full min-w-[600px]"
                     >
-                        <thead>
+                        <TableHeader>
                             <tr className="bg-surface-muted/50">
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Kode
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Outlet
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Kurir
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Status
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Tanggal
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
                                     Aksi
-                                </th>
+                                </TableHead>
                             </tr>
-                        </thead>
-                        <tbody>
+                        </TableHeader>
+                        <TableBody>
                             {deliveries.data.map((d: any) => {
                                 const isActive = [
                                     'delivering',
@@ -188,29 +213,29 @@ export default function OwnerDeliveriesIndex({
                                 ].includes(d.status);
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={d.id}
-                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors"
+                                        className="border-t border-border/20 transition-colors hover:bg-emerald-50/40"
                                     >
-                                        <td className="px-4 py-3 font-bold text-text tabular-nums">
+                                        <TableCell className="px-4 py-3 font-mono font-bold text-primary tabular-nums">
                                             {d.order?.order_code ?? '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
                                             {d.order?.outlet?.name ?? '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
                                             {d.courier?.name ??
                                                 'Belum ada kurir'}
-                                        </td>
-                                        <td className="px-4 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
                                             <DeliveryStatusBadge
                                                 status={d.status}
                                             />
-                                        </td>
-                                        <td className="px-4 py-3 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
                                             {formatDate(d.assigned_at)}
-                                        </td>
-                                        <td className="px-4 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-2">
                                                 {isActive && (
                                                     <Button
@@ -236,13 +261,13 @@ export default function OwnerDeliveriesIndex({
                                                     Detail
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Pagination links={deliveries.links} />

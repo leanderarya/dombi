@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
+use App\Models\OfflineSale;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PaymentAccount;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -79,6 +81,7 @@ class SettlementController extends Controller
                 'payment_date' => $p->payment_date->toDateString(),
                 'status' => $p->status,
                 'notes' => $p->notes,
+                'proof_image' => $p->proof_image,
                 'rejection_reason' => $p->rejection_reason,
                 'verifier' => $p->verifier?->name,
                 'verified_at' => $p->verified_at?->toISOString(),
@@ -100,6 +103,7 @@ class SettlementController extends Controller
         }
 
         // Summary (no dead fields)
+        $netTotal = (float) $settlements->sum('net_amount');
         $summary = [
             'gross_revenue' => $totalSales + $totalDeliveryFee,
             'sales_amount' => $totalSales,
@@ -110,6 +114,14 @@ class SettlementController extends Controller
             'outstanding_amount' => $totalOutstanding,
             'units_sold' => $unitsSold,
             'orders_count' => $orderIds->count(),
+            'net_amount' => $netTotal,
+            'direction' => $netTotal >= 0 ? 'owner_pays_outlet' : 'outlet_pays_owner',
+            'breakdown' => [
+                'online_outlet_share' => (float) $settlements->sum('total_online_share'),
+                'delivery_cost' => (float) $settlements->sum('total_delivery_cost'),
+                'refund' => (float) $settlements->sum('total_refund'),
+                'offline_sales' => (float) $settlements->sum('total_offline_sales'),
+            ],
         ];
 
         $reconciliation = [
@@ -151,6 +163,14 @@ class SettlementController extends Controller
                 'due_date' => $s->due_date->toDateString(),
                 'status' => $s->status,
                 'outstanding' => (float) $s->outstanding_amount,
+                'net_amount' => (float) $s->net_amount,
+                'direction' => $s->direction,
+                'breakdown' => [
+                    'online_outlet_share' => (float) $s->total_online_share,
+                    'delivery_cost' => (float) $s->total_delivery_cost,
+                    'refund' => (float) $s->total_refund,
+                    'offline_sales' => (float) $s->total_offline_sales,
+                ],
                 'notes' => "Settlement {$s->period_label}",
                 'created_at' => $s->created_at->toISOString(),
             ];
@@ -162,6 +182,11 @@ class SettlementController extends Controller
             'payments' => $payments,
             'timeline' => $timeline,
             'paymentAccounts' => PaymentAccount::active()->orderBy('bank_name')->get(),
+            'outletBank' => [
+                'bank_name' => $outlet->bank_name,
+                'bank_account_number' => $outlet->bank_account_number,
+                'bank_account_holder' => $outlet->bank_account_holder,
+            ],
             'hasPendingPayment' => $hasPendingPayment,
             'period' => $period,
             'periodRange' => $from && $to ? [
@@ -169,6 +194,90 @@ class SettlementController extends Controller
                 'to' => $to->toDateString(),
             ] : null,
         ]);
+    }
+
+    public function show(Request $request, Settlement $settlement): Response
+    {
+        $outlet = $request->user()->outlet;
+        abort_unless($outlet && $settlement->outlet_id === $outlet->id, 403);
+
+        $weekStart = $settlement->period_start->toDateString();
+        $weekEnd = $settlement->period_end->toDateString();
+
+        $offlineSales = OfflineSale::where('outlet_id', $outlet->id)
+            ->whereDate('created_at', '>=', $weekStart)
+            ->whereDate('created_at', '<=', $weekEnd)
+            ->with(['product.category'])
+            ->get()
+            ->map(fn ($s) => [
+                'id' => $s->id,
+                'product_name' => $s->product?->category?->name
+                    ? "{$s->product->category->name} - {$s->product->name}"
+                    : ($s->product?->name ?? '-'),
+                'quantity' => $s->quantity,
+                'total_amount' => (float) $s->total_amount,
+                'payment_method' => $s->payment_method,
+                'created_at' => $s->created_at->toDateTimeString(),
+            ]);
+
+        $payments = SettlementPayment::where('outlet_id', $outlet->id)
+            ->where('status', SettlementPayment::STATUS_VERIFIED)
+            ->latest('payment_date')
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'amount' => (float) $p->amount,
+                'reference' => $p->reference_number,
+                'date' => $p->payment_date->toDateString(),
+                'direction' => $p->direction,
+            ]);
+
+        return Inertia::render('outlet/settlement-show', [
+            'settlement' => [
+                'period_label' => $settlement->period_label,
+                'period_start' => $weekStart,
+                'period_end' => $weekEnd,
+                'due_date' => $settlement->due_date->toDateString(),
+                'status' => $settlement->status,
+                'gross_revenue' => (float) $settlement->sales_amount + (float) $settlement->delivery_fee_amount,
+                'sales_amount' => (float) $settlement->sales_amount,
+                'delivery_fee_amount' => (float) $settlement->delivery_fee_amount,
+                'online_share' => (float) $settlement->total_online_share,
+                'delivery_cost' => (float) $settlement->total_delivery_cost,
+                'refund' => (float) $settlement->total_refund,
+                'offline_sales' => (float) $settlement->total_offline_sales,
+                'adjustments' => (float) $settlement->adjustment_amount,
+                'net_amount' => (float) $settlement->net_amount,
+                'direction' => $settlement->direction,
+                'amount_due' => (float) $settlement->amount_due,
+                'paid_amount' => (float) $settlement->paid_amount,
+                'outstanding' => (float) $settlement->outstanding_amount,
+            ],
+            'offlineSales' => $offlineSales,
+            'payments' => $payments,
+            'outlet' => [
+                'name' => $outlet->name,
+                'bank_name' => $outlet->bank_name,
+                'bank_account_number' => $outlet->bank_account_number,
+                'bank_account_holder' => $outlet->bank_account_holder,
+            ],
+        ]);
+    }
+
+    public function updateBank(Request $request): RedirectResponse
+    {
+        $outlet = $request->user()->outlet;
+        abort_unless($outlet, 403);
+
+        $validated = $request->validate([
+            'bank_name' => ['nullable', 'string', 'max:100'],
+            'bank_account_number' => ['nullable', 'string', 'max:50'],
+            'bank_account_holder' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $outlet->update($validated);
+
+        return back()->with('success', 'Rekening pembayaran diperbarui.');
     }
 
     private function resolvePeriod(string $period, Request $request): array

@@ -1,5 +1,3 @@
-import { formatDeliveryAge } from '@/lib/format';
-
 interface StatusHistory {
     id: number;
     from_status: string | null;

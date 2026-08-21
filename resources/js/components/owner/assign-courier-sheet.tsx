@@ -3,12 +3,12 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import CustomSelect from '@/components/ui/custom-select';
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetDescription,
-} from '@/components/ui/sheet';
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
 
 interface Props {
     order: any;
@@ -23,7 +23,10 @@ export default function AssignCourierSheet({
     open,
     onClose,
 }: Props) {
-    const form = useForm({ courier_id: couriers[0]?.id ?? '' });
+    const form = useForm({
+        courier_id: couriers[0]?.id ?? '',
+        courier_type: 'dombi',
+    });
 
     if (!order) {
         return null;
@@ -37,19 +40,20 @@ export default function AssignCourierSheet({
                 onClose();
                 toast.success('Kurir ditugaskan');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
     return (
-        <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-            <SheetContent>
-                <SheetHeader>
-                    <SheetTitle>Assign Kurir</SheetTitle>
-                    <SheetDescription>
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Assign Kurir</DialogTitle>
+                    <DialogDescription>
                         Pilih kurir untuk pesanan {order?.order_code}
-                    </SheetDescription>
-                </SheetHeader>
+                    </DialogDescription>
+                </DialogHeader>
                 <form onSubmit={handleSubmit} className="mt-4 space-y-4">
                     <CustomSelect
                         value={String(form.data.courier_id)}
@@ -67,7 +71,7 @@ export default function AssignCourierSheet({
                         Tugaskan Kurir
                     </Button>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }

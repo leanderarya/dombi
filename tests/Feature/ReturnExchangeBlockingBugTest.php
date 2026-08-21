@@ -7,8 +7,7 @@ use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\OutletPayable;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\ReturnRequest;
 use App\Models\StockMovement;
 use App\Models\User;
@@ -50,7 +49,8 @@ class ReturnExchangeBlockingBugTest extends TestCase
     public function test_outlet_can_view_own_exchange_request(): void
     {
         $context = $this->makeContext();
-        $exchange = $this->createExchange($context);
+        $return = $this->createReceivedReturnForExchange($context);
+        $exchange = $this->createExchange($context, $return);
 
         $this->actingAs($context['outletUser'])
             ->get(route('outlet.exchanges.show', $exchange))
@@ -66,7 +66,9 @@ class ReturnExchangeBlockingBugTest extends TestCase
     {
         $context = $this->makeContext();
         $otherContext = $this->makeContext('Other Outlet', 'Other Exchange 1L');
-        $otherExchange = $this->createExchange($otherContext);
+        $return = $this->createReceivedReturnForExchange($context);
+        $otherReturn = $this->createReceivedReturnForExchange($otherContext);
+        $otherExchange = $this->createExchange($otherContext, $otherReturn);
 
         $this->actingAs($context['outletUser'])
             ->get(route('outlet.exchanges.show', $otherExchange))
@@ -100,7 +102,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
 
         $this->assertDatabaseHas('stock_movements', [
             'outlet_id' => $context['outlet']->id,
-            'product_variant_id' => $context['variant']->id,
+            'product_id' => $context['variant']->id,
             'type' => 'return_out',
             'quantity' => -4,
             'reference_type' => ReturnRequest::class,
@@ -125,11 +127,14 @@ class ReturnExchangeBlockingBugTest extends TestCase
 
     public function test_completing_received_return_creates_single_settlement_adjustment(): void
     {
+        // Return of unsold stock (consignment) should NOT affect settlement
         $context = $this->makeContext(currentStock: 10, reservedStock: 0);
         $return = $this->createReturn($context, quantity: 2);
 
         app(ReturnService::class)->approveRequest($return, $context['owner']);
         app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
+
+        $return->fresh('items')->items->each->update(['disposition' => 'stored']);
 
         $this->actingAs($context['owner'])
             ->post(route('owner.returns.complete', $return))
@@ -140,7 +145,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
             'status' => ReturnRequest::STATUS_COMPLETED,
         ]);
 
-        $this->assertSame(1, OutletPayable::query()
+        $this->assertSame(0, OutletPayable::query()
             ->where('outlet_id', $context['outlet']->id)
             ->where('type', 'adjustment')
             ->count());
@@ -154,6 +159,8 @@ class ReturnExchangeBlockingBugTest extends TestCase
         app(ReturnService::class)->approveRequest($return, $context['owner']);
         app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
 
+        $return->fresh('items')->items->each->update(['disposition' => 'stored']);
+
         $this->actingAs($context['owner'])
             ->post(route('owner.returns.complete', $return))
             ->assertRedirect();
@@ -162,7 +169,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
             ->post(route('owner.returns.complete', $return))
             ->assertSessionHasErrors('status');
 
-        $this->assertSame(1, OutletPayable::query()
+        $this->assertSame(0, OutletPayable::query()
             ->where('outlet_id', $context['outlet']->id)
             ->where('type', 'adjustment')
             ->count());
@@ -199,18 +206,34 @@ class ReturnExchangeBlockingBugTest extends TestCase
             'reason' => 'slow_moving',
             'notes' => 'Return request for blocking bug reproduction',
             'items' => [[
-                'product_variant_id' => $context['variant']->id,
+                'product_id' => $context['variant']->id,
                 'quantity' => $quantity,
             ]],
         ]);
     }
 
-    private function createExchange(array $context, int $quantity = 2): ExchangeRequest
+    private function createReceivedReturnForExchange(array $context, int $quantity = 2): ReturnRequest
+    {
+        $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'reason' => 'slow_moving',
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => $quantity]],
+        ]);
+        $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
+        $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
+        $return->fresh('items')->items->each(
+            fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $context['owner'])
+        );
+
+        return $return->fresh();
+    }
+
+    private function createExchange(array $context, ReturnRequest $return, int $quantity = 2): ExchangeRequest
     {
         return app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
             'notes' => 'Exchange request for blocking bug reproduction',
             'items' => [[
-                'product_variant_id' => $context['variant']->id,
+                'product_id' => $context['variant']->id,
                 'quantity' => $quantity,
             ]],
         ]);
@@ -238,19 +261,17 @@ class ReturnExchangeBlockingBugTest extends TestCase
 
         $product = Product::create([
             'name' => $variantName,
-            'slug' => uniqid('return-bug-'),
-            'unit' => 'botol',
-            'price' => 55000,
+            'selling_price' => 55000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => $variantName,
             'brand' => 'Dombi',
         ]);
 
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => $variantName,
             'flavor' => 'Original',
@@ -263,7 +284,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
         $inventory = OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => $currentStock,
             'reserved_stock' => $reservedStock,
             'minimum_stock' => 2,

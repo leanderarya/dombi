@@ -12,6 +12,10 @@ class GuestOrderRecoveryService
 
     private const MAX_DAYS = 30;
 
+    public function __construct(
+        private readonly RefundPayloadService $refundPayloads,
+    ) {}
+
     /**
      * Recover orders using phone number.
      * Phone number is the sole proof of ownership — no second factor needed.
@@ -52,22 +56,8 @@ class GuestOrderRecoveryService
 
         $activeOrders = Order::query()
             ->where('customer_id', $customer->id)
-            ->whereIn('status', Order::ACTIVE_STATUSES)
-            ->where(function ($q) {
-                $q->whereNull('payment_status')
-                    ->orWhere('payment_status', 'pending')
-                    ->orWhere('payment_status', 'paid')
-                    ->orWhere(function ($q2) {
-                        $q2->whereIn('payment_status', ['failed', 'expired'])
-                            ->where('status', Order::STATUS_PENDING_CONFIRMATION);
-                    });
-            })
-            ->where(function ($q) {
-                $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)
-                    ->orWhereNull('confirmation_expires_at')
-                    ->orWhere('confirmation_expires_at', '>', now());
-            })
-            ->with(['outlet:id,name', 'items.variant.family'])
+            ->visibleAsCustomerActive()
+            ->with(['outlet:id,name', 'items.product.category'])
             ->latest()
             ->get()
             ->map(fn (Order $order) => $this->formatOrder($order));
@@ -76,16 +66,16 @@ class GuestOrderRecoveryService
         $recentOrders = $activeOnly
             ? Order::query()
                 ->where('customer_id', $customer->id)
-                ->whereIn('status', array_merge(Order::HISTORY_STATUSES, [Order::STATUS_EXPIRED]))
+                ->visibleAsCustomerHistory()
                 ->where('ordered_at', '>=', now()->subDays(self::MAX_DAYS))
-                ->with(['outlet:id,name', 'items.variant.family'])
+                ->with(['outlet:id,name', 'items.product.category'])
                 ->latest()
                 ->limit(self::MAX_ORDERS)
                 ->get()
                 ->map(fn (Order $order) => $this->formatOrder($order))
             : Order::query()
                 ->where('customer_id', $customer->id)
-                ->whereIn('status', Order::HISTORY_STATUSES)
+                ->visibleAsCustomerHistory()
                 ->where('ordered_at', '>=', now()->subDays(self::MAX_DAYS))
                 ->with(['outlet:id,name', 'items'])
                 ->latest()
@@ -113,6 +103,13 @@ class GuestOrderRecoveryService
 
     private function formatOrder(Order $order): array
     {
+        $queueState = $this->refundPayloads->queueState($order);
+        $refundBadge = $queueState === null ? null : [
+            'payment_status' => $order->payment_status,
+            'queue_state' => $queueState,
+            'status_label' => $this->refundPayloads->statusLabel($order),
+        ];
+
         return [
             'id' => $order->id,
             'order_code' => $order->order_code,
@@ -120,6 +117,7 @@ class GuestOrderRecoveryService
             'tracking_url' => $order->tracking_url,
             'status' => $order->status,
             'payment_status' => $order->payment_status,
+            'refund_badge' => $refundBadge,
             'fulfillment_type' => $order->fulfillment_type,
             'total' => (float) $order->total,
             'customer_name' => $order->customer_name,
@@ -127,7 +125,7 @@ class GuestOrderRecoveryService
             'items' => $order->items->map(fn ($item) => [
                 'product_name' => $item->product_name,
                 'quantity' => $item->quantity,
-                'image' => $item->variant?->family?->image,
+                'image' => $item->product?->display_image ?? $item->product?->image,
             ])->values()->all(),
             'ordered_at' => $order->ordered_at?->toISOString(),
             'created_at' => $order->ordered_at?->toISOString(),

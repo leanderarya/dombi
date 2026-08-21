@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
 use App\Models\OutletInventory;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\RestockRequest;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
@@ -20,12 +20,12 @@ class InventoryController extends Controller
         $outlet = auth()->user()->outlet;
         abort_unless($outlet, 403);
 
-        $families = ProductFamily::where('is_active', true)
-            ->with(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
+        $categories = ProductCategory::where('is_active', true)
+            ->with(['products' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
             ->orderBy('name')
             ->get();
 
-        $centerStocks = ProductVariant::pluck('center_stock', 'id');
+        $centerStocks = Product::pluck('center_stock', 'id');
 
         $activeRequests = RestockRequest::where('outlet_id', $outlet->id)
             ->whereIn('status', ['requested', 'preparing', 'shipped'])
@@ -36,9 +36,9 @@ class InventoryController extends Controller
         $activeMap = [];
         foreach ($activeRequests as $req) {
             foreach ($req->items as $item) {
-                $vid = $item->product_variant_id;
-                if (!isset($activeMap[$vid])) {
-                    $activeMap[$vid] = [
+                $pid = $item->product_id;
+                if (! isset($activeMap[$pid])) {
+                    $activeMap[$pid] = [
                         'id' => $req->id,
                         'status' => $req->status,
                         'requested_qty' => $item->requested_quantity,
@@ -50,18 +50,19 @@ class InventoryController extends Controller
         }
 
         $recentRestocks = RestockRequest::where('outlet_id', $outlet->id)
-            ->with(['items.variant.family'])
+            ->with(['items.product.category'])
             ->latest()
             ->limit(10)
             ->get();
 
         return Inertia::render('outlet/inventory', [
             'outlet' => $outlet,
-            'inventories' => OutletInventory::with(['variant.family', 'product'])
+            'inventories' => OutletInventory::with(['product.category'])
                 ->where('outlet_id', $outlet->id)
-                ->orderBy('product_variant_id')
+                ->orderBy('product_id')
                 ->get(),
-            'families' => $families,
+            'categories' => $categories,
+            'families' => $categories,
             'centerStocks' => $centerStocks,
             'activeRestocks' => $activeMap,
             'recentRestocks' => $recentRestocks,
@@ -75,13 +76,15 @@ class InventoryController extends Controller
         abort_unless($outlet, 403);
 
         $validated = $request->validate([
-            'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'product_id' => ['required', 'integer', 'exists:products,id'],
             'actual_count' => ['required', 'integer', 'min:0'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $productId = $validated['product_id'];
+
         $inventory = OutletInventory::where('outlet_id', $outlet->id)
-            ->where('product_variant_id', $validated['product_variant_id'])
+            ->where('product_id', $productId)
             ->firstOrFail();
 
         $systemCount = $inventory->current_stock;
@@ -91,9 +94,13 @@ class InventoryController extends Controller
             return back()->with('success', 'Stok sesuai. Tidak ada perubahan.');
         }
 
+        if (empty($validated['notes'])) {
+            return back()->withErrors(['notes' => 'Catatan wajib diisi saat stok berubah.'])->withInput();
+        }
+
         app(InventoryService::class)->stockOpname(
             $outlet->id,
-            $validated['product_variant_id'],
+            $productId,
             $actualCount,
             $validated['notes'] ?? null,
         );

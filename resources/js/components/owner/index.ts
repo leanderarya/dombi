@@ -18,7 +18,6 @@ export { default as OutletProvisioningSummary } from './outlet-provisioning-summ
 export { default as OutletStatusBadge } from './outlet-status-badge';
 export { default as OwnerCommandSheet } from './owner-command-sheet';
 export { default as OwnerDashboardSkeleton } from './owner-dashboard-skeleton';
-export { default as OwnerKpiCard } from './owner-kpi-card';
 export { default as OwnerPageShell } from './owner-page-shell';
 export { default as OwnerPageSkeleton } from './owner-page-skeleton';
 export { default as OwnerSidebarNav } from './owner-sidebar-nav';

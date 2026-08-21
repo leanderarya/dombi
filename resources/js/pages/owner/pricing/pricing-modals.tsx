@@ -16,18 +16,17 @@ import type { OutletPriceRow, PusatVariant } from './types';
 export function GlobalPriceModal({
     open,
     variant,
+    product,
     onClose,
 }: {
     open: boolean;
-    variant: PusatVariant;
+    variant?: PusatVariant;
+    product?: PusatVariant;
     onClose: () => void;
 }) {
-    const [centerPrice, setCenterPrice] = useState(
-        String(variant.center_price),
-    );
-    const [sellingPrice, setSellingPrice] = useState(
-        String(variant.selling_price),
-    );
+    const row = product ?? variant!;
+    const [centerPrice, setCenterPrice] = useState(String(row.center_price));
+    const [sellingPrice, setSellingPrice] = useState(String(row.selling_price));
     const [saving, setSaving] = useState(false);
 
     const margin =
@@ -39,11 +38,11 @@ export function GlobalPriceModal({
         const newCenter = parseFloat(centerPrice);
         const newSelling = parseFloat(sellingPrice);
 
-        if (!isNaN(newCenter) && newCenter !== variant.center_price) {
+        if (!isNaN(newCenter) && newCenter !== row.center_price) {
             updates.center_price = newCenter;
         }
 
-        if (!isNaN(newSelling) && newSelling !== variant.selling_price) {
+        if (!isNaN(newSelling) && newSelling !== row.selling_price) {
             updates.selling_price = newSelling;
         }
 
@@ -54,7 +53,8 @@ export function GlobalPriceModal({
         }
 
         setSaving(true);
-        router.patch(`/owner/pricing/variants/${variant.variant_id}`, updates, {
+        const pid = row.product_id ?? row.variant_id;
+        router.patch(`/owner/pricing/products/${pid}`, updates, {
             onFinish: () => {
                 setSaving(false);
                 onClose();
@@ -68,7 +68,7 @@ export function GlobalPriceModal({
                 <DialogHeader>
                     <DialogTitle>Ubah Harga</DialogTitle>
                     <DialogDescription>
-                        {displayProductName(variant)}
+                        {displayProductName(row as any)}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3">
@@ -112,9 +112,9 @@ export function GlobalPriceModal({
                         )}
                     </div>
 
-                    {variant.outlet_override_count > 0 && (
+                    {row.outlet_override_count > 0 && (
                         <p className="text-xs text-amber-600">
-                            {variant.outlet_override_count} outlet memiliki
+                            {row.outlet_override_count} outlet memiliki
                             override. Perubahan HPP dapat mempengaruhi margin
                             outlet.
                         </p>
@@ -167,7 +167,9 @@ export function OutletPriceModal({
             <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle>Ubah Harga Outlet</DialogTitle>
-                    <DialogDescription>{row.name}</DialogDescription>
+                    <DialogDescription>
+                        {displayProductName(row as any)}
+                    </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3">
                     <div>

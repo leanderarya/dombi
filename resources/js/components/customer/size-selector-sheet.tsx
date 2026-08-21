@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import Dialog from '@/components/ui/dialog';
+import { useOutlet } from '@/contexts/outlet-context';
+import { mutationFetch } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
-import { useOutlet } from '@/contexts/outlet-context';
-import { mutationFetch } from '@/lib/api';
 
 interface Variant {
     id: number;
@@ -26,37 +27,36 @@ interface Props {
     onAdded?: () => void;
 }
 
-export default function SizeSelectorSheet({
-    open,
+export default function SizeSelectorSheet({ open, ...props }: Props) {
+    if (!open) {
+        return null;
+    }
+
+    return <SizeSelectorSheetContent {...props} />;
+}
+
+function SizeSelectorSheetContent({
     onClose,
     familyName,
     flavorName,
     variants,
     onAdded,
-}: Props) {
-    const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [quantity, setQuantity] = useState(1);
-    const [adding, setAdding] = useState(false);
-    const [maxQuantity, setMaxQuantity] = useState<number>(999);
-
-    const cart = useCart();
-    const { selectedOutlet } = useOutlet();
-    const isOutletClosed = selectedOutlet?.is_open === false;
-
+}: Omit<Props, 'open'>) {
     const sortedVariants = useMemo(() => {
         return [...variants].sort(
             (a, b) => sizeToMl(a.size) - sizeToMl(b.size),
         );
     }, [variants]);
+    const [selectedId, setSelectedId] = useState<number | null>(
+        () => sortedVariants[0]?.id ?? null,
+    );
+    const [quantity, setQuantity] = useState(1);
+    const [adding, setAdding] = useState(false);
+    const [maxQuantity, setMaxQuantity] = useState<number>(999);
 
-    // Reset selection to smallest when sheet opens
-    useEffect(() => {
-        if (open && sortedVariants.length > 0) {
-            setSelectedId(sortedVariants[0].id);
-            setQuantity(1);
-            setMaxQuantity(999);
-        }
-    }, [open, sortedVariants]);
+    const cart = useCart();
+    const { selectedOutlet, syncOutletId } = useOutlet();
+    const isOutletClosed = selectedOutlet?.is_open === false;
 
     const selectedVariant =
         sortedVariants.find((v) => v.id === selectedId) ?? sortedVariants[0];
@@ -85,7 +85,7 @@ export default function SizeSelectorSheet({
                     ...(token ? { 'X-CSRF-TOKEN': token } : {}),
                 },
                 body: JSON.stringify({
-                    product_variant_id: selectedVariant.id,
+                    product_id: selectedVariant.id,
                     quantity,
                 }),
             });
@@ -94,8 +94,16 @@ export default function SizeSelectorSheet({
             if (data.item?.max_quantity !== undefined) {
                 setMaxQuantity(data.item.max_quantity);
             }
+
+            if (data?.switched_outlet && data?.outlet?.to_outlet_id) {
+                syncOutletId(data.outlet.to_outlet_id);
+                toast.warning(
+                    `Stok tidak tersedia di ${data.outlet.from_outlet_name}. Outlet belanja Anda otomatis dialihkan ke ${data.outlet.to_outlet_name}.`,
+                    { duration: 4000 },
+                );
+            }
         } catch {
-            // Frontend cart already updated
+            cart.removeItem(selectedVariant.id);
         }
 
         setAdding(false);
@@ -107,7 +115,7 @@ export default function SizeSelectorSheet({
     const title = flavorName ? `${familyName} ${flavorName}` : familyName;
 
     return (
-        <Dialog open={open} onClose={onClose} title={title}>
+        <Dialog open onClose={onClose} title={title}>
             <div className="space-y-5">
                 {/* Size Options */}
                 <div className="space-y-2">

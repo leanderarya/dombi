@@ -10,12 +10,12 @@ import {
     User,
 } from 'lucide-react';
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetDescription,
-} from '@/components/ui/sheet';
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
 
 interface Props {
     open: boolean;
@@ -47,15 +47,15 @@ const sheetItems = [
 
 export default function OwnerCommandSheet({ open, onClose }: Props) {
     return (
-        <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-            <SheetContent side="bottom">
-                <SheetHeader>
-                    <SheetTitle>Menu</SheetTitle>
-                    <SheetDescription>
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Menu</DialogTitle>
+                    <DialogDescription>
                         Navigasi cepat untuk owner dashboard.
-                    </SheetDescription>
-                </SheetHeader>
-                <div className="mt-4 px-4 pb-4">
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="mt-4">
                     <div className="mb-4 space-y-0.5">
                         {sheetItems.map((item, i) => {
                             if ('divider' in item && item.divider) {
@@ -99,7 +99,7 @@ export default function OwnerCommandSheet({ open, onClose }: Props) {
                         </button>
                     </div>
                 </div>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }

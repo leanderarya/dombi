@@ -1,13 +1,18 @@
 import { createInertiaApp, router } from '@inertiajs/react';
+import { Component, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import type { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Component, useEffect, type ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import DevToolbar from '@/components/dev-toolbar';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
 
-class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
+class ErrorBoundary extends Component<
+    { children: ReactNode },
+    { hasError: boolean; error: Error | null }
+> {
     constructor(props: { children: ReactNode }) {
         super(props);
         this.state = { hasError: false, error: null };
@@ -19,8 +24,12 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
         if (this.state.hasError) {
             return (
                 <div className="flex min-h-screen flex-col items-center justify-center bg-white p-6 text-center">
-                    <h1 className="mb-2 text-lg font-bold">Terjadi kesalahan</h1>
-                    <p className="mb-4 text-sm text-gray-500">{this.state.error?.message || 'Unknown error'}</p>
+                    <h1 className="mb-2 text-lg font-bold">
+                        Terjadi kesalahan
+                    </h1>
+                    <p className="mb-4 text-sm text-gray-500">
+                        {this.state.error?.message || 'Unknown error'}
+                    </p>
                     <button
                         onClick={() => window.location.reload()}
                         className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white"
@@ -30,24 +39,30 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
                 </div>
             );
         }
+
         return this.props.children;
     }
 }
 
 const PushInit = () => {
-  usePushSubscription();
+    usePushSubscription();
 
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'NAVIGATE' && event.data?.url) {
-        router.visit(event.data.url);
-      }
-    };
-    navigator.serviceWorker.addEventListener('message', handleMessage);
-    return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
-  }, []);
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'NAVIGATE' && event.data?.url) {
+                router.visit(event.data.url);
+            }
+        };
+        navigator.serviceWorker.addEventListener('message', handleMessage);
 
-  return null;
+        return () =>
+            navigator.serviceWorker.removeEventListener(
+                'message',
+                handleMessage,
+            );
+    }, []);
+
+    return null;
 };
 
 createInertiaApp({
@@ -57,7 +72,7 @@ createInertiaApp({
         color: '#047857',
     },
     resolve: (name) => {
-        const pages = import.meta.glob(
+        const pages = import.meta.glob<{ default: ComponentType }>(
             './pages/{owner,outlet,courier,auth}/**/*.tsx',
             { eager: true },
         );
@@ -70,36 +85,30 @@ createInertiaApp({
         return page;
     },
     setup({ el, App, props }) {
+        const devValue = props.initialPage.props.dev;
+        const dev =
+            typeof devValue === 'object' && devValue !== null
+                ? (devValue as {
+                      isLocal?: boolean;
+                      currentRole?: string | null;
+                      env?: string;
+                  })
+                : null;
         const root = createRoot(el!);
         root.render(
             <ErrorBoundary>
                 <PushInit />
                 <App {...props} />
                 <Toaster
-                  position="top-center"
-                  richColors
-                  closeButton
-                  style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
+                    position="top-center"
+                    richColors
+                    closeButton
+                    style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
                 />
-                {(props.initialPage.props.dev as Record<string, unknown>)
-                    ?.isLocal && (
+                {dev?.isLocal && (
                     <DevToolbar
-                        currentRole={
-                            (
-                                props.initialPage.props.dev as Record<
-                                    string,
-                                    unknown
-                                >
-                            ).currentRole as string | null
-                        }
-                        env={
-                            (
-                                props.initialPage.props.dev as Record<
-                                    string,
-                                    unknown
-                                >
-                            ).env as string
-                        }
+                        currentRole={dev.currentRole ?? null}
+                        env={dev.env ?? ''}
                     />
                 )}
             </ErrorBoundary>,

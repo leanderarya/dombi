@@ -6,8 +6,13 @@ export type RefundPaymentStatus =
     | 'refund_failed';
 export type RefundDestinationStatus = 'missing' | 'valid' | 'invalid';
 export type RefundQueue =
-    | 'awaiting_customer' | 'awaiting_guest' | 'ready' | 'in_progress'
-    | 'action_required' | 'completed' | 'rejected';
+    | 'awaiting_customer'
+    | 'awaiting_guest'
+    | 'ready'
+    | 'in_progress'
+    | 'action_required'
+    | 'completed'
+    | 'rejected';
 export type RefundDestinationType = 'bank' | 'ewallet';
 
 export interface RefundHistoryItem {
@@ -67,7 +72,9 @@ export interface GuestRefundPayload extends RefundBase {
     role: 'guest';
     guidance: string;
 }
-export interface OutletRefundPayload extends RefundBase { role: 'outlet'; }
+export interface OutletRefundPayload extends RefundBase {
+    role: 'outlet';
+}
 export interface OwnerRefundPayload extends RefundBase {
     role: 'owner';
     order_code: string;

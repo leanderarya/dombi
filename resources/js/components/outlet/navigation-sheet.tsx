@@ -6,14 +6,12 @@ import {
     Box,
     Truck,
     ShoppingBag,
-    BarChart3,
-    FileText,
     AlertTriangle,
     RotateCcw,
     Repeat2,
-    Receipt,
     DollarSign,
     LogOut,
+    UserRound,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import SideSheet from '@/components/ui/side-sheet';
@@ -24,6 +22,7 @@ interface NavItem {
     label: string;
     icon: ReactNode;
     badgeKey?: keyof OutletBadgeCounts | 'orders';
+    activePaths?: string[];
 }
 
 interface NavGroup {
@@ -39,6 +38,7 @@ const navGroups: NavGroup[] = [
                 href: '/outlet/dashboard',
                 label: 'Dashboard',
                 icon: <LayoutDashboard className="h-5 w-5" />,
+                activePaths: ['/outlet/analytics', '/outlet/reports'],
             },
             {
                 href: '/outlet/orders',
@@ -52,9 +52,10 @@ const navGroups: NavGroup[] = [
                 icon: <QrCode className="h-5 w-5" />,
             },
             {
-                href: '/outlet/settlement',
-                label: 'Settlement',
-                icon: <DollarSign className="h-5 w-5" />,
+                href: '/outlet/deliveries',
+                label: 'Pengiriman',
+                icon: <Truck className="h-5 w-5" />,
+                badgeKey: 'deliveries',
             },
         ],
     },
@@ -67,42 +68,26 @@ const navGroups: NavGroup[] = [
                 icon: <Box className="h-5 w-5" />,
             },
             {
-                href: '/outlet/deliveries',
-                label: 'Pengiriman',
-                icon: <Truck className="h-5 w-5" />,
-                badgeKey: 'deliveries',
-            },
-            {
                 href: '/outlet/offline-sales',
                 label: 'Penjualan Offline',
                 icon: <ShoppingBag className="h-5 w-5" />,
             },
+            {
+                href: '/outlet/my-couriers',
+                label: 'Kurir Saya',
+                icon: <UserRound className="h-5 w-5" />,
+            },
         ],
     },
     {
-        label: 'Pelaporan',
+        label: 'Tindakan',
         items: [
-            {
-                href: '/outlet/analytics',
-                label: 'Analitik',
-                icon: <BarChart3 className="h-5 w-5" />,
-            },
-            {
-                href: '/outlet/reports',
-                label: 'Laporan Penjualan',
-                icon: <FileText className="h-5 w-5" />,
-            },
             {
                 href: '/outlet/order-reports',
                 label: 'Laporan Masalah',
                 icon: <AlertTriangle className="h-5 w-5" />,
                 badgeKey: 'reports',
             },
-        ],
-    },
-    {
-        label: 'Pengembalian',
-        items: [
             {
                 href: '/outlet/returns',
                 label: 'Return Produk',
@@ -118,13 +103,12 @@ const navGroups: NavGroup[] = [
         ],
     },
     {
-        label: 'Lainnya',
+        label: 'Keuangan',
         items: [
             {
-                href: '/outlet/settlement-payments',
-                label: 'Riwayat Pembayaran',
-                icon: <Receipt className="h-5 w-5" />,
-                badgeKey: 'payments',
+                href: '/outlet/settlement',
+                label: 'Settlement',
+                icon: <DollarSign className="h-5 w-5" />,
             },
         ],
     },
@@ -151,8 +135,11 @@ export default function OutletNavigationSheet({
 
     const isItemActive = (item: NavItem): boolean => {
         const pathname = url.split('?')[0];
+        const paths = [item.href, ...(item.activePaths ?? [])];
 
-        return pathname === item.href || pathname.startsWith(item.href + '/');
+        return paths.some(
+            (path) => pathname === path || pathname.startsWith(`${path}/`),
+        );
     };
 
     const getBadgeCount = (item: NavItem): number => {
@@ -193,7 +180,7 @@ export default function OutletNavigationSheet({
                         key={group.label}
                         className={groupIndex > 0 ? 'mt-3' : ''}
                     >
-                        <div className="px-3 pb-1 text-[10px] font-semibold tracking-wider text-text-subtle uppercase">
+                        <div className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-text-subtle uppercase">
                             {group.label}
                         </div>
                         <div className="space-y-0.5">
@@ -208,12 +195,12 @@ export default function OutletNavigationSheet({
                                         onClick={onClose}
                                         className={`flex items-center gap-3 rounded-lg px-3 py-3 text-[13px] transition-all duration-150 ${
                                             active
-                                                ? 'bg-emerald-50 font-semibold text-emerald-700'
+                                                ? 'bg-primary-light font-semibold text-primary'
                                                 : 'font-medium text-text-muted active:bg-surface-muted'
                                         }`}
                                     >
                                         <span
-                                            className={`h-5 w-5 shrink-0 ${active ? 'text-emerald-600' : 'text-text-subtle'}`}
+                                            className={`h-5 w-5 shrink-0 ${active ? 'text-primary' : 'text-text-subtle'}`}
                                         >
                                             {item.icon}
                                         </span>

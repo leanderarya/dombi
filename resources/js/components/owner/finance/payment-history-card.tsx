@@ -1,5 +1,4 @@
 import { Eye, Check, X } from 'lucide-react';
-import { useState } from 'react';
 import { formatCurrency, formatDate } from '@/lib/format';
 import FinanceStatusBadge from './finance-status-badge';
 
@@ -42,7 +41,6 @@ export default function PaymentHistoryCard({
     processing,
 }: Props) {
     const isPending = payment.status === 'pending_verification';
-    const isRejected = payment.status === 'rejected';
 
     return (
         <div

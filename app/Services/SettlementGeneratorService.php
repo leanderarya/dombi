@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Delivery;
+use App\Models\ExchangeRequest;
 use App\Models\OfflineSale;
 use App\Models\Order;
 use App\Models\Outlet;
@@ -44,17 +46,54 @@ class SettlementGeneratorService
             return null;
         }
 
-        // Online orders
-        $deliveryFeeTotal = $orders->sum(fn (Order $o) => (float) $o->delivery_fee);
-        $salesAmount = $orders->sum(fn (Order $o) => (float) $o->total) - $deliveryFeeTotal;
-        $amountDue = $orders->sum(function (Order $o) {
-            return $o->items->sum(fn ($item) => ((float) ($item->center_price_snapshot ?? 0)) * $item->quantity);
+        // 1. Online outlet share = Σ(selling_price_snapshot - center_price_snapshot) per item
+        $onlineOutletShare = $orders->sum(function (Order $o) {
+            return $o->items->sum(function ($item) {
+                $selling = (float) ($item->selling_price_snapshot ?? 0);
+                $center = (float) ($item->center_price_snapshot ?? 0);
+
+                return ($selling - $center) * $item->quantity;
+            });
         });
 
-        // Offline sales: all revenue is center_price × qty (no delivery fee, no customer margin)
-        $offlineAmount = $offlineSales->sum(fn (OfflineSale $s) => (float) $s->center_price * $s->quantity);
-        $salesAmount += $offlineAmount;
-        $amountDue += $offlineAmount;
+        // 2. Delivery costs = Σ(courier_cost) for ALL deliveries (dombi + eksternal)
+        // Owner pays all courier salaries, so all costs are deducted from outlet share
+        $orderIds = $orders->pluck('id');
+        $deliveryCostTotal = $orderIds->isNotEmpty()
+            ? (float) Delivery::whereIn('order_id', $orderIds)
+                ->where('status', 'delivered')
+                ->sum('courier_cost')
+            : 0.0;
+
+        // 3. Refunds = Σ(refund_amount) for orders refunded this week
+        // Approach A: refund potong minggu refund diproses
+        $refundTotal = (float) Order::where('outlet_id', $outlet->id)
+            ->whereIn('payment_status', ['refunded', 'refund_in_progress'])
+            ->whereNotNull('refund_amount')
+            ->where('refund_amount', '>', 0)
+            ->whereDate('refund_requested_at', '>=', $weekStart)
+            ->whereDate('refund_requested_at', '<=', $weekEnd)
+            ->sum('refund_amount');
+
+        // 4. Offline sales = Σ(center_price * qty) — money received by outlet, must be remitted
+        $offlineSalesTotal = $offlineSales->sum(fn (OfflineSale $s) => (float) $s->center_price * $s->quantity);
+
+        // 5. Net calculation
+        $netAmount = ($onlineOutletShare - $deliveryCostTotal - $refundTotal) - $offlineSalesTotal;
+
+        // 6. Direction
+        $direction = $netAmount >= 0
+            ? Settlement::DIRECTION_OWNER_PAYS
+            : Settlement::DIRECTION_OUTLET_PAYS;
+
+        // 7. amount_due = abs(net) for backward compat with payment flow
+        $amountDue = abs($netAmount);
+
+        // Total sales for display (online + offline revenue)
+        $salesAmount = $orders->sum(fn (Order $o) => (float) $o->total - (float) $o->delivery_fee) + $offlineSalesTotal;
+
+        // Delivery fee from orders (for display)
+        $deliveryFeeTotal = $orders->sum(fn (Order $o) => (float) $o->delivery_fee);
 
         // Due date = end of week + 7 days (consistent weekly cycle)
         $dueDate = Carbon::parse($weekEnd)->addDays(7)->toDateString();
@@ -72,17 +111,32 @@ class SettlementGeneratorService
                 'sales_amount' => $salesAmount,
                 'delivery_fee_amount' => $deliveryFeeTotal,
                 'amount_due' => $amountDue,
+                'total_online_share' => $onlineOutletShare,
+                'total_delivery_cost' => $deliveryCostTotal,
+                'total_refund' => $refundTotal,
+                'total_offline_sales' => $offlineSalesTotal,
+                'net_amount' => $netAmount,
+                'direction' => $direction,
                 'due_date' => $dueDate,
                 'notes' => "Settlement minggu {$weekStart} – {$weekEnd} untuk {$outlet->name}",
             ],
         );
 
-        // Ensure status is correct after upsert
-        if ($settlement->wasRecentlyCreated) {
-            $settlement->status = Settlement::STATUS_GENERATED;
-            $settlement->save();
-            $this->notificationService->notifySettlementGenerated($settlement);
-        } else {
+        $wasRecentlyCreated = $settlement->wasRecentlyCreated;
+
+        // Sync exchange adjustments (return adjustments are ignored - consignment model)
+        $this->syncAdjustments($outlet, $date);
+
+        // Refresh after sync (adjustment_amount may have changed)
+        $settlement = Settlement::where('outlet_id', $outlet->id)
+            ->where('period_type', 'weekly')
+            ->where('period_start', $weekStart)
+            ->first();
+
+        if ($settlement) {
+            if ($wasRecentlyCreated) {
+                $this->notificationService->notifySettlementGenerated($settlement);
+            }
             $settlement = Settlement::lockForUpdate()->find($settlement->id);
             $settlement->recalculateStatus();
         }
@@ -143,16 +197,19 @@ class SettlementGeneratorService
     }
 
     /**
-     * Sync outlet_payables adjustments (returns/exchanges) to settlement.adjustment_amount.
-     * Single source of truth — called from ReturnService and ExchangeService after recording adjustments.
+     * Sync outlet_payables adjustments (exchanges only) to settlement.adjustment_amount.
+     * Return of unsold stock (consignment) must NOT affect settlement.
+     * Single source of truth — called from ExchangeService and ReturnService (cleanup).
      */
     public function syncAdjustments(Outlet $outlet, CarbonInterface $date): void
     {
         $weekStart = Carbon::parse($date)->startOfWeek(Carbon::MONDAY)->toDateString();
         $weekEnd = Carbon::parse($date)->endOfWeek(Carbon::SUNDAY)->toDateString();
 
+        // Only exchange adjustments affect settlement; return adjustments are ignored (consignment model)
         $adjustmentTotal = (float) OutletPayable::where('outlet_id', $outlet->id)
             ->where('type', 'adjustment')
+            ->where('reference_type', ExchangeRequest::class)
             ->whereBetween('created_at', [$weekStart, $weekEnd.' 23:59:59'])
             ->sum('amount');
 

@@ -9,22 +9,30 @@ import {
     XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
-import Dialog from '@/components/ui/dialog';
 import PushBanner from '@/components/shared/push-banner';
-import { formatCurrency } from '@/lib/format';
+import Dialog from '@/components/ui/dialog';
+import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { copyToClipboard } from '@/lib/clipboard';
+import { formatCurrency } from '@/lib/format';
 import { useNavigation } from '@/providers/navigation-provider';
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max polling
 
-export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [] }: any) {
+export default function ConfirmPage({
+    order,
+    isLoggedIn,
+    cancellationReasons = [],
+}: any) {
     const nav = useNavigation();
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(() => {
         const s = order.payment_status;
-        if (s === 'paid' || s === 'failed' || s === 'expired') return s;
+
+        if (s === 'paid' || s === 'failed' || s === 'expired') {
+            return s;
+        }
+
         return 'pending';
     });
     const [countdown, setCountdown] = useState<number | null>(null);
@@ -36,7 +44,7 @@ export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [
     const [cancelLoading, setCancelLoading] = useState(false);
     const [needsRefund, setNeedsRefund] = useState(false);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-    const pollStart = useRef(Date.now());
+    const pollStart = useRef<number | null>(null);
     const submitLock = useRef(false);
 
     // Prune navigation stack after successful payment
@@ -47,14 +55,22 @@ export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [
 
     // Poll payment status as webhook fallback (max 5 min)
     useEffect(() => {
-        if (paymentStatus !== 'pending') return;
+        if (paymentStatus !== 'pending') {
+            return;
+        }
 
         pollStart.current = Date.now();
 
         pollInterval.current = setInterval(async () => {
             // Stop polling after timeout
-            if (Date.now() - pollStart.current > POLL_TIMEOUT_MS) {
-                if (pollInterval.current) clearInterval(pollInterval.current);
+            if (
+                pollStart.current !== null &&
+                Date.now() - pollStart.current > POLL_TIMEOUT_MS
+            ) {
+                if (pollInterval.current) {
+                    clearInterval(pollInterval.current);
+                }
+
                 return;
             }
 
@@ -71,8 +87,11 @@ export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [
 
                     if (data.payment_status === 'paid') {
                         setPaymentStatus('paid');
-                        if (pollInterval.current)
+
+                        if (pollInterval.current) {
                             clearInterval(pollInterval.current);
+                        }
+
                         router.reload();
                     } else if (
                         ['failed', 'expired', 'cancelled'].includes(
@@ -80,8 +99,10 @@ export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [
                         )
                     ) {
                         setPaymentStatus(data.payment_status as PaymentStatus);
-                        if (pollInterval.current)
+
+                        if (pollInterval.current) {
                             clearInterval(pollInterval.current);
+                        }
                     }
                 }
             } catch {
@@ -90,14 +111,17 @@ export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [
         }, 5000);
 
         return () => {
-            if (pollInterval.current) clearInterval(pollInterval.current);
+            if (pollInterval.current) {
+                clearInterval(pollInterval.current);
+            }
         };
-    }, [paymentStatus]);
+    }, [order.id, paymentStatus]);
 
     // Countdown timer — auto-expire when reaching 0
     useEffect(() => {
-        if (!order.confirmation_expires_at || paymentStatus !== 'pending')
+        if (!order.confirmation_expires_at || paymentStatus !== 'pending') {
             return;
+        }
 
         const target = new Date(order.confirmation_expires_at).getTime();
 
@@ -110,12 +134,16 @@ export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [
 
             if (remaining === 0) {
                 setPaymentStatus('expired');
-                if (pollInterval.current) clearInterval(pollInterval.current);
+
+                if (pollInterval.current) {
+                    clearInterval(pollInterval.current);
+                }
             }
         };
 
         tick();
         const timer = setInterval(tick, 1000);
+
         return () => clearInterval(timer);
     }, [order.confirmation_expires_at, paymentStatus]);
 
@@ -126,12 +154,17 @@ export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [
             setTimeout(() => setCopied(false), 2000);
         } catch {
             // Last resort: show the code for manual copy
-            alert(`Kode pesanan: ${order.order_code}\n\nSalin kode ini secara manual.`);
+            alert(
+                `Kode pesanan: ${order.order_code}\n\nSalin kode ini secara manual.`,
+            );
         }
     }, [order.order_code]);
 
     const handleCancel = useCallback(() => {
-        if (!cancelReason) return;
+        if (!cancelReason) {
+            return;
+        }
+
         setCancelLoading(true);
 
         router.post(
@@ -141,54 +174,62 @@ export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [
                 onFinish: () => setCancelLoading(false),
                 onSuccess: () => {
                     setCancelDialogOpen(false);
+
                     if (paymentStatus === 'paid') {
                         setNeedsRefund(true);
                     }
+
                     setPaymentStatus('cancelled');
                 },
             },
         );
-    }, [order.id, cancelReason]);
+    }, [order.id, cancelReason, paymentStatus]);
 
-    const handlePay = useCallback((method?: string) => {
-        if (submitLock.current || payLoading) return;
-        submitLock.current = true;
-        setPayLoading(true);
-        setPayError(null);
-
-        try {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/customer/orders/${order.id}/pay`;
-
-            const csrf =
-                document
-                    .querySelector('meta[name="csrf-token"]')
-                    ?.getAttribute('content') ?? '';
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrf;
-            form.appendChild(csrfInput);
-
-            if (method) {
-                const methodInput = document.createElement('input');
-                methodInput.type = 'hidden';
-                methodInput.name = 'payment_method';
-                methodInput.value = method;
-                form.appendChild(methodInput);
+    const handlePay = useCallback(
+        (method?: string) => {
+            if (submitLock.current || payLoading) {
+                return;
             }
 
-            document.body.appendChild(form);
-            form.submit();
-        } catch {
-            setPayError(
-                'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.',
-            );
-            setPayLoading(false);
-            submitLock.current = false;
-        }
-    }, [order.id, payLoading]);
+            submitLock.current = true;
+            setPayLoading(true);
+            setPayError(null);
+
+            try {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/customer/orders/${order.id}/pay`;
+
+                const csrf =
+                    document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content') ?? '';
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = csrf;
+                form.appendChild(csrfInput);
+
+                if (method) {
+                    const methodInput = document.createElement('input');
+                    methodInput.type = 'hidden';
+                    methodInput.name = 'payment_method';
+                    methodInput.value = method;
+                    form.appendChild(methodInput);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            } catch {
+                setPayError(
+                    'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.',
+                );
+                setPayLoading(false);
+                submitLock.current = false;
+            }
+        },
+        [order.id, payLoading],
+    );
 
     const statusConfig: Record<
         PaymentStatus,
@@ -305,9 +346,9 @@ export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [
                     </div>
 
                     {paymentStatus === 'paid' && isLoggedIn && (
-                      <div className="mt-4">
-                        <PushBanner variant="confirm" />
-                      </div>
+                        <div className="mt-4">
+                            <PushBanner variant="confirm" />
+                        </div>
                     )}
 
                     {/* Error Message */}
@@ -322,7 +363,7 @@ export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [
                         {paymentStatus === 'pending' && (
                             <>
                                 <button
-                                    onClick={handlePay}
+                                    onClick={() => handlePay()}
                                     disabled={payLoading}
                                     className="min-h-12 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-sm active:opacity-80 disabled:opacity-50"
                                 >
@@ -582,5 +623,6 @@ export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [
 function formatTime(seconds: number): string {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
+
     return `${m}:${s.toString().padStart(2, '0')}`;
 }

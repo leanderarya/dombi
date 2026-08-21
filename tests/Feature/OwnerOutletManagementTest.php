@@ -28,7 +28,7 @@ class OwnerOutletManagementTest extends TestCase
             'longitude' => 110.4375000,
             'status' => 'active',
         ]);
-        $product = Product::create(['name' => 'Susu 500ml', 'slug' => 'susu-500ml-test', 'unit' => 'botol', 'price' => 25000, 'is_active' => true]);
+        $product = Product::create(['name' => 'Susu 500ml', 'selling_price' => 25000, 'is_active' => true]);
         OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'current_stock' => 1, 'reserved_stock' => 0, 'minimum_stock' => 2]);
 
         $this->actingAs($owner)
@@ -183,6 +183,35 @@ class OwnerOutletManagementTest extends TestCase
                 ->has('inventoryHealth')
                 ->has('recentRestocks')
                 ->where('activeDeliveriesCount', 0)
+            );
+    }
+
+    public function test_owner_outlet_detail_loads_with_inventory_rows(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+        $outlet = Outlet::create([
+            'name' => 'Outlet Inventory',
+            'kelurahan' => 'Test',
+            'kecamatan' => 'Test',
+            'address' => 'Jl. Test',
+            'status' => 'active',
+        ]);
+
+        $product = Product::factory()->create();
+        OutletInventory::factory()->create([
+            'outlet_id' => $outlet->id,
+            'product_id' => $product->id,
+            'current_stock' => 12,
+            'reserved_stock' => 2,
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('owner.outlets.show', $outlet))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('owner/outlets/show')
+                ->where('outlet.id', $outlet->id)
+                ->has('inventoryHealth')
             );
     }
 

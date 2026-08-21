@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { checkoutFulfillmentType } from '@/lib/checkout-fulfillment';
 
 const STORAGE_KEY = 'dombi_fulfillment_type';
 
@@ -7,13 +8,14 @@ function loadFulfillmentType(): 'pickup' | 'delivery' {
         return 'pickup';
     }
 
-    const stored = localStorage.getItem(STORAGE_KEY);
-
-    return stored === 'delivery' ? 'delivery' : 'pickup';
+    return checkoutFulfillmentType(localStorage.getItem(STORAGE_KEY)) ===
+        'delivery_dombi'
+        ? 'delivery'
+        : 'pickup';
 }
 
 function saveFulfillmentType(type: 'pickup' | 'delivery') {
-    localStorage.setItem(STORAGE_KEY, type);
+    localStorage.setItem(STORAGE_KEY, checkoutFulfillmentType(type));
 }
 
 type OverlayState = 'hidden' | 'entering' | 'visible' | 'exiting';
@@ -31,7 +33,9 @@ export function useFulfillmentOverlay() {
     const [overlayTarget, setOverlayTarget] = useState<'pickup' | 'delivery'>(
         'pickup',
     );
-    const timerRef = useRef<ReturnType<typeof setTimeout>>();
+    const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+        undefined,
+    );
 
     // Inject keyframes once
     useEffect(() => {

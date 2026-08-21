@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CourierProfile;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
@@ -33,10 +34,16 @@ class DeliveryNotificationTest extends TestCase
             'phone' => '08123456789',
             'status' => 'active',
         ]);
+
+        CourierProfile::create([
+            'user_id' => $courier->id,
+            'courier_source' => 'outlet',
+            'outlet_id' => $outlet->id,
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
+        ]);
         $product = Product::create([
             'name' => 'Nasi Goreng',
-            'slug' => 'nasi-goreng-'.uniqid(),
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
         OutletInventory::create([
@@ -52,6 +59,7 @@ class DeliveryNotificationTest extends TestCase
             'order_code' => 'ORD-'.strtoupper(substr(uniqid(), -6)),
             'status' => 'ready_for_pickup',
             'fulfillment_type' => 'delivery_dombi',
+            'payment_status' => 'paid',
             'subtotal' => 25000,
             'delivery_fee' => 5000,
             'total' => 30000,

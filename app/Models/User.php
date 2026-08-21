@@ -163,6 +163,11 @@ class User extends Authenticatable
         return $this->hasMany(CourierInvitation::class, 'invited_by');
     }
 
+    public function receivedCourierInvitations(): HasMany
+    {
+        return $this->hasMany(CourierInvitation::class, 'courier_user_id');
+    }
+
     public function hasActiveLocation(): bool
     {
         return $this->latitude !== null

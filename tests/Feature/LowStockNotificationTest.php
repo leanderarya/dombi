@@ -9,8 +9,7 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\User;
 use App\Services\InventoryService;
 use App\Services\NotificationService;
@@ -79,12 +78,12 @@ class LowStockNotificationTest extends TestCase
         $order2 = app(OrderService::class)->createCustomerOrder($customer, [
             'address_id' => $address->id,
             'payment_method' => 'qris',
-            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 1]],
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => 1]],
         ]);
 
         // Set stock low enough for second order
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
+            ->where('product_id', $context['variant']->id)
             ->first();
         $inventory->update(['current_stock' => 2, 'reserved_stock' => 1]);
 
@@ -111,7 +110,7 @@ class LowStockNotificationTest extends TestCase
             ->first();
 
         $this->assertNotNull($notification);
-        $this->assertStringContainsString($context['variant']->full_name, $notification->message);
+        $this->assertStringContainsString($context['variant']->full_display_name, $notification->message);
         $this->assertStringContainsString('2', $notification->message); // available stock
         $this->assertStringContainsString('5', $notification->message); // minimum stock
     }
@@ -135,20 +134,18 @@ class LowStockNotificationTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => uniqid('susu-kambing-'),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Susu Kambing',
             'brand' => 'Test',
             'is_active' => true,
         ]);
 
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Original 500ml',
             'flavor' => 'Original',
@@ -161,7 +158,7 @@ class LowStockNotificationTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => $currentStock,
             'reserved_stock' => 0,
             'minimum_stock' => $minimumStock,
@@ -179,7 +176,7 @@ class LowStockNotificationTest extends TestCase
         $order = app(OrderService::class)->createCustomerOrder($customer, [
             'address_id' => $address->id,
             'payment_method' => 'qris',
-            'items' => [['product_variant_id' => $variant->id, 'quantity' => $quantity]],
+            'items' => [['product_id' => $variant->id, 'quantity' => $quantity]],
         ]);
 
         return compact('owner', 'outletUser', 'customer', 'outlet', 'product', 'variant', 'order');

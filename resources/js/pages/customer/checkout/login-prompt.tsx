@@ -40,7 +40,7 @@ export default function LoginPrompt() {
                     </p>
 
                     <Link
-                        href="/oauth/google"
+                        href="/oauth/google?redirect=/customer/checkout/customer"
                         className="mt-8 flex min-h-11 w-full max-w-sm items-center justify-center gap-3 rounded-xl border border-border bg-white px-6 text-sm font-semibold text-text active:opacity-80"
                     >
                         <svg className="h-5 w-5" viewBox="0 0 24 24">

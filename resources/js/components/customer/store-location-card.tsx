@@ -64,6 +64,7 @@ export default function StoreLocationCard() {
             : null;
 
     const outletLocation =
+        selectedOutlet.address ||
         [selectedOutlet.kecamatan, selectedOutlet.kelurahan]
             .filter(Boolean)
             .join(', ') ||
@@ -77,30 +78,35 @@ export default function StoreLocationCard() {
                 onClick={() => setOutletSheetOpen(true)}
                 className="flex w-full items-center gap-3 rounded-2xl bg-white p-3.5 text-left shadow-elevated transition-colors active:bg-surface-muted"
             >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-light">
-                    <Store className="h-4 w-4 text-primary" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                    <Store className="h-5 w-5 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                        <div className="truncate text-sm font-bold text-text">
-                            {selectedOutlet.name}
+                    <div className="flex items-center gap-1.5">
+                        <div className="min-w-0 truncate text-sm font-bold text-text">
+                            Dombi Store • {selectedOutlet.name}
                         </div>
+                        {selectedOutlet.id === outlets[0]?.id && (
+                            <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                                Terdekat
+                            </span>
+                        )}
                         {selectedOutlet.is_open === false && (
                             <span className="shrink-0 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
                                 Tutup
                             </span>
                         )}
                     </div>
-                    <div className="text-[11px] text-text-muted">
+                    <div className="mt-0.5 truncate text-xs text-text-muted">
                         {distanceText ? (
                             <>
                                 {distanceText}
-                                {selectedOutlet.id === outlets[0]?.id && (
+                                {outletLocation && (
                                     <>
                                         {' '}
                                         ·{' '}
-                                        <span className="font-semibold text-primary">
-                                            Terdekat
+                                        <span className="truncate">
+                                            {outletLocation}
                                         </span>
                                     </>
                                 )}

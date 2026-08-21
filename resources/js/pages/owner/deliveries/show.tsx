@@ -1,4 +1,12 @@
-import { MapPin, Truck } from 'lucide-react';
+import {
+    AlertTriangle,
+    History,
+    Info,
+    MapPin,
+    ShoppingBag,
+    Truck,
+    User,
+} from 'lucide-react';
 import { useState } from 'react';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -23,14 +31,14 @@ export default function OwnerDeliveryShow({ delivery }: any) {
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                         </div>
@@ -60,10 +68,16 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {/* Status */}
                     <div
                         aria-label="Status pengiriman"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Status
+                        <div className="mb-3 flex items-center gap-2">
+                            <Truck
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Status
+                            </h3>
                         </div>
                         <OwnerDetailRow
                             label="Pesanan"
@@ -76,7 +90,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                             }
                         />
                         {isActive && (
-                            <div className="mt-3 flex h-9 items-center justify-center gap-2 rounded-lg bg-indigo-50 text-sm font-semibold text-indigo-700">
+                            <div className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary/10 text-sm font-semibold text-primary">
                                 <MapPin
                                     aria-hidden="true"
                                     className="h-3.5 w-3.5"
@@ -89,10 +103,16 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {/* Delivery Info */}
                     <div
                         aria-label="Info pengiriman"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Info Pengiriman
+                        <div className="mb-3 flex items-center gap-2">
+                            <Info
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Info Pengiriman
+                            </h3>
                         </div>
                         <OwnerDetailRow
                             label="Outlet"
@@ -146,10 +166,16 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {/* Items */}
                     <div
                         aria-label="Item pesanan"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Item Pesanan
+                        <div className="mb-3 flex items-center gap-2">
+                            <ShoppingBag
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Item Pesanan
+                            </h3>
                         </div>
                         {order.items.map((item: any) => (
                             <OwnerDetailRow
@@ -168,10 +194,16 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {delivery.courier && (
                         <div
                             aria-label="Informasi kurir"
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                         >
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">
-                                Kurir
+                            <div className="mb-3 flex items-center gap-2">
+                                <User
+                                    aria-hidden="true"
+                                    className="h-4 w-4 text-primary"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Kurir
+                                </h3>
                             </div>
                             <OwnerDetailRow
                                 label="Nama"
@@ -183,10 +215,16 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {/* Timeline */}
                     <div
                         aria-label="Linimasa pengiriman"
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Linimasa
+                        <div className="mb-3 flex items-center gap-2">
+                            <History
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Linimasa
+                            </h3>
                         </div>
                         <div className="space-y-3">
                             {order.status_histories.map((history: any) => {
@@ -212,7 +250,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                                                 {history.notes}
                                             </div>
                                         )}
-                                        <div className="mt-1 text-xs text-text-subtle">
+                                        <div className="mt-1 text-xs text-text-subtle tabular-nums">
                                             {formatDate(history.created_at)}{' '}
                                             {history.actor
                                                 ? `oleh ${history.actor.name}`
@@ -228,10 +266,16 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {canResolve && (
                         <div
                             aria-label="Insiden belum diselesaikan"
-                            className="rounded-lg border border-amber-200 bg-amber-50 p-4"
+                            className="rounded-2xl border border-amber-200 bg-amber-50 p-5"
                         >
-                            <div className="mb-1 text-sm font-bold text-amber-900">
-                                Insiden Belum Diselesaikan
+                            <div className="mb-3 flex items-center gap-2">
+                                <AlertTriangle
+                                    aria-hidden="true"
+                                    className="h-4 w-4 text-amber-600"
+                                />
+                                <h3 className="font-heading text-base font-bold text-amber-900">
+                                    Insiden Belum Diselesaikan
+                                </h3>
                             </div>
                             <p className="text-xs text-amber-700">
                                 Delivery ini gagal dan membutuhkan tindakan
@@ -239,7 +283,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                             </p>
                             <Button
                                 variant="destructive"
-                                className="mt-3 w-full"
+                                className="mt-3 min-h-11 w-full"
                                 onClick={() => setResolveOpen(true)}
                             >
                                 Selesaikan Insiden

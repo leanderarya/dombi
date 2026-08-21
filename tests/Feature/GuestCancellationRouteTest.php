@@ -2,10 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
+use App\Http\Controllers\Customer\GuestOrderController;
 use App\Models\Order;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
 
 class GuestCancellationRouteTest extends TestCase
@@ -42,10 +43,10 @@ class GuestCancellationRouteTest extends TestCase
     public function test_guest_cancel_action_returns_403(): void
     {
         try {
-            $controller = new \App\Http\Controllers\Customer\GuestOrderController;
+            $controller = new GuestOrderController;
             $controller->cancel();
             $this->fail('Expected exception not thrown');
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        } catch (HttpException $e) {
             $this->assertSame(403, $e->getStatusCode());
         }
     }
@@ -53,10 +54,10 @@ class GuestCancellationRouteTest extends TestCase
     public function test_guest_show_cancel_page_action_returns_404(): void
     {
         try {
-            $controller = new \App\Http\Controllers\Customer\GuestOrderController;
+            $controller = new GuestOrderController;
             $controller->showCancelPage();
             $this->fail('Expected exception not thrown');
-        } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
+        } catch (NotFoundHttpException $e) {
             $this->assertSame(404, $e->getStatusCode());
         }
     }

@@ -9,6 +9,14 @@ interface Props {
     outletId: number;
     outletName: string;
     outstanding: number;
+    /** 'outlet_pays_owner' (setoran) vs 'owner_pays_outlet' (payout) */
+    direction?: 'outlet_pays_owner' | 'owner_pays_outlet';
+    /** Target rekening outlet utk payout (owner_pays_outlet) */
+    outletBank?: {
+        bank_name: string;
+        bank_account_number: string;
+        bank_account_holder: string;
+    } | null;
 }
 
 const PAYMENT_METHODS = [
@@ -24,7 +32,10 @@ export default function PaymentModal({
     outletId,
     outletName,
     outstanding,
+    direction = 'outlet_pays_owner',
+    outletBank = null,
 }: Props) {
+    const isPayout = direction === 'owner_pays_outlet';
     const [amount, setAmount] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('transfer_bank');
     const [referenceNumber, setReferenceNumber] = useState('');
@@ -61,20 +72,25 @@ export default function PaymentModal({
             formData.append('proof_image', proofFile);
         }
 
-        router.post(
-            `/owner/finance/settlements/${outletId}/payments`,
-            formData,
-            {
-                onSuccess: () => {
-                    onClose();
-                    resetForm();
-                },
-                onError: (errors: any) => {
-                    setError(errors?.error ?? 'Gagal mencatat pembayaran.');
-                },
-                onFinish: () => setSaving(false),
+        const url = isPayout
+            ? `/owner/finance/settlements/${outletId}/payout`
+            : `/owner/finance/settlements/${outletId}/payments`;
+
+        router.post(url, formData, {
+            onSuccess: () => {
+                onClose();
+                resetForm();
             },
-        );
+            onError: (errors: any) => {
+                setError(
+                    errors?.error ??
+                        (isPayout
+                            ? 'Gagal mencatat payout.'
+                            : 'Gagal mencatat pembayaran.'),
+                );
+            },
+            onFinish: () => setSaving(false),
+        });
     };
 
     const resetForm = () => {
@@ -90,7 +106,7 @@ export default function PaymentModal({
         <OwnerModalShell
             open={open}
             onClose={onClose}
-            title="Catat Pembayaran"
+            title={isPayout ? 'Bayar Profit ke Outlet' : 'Catat Pembayaran'}
             maxWidth="max-w-md"
         >
             <form onSubmit={handleSubmit}>
@@ -103,22 +119,45 @@ export default function PaymentModal({
                     </div>
                     <div className="flex justify-between">
                         <span className="text-slate-500">
-                            Total Outstanding
+                            {isPayout
+                                ? 'Owner harus bayar'
+                                : 'Total Outstanding'}
                         </span>
-                        <span className="font-semibold text-red-600">
+                        <span
+                            className={`font-semibold ${
+                                isPayout ? 'text-emerald-600' : 'text-red-600'
+                            }`}
+                        >
                             {formatCurrency(outstanding)}
                         </span>
                     </div>
+                    {isPayout && outletBank?.bank_name && (
+                        <div className="mt-1 rounded-lg bg-emerald-50 p-2">
+                            <div className="text-[11px] font-semibold text-emerald-700 uppercase">
+                                Rekening Tujuan
+                            </div>
+                            <div className="text-sm font-medium text-slate-900">
+                                {outletBank.bank_name} ·{' '}
+                                {outletBank.bank_account_number}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                                a.n. {outletBank.bank_account_holder}
+                            </div>
+                        </div>
+                    )}
                     <p className="text-xs text-slate-400">
-                        Pembayaran dialokasikan ke tagihan tertua terlebih
-                        dahulu (FIFO).
+                        {isPayout
+                            ? 'Owner transfer ke rekening outlet, dialokasikan ke profit tertua (FIFO).'
+                            : 'Pembayaran dialokasikan ke tagihan tertua terlebih dahulu (FIFO).'}
                     </p>
                 </div>
 
                 <div className="mt-4 space-y-3">
                     <label className="block">
                         <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                            Nominal Diterima
+                            {isPayout
+                                ? 'Nominal Ditransfer'
+                                : 'Nominal Diterima'}
                         </span>
                         <div className="relative mt-1">
                             <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-400">
@@ -167,20 +206,22 @@ export default function PaymentModal({
                         />
                     </label>
 
-                    <label className="block">
-                        <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                            Upload Bukti
-                        </span>
-                        <input
-                            ref={fileRef}
-                            type="file"
-                            accept="image/*,.pdf"
-                            onChange={(e) =>
-                                setProofFile(e.target.files?.[0] ?? null)
-                            }
-                            className="mt-1 w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border file:border-slate-200 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-50"
-                        />
-                    </label>
+                    {!isPayout && (
+                        <label className="block">
+                            <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                Upload Bukti
+                            </span>
+                            <input
+                                ref={fileRef}
+                                type="file"
+                                accept="image/*,.pdf"
+                                onChange={(e) =>
+                                    setProofFile(e.target.files?.[0] ?? null)
+                                }
+                                className="mt-1 w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border file:border-slate-200 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-50"
+                            />
+                        </label>
+                    )}
 
                     <label className="block">
                         <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
@@ -215,7 +256,11 @@ export default function PaymentModal({
                         disabled={saving || !amount}
                         className="flex-[2] rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                     >
-                        {saving ? 'Menyimpan...' : 'Simpan Pembayaran'}
+                        {saving
+                            ? 'Menyimpan...'
+                            : isPayout
+                              ? 'Simpan Payout'
+                              : 'Simpan Pembayaran'}
                     </button>
                 </div>
             </form>

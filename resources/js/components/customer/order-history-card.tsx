@@ -6,8 +6,6 @@ import {
     isTerminalStatus,
 } from '@/lib/order-status-config';
 import OrderCardShell from './order-card-shell';
-import { normalizeOrderReason } from '@/lib/order-reasons';
-import type { CustomerRefundPayload } from '@/types/refund';
 
 interface OrderItem {
     product_name: string;
@@ -74,7 +72,9 @@ export default function OrderHistoryCard({ order }: Props) {
             {/* Refund badge row */}
             {refundBadge && (
                 <div className="mb-2 flex">
-                    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${REFUND_BADGE_STYLES[refundBadge.queue_state] ?? 'bg-amber-100 text-amber-800 border-amber-200'}`}>
+                    <span
+                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${REFUND_BADGE_STYLES[refundBadge.queue_state] ?? 'border-amber-200 bg-amber-100 text-amber-800'}`}
+                    >
                         <RefreshCw className="h-3 w-3" />
                         {refundBadge.status_label}
                     </span>

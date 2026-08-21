@@ -7,7 +7,7 @@ use App\Models\ExchangeStatusHistory;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\OutletPayable;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\ReturnRequest;
 use App\Models\StockMovement;
 use App\Models\User;
@@ -23,46 +23,81 @@ class ExchangeService
     public function createRequest(Outlet $outlet, User $requester, array $data): ExchangeRequest
     {
         return DB::transaction(function () use ($outlet, $requester, $data) {
-            $returnValue = 0;
-            $exchangeValue = 0;
-            $this->assertOutletHasAvailableStock($outlet, $data['items']);
-
-            if (! empty($data['return_request_id'])) {
-                $return = ReturnRequest::findOrFail($data['return_request_id']);
-                if ((int) $return->outlet_id !== (int) $outlet->id) {
-                    throw ValidationException::withMessages([
-                        'return_request_id' => ['Return terkait tidak tersedia untuk outlet ini.'],
-                    ]);
-                }
-                if (! in_array($return->status, [ReturnRequest::STATUS_APPROVED, ReturnRequest::STATUS_RECEIVED_AT_CENTER], true)) {
-                    throw ValidationException::withMessages([
-                        'return_request_id' => ['Return terkait harus disetujui atau sudah diterima di pusat.'],
-                    ]);
-                }
-                $returnValue = $return->total_value;
+            if (empty($data['return_request_id'])) {
+                throw ValidationException::withMessages([
+                    'return_request_id' => ['Exchange harus merujuk ke return yang sudah diterima di pusat.'],
+                ]);
             }
 
+            $return = ReturnRequest::with('items')->lockForUpdate()->findOrFail($data['return_request_id']);
+
+            if ((int) $return->outlet_id !== (int) $outlet->id) {
+                throw ValidationException::withMessages([
+                    'return_request_id' => ['Return terkait tidak tersedia untuk outlet ini.'],
+                ]);
+            }
+
+            if ($return->status !== ReturnRequest::STATUS_RECEIVED_AT_CENTER) {
+                throw ValidationException::withMessages([
+                    'return_request_id' => ['Return harus sudah diterima di pusat sebelum ditukar.'],
+                ]);
+            }
+
+            // UNIQUE check: return already used by another exchange
+            $existingExchange = ExchangeRequest::where('return_request_id', $return->id)->lockForUpdate()->first();
+            if ($existingExchange) {
+                throw ValidationException::withMessages([
+                    'return_request_id' => ['Return ini sudah digunakan untuk penukaran lain.'],
+                ]);
+            }
+
+            // Item validation: aggregate by product, ensure exchange qty <= return qty
+            $returnItemsByProduct = $return->items
+                ->groupBy('product_id')
+                ->map(fn ($items) => $items->sum('quantity'));
+
+            $exchangeItemsByProduct = collect($data['items'])
+                ->groupBy('product_id')
+                ->map(fn ($items) => $items->sum('quantity'));
+
+            foreach ($exchangeItemsByProduct as $productId => $totalQty) {
+                $returnQty = (int) ($returnItemsByProduct->get($productId) ?? 0);
+                if ($returnQty === 0) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Product ID {$productId} tidak ada dalam return ini."],
+                    ]);
+                }
+                if ($totalQty > $returnQty) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Jumlah product ID {$productId} melebihi jumlah di return ({$returnQty})."],
+                    ]);
+                }
+            }
+
+            $returnValue = (float) $return->total_value;
+            $exchangeValue = 0;
             $items = [];
+
             foreach ($data['items'] as $item) {
-                $variant = ProductVariant::lockForUpdate()->findOrFail($item['product_variant_id']);
-                $subtotal = $variant->selling_price * $item['quantity'];
+                $product = Product::lockForUpdate()->findOrFail($item['product_id']);
+                $subtotal = $product->selling_price * $item['quantity'];
                 $exchangeValue += $subtotal;
 
-                $replacementVariantId = $item['replacement_variant_id'] ?? null;
+                $replacementProductId = $item['replacement_product_id'] ?? null;
                 $replacementQuantity = $item['replacement_quantity'] ?? null;
 
                 $items[] = [
-                    'product_variant_id' => $variant->id,
-                    'replacement_variant_id' => $replacementVariantId,
+                    'product_id' => $product->id,
+                    'replacement_product_id' => $replacementProductId,
                     'quantity' => $item['quantity'],
                     'replacement_quantity' => $replacementQuantity,
-                    'unit_price' => $variant->selling_price,
+                    'unit_price' => $product->selling_price,
                     'subtotal' => $subtotal,
                 ];
             }
 
             $exchange = ExchangeRequest::create([
-                'return_request_id' => $data['return_request_id'] ?? null,
+                'return_request_id' => $return->id,
                 'outlet_id' => $outlet->id,
                 'requested_by' => $requester->id,
                 'notes' => $data['notes'] ?? null,
@@ -78,10 +113,10 @@ class ExchangeService
             $this->recordHistory($exchange, null, ExchangeRequest::STATUS_SUBMITTED, $requester->id);
 
             app(NotificationService::class)->notifyExchangeRequestCreated(
-                $exchange->fresh(['outlet', 'items.variant.family', 'returnRequest'])
+                $exchange->fresh(['outlet', 'items.product.category', 'returnRequest'])
             );
 
-            return $exchange->load(['items.variant', 'outlet', 'requester', 'returnRequest']);
+            return $exchange->load(['items.product', 'outlet', 'requester', 'returnRequest']);
         });
     }
 
@@ -99,7 +134,7 @@ class ExchangeService
 
             $this->recordHistory($exchange, $from, ExchangeRequest::STATUS_CANCELLED, $user->id, $reason);
 
-            return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $exchange->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -124,7 +159,7 @@ class ExchangeService
 
             app(NotificationService::class)->notifyExchangeApproved($exchange);
 
-            return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $exchange->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -149,7 +184,7 @@ class ExchangeService
 
             app(NotificationService::class)->notifyExchangeRejected($exchange, $reason);
 
-            return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $exchange->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -174,7 +209,7 @@ class ExchangeService
 
             $this->recordHistory($exchange, $from, ExchangeRequest::STATUS_PREPARING, $owner->id);
 
-            return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $exchange->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -189,8 +224,19 @@ class ExchangeService
                 ]);
             }
 
+            // Guard: return must be received at center (or completed)
+            $exchange->loadMissing('returnRequest');
+            if ($exchange->returnRequest) {
+                $returnStatus = $exchange->returnRequest->status;
+                if (! in_array($returnStatus, [ReturnRequest::STATUS_RECEIVED_AT_CENTER, ReturnRequest::STATUS_COMPLETED], true)) {
+                    throw ValidationException::withMessages([
+                        'return' => ['Return terkait harus sudah diterima di pusat sebelum pengiriman.'],
+                    ]);
+                }
+            }
+
             foreach ($exchange->items as $item) {
-                $this->deductCenterInventory($exchange, $item->product_variant_id, $item->quantity, $owner->id);
+                $this->deductCenterInventory($exchange, $item->product_id, $item->quantity, $owner->id);
             }
 
             $from = $exchange->status;
@@ -204,7 +250,7 @@ class ExchangeService
 
             app(NotificationService::class)->notifyExchangeShipped($exchange);
 
-            return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $exchange->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -221,7 +267,7 @@ class ExchangeService
 
             // Add replacement stock to outlet
             foreach ($exchange->items as $item) {
-                $this->addToOutletInventory($exchange->outlet_id, $item->product_variant_id, $item->quantity, $exchange->id, $outletUser->id);
+                $this->addToOutletInventory($exchange->outlet_id, $item->product_id, $item->quantity, $exchange->id, $outletUser->id);
             }
 
             $from = $exchange->status;
@@ -236,7 +282,7 @@ class ExchangeService
 
             app(NotificationService::class)->notifyExchangeReceived($exchange);
 
-            return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $exchange->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -273,7 +319,7 @@ class ExchangeService
 
             app(NotificationService::class)->notifyExchangeCompleted($exchange);
 
-            return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $exchange->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -294,13 +340,12 @@ class ExchangeService
         ];
     }
 
-    private function addToOutletInventory(int $outletId, int $variantId, int $quantity, int $exchangeId, int $userId): void
+    private function addToOutletInventory(int $outletId, int $productId, int $quantity, int $exchangeId, int $userId): void
     {
-        $variant = ProductVariant::findOrFail($variantId);
         $inventory = OutletInventory::lockForUpdate()
             ->firstOrCreate(
-                ['outlet_id' => $outletId, 'product_variant_id' => $variantId],
-                ['product_id' => $variant->product_id, 'current_stock' => 0, 'reserved_stock' => 0, 'minimum_stock' => 0]
+                ['outlet_id' => $outletId, 'product_id' => $productId],
+                ['current_stock' => 0, 'reserved_stock' => 0, 'minimum_stock' => 0]
             );
 
         $before = $inventory->current_stock;
@@ -309,7 +354,7 @@ class ExchangeService
 
         StockMovement::create([
             'outlet_id' => $outletId,
-            'product_variant_id' => $variantId,
+            'product_id' => $productId,
             'type' => 'exchange_in',
             'quantity' => $quantity,
             'before_stock' => $before,
@@ -323,23 +368,23 @@ class ExchangeService
         ]);
     }
 
-    private function deductCenterInventory(ExchangeRequest $exchange, int $variantId, int $quantity, int $userId): void
+    private function deductCenterInventory(ExchangeRequest $exchange, int $productId, int $quantity, int $userId): void
     {
-        $variant = ProductVariant::query()->lockForUpdate()->findOrFail($variantId);
-        $before = (int) $variant->center_stock;
+        $product = Product::query()->lockForUpdate()->findOrFail($productId);
+        $before = (int) $product->center_stock;
 
         if ($before < $quantity) {
             throw ValidationException::withMessages([
-                'inventory' => ["Stok pusat untuk {$variant->name} hanya {$before}."],
+                'inventory' => ["Stok pusat untuk {$product->name} hanya {$before}."],
             ]);
         }
 
-        $variant->decrement('center_stock', $quantity);
-        $after = (int) $variant->fresh()->center_stock;
+        $product->decrement('center_stock', $quantity);
+        $after = (int) $product->fresh()->center_stock;
 
         StockMovement::create([
             'outlet_id' => $exchange->outlet_id,
-            'product_variant_id' => $variantId,
+            'product_id' => $productId,
             'type' => 'exchange_out',
             'quantity' => -$quantity,
             'before_stock' => $before,
@@ -351,39 +396,6 @@ class ExchangeService
             'notes' => 'Center stock shipped as exchange replacement',
             'created_by' => $userId,
         ]);
-    }
-
-    /**
-     * Exchanges represent an outlet asking to replace stock it currently owns.
-     * Prevent impossible requests before owner processing starts.
-     */
-    private function assertOutletHasAvailableStock(Outlet $outlet, array $items): void
-    {
-        $requested = [];
-        $firstIndexes = [];
-
-        foreach ($items as $index => $item) {
-            $variantId = (int) $item['product_variant_id'];
-            $requested[$variantId] = ($requested[$variantId] ?? 0) + (int) $item['quantity'];
-            $firstIndexes[$variantId] ??= $index;
-        }
-
-        $inventories = OutletInventory::lockForUpdate()
-            ->where('outlet_id', $outlet->id)
-            ->whereIn('product_variant_id', array_keys($requested))
-            ->get()
-            ->keyBy('product_variant_id');
-
-        foreach ($requested as $variantId => $quantity) {
-            $inventory = $inventories->get($variantId);
-            $available = $inventory ? ((int) $inventory->current_stock - (int) $inventory->reserved_stock) : 0;
-
-            if ($available < $quantity) {
-                throw ValidationException::withMessages([
-                    'items.'.$firstIndexes[$variantId].'.quantity' => ["Stok tersedia hanya {$available}."],
-                ]);
-            }
-        }
     }
 
     private function recordHistory(ExchangeRequest $exchange, ?string $from, string $to, ?int $userId, ?string $notes = null): void
@@ -399,7 +411,9 @@ class ExchangeService
 
     private function recordExchangeAdjustment(ExchangeRequest $exchange, User $owner): void
     {
-        $difference = (float) $exchange->exchange_value - (float) $exchange->return_value;
+        // Credit when return_value > exchange_value (outlet gets cheaper replacement) => positive adjustment reduces bill
+        // Debit when exchange_value > return_value => negative adjustment increases bill
+        $difference = (float) $exchange->return_value - (float) $exchange->exchange_value;
 
         if (abs($difference) < 0.00001) {
             return;
@@ -422,7 +436,7 @@ class ExchangeService
             'reference_type' => ExchangeRequest::class,
             'reference_id' => $exchange->id,
             'notes' => sprintf(
-                'Exchange #%d adjustment | return_value=%s | replacement_value=%s | difference=%s',
+                'Exchange #%d adjustment | return_value=%s | replacement_value=%s | difference=%s (return - exchange)',
                 $exchange->id,
                 number_format((float) $exchange->return_value, 2, '.', ''),
                 number_format((float) $exchange->exchange_value, 2, '.', ''),

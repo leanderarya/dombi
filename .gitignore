@@ -53,3 +53,8 @@ docs/archive/
 .superpowers/
 .worktrees/
 docs/superpowers/
+
+# Local tooling
+.opencode/
+graphify-out/
+AGENTS.md

@@ -1,6 +1,4 @@
-import { Link, router } from '@inertiajs/react';
-import { toast } from 'sonner';
-import { useState } from 'react';
+import { Link } from '@inertiajs/react';
 import {
     ArrowLeft,
     ArrowRight,
@@ -12,19 +10,27 @@ import {
     ChevronUp,
     Copy,
     ExternalLink,
-    Play,
-    RefreshCw,
     Smartphone,
     Undo2,
     User,
     UserCheck,
-    XCircle,
 } from 'lucide-react';
-import { formatCurrency } from '@/lib/format';
+import { useState } from 'react';
 import RefundCompletionModal from '@/components/owner/finance/refund-completion-modal';
+import {
+    GuestRefundDestinationDialog,
+    RefundRollbackDialog,
+} from '@/components/owner/finance/refund-operations-dialogs';
 import RefundRejectionModal from '@/components/owner/finance/refund-rejection-modal';
-import { GuestRefundDestinationDialog, RefundRollbackDialog } from '@/components/owner/finance/refund-operations-dialogs';
-import type { OwnerRefundPayload, RefundPagination, RefundQueue, RefundQueueCounts, RefundHistoryItem } from '@/types/refund';
+import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/format';
+import type {
+    OwnerRefundPayload,
+    RefundPagination,
+    RefundQueue,
+    RefundQueueCounts,
+    RefundHistoryItem,
+} from '@/types/refund';
 
 const QUEUE_LABELS: Record<RefundQueue, string> = {
     awaiting_customer: 'Menunggu Data Customer',
@@ -37,7 +43,13 @@ const QUEUE_LABELS: Record<RefundQueue, string> = {
 };
 
 const QUEUE_ORDER: RefundQueue[] = [
-    'awaiting_customer', 'awaiting_guest', 'ready', 'in_progress', 'action_required', 'completed', 'rejected',
+    'awaiting_customer',
+    'awaiting_guest',
+    'ready',
+    'in_progress',
+    'action_required',
+    'completed',
+    'rejected',
 ];
 
 interface Props {
@@ -46,21 +58,21 @@ interface Props {
     refundFilter: RefundQueue;
 }
 
-export default function RefundTab({ refunds, refundCounts, refundFilter }: Props) {
-    const [startConfirm, setStartConfirm] = useState<number | null>(null);
-    const [completionOrder, setCompletionOrder] = useState<OwnerRefundPayload | null>(null);
-    const [rejectionOrder, setRejectionOrder] = useState<OwnerRefundPayload | null>(null);
-    const [destinationOrder, setDestinationOrder] = useState<OwnerRefundPayload | null>(null);
-    const [rollbackOrder, setRollbackOrder] = useState<OwnerRefundPayload | null>(null);
+export default function RefundTab({
+    refunds,
+    refundCounts,
+    refundFilter,
+}: Props) {
+    const [completionOrder, setCompletionOrder] =
+        useState<OwnerRefundPayload | null>(null);
+    const [rejectionOrder, setRejectionOrder] =
+        useState<OwnerRefundPayload | null>(null);
+    const [destinationOrder, setDestinationOrder] =
+        useState<OwnerRefundPayload | null>(null);
+    const [rollbackOrder, setRollbackOrder] =
+        useState<OwnerRefundPayload | null>(null);
     const [copiedId, setCopiedId] = useState<number | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
-
-    const handleStart = (orderId: number) => {
-        router.post(`/owner/refunds/${orderId}/start`, {}, {
-            onSuccess: () => { toast.success('Proses refund dimulai'); setStartConfirm(null); },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
-        });
-    };
 
     const copyToClipboard = async (text: string, id: number) => {
         await navigator.clipboard.writeText(text);
@@ -68,7 +80,12 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
         setTimeout(() => setCopiedId(null), 2000);
     };
 
-    const activeCount = refundCounts.awaiting_customer + refundCounts.awaiting_guest + refundCounts.ready + refundCounts.in_progress + refundCounts.action_required;
+    const activeCount =
+        refundCounts.awaiting_customer +
+        refundCounts.awaiting_guest +
+        refundCounts.ready +
+        refundCounts.in_progress +
+        refundCounts.action_required;
 
     return (
         <>
@@ -82,7 +99,9 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
                                 href={`/owner/finance?tab=refund&filter=${queue}`}
                                 preserveState
                                 preserveScroll
-                                aria-current={refundFilter === queue ? 'page' : undefined}
+                                aria-current={
+                                    refundFilter === queue ? 'page' : undefined
+                                }
                                 className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
                                     refundFilter === queue
                                         ? 'border-primary bg-primary/10 text-primary shadow-sm'
@@ -112,9 +131,12 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
                             <CheckCircle className="h-6 w-6 text-emerald-500" />
                         </span>
                         <div className="text-center">
-                            <p className="text-sm font-medium text-text">Tidak ada refund</p>
+                            <p className="text-sm font-medium text-text">
+                                Tidak ada refund
+                            </p>
                             <p className="mt-0.5 text-xs text-text-muted">
-                                Semua refund di antrean "{QUEUE_LABELS[refundFilter]}" sudah diproses.
+                                Semua refund di antrean "
+                                {QUEUE_LABELS[refundFilter]}" sudah diproses.
                             </p>
                         </div>
                     </div>
@@ -122,20 +144,34 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
                     <div className="space-y-3">
                         {refunds.data.map((refund) => {
                             const {
-                                order_id, order_code, order_url, amount, destination,
-                                proof_url, transfer_reference, transfer_note,
-                                rejection, customer_kind, customer_name, customer_phone,
-                                can_enter_destination, can_legacy_repair,
-                                can_start, can_reject, can_rollback, can_complete,
-                                queue_state, requested_at, submitted_at, started_at,
-                                completed_at, timeline, status_label,
+                                order_id,
+                                order_code,
+                                order_url,
+                                amount,
+                                destination,
+                                proof_url,
+                                transfer_reference,
+                                transfer_note,
+                                rejection,
+                                customer_kind,
+                                customer_name,
+                                customer_phone,
+                                can_enter_destination,
+                                can_start,
+                                can_reject,
+                                can_rollback,
+                                can_complete,
+                                timeline,
+                                status_label,
                             } = refund;
 
                             const isExpanded = expandedId === order_id;
-                            const isConfirming = startConfirm === order_id;
 
                             return (
-                                <div key={order_id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+                                <div
+                                    key={order_id}
+                                    className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm"
+                                >
                                     {/* Header row */}
                                     <div className="flex items-start justify-between gap-3 p-4 pb-3">
                                         <div className="min-w-0 flex-1">
@@ -153,18 +189,24 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
                                             <div className="mt-0.5 flex items-center gap-2 text-xs text-text-muted">
                                                 {customer_kind === 'guest' ? (
                                                     <span className="inline-flex items-center gap-1">
-                                                        <User className="h-3 w-3" /> Guest
+                                                        <User className="h-3 w-3" />{' '}
+                                                        Guest
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center gap-1">
-                                                        <UserCheck className="h-3 w-3" /> {customer_name}
+                                                        <UserCheck className="h-3 w-3" />{' '}
+                                                        {customer_name}
                                                     </span>
                                                 )}
-                                                {customer_phone && <span>· {customer_phone}</span>}
+                                                {customer_phone && (
+                                                    <span>
+                                                        · {customer_phone}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-base font-bold tabular-nums text-text">
+                                            <div className="text-base font-bold text-text tabular-nums">
                                                 {formatCurrency(amount)}
                                             </div>
                                         </div>
@@ -173,100 +215,134 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
                                     {/* Action buttons */}
                                     <div className="flex flex-wrap gap-1.5 px-4 pb-3">
                                         {can_enter_destination && (
-                                            <button
-                                                onClick={() => setDestinationOrder(refund)}
-                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-semibold text-text-muted hover:bg-muted"
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    setDestinationOrder(refund)
+                                                }
                                             >
-                                                <Banknote className="h-3.5 w-3.5" /> Isi Tujuan
-                                            </button>
+                                                <Banknote className="h-3.5 w-3.5" />{' '}
+                                                Isi Tujuan
+                                            </Button>
                                         )}
-                                        {can_start && !isConfirming && (
-                                            <button
-                                                onClick={() => setStartConfirm(order_id)}
-                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white hover:bg-primary-hover"
+                                        {(can_start || can_complete) && (
+                                            <Button
+                                                variant="primary"
+                                                size="sm"
+                                                onClick={() =>
+                                                    setCompletionOrder(refund)
+                                                }
                                             >
-                                                <Play className="h-3.5 w-3.5" /> Mulai
-                                            </button>
-                                        )}
-                                        {can_start && isConfirming && (
-                                            <div className="flex gap-1">
-                                                <button
-                                                    onClick={() => handleStart(order_id)}
-                                                    className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
-                                                >
-                                                    Konfirmasi
-                                                </button>
-                                                <button
-                                                    onClick={() => setStartConfirm(null)}
-                                                    className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-border px-3 text-xs text-text-muted hover:bg-muted"
-                                                >
-                                                    Batal
-                                                </button>
-                                            </div>
+                                                <Check className="h-3.5 w-3.5" />
+                                                Selesai
+                                            </Button>
                                         )}
                                         {can_reject && (
-                                            <button
-                                                onClick={() => setRejectionOrder(refund)}
-                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-red-300 px-3 text-xs font-semibold text-red-600 hover:bg-red-50"
+                                            <Button
+                                                variant="danger"
+                                                size="sm"
+                                                onClick={() =>
+                                                    setRejectionOrder(refund)
+                                                }
                                             >
-                                                <Ban className="h-3.5 w-3.5" /> Tolak
-                                            </button>
+                                                <Ban className="h-3.5 w-3.5" />{' '}
+                                                Tolak
+                                            </Button>
                                         )}
                                         {can_rollback && (
-                                            <button
-                                                onClick={() => setRollbackOrder(refund)}
-                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-amber-300 px-3 text-xs font-semibold text-amber-600 hover:bg-amber-50"
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    setRollbackOrder(refund)
+                                                }
                                             >
-                                                <Undo2 className="h-3.5 w-3.5" /> Rollback
-                                            </button>
-                                        )}
-                                        {can_complete && (
-                                            <button
-                                                onClick={() => setCompletionOrder(refund)}
-                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white hover:bg-primary-hover"
-                                            >
-                                                <CheckCircle className="h-3.5 w-3.5" /> Selesai
-                                            </button>
+                                                <Undo2 className="h-3.5 w-3.5" />{' '}
+                                                Rollback
+                                            </Button>
                                         )}
                                     </div>
 
                                     {/* Expandable details */}
                                     <button
                                         type="button"
-                                        onClick={() => setExpandedId(isExpanded ? null : order_id)}
+                                        onClick={() =>
+                                            setExpandedId(
+                                                isExpanded ? null : order_id,
+                                            )
+                                        }
                                         className="flex w-full items-center justify-between border-t border-border px-4 py-2 text-xs font-medium text-text-muted hover:bg-surface-muted"
                                     >
                                         <span>Detail</span>
-                                        {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                                        {isExpanded ? (
+                                            <ChevronUp className="h-3.5 w-3.5" />
+                                        ) : (
+                                            <ChevronDown className="h-3.5 w-3.5" />
+                                        )}
                                     </button>
 
                                     {isExpanded && (
-                                        <div className="border-t border-border bg-surface-muted/50 px-4 py-3 space-y-3">
+                                        <div className="space-y-3 border-t border-border bg-surface-muted/50 px-4 py-3">
                                             {/* Destination */}
                                             {destination && (
                                                 <div>
-                                                    <p className="text-[11px] font-medium uppercase tracking-wider text-text-subtle">
+                                                    <p className="text-[11px] font-medium tracking-wider text-text-subtle uppercase">
                                                         Tujuan Refund
                                                     </p>
                                                     <div className="mt-1 flex items-start gap-2.5 rounded-lg bg-surface p-2.5 text-xs">
                                                         <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted">
-                                                            {destination.type === 'ewallet' ? <Smartphone className="h-3 w-3" /> : <Banknote className="h-3 w-3" />}
+                                                            {destination.type ===
+                                                            'ewallet' ? (
+                                                                <Smartphone className="h-3 w-3" />
+                                                            ) : (
+                                                                <Banknote className="h-3 w-3" />
+                                                            )}
                                                         </span>
                                                         <div className="min-w-0 flex-1">
-                                                            <p className="font-medium text-text">{destination.label}</p>
-                                                            <p className="text-text-muted">{destination.holder}</p>
-                                                            <p className="font-mono text-text-subtle break-all">{destination.number}</p>
+                                                            <p className="font-medium text-text">
+                                                                {
+                                                                    destination.label
+                                                                }
+                                                            </p>
+                                                            <p className="text-text-muted">
+                                                                {
+                                                                    destination.holder
+                                                                }
+                                                            </p>
+                                                            <p className="font-mono break-all text-text-subtle">
+                                                                {
+                                                                    destination.number
+                                                                }
+                                                            </p>
                                                         </div>
                                                         <button
                                                             type="button"
-                                                            onClick={() => copyToClipboard(destination.number, order_id)}
-                                                            className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline shrink-0"
-                                                            aria-label={copiedId === order_id ? 'Tersalin' : 'Salin nomor'}
+                                                            onClick={() =>
+                                                                copyToClipboard(
+                                                                    destination.number,
+                                                                    order_id,
+                                                                )
+                                                            }
+                                                            className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                                                            aria-label={
+                                                                copiedId ===
+                                                                order_id
+                                                                    ? 'Tersalin'
+                                                                    : 'Salin nomor'
+                                                            }
                                                         >
-                                                            {copiedId === order_id ? (
-                                                                <><Check className="h-3 w-3" /> Tersalin</>
+                                                            {copiedId ===
+                                                            order_id ? (
+                                                                <>
+                                                                    <Check className="h-3 w-3" />{' '}
+                                                                    Tersalin
+                                                                </>
                                                             ) : (
-                                                                <><Copy className="h-3 w-3" /> Salin</>
+                                                                <>
+                                                                    <Copy className="h-3 w-3" />{' '}
+                                                                    Salin
+                                                                </>
                                                             )}
                                                         </button>
                                                     </div>
@@ -276,44 +352,66 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
                                             {/* Proof & reference */}
                                             {proof_url && (
                                                 <div>
-                                                    <p className="text-[11px] font-medium uppercase tracking-wider text-text-subtle">Bukti Transfer</p>
+                                                    <p className="text-[11px] font-medium tracking-wider text-text-subtle uppercase">
+                                                        Bukti Transfer
+                                                    </p>
                                                     <a
                                                         href={proof_url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-surface px-3 py-2 text-xs font-medium text-primary hover:underline"
                                                     >
-                                                        <ExternalLink className="h-3.5 w-3.5" /> Lihat Bukti
+                                                        <ExternalLink className="h-3.5 w-3.5" />{' '}
+                                                        Lihat Bukti
                                                     </a>
                                                 </div>
                                             )}
                                             {transfer_reference && (
                                                 <div className="text-xs text-text-muted">
-                                                    <span className="text-text-subtle">Referensi:</span> {transfer_reference}
+                                                    <span className="text-text-subtle">
+                                                        Referensi:
+                                                    </span>{' '}
+                                                    {transfer_reference}
                                                 </div>
                                             )}
                                             {transfer_note && (
-                                                <div className="text-xs text-text-subtle">Catatan: {transfer_note}</div>
+                                                <div className="text-xs text-text-subtle">
+                                                    Catatan: {transfer_note}
+                                                </div>
                                             )}
 
                                             {/* Rejection info */}
                                             {rejection && (
                                                 <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800">
-                                                    <p className="font-medium">{rejection.label}</p>
-                                                    {rejection.note && <p className="mt-0.5 text-red-600">{rejection.note}</p>}
+                                                    <p className="font-medium">
+                                                        {rejection.label}
+                                                    </p>
+                                                    {rejection.note && (
+                                                        <p className="mt-0.5 text-red-600">
+                                                            {rejection.note}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             )}
 
                                             {/* Timeline */}
                                             {timeline.length > 0 && (
                                                 <div>
-                                                    <p className="text-[11px] font-medium uppercase tracking-wider text-text-subtle">
-                                                        Riwayat ({timeline.length})
+                                                    <p className="text-[11px] font-medium tracking-wider text-text-subtle uppercase">
+                                                        Riwayat (
+                                                        {timeline.length})
                                                     </p>
                                                     <div className="mt-1.5 space-y-1.5">
-                                                        {timeline.map((item) => (
-                                                            <TimelineItem key={item.id} item={item} />
-                                                        ))}
+                                                        {timeline.map(
+                                                            (item) => (
+                                                                <TimelineItem
+                                                                    key={
+                                                                        item.id
+                                                                    }
+                                                                    item={item}
+                                                                />
+                                                            ),
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}
@@ -330,8 +428,16 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
                     <div className="flex items-center justify-center gap-1.5">
                         {refunds.links.map((link, i) => {
                             if (!link.url) {
-                                return <span key={i} className="px-2 py-1 text-xs text-text-subtle">{link.label}</span>;
+                                return (
+                                    <span
+                                        key={i}
+                                        className="px-2 py-1 text-xs text-text-subtle"
+                                    >
+                                        {link.label}
+                                    </span>
+                                );
                             }
+
                             return (
                                 <Link
                                     key={i}
@@ -344,9 +450,11 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
                                             : 'border-border text-text-muted hover:border-border-strong hover:text-text'
                                     }`}
                                 >
-                                    {link.label.includes('Previous') || link.label.includes('Sebelumnya') ? (
+                                    {link.label.includes('Previous') ||
+                                    link.label.includes('Sebelumnya') ? (
                                         <ArrowLeft className="h-3.5 w-3.5" />
-                                    ) : link.label.includes('Next') || link.label.includes('Berikutnya') ? (
+                                    ) : link.label.includes('Next') ||
+                                      link.label.includes('Berikutnya') ? (
                                         <ArrowRight className="h-3.5 w-3.5" />
                                     ) : (
                                         link.label
@@ -415,9 +523,13 @@ function TimelineItem({ item }: { item: RefundHistoryItem }) {
                 <p className="text-xs font-medium text-text">
                     {EVENT_LABELS[item.event] ?? item.event}
                 </p>
-                {item.note && <p className="text-[11px] text-text-subtle">{item.note}</p>}
+                {item.note && (
+                    <p className="text-[11px] text-text-subtle">{item.note}</p>
+                )}
                 <p className="text-[11px] text-text-subtle">
-                    {item.created_at ? new Date(item.created_at).toLocaleString('id-ID') : ''}
+                    {item.created_at
+                        ? new Date(item.created_at).toLocaleString('id-ID')
+                        : ''}
                     {item.actor_type && ` · ${item.actor_type}`}
                 </p>
             </div>

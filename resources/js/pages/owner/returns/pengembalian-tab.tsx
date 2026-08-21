@@ -1,12 +1,22 @@
 import { router } from '@inertiajs/react';
+import { PackageX, RefreshCcw, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell,
+} from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
 import { getReturnStatus } from '@/lib/status-labels';
 
@@ -18,15 +28,6 @@ const RETURN_STATUS_FILTERS = [
     { key: 'completed', label: 'Selesai' },
     { key: 'rejected', label: 'Ditolak' },
 ];
-
-const statusColorMap: Record<string, string> = {
-    '': 'text-text bg-surface-muted ring-border',
-    submitted: 'text-amber-600 bg-amber-50 ring-amber-200',
-    approved: 'text-blue-600 bg-blue-50 ring-blue-200',
-    received_at_center: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
-    completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
-    rejected: 'text-red-600 bg-red-50 ring-red-200',
-};
 
 export default function PengembalianTab({
     returns,
@@ -54,7 +55,8 @@ export default function PengembalianTab({
             {
                 preserveScroll: true,
                 onSuccess: () => toast.success('Disetujui'),
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
             },
         );
     };
@@ -73,31 +75,56 @@ export default function PengembalianTab({
         <>
             {/* KPI Strip */}
             <div aria-label="Ringkasan Pengembalian">
-                <OwnerKpiStrip
-                    items={[
-                        {
-                            label: 'Return Tertunda',
-                            value: dashboard.pending_returns,
-                            sublabel:
-                                dashboard.pending_returns > 0
-                                    ? 'Perlu ditinjau'
-                                    : undefined,
-                            sublabelColor: 'text-amber-600',
-                        },
-                        {
-                            label: 'Nilai Return',
-                            value: formatCurrency(dashboard.returned_value),
-                        },
-                        ...(dashboard.total_returns !== undefined
-                            ? [
-                                  {
-                                      label: 'Total Return',
-                                      value: dashboard.total_returns,
-                                  },
-                              ]
-                            : []),
-                    ]}
-                />
+                <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Return Tertunda
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                                <RefreshCcw className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div
+                            className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_returns > 0 ? 'text-amber-600' : 'text-text'}`}
+                        >
+                            {dashboard.pending_returns}
+                        </div>
+                        {dashboard.pending_returns > 0 && (
+                            <p className="text-[11px] text-amber-500">
+                                Perlu ditinjau
+                            </p>
+                        )}
+                    </div>
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Nilai Return
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                                <Wallet className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                            {formatCurrency(dashboard.returned_value)}
+                        </div>
+                    </div>
+                    {dashboard.total_returns !== undefined && (
+                        <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">
+                                    Total Return
+                                </span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                                    <PackageX className="h-5 w-5" />
+                                </span>
+                            </div>
+                            <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                                {dashboard.total_returns}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Status Pills */}
@@ -105,27 +132,13 @@ export default function PengembalianTab({
                 className="mb-4 flex flex-wrap items-center gap-2"
                 aria-label="Filter Status Pengembalian"
             >
-                {RETURN_STATUS_FILTERS.map((f) => {
-                    const isActive = currentStatus === f.key;
-
-                    return (
-                        <button
-                            key={f.key}
-                            type="button"
-                            onClick={() =>
-                                navigate({ status: f.key || undefined })
-                            }
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive
-                                    ? (statusColorMap[f.key] ??
-                                      'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
-                            }`}
-                        >
-                            {f.label}
-                        </button>
-                    );
-                })}
+                <FilterChips
+                    options={RETURN_STATUS_FILTERS}
+                    active={currentStatus}
+                    onChange={(key) => navigate({ status: key || undefined })}
+                    variant="ring"
+                    size="sm"
+                />
             </div>
 
             {/* Filter controls - Collapsible */}
@@ -161,57 +174,58 @@ export default function PengembalianTab({
                     description="Belum ada pengajuan return dari outlet"
                 />
             ) : (
-                <div
-                    className="overflow-x-auto rounded-xl bg-surface shadow-card"
-                    aria-label="Tabel Pengembalian"
-                >
-                    <table className="w-full min-w-[600px] text-sm">
-                        <thead>
-                            <tr className="bg-surface-muted/50 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                <th className="px-3 py-2.5 text-left">Kode</th>
-                                <th className="px-3 py-2.5 text-left">
+                <OwnerTable minWidth="600px" aria-label="Tabel Pengembalian">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="bg-surface-muted/50 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                <TableHead className="px-3 py-2.5 text-left">
+                                    Kode
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-left">
                                     Outlet / Alasan
-                                </th>
-                                <th className="px-3 py-2.5 text-left">
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-left">
                                     Status
-                                </th>
-                                <th className="px-3 py-2.5 text-right">
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-right">
                                     Nilai
-                                </th>
-                                <th className="px-3 py-2.5 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-right">
+                                    Aksi
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {returns.data.map((ret: any) => {
                                 const status = getReturnStatus(ret.status);
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={ret.id}
-                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors last:border-b-0"
+                                        className="border-t border-border/20 transition-colors last:border-b-0 hover:bg-mint-wash"
                                     >
-                                        <td className="px-3 py-2.5 font-bold text-text tabular-nums">
+                                        <TableCell className="px-3 py-2.5 font-bold text-text tabular-nums">
                                             #{ret.id}
-                                        </td>
-                                        <td className="truncate px-3 py-2.5 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="truncate px-3 py-2.5 text-text-muted">
                                             {ret.outlet?.name ?? '-'} ·{' '}
                                             {(ret.reason ?? '').replaceAll(
                                                 '_',
                                                 ' ',
                                             )}
-                                        </td>
-                                        <td className="px-3 py-2.5">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5">
                                             <StatusBadge
                                                 variant={status.variant}
                                                 size="sm"
                                             >
                                                 {status.label}
                                             </StatusBadge>
-                                        </td>
-                                        <td className="px-3 py-2.5 text-right font-semibold text-primary tabular-nums">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5 text-right font-semibold text-primary tabular-nums">
                                             {formatCurrency(ret.total_value)}
-                                        </td>
-                                        <td className="px-3 py-2.5 text-right">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5 text-right">
                                             <div className="flex items-center justify-end gap-1">
                                                 {ret.status === 'submitted' && (
                                                     <Button
@@ -239,13 +253,13 @@ export default function PengembalianTab({
                                                     Tinjau
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Pagination links={returns.links} />

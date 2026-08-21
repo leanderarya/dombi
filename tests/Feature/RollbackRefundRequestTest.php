@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\User;
-use App\Models\Customer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,6 +13,7 @@ class RollbackRefundRequestTest extends TestCase
     use RefreshDatabase;
 
     private User $owner;
+
     private Order $order;
 
     protected function setUp(): void

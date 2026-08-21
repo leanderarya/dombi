@@ -7,25 +7,20 @@ interface CountdownResult {
     totalSeconds: number;
 }
 
+const EMPTY_COUNTDOWN: CountdownResult = {
+    minutes: 0,
+    seconds: 0,
+    expired: true,
+    totalSeconds: 0,
+};
+
 export function useCountdown(
     targetIso: string | null | undefined,
 ): CountdownResult {
-    const [result, setResult] = useState<CountdownResult>({
-        minutes: 0,
-        seconds: 0,
-        expired: true,
-        totalSeconds: 0,
-    });
+    const [result, setResult] = useState<CountdownResult>(EMPTY_COUNTDOWN);
 
     useEffect(() => {
         if (!targetIso) {
-            setResult({
-                minutes: 0,
-                seconds: 0,
-                expired: true,
-                totalSeconds: 0,
-            });
-
             return;
         }
 
@@ -60,5 +55,5 @@ export function useCountdown(
         return () => clearInterval(id);
     }, [targetIso]);
 
-    return result;
+    return targetIso ? result : EMPTY_COUNTDOWN;
 }

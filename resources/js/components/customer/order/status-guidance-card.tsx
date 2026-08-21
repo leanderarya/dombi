@@ -1,7 +1,10 @@
 import { Link } from '@inertiajs/react';
 import { Clock, MapPin, Phone } from 'lucide-react';
+import StatusBadge from '@/components/ui/status-badge';
+import type { BadgeVariant } from '@/components/ui/status-badge';
 import { useCountdown } from '@/hooks/use-countdown';
-import { waLinkWithMessage } from '@/lib/wa';
+import { getBadgeProps } from '@/lib/order-status';
+import { whatsAppDefaultMessage, waLinkWithText } from '@/lib/whatsapp-message';
 
 const MAPS_LINK = 'https://www.google.com/maps/dir/?api=1&destination=';
 
@@ -94,6 +97,9 @@ interface Props {
     outletName?: string;
     customerName?: string;
     orderCode?: string;
+    badgeVariant?: string;
+    badgeLabel?: string;
+    badgeFallbackStatus?: string;
 }
 
 export default function StatusGuidanceCard({
@@ -107,6 +113,8 @@ export default function StatusGuidanceCard({
     outletName,
     customerName,
     orderCode,
+    badgeVariant,
+    badgeLabel,
 }: Props) {
     const countdown = useCountdown(confirmationExpiresAt);
     const isPendingUnpaid =
@@ -121,9 +129,20 @@ export default function StatusGuidanceCard({
         : status === 'ready_for_pickup' && isDelivery
           ? 'ready_for_pickup_delivery'
           : status;
-    const guidance = STATUS_GUIDANCE[guidanceKey] ?? STATUS_GUIDANCE[paymentStatus ?? ''];
+    const guidance =
+        STATUS_GUIDANCE[guidanceKey] ?? STATUS_GUIDANCE[paymentStatus ?? ''];
+    const badge: {
+        badgeVariant?: BadgeVariant;
+        badgeLabel?: string;
+        badgeFallbackStatus?: string;
+    } =
+        badgeVariant && badgeLabel
+            ? { badgeVariant: badgeVariant as BadgeVariant, badgeLabel }
+            : getBadgeProps({ status, paymentStatus, isPickup });
 
-    if (!guidance) return null;
+    if (!guidance) {
+        return null;
+    }
 
     const isPickupReady =
         status === 'ready_for_pickup' && outletLatitude && outletLongitude;
@@ -134,7 +153,14 @@ export default function StatusGuidanceCard({
         countdown.totalSeconds > 0;
 
     return (
-        <div className="mt-3 rounded-xl border border-border bg-white p-3">
+        <div className="rounded-xl border border-border bg-white p-3">
+            {badge.badgeVariant && badge.badgeLabel ? (
+                <StatusBadge variant={badge.badgeVariant}>
+                    {badge.badgeLabel}
+                </StatusBadge>
+            ) : badge.badgeFallbackStatus ? (
+                <StatusBadge status={badge.badgeFallbackStatus} />
+            ) : null}
             <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                     <div className="text-xs font-semibold text-text">
@@ -170,21 +196,35 @@ export default function StatusGuidanceCard({
                         ) : guidance.cta.action === 'wa_outlet' &&
                           outletPhone ? (
                             <a
-                                href={waLinkWithMessage(outletPhone, {
-                                    order_code: orderCode ?? '',
-                                    customer_name: customerName,
-                                    outlet_name: outletName,
-                                })}
+                                href={waLinkWithText(
+                                    outletPhone,
+                                    whatsAppDefaultMessage({
+                                        order_code: orderCode ?? '',
+                                        status,
+                                        fulfillment_type: isPickup
+                                            ? 'pickup'
+                                            : 'delivery',
+                                        customer_name: customerName,
+                                        outlet_name: outletName,
+                                    }),
+                                )}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => {
                                     e.preventDefault();
                                     window.open(
-                                        waLinkWithMessage(outletPhone, {
-                                            order_code: orderCode ?? '',
-                                            customer_name: customerName,
-                                            outlet_name: outletName,
-                                        }),
+                                        waLinkWithText(
+                                            outletPhone,
+                                            whatsAppDefaultMessage({
+                                                order_code: orderCode ?? '',
+                                                status,
+                                                fulfillment_type: isPickup
+                                                    ? 'pickup'
+                                                    : 'delivery',
+                                                customer_name: customerName,
+                                                outlet_name: outletName,
+                                            }),
+                                        ),
                                         '_blank',
                                         'noopener,noreferrer',
                                     );

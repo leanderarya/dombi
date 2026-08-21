@@ -10,21 +10,32 @@ interface Variant {
     stock: number;
 }
 
+interface EditSale {
+    id: number;
+    product_id: number;
+    quantity: number;
+    payment_method: string;
+    notes: string | null;
+}
+
 interface Props {
     open: boolean;
     variants: Variant[];
     onClose: () => void;
+    sale?: EditSale | null;
 }
 
 export default function OfflineSaleDialog({
     open,
     variants = [],
     onClose,
+    sale = null,
 }: Props) {
     const form = useForm({
-        variant_id: '',
-        quantity: 1,
-        notes: '',
+        variant_id: sale ? String(sale.product_id) : '',
+        quantity: sale ? sale.quantity : 1,
+        payment_method: sale ? sale.payment_method : 'cash',
+        notes: sale?.notes ?? '',
     });
 
     const variantOptions = variants.map((v) => ({
@@ -42,13 +53,25 @@ export default function OfflineSaleDialog({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post('/outlet/offline-sales', {
+        const opts = {
             onSuccess: () => {
                 form.reset();
                 onClose();
             },
-        });
+        };
+
+        if (sale) {
+            form.put(`/outlet/offline-sales/${sale.id}`, opts);
+        } else {
+            form.post('/outlet/offline-sales', opts);
+        }
     };
+
+    const qtyValue = form.data.quantity.toString();
+    const qtyNum = Number(form.data.quantity);
+    const qtyValid = Number.isInteger(qtyNum) && qtyNum >= 1;
+    const qtyMax = selectedVariant?.stock ?? null;
+    const qtyOverflow = qtyValid && qtyMax !== null && qtyNum > qtyMax;
 
     if (!open) {
         return null;
@@ -62,12 +85,12 @@ export default function OfflineSaleDialog({
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl"
+                className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
                     <h2 className="text-sm font-bold text-text">
-                        Catat Penjualan
+                        {sale ? 'Edit Penjualan' : 'Catat Penjualan'}
                     </h2>
                     <button
                         onClick={onClose}
@@ -90,6 +113,20 @@ export default function OfflineSaleDialog({
                             searchable
                         />
 
+                        <CustomSelect
+                            label="Metode Bayar"
+                            options={[
+                                { value: 'cash', label: 'Tunai' },
+                                { value: 'transfer', label: 'Transfer' },
+                                { value: 'qris', label: 'QRIS' },
+                                { value: 'other', label: 'Lainnya' },
+                            ]}
+                            value={form.data.payment_method}
+                            onChange={(v: string) =>
+                                form.setData('payment_method', v)
+                            }
+                        />
+
                         <div className="flex gap-2">
                             <div className="flex-1">
                                 <label className="mb-1 block text-xs font-medium text-text-muted">
@@ -97,20 +134,29 @@ export default function OfflineSaleDialog({
                                 </label>
                                 <input
                                     type="number"
+                                    inputMode="numeric"
                                     min="1"
-                                    max={selectedVariant?.stock ?? 999}
-                                    value={form.data.quantity}
-                                    onChange={(e) =>
+                                    placeholder="0"
+                                    value={qtyValue}
+                                    onChange={(e) => {
+                                        const raw = e.target.value;
                                         form.setData(
                                             'quantity',
-                                            Math.max(
-                                                1,
-                                                parseInt(e.target.value) || 1,
-                                            ),
-                                        )
-                                    }
+                                            raw === '' ? 0 : Number(raw),
+                                        );
+                                    }}
                                     className="min-h-11 w-full rounded-lg border border-border bg-surface text-center text-sm font-semibold text-text focus:ring-2 focus:ring-primary/30 focus:outline-none"
                                 />
+                                {qtyOverflow && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        Maksimal {qtyMax} (stok tersedia)
+                                    </p>
+                                )}
+                                {qtyValid && qtyNum < 1 && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        Jumlah minimal 1
+                                    </p>
+                                )}
                             </div>
                             <div className="flex-1">
                                 <label className="mb-1 block text-xs font-medium text-text-muted">
@@ -147,10 +193,19 @@ export default function OfflineSaleDialog({
                         )}
                         <button
                             type="submit"
-                            disabled={form.processing || !form.data.variant_id}
+                            disabled={
+                                form.processing ||
+                                !form.data.variant_id ||
+                                !qtyValid ||
+                                qtyOverflow
+                            }
                             className="min-h-11 w-full rounded-lg bg-emerald-600 text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
                         >
-                            {form.processing ? 'Menyimpan...' : 'Simpan'}
+                            {form.processing
+                                ? 'Menyimpan...'
+                                : sale
+                                  ? 'Update'
+                                  : 'Simpan'}
                         </button>
                     </div>
                 </form>

@@ -48,11 +48,11 @@ export default function OutletProvisioningSummary({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[2000] flex items-end justify-center bg-slate-950/40 px-0 lg:items-center lg:px-4"
+            className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950/40 px-4"
             role="dialog"
             aria-modal="true"
         >
-            <div className="w-full max-w-md rounded-t-lg border border-slate-200 bg-white p-4 lg:rounded-lg">
+            <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-4">
                 <p className="text-xs font-semibold tracking-wide text-emerald-600 uppercase">
                     Branch Provisioned
                 </p>

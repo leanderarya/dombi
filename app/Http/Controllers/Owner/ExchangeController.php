@@ -16,7 +16,7 @@ class ExchangeController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = ExchangeRequest::with(['outlet', 'requester', 'items.variant', 'returnRequest'])
+        $query = ExchangeRequest::with(['outlet', 'requester', 'items.product', 'returnRequest'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -64,7 +64,7 @@ class ExchangeController extends Controller
 
     public function show(ExchangeRequest $exchangeRequest): Response
     {
-        $exchangeRequest->load(['outlet', 'requester', 'reviewer', 'shipper', 'receiver', 'items.variant', 'returnRequest.items.variant', 'statusHistories.actor']);
+        $exchangeRequest->load(['outlet', 'requester', 'reviewer', 'shipper', 'receiver', 'items.product', 'returnRequest.items.product', 'statusHistories.actor']);
 
         return Inertia::render('owner/exchanges/show', [
             'exchange' => $exchangeRequest,

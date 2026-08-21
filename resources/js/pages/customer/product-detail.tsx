@@ -1,13 +1,14 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast as toastNotify } from 'sonner';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import ForeGreenHeader from '@/components/customer/fore-green-header';
+import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
+import { mutationFetch } from '@/lib/api';
 import { getCsrfToken } from '@/lib/csrf';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
-import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
-import { mutationFetch } from '@/lib/api';
 
 /* ─── Types ────────────────────────────────────────────────── */
 
@@ -57,12 +58,51 @@ function findSoleFlavor(variants: Variant[]): string | null {
     return flavors.length === 1 ? flavors[0] : null;
 }
 
+/* ─── resolveSelection ──────────────────────────────────── */
+
+function resolveSelection(
+    requestedFlavor: string | null,
+    requestedSize: string | null,
+    products: Variant[],
+): {
+    product: Variant | null;
+    effectiveFlavor: string | null;
+    effectiveSize: string | null;
+} {
+    if (!products.length) {
+        return { product: null, effectiveFlavor: null, effectiveSize: null };
+    }
+
+    const flavors = [
+        ...new Set(products.map((p) => p.flavor).filter(Boolean)),
+    ] as string[];
+    const flavor =
+        requestedFlavor && flavors.includes(requestedFlavor)
+            ? requestedFlavor
+            : (flavors[0] ?? null);
+
+    const sizesForFlavor = products
+        .filter((p) => p.flavor === flavor)
+        .map((p) => p.size)
+        .filter(Boolean) as string[];
+    const size =
+        requestedSize && sizesForFlavor.includes(requestedSize)
+            ? requestedSize
+            : (sizesForFlavor.sort((a, b) => sizeToMl(a) - sizeToMl(b))[0] ??
+              null);
+
+    const product =
+        products.find((p) => p.flavor === flavor && p.size === size) ?? null;
+
+    return { product, effectiveFlavor: flavor, effectiveSize: size };
+}
+
 /* ─── Hook: useAddToCart ───────────────────────────────────── */
 
 function useAddToCart() {
     const cart = useCart();
     const { totalItems } = cart;
-    const { selectedOutlet } = useOutlet();
+    const { selectedOutlet, syncOutletId } = useOutlet();
     const [adding, setAdding] = useState(false);
     const [added, setAdded] = useState(false);
     const [toast, setToast] = useState<{ name: string; qty: number } | null>(
@@ -90,13 +130,29 @@ function useAddToCart() {
                         'X-CSRF-TOKEN': getCsrfToken(),
                     },
                     body: JSON.stringify({
-                        product_variant_id: variant.id,
+                        product_id: variant.id,
                         quantity: qty,
                     }),
                 });
-                await res.json();
+                const data = (await res.json().catch(() => null)) as {
+                    switched_outlet?: boolean;
+                    outlet?: {
+                        to_outlet_id?: number;
+                        from_outlet_name?: string;
+                        to_outlet_name?: string;
+                    };
+                } | null;
+
+                if (data?.switched_outlet && data?.outlet?.to_outlet_id) {
+                    // Smart switch: sync outlet context + notify
+                    syncOutletId(data.outlet.to_outlet_id);
+                    toastNotify.warning(
+                        `Stok tidak tersedia di ${data.outlet.from_outlet_name}. Outlet belanja Anda otomatis dialihkan ke ${data.outlet.to_outlet_name}.`,
+                        { duration: 4000 },
+                    );
+                }
             } catch {
-                /* frontend cart already updated */
+                cart.removeItem(variant.id);
             }
 
             setAdding(false);
@@ -106,7 +162,7 @@ function useAddToCart() {
             timers.current.push(setTimeout(() => setAdded(false), 1500));
             timers.current.push(setTimeout(() => setToast(null), 2500));
         },
-        [cart, adding, added, isOutletClosed],
+        [cart, adding, added, isOutletClosed, syncOutletId],
     );
 
     return { addToCart, adding, added, toast, totalItems };
@@ -191,31 +247,48 @@ function ProductDetailInner({
         typeof window !== 'undefined'
             ? new URLSearchParams(window.location.search)
             : null;
-    const [overriddenFlavor, setOverriddenFlavor] = useState<string | null>(
-        urlParams?.get('flavor') ?? null,
-    );
-    const [overriddenSize, setOverriddenSize] = useState<string | null>(
-        urlParams?.get('size') ?? null,
-    );
+    const [selection, setSelection] = useState(() => ({
+        familyId: family.id,
+        flavor: urlParams?.get('flavor') ?? null,
+        size: urlParams?.get('size') ?? null,
+    }));
     const [quantity, setQuantity] = useState(1);
-    const [maxQuantity, setMaxQuantity] = useState(999);
 
-    // Reset on family change (key-based, render-phase safe)
-    const familyIdRef = useRef(family.id);
-
-    if (familyIdRef.current !== family.id) {
-        familyIdRef.current = family.id;
-        setOverriddenFlavor(null);
-        setOverriddenSize(null);
+    if (selection.familyId !== family.id) {
+        setSelection({
+            familyId: family.id,
+            flavor: null,
+            size: null,
+        });
     }
 
-    const effectiveFlavor = overriddenFlavor ?? defaultFlavor;
-    const effectiveSize = overriddenSize ?? defaultSize;
-    const selectedVariant = family.variants.find(
-        (v) =>
-            (flavors.length === 0 || v.flavor === effectiveFlavor) &&
-            (sortedSizes.length === 0 || v.size === effectiveSize),
+    const resolved = useMemo(
+        () =>
+            resolveSelection(selection.flavor, selection.size, family.variants),
+        [selection.flavor, selection.size, family.variants],
     );
+    const effectiveFlavor = resolved.effectiveFlavor ?? defaultFlavor;
+    const effectiveSize = resolved.effectiveSize ?? defaultSize;
+    const selectedVariant = resolved.product;
+
+    const displayImage = useMemo(() => {
+        if (!effectiveFlavor) {
+            for (const v of family.variants) {
+                if (v.image) {
+                    return v.image;
+                }
+            }
+
+            return null;
+        }
+
+        const flavorVariant = family.variants.find(
+            (v) => v.flavor === effectiveFlavor && v.image,
+        );
+
+        return flavorVariant?.image ?? null;
+    }, [effectiveFlavor, family.variants]);
+
     const stockStatus = selectedVariant?.stock_status ?? 'available';
     const isOutOfStock = stockStatus === 'out_of_stock';
     const variantSummary = [effectiveFlavor, effectiveSize]
@@ -223,10 +296,7 @@ function ProductDetailInner({
         .join(' • ');
     const showFlavorSelector = flavors.length > 1;
     const showSizeSelector = sortedSizes.length > 1;
-    const effectiveMax = Math.min(
-        maxQuantity,
-        selectedVariant?.available_stock ?? 999,
-    );
+    const effectiveMax = Math.min(999, selectedVariant?.available_stock ?? 999);
 
     const handleAdd = () => {
         if (!selectedVariant || isOutOfStock || isOutletClosed) {
@@ -247,13 +317,7 @@ function ProductDetailInner({
                             <ForeGreenHeader
                                 title={family.name}
                                 backHref="/customer/products"
-                            >
-                                {family.brand && (
-                                    <p className="mt-1 text-center text-[11px] text-white/60">
-                                        {family.brand}
-                                    </p>
-                                )}
-                            </ForeGreenHeader>
+                            />
                             {totalItems > 0 && (
                                 <CartButton outletId={outletId ?? null} />
                             )}
@@ -265,9 +329,9 @@ function ProductDetailInner({
 
                 <main className="mx-auto max-w-lg px-4 pt-4 pb-32">
                     <div className="mb-5 flex h-72 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 to-zinc-50">
-                        {!!(selectedVariant?.image ?? family.image) ? (
+                        {displayImage ? (
                             <img
-                                src={selectedVariant?.image ?? family.image}
+                                src={displayImage}
                                 alt={family.name}
                                 className="h-full w-full object-cover"
                             />
@@ -321,7 +385,11 @@ function ProductDetailInner({
                                         (sortedSizes.length === 0 ||
                                             v.size === effectiveSize),
                                 ),
-                                onSelect: () => setOverriddenFlavor(f),
+                                onSelect: () =>
+                                    setSelection((current) => ({
+                                        ...current,
+                                        flavor: f,
+                                    })),
                             }))}
                         />
                     )}
@@ -352,7 +420,11 @@ function ProductDetailInner({
                                             (flavors.length === 0 ||
                                                 v.flavor === effectiveFlavor),
                                     ),
-                                    onSelect: () => setOverriddenSize(s),
+                                    onSelect: () =>
+                                        setSelection((current) => ({
+                                            ...current,
+                                            size: s,
+                                        })),
                                     right: v ? (
                                         <PriceDiff
                                             diff={v.selling_price - basePrice}
@@ -375,8 +447,11 @@ function ProductDetailInner({
                                     selected: selectedVariant?.id === v.id,
                                     hasVariant: true,
                                     onSelect: () => {
-                                        setOverriddenFlavor(null);
-                                        setOverriddenSize(null);
+                                        setSelection((current) => ({
+                                            ...current,
+                                            flavor: null,
+                                            size: null,
+                                        }));
                                     },
                                     right: (
                                         <span className="text-sm text-text-muted tabular-nums">
@@ -640,11 +715,24 @@ function OtherProducts({
 
 function CartButton({ outletId }: { outletId: number | null }) {
     const { totalItems, items } = useCart();
+    const [processing, setProcessing] = useState(false);
 
     const handleCheckout = () => {
-        const payload: Record<string, unknown> = {
+        if (processing) {
+            return;
+        }
+
+        setProcessing(true);
+
+        const payload: {
+            items: Array<{
+                product_id: number;
+                quantity: number;
+            }>;
+            selected_outlet_id?: number;
+        } = {
             items: items.map((i) => ({
-                product_variant_id: i.product_variant_id,
+                product_id: i.product_id,
                 quantity: i.quantity,
             })),
         };
@@ -653,7 +741,10 @@ function CartButton({ outletId }: { outletId: number | null }) {
             payload.selected_outlet_id = outletId;
         }
 
-        router.post('/customer/checkout', payload);
+        router.post('/customer/checkout', payload, {
+            preserveScroll: true,
+            onFinish: () => setProcessing(false),
+        });
     };
 
     return (
@@ -758,13 +849,7 @@ function StickyCTA({
     );
 }
 
-function RadioDot({
-    checked,
-    disabled,
-}: {
-    checked: boolean;
-    disabled?: boolean;
-}) {
+function RadioDot({ checked }: { checked: boolean; disabled?: boolean }) {
     if (checked) {
         return (
             <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600">

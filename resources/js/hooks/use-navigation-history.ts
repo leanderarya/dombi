@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
 import { router } from '@inertiajs/react';
+import { useEffect, useRef } from 'react';
 
 const EXCLUDE_PATTERNS = [
     '/payment/',
@@ -16,13 +16,20 @@ export function useNavigationHistory(rootUrl = '/customer/home') {
     const stack = useRef<string[]>([]);
 
     const push = (url: string) => {
-        if (shouldExclude(url)) return;
+        if (shouldExclude(url)) {
+            return;
+        }
+
         stack.current.push(url);
     };
 
     const pop = (): string | null => {
-        if (stack.current.length <= 1) return null;
+        if (stack.current.length <= 1) {
+            return null;
+        }
+
         stack.current.pop();
+
         return stack.current[stack.current.length - 1] ?? rootUrl;
     };
 
@@ -37,13 +44,13 @@ export function useNavigationHistory(rootUrl = '/customer/home') {
 
     const back = () => {
         const prev = pop();
+
         if (prev) {
             router.visit(prev);
         }
     };
 
-    const currentUrl = () =>
-        stack.current[stack.current.length - 1] ?? rootUrl;
+    const currentUrl = () => stack.current[stack.current.length - 1] ?? rootUrl;
 
     useEffect(() => {
         if (stack.current.length === 0) {
@@ -58,5 +65,13 @@ export function useNavigationHistory(rootUrl = '/customer/home') {
         handler();
     }, [rootUrl]);
 
-    return { back, push, pop, pruneToRoot, clear, currentUrl, stackSize: () => stack.current.length };
+    return {
+        back,
+        push,
+        pop,
+        pruneToRoot,
+        clear,
+        currentUrl,
+        stackSize: () => stack.current.length,
+    };
 }

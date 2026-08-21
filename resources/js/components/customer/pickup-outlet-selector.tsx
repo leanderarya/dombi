@@ -1,4 +1,4 @@
-import { ChevronDown, MapPin, Check, Navigation, Store } from 'lucide-react';
+import { ChevronDown, MapPin, Check, Store } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import { useCustomerLocation } from '@/lib/customer-location';
@@ -47,7 +47,10 @@ export default function PickupOutletSelector({
         initialRecommendations ?? { recommended: null, alternatives: [] },
     );
 
-    const alternatives = recommendations.alternatives ?? [];
+    const alternatives = useMemo(
+        () => recommendations.alternatives ?? [],
+        [recommendations.alternatives],
+    );
 
     useEffect(() => {
         let active = true;
@@ -61,15 +64,23 @@ export default function PickupOutletSelector({
             params.set('longitude', String(location.longitude));
         }
 
-        setLoading(true);
+        Promise.resolve()
+            .then(() => {
+                if (active) {
+                    setLoading(true);
+                }
 
-        fetch(`/customer/checkout/pickup-outlets?${params.toString()}`, {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-        })
+                return fetch(
+                    `/customer/checkout/pickup-outlets?${params.toString()}`,
+                    {
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin',
+                    },
+                );
+            })
             .then(async (response) => {
                 if (!response.ok) {
                     throw new Error('Failed to load pickup outlets');
@@ -196,7 +207,10 @@ export default function PickupOutletSelector({
                             </div>
                             {selectedOutlet.is_open === false && (
                                 <span className="mt-1 inline-flex items-center rounded bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
-                                    Sedang Tutup{selectedOutlet.next_open ? ` • Buka ${selectedOutlet.next_open}` : ''}
+                                    Sedang Tutup
+                                    {selectedOutlet.next_open
+                                        ? ` • Buka ${selectedOutlet.next_open}`
+                                        : ''}
                                 </span>
                             )}
                         </div>
@@ -264,7 +278,10 @@ export default function PickupOutletSelector({
                                                 </div>
                                                 {outlet.is_open === false && (
                                                     <span className="mt-0.5 inline-flex items-center rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
-                                                        Sedang Tutup{outlet.next_open ? ` • Buka ${outlet.next_open}` : ''}
+                                                        Sedang Tutup
+                                                        {outlet.next_open
+                                                            ? ` • Buka ${outlet.next_open}`
+                                                            : ''}
                                                     </span>
                                                 )}
                                             </div>

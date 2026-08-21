@@ -21,7 +21,7 @@ class RecipientDisplayTest extends TestCase
         Customer::create(['name' => 'Budi', 'phone' => '6281234567890', 'user_id' => $user->id, 'is_registered' => true]);
 
         $this->actingAs($user)->session([
-            'checkout.cart' => [['product_variant_id' => 1, 'quantity' => 1]],
+            'checkout.cart' => [['product_id' => 1, 'quantity' => 1]],
             'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => 1],
             'checkout.customer' => [
                 'customer_name' => 'Budi',

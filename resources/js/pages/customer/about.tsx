@@ -46,9 +46,8 @@ export default function About() {
                         </p>
                         <p className="mt-3 text-sm leading-relaxed text-text-muted">
                             Kami menghubungkan pelanggan langsung dengan
-                            jaringan outlet distribusi untuk memastikan
-                            produk kebutuhan sampai ke tangan kamu dalam waktu
-                            singkat.
+                            jaringan outlet distribusi untuk memastikan produk
+                            kebutuhan sampai ke tangan kamu dalam waktu singkat.
                         </p>
                     </div>
                 </section>

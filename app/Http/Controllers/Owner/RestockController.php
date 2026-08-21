@@ -7,9 +7,9 @@ use App\Http\Requests\Owner\ApproveRestockRequest;
 use App\Http\Requests\Owner\RejectRestockRequest;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\Product;
 use App\Models\RestockRequest;
 use App\Services\RestockService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,7 +21,7 @@ class RestockController extends Controller
     {
         return Inertia::render('owner/restocks/index', [
             'restocks' => RestockRequest::query()
-                ->with(['outlet', 'items.variant.family'])
+                ->with(['outlet', 'items.product.category'])
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
                 ->when($request->filled('outlet_id'), fn ($query) => $query->where('outlet_id', $request->integer('outlet_id')))
                 ->when($request->filled('search'), fn ($query) => $query->where(function ($searchQuery) use ($request): void {
@@ -54,19 +54,18 @@ class RestockController extends Controller
             'requester',
             'approver',
             'rejecter',
-            'items.product',
-            'items.variant.family',
+            'items.product.category',
             'sender',
             'receiver',
         ]);
 
-        $inventories = OutletInventory::with('variant.family')
+        $inventories = OutletInventory::with('product.category')
             ->where('outlet_id', $restockRequest->outlet_id)
-            ->whereIn('product_variant_id', $restockRequest->items->pluck('product_variant_id'))
+            ->whereIn('product_id', $restockRequest->items->pluck('product_id'))
             ->get();
 
         if ($request->expectsJson()) {
-            $centralStock = \App\Models\ProductVariant::whereIn('id', $restockRequest->items->pluck('product_variant_id'))
+            $centralStock = Product::whereIn('id', $restockRequest->items->pluck('product_id'))
                 ->pluck('center_stock', 'id');
 
             return response()->json([

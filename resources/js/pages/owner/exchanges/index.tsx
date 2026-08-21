@@ -1,13 +1,22 @@
 import { router } from '@inertiajs/react';
-import { toast } from 'sonner';
+import { Package, PackageX, Repeat2, Wallet } from 'lucide-react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
 import { getExchangeStatus } from '@/lib/status-labels';
 
@@ -21,17 +30,6 @@ const statusFilters = [
     { key: 'completed', label: 'Selesai' },
     { key: 'rejected', label: 'Ditolak' },
 ];
-
-const colorMap: Record<string, string> = {
-    '': 'text-text bg-surface-muted ring-border',
-    submitted: 'text-amber-600 bg-amber-50 ring-amber-200',
-    approved: 'text-blue-600 bg-blue-50 ring-blue-200',
-    preparing: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
-    shipped: 'text-purple-600 bg-purple-50 ring-purple-200',
-    received: 'text-cyan-600 bg-cyan-50 ring-cyan-200',
-    completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
-    rejected: 'text-red-600 bg-red-50 ring-red-200',
-};
 
 export default function OwnerExchangesIndex({
     exchanges,
@@ -78,31 +76,56 @@ export default function OwnerExchangesIndex({
         >
             {/* KPI Strip */}
             <div aria-label="Ringkasan Tukar Produk">
-                <OwnerKpiStrip
-                    items={[
-                        {
-                            label: 'Tertunda',
-                            value: dashboard.pending_exchanges,
-                            sublabel:
-                                dashboard.pending_exchanges > 0
-                                    ? 'Perlu ditinjau'
-                                    : undefined,
-                            sublabelColor: 'text-amber-600',
-                        },
-                        {
-                            label: 'Nilai Tukar',
-                            value: formatCurrency(dashboard.exchange_value),
-                        },
-                        ...(dashboard.total_exchanges !== undefined
-                            ? [
-                                  {
-                                      label: 'Total',
-                                      value: dashboard.total_exchanges,
-                                  },
-                              ]
-                            : []),
-                    ]}
-                />
+                <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Tertunda
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                                <Repeat2 className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div
+                            className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_exchanges > 0 ? 'text-amber-600' : 'text-text'}`}
+                        >
+                            {dashboard.pending_exchanges}
+                        </div>
+                        {dashboard.pending_exchanges > 0 && (
+                            <p className="text-[11px] text-amber-500">
+                                Perlu ditinjau
+                            </p>
+                        )}
+                    </div>
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Nilai Tukar
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                                <Wallet className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                            {formatCurrency(dashboard.exchange_value)}
+                        </div>
+                    </div>
+                    {dashboard.total_exchanges !== undefined && (
+                        <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">
+                                    Total
+                                </span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                                    <PackageX className="h-5 w-5" />
+                                </span>
+                            </div>
+                            <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                                {dashboard.total_exchanges}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Status Pills */}
@@ -110,25 +133,13 @@ export default function OwnerExchangesIndex({
                 className="mb-4 flex flex-wrap items-center gap-2"
                 aria-label="Filter Status Tukar Produk"
             >
-                {statusFilters.map((sf) => {
-                    const isActive = currentStatus === sf.key;
-
-                    return (
-                        <button
-                            key={sf.key}
-                            type="button"
-                            onClick={() => setFilter('status', sf.key)}
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive
-                                    ? (colorMap[sf.key] ??
-                                      'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
-                            }`}
-                        >
-                            {sf.label}
-                        </button>
-                    );
-                })}
+                <FilterChips
+                    options={statusFilters}
+                    active={currentStatus}
+                    onChange={(key) => setFilter('status', key)}
+                    variant="ring"
+                    size="sm"
+                />
             </div>
 
             {/* Filter controls - Collapsible */}
@@ -161,61 +172,62 @@ export default function OwnerExchangesIndex({
             {/* Table */}
             {exchanges.data.length === 0 ? (
                 <EmptyState
-                    icon="package"
+                    icon={<Package className="h-8 w-8 text-text-subtle" />}
                     title="Tidak ada permintaan tukar produk"
                     description="Belum ada pengajuan penukaran dari outlet"
                 />
             ) : (
-                <div
-                    className="overflow-x-auto rounded-xl bg-surface shadow-card"
-                    aria-label="Tabel Tukar Produk"
-                >
-                    <table className="w-full min-w-[600px] text-sm">
-                        <thead>
-                            <tr className="bg-surface-muted/50 text-xs font-medium text-text-muted">
-                                <th className="px-3 py-2.5 text-left">Kode</th>
-                                <th className="px-3 py-2.5 text-left">
+                <OwnerTable minWidth="600px">
+                    <Table className="text-sm" aria-label="Tabel Tukar Produk">
+                        <TableHeader>
+                            <TableRow className="bg-surface-muted/50 text-xs font-medium text-text-muted">
+                                <TableHead className="px-3 py-2.5 text-left">
+                                    Kode
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-left">
                                     Outlet / Info
-                                </th>
-                                <th className="px-3 py-2.5 text-left">
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-left">
                                     Status
-                                </th>
-                                <th className="px-3 py-2.5 text-right">
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-right">
                                     Nilai
-                                </th>
-                                <th className="px-3 py-2.5 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-right">
+                                    Aksi
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {exchanges.data.map((ex: any) => {
                                 const status = getExchangeStatus(ex.status);
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={ex.id}
-                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors last:border-b-0"
+                                        className="border-t border-border/20 transition-colors last:border-b-0 hover:bg-mint-wash"
                                     >
-                                        <td className="px-3 py-2.5 font-bold text-text tabular-nums">
+                                        <TableCell className="px-3 py-2.5 font-bold text-text tabular-nums">
                                             #{ex.id}
-                                        </td>
-                                        <td className="truncate px-3 py-2.5 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="truncate px-3 py-2.5 text-text-muted">
                                             {ex.outlet?.name ?? '-'} ·{' '}
                                             {ex.return_request_id
                                                 ? `Return #${ex.return_request_id}`
                                                 : 'Tanpa return'}
-                                        </td>
-                                        <td className="px-3 py-2.5">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5">
                                             <StatusBadge
                                                 variant={status.variant}
                                                 size="sm"
                                             >
                                                 {status.label}
                                             </StatusBadge>
-                                        </td>
-                                        <td className="px-3 py-2.5 text-right font-semibold text-primary tabular-nums">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5 text-right font-semibold text-primary tabular-nums">
                                             {formatCurrency(ex.exchange_value)}
-                                        </td>
-                                        <td className="px-3 py-2.5 text-right">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5 text-right">
                                             <div className="flex items-center justify-end gap-1">
                                                 {ex.status === 'submitted' && (
                                                     <Button
@@ -243,13 +255,13 @@ export default function OwnerExchangesIndex({
                                                     Tinjau
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Pagination links={exchanges.links} />

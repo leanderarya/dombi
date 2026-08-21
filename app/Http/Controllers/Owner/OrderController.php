@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Owner\CancelOrderRequest;
+use App\Models\OfflineSale;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\User;
+use App\Services\OrderStatusService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
@@ -16,20 +20,40 @@ class OrderController extends Controller
 {
     public function index(Request $request): Response
     {
+        $status = $request->string('status', 'needs_action')->toString();
+
+        $offlineSales = null;
+        if ($status === 'all') {
+            $status = '';
+        }
+
+        if ($status === 'offline') {
+            $offlineSales = OfflineSale::with([
+                'outlet:id,name',
+                'product' => fn ($q) => $q->with('category:id,name'),
+            ])
+                ->when($request->filled('outlet_id'), fn ($q) => $q->where('outlet_id', $request->integer('outlet_id')))
+                ->when($request->filled('date'), fn ($q) => $q->whereDate('created_at', $request->date('date')))
+                ->latest()
+                ->paginate(20)
+                ->withQueryString();
+        }
+
         $orders = Order::query()
             ->with(['outlet', 'items', 'delivery.courier', 'statusHistories'])
-            ->when(true, function ($query) use ($request) {
-                $status = $request->string('status', 'needs_action')->toString();
+            ->when(true, function ($query) use ($status) {
+                if ($status === 'offline') {
+                    return;
+                }
 
                 if ($status === '') {
                     return;
                 }
 
                 $compoundMap = [
-                    'needs_action' => ['pending_confirmation', 'ready_for_pickup'],
+                    'needs_action' => ['pending_confirmation', 'ready_for_pickup', 'failed_delivery'],
                     'active' => ['confirmed', 'preparing', 'delivering'],
                     'cancelled' => ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'],
-                    'failed' => ['failed_delivery'],
                 ];
 
                 if (isset($compoundMap[$status])) {
@@ -53,7 +77,7 @@ class OrderController extends Controller
         // Cache stats for 10 seconds (scalar values only)
         $stats = Cache::remember('owner:order_stats', 10, function () {
             $today = now()->toDateString();
-            
+
             return [
                 'total_today' => Order::whereDate('created_at', $today)->count(),
                 'pending' => Order::whereIn('status', ['pending_confirmation', 'ready_for_pickup'])->count(),
@@ -64,6 +88,7 @@ class OrderController extends Controller
 
         return Inertia::render('owner/orders/index', [
             'orders' => $orders,
+            'offlineSales' => $offlineSales,
             'outlets' => $outlets,
             'filters' => $request->only(['status', 'outlet_id', 'courier_id', 'date', 'search']),
             'stats' => $stats,
@@ -86,5 +111,17 @@ class OrderController extends Controller
             'reservedStocks' => $reservedStocks,
             'couriers' => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
+    }
+
+    public function cancel(CancelOrderRequest $request, Order $order, OrderStatusService $statusService): RedirectResponse
+    {
+        $statusService->transition($order, Order::STATUS_CANCELLED_BY_OUTLET, [
+            'reason' => $request->validated('reason'),
+            'notes' => $request->validated('notes'),
+            'actor_id' => $request->user()->id,
+            'actor_type' => 'owner',
+        ]);
+
+        return redirect()->route('owner.orders.show', $order)->with('success', 'Pesanan dibatalkan.');
     }
 }

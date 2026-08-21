@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('damage_notes')->nullable()->after('received_notes');
         });
 
-        DB::statement("
+        DB::statement('
             UPDATE restock_requests rr
             INNER JOIN stock_distributions sd ON sd.restock_request_id = rr.id
             SET
@@ -28,7 +28,7 @@ return new class extends Migration
                 rr.received_at    = sd.received_at,
                 rr.received_notes = sd.received_notes,
                 rr.damage_notes   = sd.damage_notes
-        ");
+        ');
 
         DB::statement("ALTER TABLE restock_requests MODIFY status ENUM('requested', 'rejected', 'preparing', 'shipped', 'completed', 'cancelled') NOT NULL DEFAULT 'requested'");
 

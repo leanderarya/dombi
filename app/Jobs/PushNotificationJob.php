@@ -8,7 +8,6 @@ use App\Services\PushNotificationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Queue\Middleware\WithoutOverlapping;
 
 class PushNotificationJob implements ShouldQueue
 {
@@ -30,6 +29,7 @@ class PushNotificationJob implements ShouldQueue
     {
         if ($this->user) {
             $push->send($this->user, $this->title, $this->body, $this->data);
+
             return;
         }
 

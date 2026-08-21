@@ -13,6 +13,7 @@ class CustomerRefundDestinationTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Customer $customer;
 
     protected function setUp(): void

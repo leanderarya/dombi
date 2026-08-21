@@ -23,13 +23,11 @@ export function useHideOnScroll(threshold = 10) {
                 // Always show near top
                 if (currentY < 50) {
                     setVisible(true);
-                }
-                // Scrolling down — hide
-                else if (delta > threshold) {
+                } else if (delta > threshold) {
+                    // Scrolling down — hide
                     setVisible(false);
-                }
-                // Scrolling up — show
-                else if (delta < -threshold) {
+                } else if (delta < -threshold) {
+                    // Scrolling up — show
                     setVisible(true);
                 }
 

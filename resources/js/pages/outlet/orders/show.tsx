@@ -2,6 +2,7 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { AlertTriangle, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import BottomSheet from '@/components/ui/bottom-sheet';
+import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
@@ -10,6 +11,8 @@ import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 import { isDifferentRecipient } from '@/lib/recipient';
 import { getOrderStatus } from '@/lib/status-labels';
+import { usePolling } from '@/lib/use-polling';
+import { waLink } from '@/lib/wa';
 
 const STATUS_CONFIRM_LABELS: Record<
     string,
@@ -39,7 +42,29 @@ export default function OutletOrderShow({
     cancellationReasons = [],
 }: any) {
     const { errors } = usePage<any>().props;
-    const assignForm = useForm({ courier_id: couriers[0]?.id ?? '' });
+    const isTerminal = [
+        'completed',
+        'cancelled_by_customer',
+        'cancelled_by_outlet',
+        'rejected_by_outlet',
+        'expired',
+    ].includes(order.status);
+    usePolling(15000, [], !isTerminal);
+    const deliveryCourierName =
+        order.delivery?.courier?.name ?? order.delivery?.external_courier_name;
+    const deliveryCourierPhone =
+        order.delivery?.courier?.phone ??
+        order.delivery?.external_courier_phone;
+    const deliveryCourierPlate =
+        order.delivery?.courier?.vehicle_plate ??
+        order.delivery?.external_plate_number;
+    const firstAssignableCourier = couriers.find(
+        (courier: any) => courier.is_online !== false && !courier.at_capacity,
+    );
+    const assignForm = useForm({
+        courier_type: 'dombi',
+        courier_id: firstAssignableCourier?.id ?? '',
+    });
     const rejectForm = useForm({ reason: '', note: '' });
     const statusForm = useForm({ status: '' });
     const cancelForm = useForm({
@@ -203,7 +228,7 @@ export default function OutletOrderShow({
                     {isDifferentRecipient(order) && (
                         <div className="mb-3 inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-700 ring-1 ring-red-200">
                             <AlertTriangle className="h-3 w-3" />
-                            BEDA PENERIMA
+                            Dikirim ke orang lain
                         </div>
                     )}
 
@@ -212,15 +237,25 @@ export default function OutletOrderShow({
                             {order.customer_name}
                         </div>
                         {order.customer_phone && (
-                            <a
-                                href={`tel:${order.customer_phone}`}
-                                className="inline-flex items-center gap-1.5 text-text-muted active:text-primary"
-                            >
-                                <span>{order.customer_phone}</span>
-                                <span className="text-[10px] font-bold text-primary">
-                                    📞 Hubungi
-                                </span>
-                            </a>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <a
+                                    href={`tel:${order.customer_phone}`}
+                                    className="inline-flex items-center gap-1.5 text-text-muted active:text-primary"
+                                >
+                                    <span>{order.customer_phone}</span>
+                                    <span className="text-[10px] font-bold text-primary">
+                                        📞 Hubungi
+                                    </span>
+                                </a>
+                                <a
+                                    href={waLink(order.customer_phone)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="rounded-md bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-primary"
+                                >
+                                    WA
+                                </a>
+                            </div>
                         )}
                         {!order.customer_phone && (
                             <div className="text-text-muted">-</div>
@@ -249,9 +284,26 @@ export default function OutletOrderShow({
                                 <div className="font-semibold text-text">
                                     {order.recipient_name}
                                 </div>
-                                <div className="text-text-muted">
-                                    {order.recipient_phone ?? '-'}
-                                </div>
+                                {order.recipient_phone ? (
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <a
+                                            href={`tel:${order.recipient_phone}`}
+                                            className="text-text-muted active:text-primary"
+                                        >
+                                            {order.recipient_phone}
+                                        </a>
+                                        <a
+                                            href={waLink(order.recipient_phone)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="rounded-md bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-primary"
+                                        >
+                                            WA
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <div className="text-text-muted">-</div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -277,9 +329,35 @@ export default function OutletOrderShow({
                             <div className="text-sm text-text-muted">
                                 Kurir:{' '}
                                 <span className="font-medium text-text">
-                                    {order.delivery.courier?.name ?? '-'}
+                                    {deliveryCourierName ?? '-'}
                                 </span>
                             </div>
+                            {deliveryCourierPhone && (
+                                <div className="flex flex-wrap items-center gap-2 text-sm text-text-muted">
+                                    <a
+                                        href={`tel:${deliveryCourierPhone}`}
+                                        className="font-medium text-primary"
+                                    >
+                                        {deliveryCourierPhone}
+                                    </a>
+                                    <a
+                                        href={waLink(deliveryCourierPhone)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="rounded-md bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-primary"
+                                    >
+                                        WA
+                                    </a>
+                                </div>
+                            )}
+                            {deliveryCourierPlate && (
+                                <div className="text-sm text-text-muted">
+                                    Plat:{' '}
+                                    <span className="font-medium text-text">
+                                        {deliveryCourierPlate}
+                                    </span>
+                                </div>
+                            )}
                             {order.delivery.pickup_time && (
                                 <div className="text-sm text-text-muted">
                                     Pickup:{' '}
@@ -295,6 +373,14 @@ export default function OutletOrderShow({
                                         order.delivery.delivered_time,
                                     ).toLocaleString('id-ID')}
                                 </div>
+                            )}
+                            {order.delivery.id && (
+                                <a
+                                    href={`/outlet/deliveries/${order.delivery.id}`}
+                                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary active:opacity-80"
+                                >
+                                    Lihat Detail Pengiriman
+                                </a>
                             )}
                         </div>
                     ) : isReadyForCustomerPickup ? (
@@ -421,24 +507,25 @@ export default function OutletOrderShow({
                         {STATUS_CONFIRM_LABELS[confirmAction]?.message ?? ''}
                     </p>
                     <div className="mt-4 flex gap-2">
-                        <button
+                        <Button
                             type="button"
+                            variant="outline"
+                            className="flex-1"
                             onClick={() => setConfirmAction(null)}
-                            className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
                         >
                             Batal
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            variant="primary"
+                            className="flex-1"
                             onClick={() => updateStatus(confirmAction)}
                             disabled={statusForm.processing}
-                            className="flex h-12 flex-1 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                            loading={statusForm.processing}
                         >
-                            {statusForm.processing
-                                ? 'Memproses...'
-                                : (STATUS_CONFIRM_LABELS[confirmAction]
-                                      ?.confirm ?? 'Ya')}
-                        </button>
+                            {STATUS_CONFIRM_LABELS[confirmAction]?.confirm ??
+                                'Ya'}
+                        </Button>
                     </div>
                 </Dialog>
             )}
@@ -454,23 +541,24 @@ export default function OutletOrderShow({
                         Pastikan customer sudah menerima pesanan.
                     </p>
                     <div className="mt-4 flex gap-2">
-                        <button
+                        <Button
                             type="button"
+                            variant="outline"
+                            className="flex-1"
                             onClick={() => setConfirmAction(null)}
-                            className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
                         >
                             Batal
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            variant="primary"
+                            className="flex-1"
                             onClick={handleCompletePickup}
                             disabled={completeForm.processing}
-                            className="flex h-12 flex-1 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                            loading={completeForm.processing}
                         >
-                            {completeForm.processing
-                                ? 'Memproses...'
-                                : 'Ya, Serahkan'}
-                        </button>
+                            Ya, Serahkan
+                        </Button>
                     </div>
                 </Dialog>
             )}
@@ -505,20 +593,42 @@ export default function OutletOrderShow({
                             className="min-h-11 w-full rounded-xl border border-border px-4 text-sm"
                         >
                             {couriers.map((courier: any) => (
-                                <option key={courier.id} value={courier.id}>
+                                <option
+                                    key={courier.id}
+                                    value={courier.id}
+                                    disabled={
+                                        courier.is_online === false ||
+                                        courier.at_capacity
+                                    }
+                                >
                                     {courier.name}
+                                    {courier.is_online === false
+                                        ? ' (offline)'
+                                        : courier.at_capacity
+                                          ? ' (kapasitas penuh)'
+                                          : ''}
                                 </option>
                             ))}
                         </select>
-                        {assignForm.errors.courier_id && (
-                            <div className="mt-1 text-xs text-red-600">
-                                {assignForm.errors.courier_id}
+                        {(assignForm.errors.courier_id ||
+                            assignForm.errors.courier_type) && (
+                            <div className="mt-1 space-y-1 text-xs text-red-600">
+                                {[
+                                    assignForm.errors.courier_type,
+                                    assignForm.errors.courier_id,
+                                ]
+                                    .filter(Boolean)
+                                    .map((err) => (
+                                        <p key={err}>{err}</p>
+                                    ))}
                             </div>
                         )}
                     </div>
                     <button
                         type="submit"
-                        disabled={assignForm.processing}
+                        disabled={
+                            assignForm.processing || !assignForm.data.courier_id
+                        }
                         className="flex min-h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                     >
                         {assignForm.processing

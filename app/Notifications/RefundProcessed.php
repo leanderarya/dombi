@@ -24,8 +24,8 @@ class RefundProcessed extends Notification
             'order_id' => $this->order->id,
             'order_code' => $this->order->order_code,
             'amount' => $this->amount,
-            'message' => 'Refund sebesar Rp ' . number_format($this->amount, 0, ',', '.') .
-                ' untuk pesanan ' . $this->order->order_code . ' sudah selesai. Silakan cek rekening Anda.',
+            'message' => 'Refund sebesar Rp '.number_format($this->amount, 0, ',', '.').
+                ' untuk pesanan '.$this->order->order_code.' sudah selesai. Silakan cek rekening Anda.',
         ];
     }
 }

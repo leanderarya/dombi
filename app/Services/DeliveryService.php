@@ -2,15 +2,18 @@
 
 namespace App\Services;
 
+use App\Exceptions\DeliveryException;
+use App\Models\CourierProfile;
 use App\Models\Delivery;
 use App\Models\DeliveryResolutionLog;
 use App\Models\DeliveryStatusHistory;
 use App\Models\Order;
+use App\Models\OutletInventory;
+use App\Models\StockMovement;
 use App\Models\User;
 use App\Support\OperationalLog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Exceptions\DeliveryException;
 use Illuminate\Validation\ValidationException;
 
 class DeliveryService
@@ -31,16 +34,24 @@ class DeliveryService
         ?string $externalName = null,
         ?string $externalPhone = null,
         ?string $externalPlate = null,
+        ?string $externalProvider = null,
+        ?string $externalReference = null,
         ?float $courierCost = null,
     ): Delivery {
-        if ($courierType === 'eksternal') {
-            return $this->assignEksternal($order, $assignedBy, $externalName, $externalPhone, $externalPlate, $courierCost);
+        if (! $order->isDelivery()) {
+            throw ValidationException::withMessages([
+                'fulfillment_type' => 'Pesanan pickup tidak memerlukan kurir.',
+            ]);
         }
 
-        if ($order->fulfillment_type === 'pickup') {
+        if ($order->payment_status !== 'paid') {
             throw ValidationException::withMessages([
-                'courier_id' => 'Pesanan pickup tidak memerlukan kurir.',
+                'payment_status' => 'Pesanan harus sudah dibayar sebelum kurir dipilih.',
             ]);
+        }
+
+        if ($courierType === 'eksternal') {
+            return $this->assignEksternal($order, $assignedBy, $externalName, $externalPhone, $externalPlate, $externalProvider, $externalReference, $courierCost);
         }
 
         if ($order->fulfillment_type === 'delivery_ojol') {
@@ -49,11 +60,40 @@ class DeliveryService
             ]);
         }
 
+        if ($courier === null) {
+            throw ValidationException::withMessages([
+                'courier_id' => 'Kurir wajib dipilih.',
+            ]);
+        }
+
         return DB::transaction(function () use ($order, $courier, $assignedBy, $overrideCapacity, $overrideReason): Delivery {
             $order = Order::query()->lockForUpdate()->with('delivery')->findOrFail($order->id);
 
-            // Lock courier row to prevent race condition on capacity check
-            User::query()->where('id', $courier->id)->lockForUpdate()->firstOrFail();
+            if (! $order->isDelivery()) {
+                throw ValidationException::withMessages([
+                    'fulfillment_type' => 'Pesanan pickup tidak memerlukan kurir.',
+                ]);
+            }
+
+            if ($order->payment_status !== 'paid') {
+                throw ValidationException::withMessages([
+                    'payment_status' => 'Pesanan harus sudah dibayar sebelum kurir dipilih.',
+                ]);
+            }
+
+            if ($order->fulfillment_type === 'delivery_ojol') {
+                throw ValidationException::withMessages([
+                    'courier_id' => 'Pesanan delivery Ojol tidak bisa di-assign ke kurir internal.',
+                ]);
+            }
+
+            $courier = User::query()->whereKey($courier->id)->lockForUpdate()->first();
+
+            if ($courier === null) {
+                throw ValidationException::withMessages([
+                    'courier_id' => 'Kurir tidak ditemukan.',
+                ]);
+            }
 
             if ($order->status !== 'ready_for_pickup') {
                 throw ValidationException::withMessages([
@@ -72,6 +112,8 @@ class DeliveryService
                     'courier_id' => 'Kurir sedang offline.',
                 ]);
             }
+
+            $this->assertCourierAvailableForOutlet($courier, $order->outlet_id);
 
             if ($order->delivery && $order->delivery->status !== 'rejected_by_courier') {
                 throw ValidationException::withMessages([
@@ -129,10 +171,22 @@ class DeliveryService
         });
     }
 
-    private function assignEksternal(Order $order, User $actor, ?string $externalName, ?string $externalPhone, ?string $externalPlate, ?float $courierCost): Delivery
+    private function assignEksternal(Order $order, User $actor, ?string $externalName, ?string $externalPhone, ?string $externalPlate, ?string $externalProvider, ?string $externalReference, ?float $courierCost): Delivery
     {
-        return DB::transaction(function () use ($order, $actor, $externalName, $externalPhone, $externalPlate, $courierCost): Delivery {
+        return DB::transaction(function () use ($order, $actor, $externalName, $externalPhone, $externalPlate, $externalProvider, $externalReference, $courierCost): Delivery {
             $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+
+            if (! $order->isDelivery()) {
+                throw ValidationException::withMessages([
+                    'fulfillment_type' => 'Pesanan pickup tidak memerlukan kurir.',
+                ]);
+            }
+
+            if ($order->payment_status !== 'paid') {
+                throw ValidationException::withMessages([
+                    'payment_status' => 'Pesanan harus sudah dibayar sebelum kurir dipilih.',
+                ]);
+            }
 
             if ($order->status !== 'ready_for_pickup') {
                 throw ValidationException::withMessages([
@@ -144,7 +198,9 @@ class DeliveryService
                 'order_id' => $order->id,
                 'courier_id' => null,
                 'courier_type' => 'eksternal',
-                'status' => 'delivering',
+                'status' => 'waiting_pickup',
+                'external_provider' => $externalProvider,
+                'external_reference' => $externalReference,
                 'external_courier_name' => $externalName,
                 'external_courier_phone' => $externalPhone,
                 'external_plate_number' => $externalPlate,
@@ -153,9 +209,7 @@ class DeliveryService
                 'assigned_at' => now(),
             ]);
 
-            $this->orderStatusService->updateStatus($order, Order::STATUS_DELIVERING);
-
-            $this->recordHistory($delivery, null, 'delivering', $actor, 'outlet', 'Kurir eksternal (Gojek/Grab).');
+            $this->recordHistory($delivery, null, 'waiting_pickup', $actor, $actor->isOwner() ? 'owner' : 'outlet', 'Kurir eksternal (Gojek/Grab) dipilih manual.');
 
             return $delivery->load(['order.outlet', 'order.items.product', 'assignedBy']);
         });
@@ -338,28 +392,27 @@ class DeliveryService
             $order = $delivery->order;
             if ($order) {
                 foreach ($order->items as $item) {
-                    if (! $item->product_variant_id) {
+                    if (! $item->product_id) {
                         continue;
                     }
 
-                    $inventory = \App\Models\OutletInventory::query()
+                    $inventory = OutletInventory::query()
                         ->where('outlet_id', $order->outlet_id)
-                        ->where('product_variant_id', $item->product_variant_id)
+                        ->where('product_id', $item->product_id)
                         ->first();
 
-                    \App\Models\StockMovement::create([
+                    StockMovement::create([
                         'outlet_id' => $order->outlet_id,
                         'product_id' => $item->product_id,
-                        'product_variant_id' => $item->product_variant_id,
                         'type' => 'delivery_returned',
                         'quantity' => $item->quantity,
                         'before_stock' => $inventory?->current_stock ?? 0,
                         'after_stock' => $inventory?->current_stock ?? 0,
                         'before_reserved' => $inventory?->reserved_stock ?? 0,
                         'after_reserved' => $inventory?->reserved_stock ?? 0,
-                        'reference_type' => \App\Models\Delivery::class,
+                        'reference_type' => Delivery::class,
                         'reference_id' => $delivery->id,
-                        'notes' => 'Pengiriman dikembalikan ke outlet untuk Order #' . $order->id,
+                        'notes' => 'Pengiriman dikembalikan ke outlet untuk Order #'.$order->id,
                         'created_by' => $outletUser->id,
                     ]);
                 }
@@ -368,6 +421,95 @@ class DeliveryService
             $this->recordHistory($delivery, 'returning_to_outlet', 'returned_to_outlet', $outletUser, 'outlet', $note ?? 'Outlet mengkonfirmasi penerimaan barang kembali.');
 
             return $delivery->fresh();
+        });
+    }
+
+    public function transitionExternal(
+        Delivery $delivery,
+        User $operator,
+        string $targetStatus,
+        ?string $reason = null,
+    ): Delivery {
+        return DB::transaction(function () use ($delivery, $operator, $targetStatus, $reason): Delivery {
+            $delivery = Delivery::query()
+                ->lockForUpdate()
+                ->with('order')
+                ->findOrFail($delivery->id);
+
+            if ($delivery->courier_type !== 'eksternal'
+                || $operator->outlet?->id !== $delivery->order->outlet_id) {
+                abort(403);
+            }
+
+            if ($targetStatus === 'returned_to_outlet') {
+                if ($delivery->status !== 'failed') {
+                    throw ValidationException::withMessages([
+                        'status' => 'Hanya delivery gagal yang dapat dikembalikan ke outlet.',
+                    ]);
+                }
+
+                return $this->resolveFailedDelivery(
+                    $delivery,
+                    $operator,
+                    'returned_to_outlet',
+                    $reason,
+                );
+            }
+
+            $allowed = [
+                'waiting_pickup' => ['picked_up'],
+                'picked_up' => ['delivering'],
+                'delivering' => ['completed', 'failed'],
+            ];
+
+            if (! in_array($targetStatus, $allowed[$delivery->status] ?? [], true)) {
+                throw ValidationException::withMessages([
+                    'status' => "Delivery tidak bisa diubah dari {$delivery->status} ke {$targetStatus}.",
+                ]);
+            }
+
+            if ($targetStatus === 'failed' && blank($reason)) {
+                throw ValidationException::withMessages([
+                    'reason' => 'Alasan kegagalan wajib diisi.',
+                ]);
+            }
+
+            $from = $delivery->status;
+            $attributes = ['status' => $targetStatus];
+            if ($targetStatus === 'picked_up') {
+                $attributes['pickup_time'] = now();
+            }
+            if ($targetStatus === 'completed') {
+                $attributes['delivered_time'] = now();
+            }
+            if ($targetStatus === 'failed') {
+                $attributes['failed_reason'] = $reason;
+            }
+
+            $delivery->update($attributes);
+
+            $orderStatus = match ($targetStatus) {
+                'picked_up' => Order::STATUS_PICKED_UP,
+                'delivering' => Order::STATUS_DELIVERING,
+                'completed' => Order::STATUS_COMPLETED,
+                'failed' => Order::STATUS_FAILED_DELIVERY,
+            };
+            $this->orderStatusService->updateStatus(
+                $delivery->order,
+                $orderStatus,
+                $operator,
+                $reason,
+            );
+            $this->recordHistory(
+                $delivery,
+                $from,
+                $targetStatus,
+                $operator,
+                'outlet',
+                $reason,
+            );
+
+            return $delivery->fresh(['order', 'statusHistories']);
         });
     }
 
@@ -550,5 +692,19 @@ class DeliveryService
 
             return $delivery->fresh(['order.outlet', 'order.items.product', 'order.statusHistories.actor', 'courier']);
         });
+    }
+
+    private function assertCourierAvailableForOutlet(User $courier, int $outletId): void
+    {
+        $available = CourierProfile::query()
+            ->availableForOutlet($outletId)
+            ->where('user_id', $courier->id)
+            ->exists();
+
+        if (! $available) {
+            throw ValidationException::withMessages([
+                'courier_id' => 'Kurir tidak tersedia untuk outlet pesanan ini.',
+            ]);
+        }
     }
 }

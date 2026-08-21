@@ -6,7 +6,7 @@ use App\Exceptions\InsufficientStockException;
 use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OutletInventory;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\StockMovement;
 use App\Support\OperationalLog;
 use Illuminate\Support\Facades\Auth;
@@ -20,28 +20,30 @@ class InventoryService
         private readonly NotificationService $notificationService
     ) {}
 
+    /**
+     * Reserve stock for an order.
+     */
     public function reserveStock(int $outletId, array $items, Order $order): void
     {
         foreach ($items as $item) {
-            $variantId = (int) ($item['product_variant_id'] ?? 0);
-            if (! $variantId) {
+            $productId = (int) ($item['product_id'] ?? $item['product_variant_id'] ?? 0);
+            if (! $productId) {
                 continue;
             }
 
             $inventory = OutletInventory::query()
                 ->where('outlet_id', $outletId)
-                ->where('product_variant_id', $variantId)
+                ->where('product_id', $productId)
                 ->lockForUpdate()
                 ->first();
 
             $isNewInventory = false;
 
             if (! $inventory) {
-                // Auto-create inventory row for this variant
+                // Auto-create inventory row for this product
                 $inventory = OutletInventory::create([
                     'outlet_id' => $outletId,
-                    'product_id' => $item['product_id'] ?? null,
-                    'product_variant_id' => $variantId,
+                    'product_id' => $productId,
                     'current_stock' => 0,
                     'reserved_stock' => 0,
                     'minimum_stock' => 0,
@@ -53,7 +55,6 @@ class InventoryService
             $availableStock = $inventory->current_stock - $inventory->reserved_stock;
 
             if ($availableStock < $quantity) {
-                // Clean up orphaned zero-stock row if we just created it
                 if ($isNewInventory) {
                     $inventory->delete();
                 }
@@ -69,8 +70,7 @@ class InventoryService
 
             StockMovement::create([
                 'outlet_id' => $outletId,
-                'product_id' => $item['product_id'] ?? null,
-                'product_variant_id' => $variantId,
+                'product_id' => $productId,
                 'type' => 'order_reserved',
                 'quantity' => $quantity,
                 'before_stock' => $inventory->current_stock,
@@ -88,14 +88,14 @@ class InventoryService
     public function releaseReservedStock(Order $order): void
     {
         foreach ($order->items as $item) {
-            $variantId = $item->product_variant_id;
-            if (! $variantId) {
+            $productId = (int) ($item->product_id ?? $item->product_variant_id ?? 0);
+            if (! $productId) {
                 continue;
             }
 
             $inventory = OutletInventory::query()
                 ->where('outlet_id', $order->outlet_id)
-                ->where('product_variant_id', $variantId)
+                ->where('product_id', $productId)
                 ->lockForUpdate()
                 ->first();
 
@@ -104,12 +104,11 @@ class InventoryService
             }
 
             if ($inventory->reserved_stock < $item->quantity) {
-                // Graceful degradation: set to 0 instead of throwing
                 $beforeReserved = $inventory->reserved_stock;
 
                 Log::warning('Inventory reserved_stock discrepancy detected', [
                     'outlet_id' => $order->outlet_id,
-                    'product_variant_id' => $variantId,
+                    'product_id' => $productId,
                     'order_id' => $order->id,
                     'order_code' => $order->order_code,
                     'reserved_stock' => $beforeReserved,
@@ -122,8 +121,7 @@ class InventoryService
 
                 StockMovement::create([
                     'outlet_id' => $order->outlet_id,
-                    'product_id' => $item->product_id,
-                    'product_variant_id' => $variantId,
+                    'product_id' => $productId,
                     'type' => 'order_cancelled',
                     'quantity' => $beforeReserved,
                     'before_stock' => $inventory->current_stock,
@@ -136,7 +134,7 @@ class InventoryService
                     'created_by' => Auth::id(),
                 ]);
 
-                $this->checkAndNotifyLowStock($order->outlet_id, $inventory, $variantId);
+                $this->checkAndNotifyLowStock($order->outlet_id, $inventory, $productId);
 
                 continue;
             }
@@ -147,8 +145,7 @@ class InventoryService
 
             StockMovement::create([
                 'outlet_id' => $order->outlet_id,
-                'product_id' => $item->product_id,
-                'product_variant_id' => $variantId,
+                'product_id' => $productId,
                 'type' => 'order_cancelled',
                 'quantity' => $item->quantity,
                 'before_stock' => $inventory->current_stock,
@@ -161,21 +158,21 @@ class InventoryService
                 'created_by' => Auth::id(),
             ]);
 
-            $this->checkAndNotifyLowStock($order->outlet_id, $inventory, $variantId);
+            $this->checkAndNotifyLowStock($order->outlet_id, $inventory, $productId);
         }
     }
 
     public function completeOrderStock(Order $order): void
     {
         foreach ($order->items as $item) {
-            $variantId = $item->product_variant_id;
-            if (! $variantId) {
+            $productId = (int) ($item->product_id ?? $item->product_variant_id ?? 0);
+            if (! $productId) {
                 continue;
             }
 
             $inventory = OutletInventory::query()
                 ->where('outlet_id', $order->outlet_id)
-                ->where('product_variant_id', $variantId)
+                ->where('product_id', $productId)
                 ->lockForUpdate()
                 ->firstOrFail();
 
@@ -209,8 +206,7 @@ class InventoryService
 
             StockMovement::create([
                 'outlet_id' => $order->outlet_id,
-                'product_id' => $item->product_id,
-                'product_variant_id' => $variantId,
+                'product_id' => $productId,
                 'type' => 'order_completed',
                 'quantity' => -$item->quantity,
                 'before_stock' => $beforeStock,
@@ -223,24 +219,23 @@ class InventoryService
                 'created_by' => Auth::id(),
             ]);
 
-            $this->checkAndNotifyLowStock($order->outlet_id, $inventory, $variantId);
+            $this->checkAndNotifyLowStock($order->outlet_id, $inventory, $productId);
         }
     }
 
-    public function adjustStock(int $outletId, int $productVariantId, int $newStock, ?string $notes = null): void
+    public function adjustStock(int $outletId, int $productId, int $newStock, ?string $notes = null): void
     {
         $inventory = OutletInventory::query()
             ->where('outlet_id', $outletId)
-            ->where('product_variant_id', $productVariantId)
+            ->where('product_id', $productId)
             ->lockForUpdate()
             ->first();
 
         if (! $inventory) {
-            $variant = ProductVariant::find($productVariantId);
+            $product = Product::find($productId);
             $inventory = OutletInventory::create([
                 'outlet_id' => $outletId,
-                'product_id' => $variant?->product_id,
-                'product_variant_id' => $productVariantId,
+                'product_id' => $productId,
                 'current_stock' => 0,
                 'reserved_stock' => 0,
                 'minimum_stock' => 0,
@@ -250,7 +245,7 @@ class InventoryService
         if ($newStock < $inventory->reserved_stock) {
             throw new InsufficientStockException(
                 outletId: $outletId,
-                productId: $productVariantId,
+                productId: $productId,
                 stockType: 'current_stock (cannot go below reserved)',
                 required: $inventory->reserved_stock,
                 available: $newStock,
@@ -261,11 +256,11 @@ class InventoryService
         $inventory->current_stock = $newStock;
         $inventory->save();
 
-        OperationalLog::stockAdjustment($outletId, $productVariantId, $beforeStock, $newStock, $notes);
+        OperationalLog::stockAdjustment($outletId, $productId, $beforeStock, $newStock, $notes);
 
         StockMovement::create([
             'outlet_id' => $outletId,
-            'product_variant_id' => $productVariantId,
+            'product_id' => $productId,
             'type' => 'stock_adjustment',
             'quantity' => $newStock - $beforeStock,
             'before_stock' => $beforeStock,
@@ -283,26 +278,26 @@ class InventoryService
      * Transfer stock from center to outlet (quick restock).
      * Deducts center_stock, increments outlet current_stock, creates audit trail.
      */
-    public function restockOutlet(int $outletId, int $variantId, int $quantity, ?string $notes = null): void
+    public function restockOutlet(int $outletId, int $productId, int $quantity, ?string $notes = null): void
     {
-        DB::transaction(function () use ($outletId, $variantId, $quantity, $notes) {
-            $variant = ProductVariant::where('id', $variantId)
+        DB::transaction(function () use ($outletId, $productId, $quantity, $notes) {
+            $product = Product::where('id', $productId)
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            if ($variant->center_stock < $quantity) {
+            if ($product->center_stock < $quantity) {
                 throw new InsufficientStockException(
                     outletId: $outletId,
-                    productId: $variantId,
+                    productId: $productId,
                     stockType: 'center_stock',
                     required: $quantity,
-                    available: $variant->center_stock,
-                    message: "Stok pusat tidak cukup. Tersedia: {$variant->center_stock}, diminta: {$quantity}",
+                    available: $product->center_stock,
+                    message: "Stok pusat tidak cukup. Tersedia: {$product->center_stock}, diminta: {$quantity}",
                 );
             }
 
             $inventory = OutletInventory::where('outlet_id', $outletId)
-                ->where('product_variant_id', $variantId)
+                ->where('product_id', $productId)
                 ->lockForUpdate()
                 ->first();
 
@@ -310,8 +305,8 @@ class InventoryService
                 throw new \InvalidArgumentException('Produk belum ditambahkan ke outlet.');
             }
 
-            $centerBefore = $variant->center_stock;
-            $variant->decrement('center_stock', $quantity);
+            $centerBefore = $product->center_stock;
+            $product->decrement('center_stock', $quantity);
 
             $outletBefore = $inventory->current_stock;
             $inventory->increment('current_stock', $quantity);
@@ -320,11 +315,11 @@ class InventoryService
 
             StockMovement::create([
                 'outlet_id' => null,
-                'product_variant_id' => $variantId,
+                'product_id' => $productId,
                 'type' => 'distribution_out',
                 'quantity' => -$quantity,
                 'before_stock' => $centerBefore,
-                'after_stock' => $variant->fresh()->center_stock,
+                'after_stock' => $product->fresh()->center_stock,
                 'before_reserved' => 0,
                 'after_reserved' => 0,
                 'reference_type' => OutletInventory::class,
@@ -335,7 +330,7 @@ class InventoryService
 
             StockMovement::create([
                 'outlet_id' => $outletId,
-                'product_variant_id' => $variantId,
+                'product_id' => $productId,
                 'type' => 'restock_in',
                 'quantity' => $quantity,
                 'before_stock' => $outletBefore,
@@ -348,53 +343,67 @@ class InventoryService
                 'created_by' => $userId,
             ]);
 
-            $this->checkAndNotifyLowStock($outletId, $inventory, $variantId);
+            $this->checkAndNotifyLowStock($outletId, $inventory, $productId);
         });
     }
 
     /**
      * Update center stock with locking and audit trail.
+     * Detects initial_stock when before==0 && new>0 or notes contains 'awal'.
      */
-    public function updateCenterStock(int $variantId, int $newStock, ?string $notes = null): void
+    public function updateCenterStock(int $productId, int $newStock, ?string $notes = null, string $type = 'stock_adjustment'): Product
     {
-        DB::transaction(function () use ($variantId, $newStock, $notes) {
-            $variant = ProductVariant::where('id', $variantId)
-                ->lockForUpdate()
-                ->firstOrFail();
+        return DB::transaction(function () use ($productId, $newStock, $notes, $type) {
+            $product = Product::lockForUpdate()->findOrFail($productId);
 
-            $before = $variant->center_stock;
-            $variant->update(['center_stock' => $newStock]);
+            $before = (int) $product->center_stock;
+
+            $actualType = $type;
+            // Primary rule: before==0 && new>0 => initial_stock
+            if ($before === 0 && $newStock > 0) {
+                $actualType = 'initial_stock';
+            } else {
+                // Secondary rule: reason contains 'awal' and before==0
+                $lower = strtolower($notes ?? '');
+                if ($before === 0 && str_contains($lower, 'awal')) {
+                    $actualType = 'initial_stock';
+                }
+            }
+
+            $product->update(['center_stock' => $newStock]);
 
             StockMovement::create([
                 'outlet_id' => null,
-                'product_variant_id' => $variantId,
-                'type' => 'stock_adjustment',
+                'product_id' => $productId,
+                'type' => $actualType,
                 'quantity' => $newStock - $before,
                 'before_stock' => $before,
                 'after_stock' => $newStock,
                 'before_reserved' => 0,
                 'after_reserved' => 0,
-                'reference_type' => ProductVariant::class,
-                'reference_id' => $variantId,
+                'reference_type' => Product::class,
+                'reference_id' => $productId,
                 'notes' => $notes ?? 'Manual adjustment by owner',
                 'created_by' => Auth::id(),
             ]);
+
+            return $product->fresh();
         });
     }
 
     /**
      * Stock opname: set outlet stock to exact count with locking and audit trail.
      */
-    public function stockOpname(int $outletId, int $variantId, int $actualCount, ?string $notes = null): void
+    public function stockOpname(int $outletId, int $productId, int $actualCount, ?string $notes = null): void
     {
-        DB::transaction(function () use ($outletId, $variantId, $actualCount, $notes) {
+        DB::transaction(function () use ($outletId, $productId, $actualCount, $notes) {
             $inventory = OutletInventory::where('outlet_id', $outletId)
-                ->where('product_variant_id', $variantId)
+                ->where('product_id', $productId)
                 ->lockForUpdate()
                 ->firstOrFail();
 
             if ($actualCount < $inventory->reserved_stock) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'actual_count' => "Stok aktual ({$actualCount}) tidak boleh kurang dari stok dipesan ({$inventory->reserved_stock}).",
                 ]);
             }
@@ -404,7 +413,7 @@ class InventoryService
 
             StockMovement::create([
                 'outlet_id' => $outletId,
-                'product_variant_id' => $variantId,
+                'product_id' => $productId,
                 'type' => 'stock_opname',
                 'quantity' => $actualCount - $before,
                 'before_stock' => $before,
@@ -417,13 +426,12 @@ class InventoryService
                 'created_by' => Auth::id(),
             ]);
 
-            // Notify low stock after opname if applicable
             $inventory->refresh();
-            $this->checkAndNotifyLowStock($outletId, $inventory, $variantId);
+            $this->checkAndNotifyLowStock($outletId, $inventory, $productId);
         });
     }
 
-    private function checkAndNotifyLowStock(int $outletId, OutletInventory $inventory, int $variantId): void
+    private function checkAndNotifyLowStock(int $outletId, OutletInventory $inventory, int $productId): void
     {
         if ($inventory->minimum_stock <= 0) {
             return;
@@ -444,8 +452,8 @@ class InventoryService
             return;
         }
 
-        $variant = ProductVariant::find($variantId);
-        $productName = $variant?->full_name ?? "Product #{$variantId}";
+        $product = Product::find($productId);
+        $productName = $product?->full_display_name ?? $product?->name ?? "Product #{$productId}";
 
         $this->notificationService->notifyLowStock(
             $outletId,

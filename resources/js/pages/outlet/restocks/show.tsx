@@ -1,5 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import Dialog from '@/components/ui/dialog';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
@@ -189,40 +191,36 @@ export default function OutletRestockShow({ restock }: any) {
             )}
 
             {/* Cancel Confirmation Dialog */}
-            {showCancelDialog && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div
-                        className="absolute inset-0 bg-black/40"
+            <Dialog
+                open={showCancelDialog}
+                onClose={() => setShowCancelDialog(false)}
+                title="Batalkan Request?"
+            >
+                <p className="text-sm text-text-muted">
+                    Request restock #{restock.id} akan dibatalkan. Tindakan ini
+                    tidak dapat diurungkan.
+                </p>
+                <div className="mt-6 flex gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
                         onClick={() => setShowCancelDialog(false)}
-                    />
-                    <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-                        <h3 className="text-lg font-bold text-text">
-                            Batalkan Request?
-                        </h3>
-                        <p className="mt-2 text-sm text-text-muted">
-                            Request restock #{restock.id} akan dibatalkan.
-                            Tindakan ini tidak dapat diurungkan.
-                        </p>
-                        <div className="mt-6 flex gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setShowCancelDialog(false)}
-                                className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface-muted"
-                            >
-                                Kembali
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleCancel}
-                                disabled={cancelling}
-                                className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                            >
-                                {cancelling ? 'Membatalkan...' : 'Ya, Batalkan'}
-                            </button>
-                        </div>
-                    </div>
+                    >
+                        Kembali
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="danger"
+                        className="flex-1"
+                        onClick={handleCancel}
+                        disabled={cancelling}
+                        loading={cancelling}
+                    >
+                        Ya, Batalkan
+                    </Button>
                 </div>
-            )}
+            </Dialog>
         </OutletLayout>
     );
 }

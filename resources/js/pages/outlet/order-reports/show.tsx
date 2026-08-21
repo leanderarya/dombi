@@ -53,19 +53,18 @@ export default function OutletOrderReportShow({ report }: any) {
                         {formatDate(report.created_at)}
                     </div>
                 </div>
-                <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-                        reportStatus.variant === 'success'
-                            ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
-                            : reportStatus.variant === 'danger'
-                              ? 'bg-red-50 text-red-700 ring-1 ring-red-200'
-                              : reportStatus.variant === 'info'
-                                ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
-                                : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
-                    }`}
+                <StatusBadge
+                    variant={
+                        reportStatus.variant as
+                            | 'success'
+                            | 'warning'
+                            | 'danger'
+                            | 'info'
+                            | 'neutral'
+                    }
                 >
                     {reportStatus.label}
-                </span>
+                </StatusBadge>
             </div>
 
             {/* Report Info */}
@@ -133,7 +132,7 @@ export default function OutletOrderReportShow({ report }: any) {
                     <button
                         type="button"
                         onClick={() => setRespondMode(true)}
-                        className="flex min-h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80"
+                        className="flex min-h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80"
                     >
                         Tanggapi Laporan
                     </button>

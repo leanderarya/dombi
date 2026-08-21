@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
+use App\Models\SettlementPaymentAllocation;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -57,7 +58,7 @@ class SettlementPaymentService
                 'verified_at' => now(),
             ]);
 
-            $this->fifoAllocate($payment->outlet_id, (float) $payment->amount, $payment->id);
+            $this->fifoAllocate($payment->outlet_id, (float) $payment->amount, $payment->id, $payment->direction);
         });
 
         $payment->load('outlet');
@@ -90,14 +91,15 @@ class SettlementPaymentService
 
                 $verifiedPayments[] = $payment;
 
-                // Accumulate per outlet
-                $oid = $payment->outlet_id;
-                $outletAllocations[$oid] = ($outletAllocations[$oid] ?? 0) + (float) $payment->amount;
+                // Accumulate per outlet + direction
+                $key = $payment->outlet_id.':'.$payment->direction;
+                $outletAllocations[$key] = ($outletAllocations[$key] ?? 0) + (float) $payment->amount;
             }
 
-            // FIFO-allocate per outlet (one pass per outlet for the entire batch)
-            foreach ($outletAllocations as $outletId => $totalAmount) {
-                $this->fifoAllocate($outletId, $totalAmount);
+            // FIFO-allocate per outlet+direction (one pass per pair for the entire batch)
+            foreach ($outletAllocations as $key => $totalAmount) {
+                [$outletId, $direction] = explode(':', $key);
+                $this->fifoAllocate((int) $outletId, $totalAmount, null, $direction);
             }
         });
 
@@ -129,12 +131,13 @@ class SettlementPaymentService
      * Oldest settlement first. Updates paid_amount and recalculates status.
      * Must be called inside a DB transaction with proper locking.
      */
-    public function fifoAllocate(int $outletId, float $amount, ?int $settlementPaymentId = null): void
+    public function fifoAllocate(int $outletId, float $amount, ?int $settlementPaymentId = null, string $direction = Settlement::DIRECTION_OUTLET_PAYS): void
     {
         $remaining = $amount;
 
         $unpaidSettlements = Settlement::where('outlet_id', $outletId)
             ->where('period_type', 'weekly')
+            ->where('direction', $direction)
             ->where('status', '!=', Settlement::STATUS_PAID)
             ->lockForUpdate()
             ->orderBy('period_start', 'asc')
@@ -154,7 +157,7 @@ class SettlementPaymentService
                 $remaining -= $allocate;
 
                 if ($settlementPaymentId) {
-                    \App\Models\SettlementPaymentAllocation::create([
+                    SettlementPaymentAllocation::create([
                         'settlement_payment_id' => $settlementPaymentId,
                         'settlement_id' => $settlement->id,
                         'allocated_amount' => $allocate,
@@ -170,7 +173,7 @@ class SettlementPaymentService
             $last->recalculateStatus();
 
             if ($settlementPaymentId) {
-                \App\Models\SettlementPaymentAllocation::create([
+                SettlementPaymentAllocation::create([
                     'settlement_payment_id' => $settlementPaymentId,
                     'settlement_id' => $last->id,
                     'allocated_amount' => $remaining,

@@ -38,12 +38,6 @@ export default function ReturnCreateDialog({
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const variantOptions = variants.map((v) => ({
-        value: String(v.id),
-        label: v.full_name ?? v.name,
-        subtitle: `Stok: ${v.available_stock}`,
-    }));
-
     const reasonOptions = Object.entries(reasons).map(([key, label]) => ({
         value: key,
         label: label,
@@ -299,11 +293,26 @@ export default function ReturnCreateDialog({
                                                     >
                                                         <Minus className="h-3.5 w-3.5" />
                                                     </button>
-                                                    <span className="w-8 text-center text-sm font-bold text-text">
-                                                        {selectedVariants.get(
-                                                            v.id,
-                                                        ) ?? 1}
-                                                    </span>
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        max={v.available_stock}
+                                                        value={
+                                                            selectedVariants.get(
+                                                                v.id,
+                                                            ) ?? 1
+                                                        }
+                                                        onChange={(e) =>
+                                                            updateQuantity(
+                                                                v.id,
+                                                                Number(
+                                                                    e.target
+                                                                        .value,
+                                                                ),
+                                                            )
+                                                        }
+                                                        className="w-14 [appearance:textfield] text-center text-sm font-bold tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                    />
                                                     <button
                                                         type="button"
                                                         onClick={() =>

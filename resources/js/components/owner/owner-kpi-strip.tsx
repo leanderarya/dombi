@@ -56,7 +56,7 @@ export default function OwnerKpiStrip({ items, cols }: Props) {
                         <div className="flex items-start justify-between">
                             {item.icon && (
                                 <div
-                                    className="flex h-12 w-12 items-center justify-center rounded-xl"
+                                    className="flex h-10 w-10 items-center justify-center rounded-xl"
                                     style={{
                                         backgroundColor: item.accentColor
                                             ? `${item.accentColor}15`
@@ -69,24 +69,6 @@ export default function OwnerKpiStrip({ items, cols }: Props) {
                                     {item.icon}
                                 </div>
                             )}
-                            <div className="flex h-8 items-end gap-1">
-                                {[3, 5, 4, 7].map((h, j) => (
-                                    <div
-                                        key={j}
-                                        className="sparkline-bar w-1.5 rounded-full"
-                                        style={
-                                            {
-                                                height: `${h * 4}px`,
-                                                backgroundColor:
-                                                    item.accentColor
-                                                        ? `${item.accentColor}40`
-                                                        : 'var(--color-surface-muted)',
-                                                '--delay': `${j * 100 + 100}ms`,
-                                            } as React.CSSProperties
-                                        }
-                                    />
-                                ))}
-                            </div>
                         </div>
                         <div className="mt-6">
                             <div className="text-xs font-semibold tracking-wider text-text-muted uppercase">

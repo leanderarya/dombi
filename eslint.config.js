@@ -111,6 +111,8 @@ export default [
             'node_modules',
             'public',
             'bootstrap/ssr',
+            'android/**/build/**',
+            'android/app/src/main/assets/public/**',
             'tailwind.config.js',
             'vite.config.ts',
             'resources/js/actions/**',

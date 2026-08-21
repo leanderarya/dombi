@@ -288,7 +288,7 @@ function Field({
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 inputMode={inputMode}
-                className="mt-1.5 min-h-11 w-full rounded-lg border border-border px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                className={`mt-1.5 min-h-11 w-full rounded-lg border px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200 ${error ? 'border-red-500' : 'border-border'}`}
                 placeholder={placeholder}
                 required={required}
             />

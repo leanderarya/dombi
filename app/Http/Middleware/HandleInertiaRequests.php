@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\PaymentStatus;
 use App\Models\ExchangeRequest;
+use App\Models\Order;
 use App\Models\ReturnRequest;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -51,12 +53,18 @@ class HandleInertiaRequests extends Middleware
                     'role' => $user->role,
                     'must_change_password' => $user->must_change_password,
                     'is_active' => $user->is_active,
+                    'customer' => $user->customer ? [
+                        'id' => $user->customer->id,
+                        'phone' => $user->customer->phone,
+                    ] : null,
                 ] : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'outlet_provisioning' => fn () => $request->session()->get('outlet_provisioning'),
+                'new_product_id' => fn () => $request->session()->get('new_product_id'),
+                'new_product_ids' => fn () => $request->session()->get('new_product_ids'),
             ],
             'guestMode' => fn () => session('guest_mode', false),
             'dev' => [
@@ -72,6 +80,7 @@ class HandleInertiaRequests extends Middleware
                 return [
                     'pendingReturns' => ReturnRequest::where('status', ReturnRequest::STATUS_SUBMITTED)->count(),
                     'pendingExchanges' => ExchangeRequest::where('status', ExchangeRequest::STATUS_SUBMITTED)->count(),
+                    'pendingRefunds' => Order::where('payment_status', PaymentStatus::RefundPending->value)->count(),
                 ];
             },
         ];

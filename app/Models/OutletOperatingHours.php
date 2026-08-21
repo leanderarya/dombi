@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class OutletOperatingHours extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'outlet_id',
         'day_of_week',

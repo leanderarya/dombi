@@ -1,10 +1,10 @@
 {
-    "id": "/customer/home",
+    "id": "/customer/",
     "name": "Dombi - Belanja Kebutuhan Harian",
     "short_name": "Dombi",
     "description": "Aplikasi operasional belanja kebutuhan harian",
     "start_url": "/customer/home",
-    "scope": "/",
+    "scope": "/customer/",
     "display": "standalone",
     "background_color": "#f8f7f2",
     "theme_color": "#047857",

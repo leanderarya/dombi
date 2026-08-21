@@ -4,7 +4,10 @@ let overlay: HTMLDivElement | null = null;
 let refCount = 0;
 
 function ensureOverlay() {
-    if (overlay) return;
+    if (overlay) {
+        return;
+    }
+
     overlay = document.createElement('div');
     Object.assign(overlay.style, {
         position: 'fixed',
@@ -20,19 +23,28 @@ function ensureOverlay() {
 }
 
 function removeOverlay() {
-    if (!overlay || refCount > 0) return;
+    if (!overlay || refCount > 0) {
+        return;
+    }
+
     overlay.remove();
     overlay = null;
 }
 
 function showOverlay() {
-    if (!overlay) return;
+    if (!overlay) {
+        return;
+    }
+
     overlay.style.opacity = '1';
     overlay.style.pointerEvents = 'auto';
 }
 
 function hideOverlay() {
-    if (!overlay) return;
+    if (!overlay) {
+        return;
+    }
+
     overlay.style.opacity = '0';
     overlay.style.pointerEvents = 'none';
 }
@@ -52,6 +64,7 @@ export function useLockSwipeBack() {
         };
 
         window.addEventListener('popstate', onPopState);
+
         return () => {
             window.removeEventListener('popstate', onPopState);
             refCount--;

@@ -56,7 +56,7 @@ export default function OutletProducts({ outletId }: Props) {
     }, [outletId]);
 
     useEffect(() => {
-        fetchProducts();
+        void Promise.resolve().then(fetchProducts);
     }, [fetchProducts]);
 
     const csrfToken =
@@ -229,7 +229,6 @@ export default function OutletProducts({ outletId }: Props) {
                                     </td>
                                     <td className="px-3 py-2.5 text-right">
                                         <ActionMenu
-                                            variantId={p.variant_id}
                                             isActive={p.is_active}
                                             onRestock={() =>
                                                 setRestockTarget(p)
@@ -315,13 +314,11 @@ function StockBadge({ status, stock }: { status: string; stock: number }) {
 }
 
 function ActionMenu({
-    variantId,
     isActive,
     onRestock,
     onToggle,
     onRemove,
 }: {
-    variantId: number;
     isActive: boolean;
     onRestock: () => void;
     onToggle: () => void;

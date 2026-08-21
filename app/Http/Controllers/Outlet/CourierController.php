@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
+use App\Models\CourierProfile;
 use App\Models\Outlet;
 use App\Services\CourierLocationService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CourierController extends Controller
 {
@@ -13,12 +15,18 @@ class CourierController extends Controller
         private readonly CourierLocationService $locationService,
     ) {}
 
-    public function nearestCouriers(Outlet $outlet): JsonResponse
+    public function nearestCouriers(Request $request, Outlet $outlet): JsonResponse
     {
+        abort_unless($request->user()?->outlet?->id === $outlet->id, 403);
+
+        $eligibleIds = CourierProfile::query()
+            ->availableForOutlet($outlet->id)
+            ->pluck('user_id');
+
         $couriers = $this->locationService->getNearestCouriers(
             (float) $outlet->latitude,
             (float) $outlet->longitude,
-        );
+        )->whereIn('id', $eligibleIds);
 
         $result = $couriers->map(fn ($courier) => [
             'id' => $courier->id,

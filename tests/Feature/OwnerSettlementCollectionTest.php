@@ -55,6 +55,8 @@ class OwnerSettlementCollectionTest extends TestCase
             'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 160000,
+            'net_amount' => -160000,
+            'direction' => 'outlet_pays_owner',
             'due_date' => now()->addDays(4)->toDateString(),
             'status' => 'pending',
         ]);
@@ -77,6 +79,8 @@ class OwnerSettlementCollectionTest extends TestCase
             'period_end' => now()->subDays(3)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 160000,
+            'net_amount' => -160000,
+            'direction' => 'outlet_pays_owner',
             'due_date' => now()->subDays(3)->toDateString(),
             'status' => 'paid',
             'paid_amount' => 160000,
@@ -103,6 +107,8 @@ class OwnerSettlementCollectionTest extends TestCase
             'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 160000,
+            'net_amount' => -160000,
+            'direction' => 'outlet_pays_owner',
             'due_date' => now()->addDays(4)->toDateString(),
             'status' => 'pending',
         ]);
@@ -127,6 +133,8 @@ class OwnerSettlementCollectionTest extends TestCase
             'period_end' => now()->subDays(7)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 160000,
+            'net_amount' => -160000,
+            'direction' => 'outlet_pays_owner',
             'due_date' => now()->subDays(7)->toDateString(),
             'status' => 'overdue',
         ]);

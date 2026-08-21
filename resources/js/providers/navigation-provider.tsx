@@ -1,5 +1,6 @@
-import { createContext, useContext, type ReactNode } from 'react';
 import { router } from '@inertiajs/react';
+import { createContext, useContext } from 'react';
+import type { ReactNode } from 'react';
 
 interface NavigationContextValue {
     back: () => void;
@@ -23,8 +24,11 @@ export function NavigationProvider({
     rootUrl?: string;
 }) {
     const back = () => {
+        // If there's no in-app history (deep link / refresh), fall back to home.
         if (window.history.length > 1) {
             window.history.back();
+        } else {
+            router.visit(rootUrl);
         }
     };
 

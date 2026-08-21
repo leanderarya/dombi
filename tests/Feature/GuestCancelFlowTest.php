@@ -20,12 +20,8 @@ class GuestCancelFlowTest extends TestCase
 
         $response = $this->get("/guest/orders/{$order->id}/cancel/{$order->guest_token}");
 
-        $response->assertOk();
-        $response->assertInertia(fn ($page) => $page
-            ->component('guest/cancel')
-            ->has('order')
-            ->has('token')
-        );
+        // Guest cancel page removed — should be 404
+        $response->assertNotFound();
     }
 
     public function test_cancel_page_returns_404_with_invalid_token(): void
@@ -45,9 +41,10 @@ class GuestCancelFlowTest extends TestCase
             'reason' => 'Salah Pesan',
         ]);
 
-        $response->assertRedirect();
+        // Guest cancel disabled — should be 404 or 403, not redirect
+        $this->assertTrue(in_array($response->status(), [403, 404], true));
         $order->refresh();
-        $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $order->status);
+        $this->assertSame(Order::STATUS_PENDING_CONFIRMATION, $order->status);
     }
 
     public function test_guest_cannot_cancel_with_invalid_token(): void
@@ -58,7 +55,7 @@ class GuestCancelFlowTest extends TestCase
             'reason' => 'Salah Pesan',
         ]);
 
-        $response->assertForbidden();
+        $this->assertTrue(in_array($response->status(), [403, 404], true));
         $order->refresh();
         $this->assertSame(Order::STATUS_PENDING_CONFIRMATION, $order->status);
     }
@@ -71,7 +68,8 @@ class GuestCancelFlowTest extends TestCase
             'reason' => 'Salah Pesan',
         ]);
 
-        $response->assertSessionHasErrors('status');
+        // Routes removed, so 404/403, not session errors
+        $this->assertTrue(in_array($response->status(), [403, 404], true));
     }
 
     public function test_guest_token_has_high_entropy(): void
@@ -108,16 +106,14 @@ class GuestCancelFlowTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-' . Str::random(8),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
         $data = array_merge([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'DOMBI-GCF-' . strtoupper(Str::random(6)),
+            'order_code' => 'DOMBI-GCF-'.strtoupper(Str::random(6)),
             'status' => Order::STATUS_PENDING_CONFIRMATION,
             'fulfillment_type' => 'pickup',
             'subtotal' => 50000,
@@ -138,7 +134,7 @@ class GuestCancelFlowTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 2,
-            'price' => $product->price,
+            'price' => $product->selling_price,
             'subtotal' => 50000,
         ]);
 

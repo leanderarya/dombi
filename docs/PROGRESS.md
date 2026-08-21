@@ -1,8 +1,8 @@
 # Dombi — Progress Roadmap
 
-**Updated:** 2026-07-22
-**Current Branch:** `main`
-**Status:** Production-ready. 791 tests passing. All hardening done. Courier management v2 live.
+**Updated:** 2026-08-09
+**Current Branch:** `develop`
+**Status:** Implementation near-complete (62/64 PRD requirements DONE). Both release blockers resolved. Release is **GO** pending operational release evidence. See [PRD Gap Report](PRD_GAP_REPORT.md) for the full evidence-backed audit.
 
 ---
 
@@ -11,117 +11,117 @@
 | Category | Status |
 |----------|--------|
 | Backend core (orders, products, outlets) | ✅ Done |
-| Payment integration (DOKU) | ✅ Done |
+| Payment integration (DOKU) | ✅ Done — idempotent webhook, retry, fee |
 | Refund system | ✅ Done |
-| Push notification (VAPID + FCM) | ✅ Done — all events, SW handlers, iOS PWA fix |
+| Push notification (VAPID + FCM) | ✅ Done — VAPID web solid; FCM is thin/legacy |
 | Operating hours (WIB) + holidays | ✅ Done — isOpen, nextOpenTime, auto-select OPEN outlet |
-| Owner toast UX | ✅ Done — toastMutation helper, 23+ pages |
-| Collapsible outlet header | ✅ Done — CollapsedOutletBar + IntersectionObserver |
-| Guest cancel hardening | ✅ Done — guest_token (Str::random(32)), hash_equals, confirmation wall |
-| Settlement FK + verification | ✅ Done — settlement_payment_allocations junction table |
-| Settlement manual allocation UI | ✅ Done — PaymentVerifySheet with per-settlement amount input |
-| Delivery ENUM fix | ✅ Done — ENUM → VARCHAR |
-| Reconciliation fix | ✅ Done — sign fix + exclude paid settlements |
-| Courier Management v2 | ✅ Done — Dombi (Pusat + Outlet) + Eksternal (Gojek/Grab), cost tracking |
-| Phase 5 Outlet Features | ✅ Done — recharts, CSV export |
-| Phase 6 Owner Analytics | ⏳ 70% — KPI cards done, charts/report partial |
-| Phase 7 Courier Routing | ✅ v2 done — Kurir Dombi + Eksternal (not multi-stop routing, per client decision) |
-| Phase 8 UI/UX Polish | 🔄 In progress |
-| Phase 9 Production Deploy | ❌ Not started |
-| TypeScript | ⚠️ 5 errors in 3 files — pre-existing |
-| Build | ✅ Clean — `npm run build` passes |
-| Test Suite | ✅ 791 tests, 791 passed, 0 failures |
+| Owner toast UX | ✅ Done — toastMutation helper |
+| Guest checkout / tracking | ✅ Done — guest_token, tracking, recovery |
+| Settlement FK + manual allocation | ✅ Done |
+| Courier Management v2 | ✅ Done — Dombi (Pusat + Outlet) + Eksternal (Gojek/Grab) |
+| Owner Analytics + CSV export | ✅ Done — ANA-1/2/3 |
+| Refund UI (customer + owner) | ✅ Done — REF-1..5 |
+| Product Scope launch invariants | ✅ 10/10 verified in code |
+| **PRD functional coverage** | ✅ **62/64 DONE, 2 PARTIAL, 0 NOT DONE** |
+| Test Suite | ✅ 1210 tests, 1210 passed, 4270 assertions |
+| Frontend tests | ✅ 18 files, 62 tests |
+| Frontend format/lint | ✅ format:check + lint:check pass |
+| Build | ✅ `npm run build` passes |
+| **TypeScript** | ✅ `npm run types:check` passes (fixture fixed) |
+
+---
+
+## Verification baseline (2026-08-09, branch `develop`)
+
+| Command | Result |
+|---|---|
+| `php artisan test` | ✅ PASS — 1210/1210, 4270 assertions |
+| `npm run format:check` | ✅ PASS |
+| `npm run lint:check` | ✅ PASS |
+| `npm run types:check` | ✅ PASS — fixture fixed |
+| `npm run test` | ✅ PASS — 18 files, 62 tests |
+| `npm run build` | ✅ PASS |
 
 ---
 
 ## What's Done
 
-### Phase 1: Production Readiness Hardening
-✅ Guest cancel: `guest_token` (Str::random(32), ~190 bit), `GuestCancelOrderRequest` with `hash_equals`, React confirmation wall, routes extracted from `auth`
-✅ C3 TOCTOU: `lockForUpdate(true)` in `outletHasEnoughStock()`
-✅ C9 Settlement FK: `settlement_payment_allocations` junction table with FK constraints
-✅ C4 MySQL ENUM: `deliveries.status` ENUM → VARCHAR(50)
-✅ C10 Reconciliation: sign fix (+ → -) + exclude paid settlements
-✅ Rate limiting: `guest-cancel` 3/min IP + `guest-cancel-token` 10/10min per token
+### PRD functional coverage (62/64 DONE)
+Full requirement matrix with per-ID evidence is in [PRD_GAP_REPORT.md](PRD_GAP_REPORT.md). Summary by domain:
+- **Customer** CUST-1..8, PAY-1..6, REF-1..5 — all DONE
+- **Outlet** OUT-1..9 — 6 DONE, OUT-5 PARTIAL (no date filter)
+- **Inventory** INV-1..3 — all DONE
+- **Owner** OWN-1..4, STK-1..5, FIN-1..6, DEL-1..4 — 10 DONE, DEL-3 PARTIAL
+- **Analytics** ANA-1..3 — all DONE
+- **Courier** CR-1..5 — all DONE
+- **System** SYS-1..6 — 4 DONE, SYS-1 PARTIAL (push thin)
 
-### Phase 2-4: Settlement, Returns, Inventory
-✅ Settlement dual-track unification
-✅ Returns/exchange notifications + cancel flow
-✅ Inventory received_notes/damage_notes + low-stock alerts + stock opname
-✅ Settlement manual allocation UI — PaymentVerifySheet with per-settlement amount input
+### Product Scope launch invariants — 10/10 verified
+Stock (no oversell, exact-once reservation release), payment idempotency (CAS + terminal guard), authorization scoping, order state machine, refund traceability, unpaid-order guard, ongkir/external-cost separation, courier self-scope. All present in code.
 
-### Phase 5: Push Notification + Operating Hours + Owner UX
-✅ Push notification (VAPID + FCM): SW handlers, FcmSender, usePushSubscription hook, all roles
-✅ Operating hours (WIB): Outlet::isOpen(), nextOpenTime(), holiday schedule, auto-select OPEN outlet
-✅ Owner toast UX: toastMutation helper applied to 23+ pages
-✅ Outlet features: recharts analytics, CSV export
-
-### Phase 7: Courier Management v2
-✅ Dual courier types: Dombi (Pusat + Outlet, approval workflow) + Eksternal (Gojek/Grab, inline form)
-✅ 3 migrations: courier_profiles source, pivot assignments, deliveries eksternal fields
-✅ CourierProfile scopes: `pusat()`, `outlet()`, `pending()`, `availableForOutlet()`
-✅ DeliveryService: `assignEksternal()` path with order status sync (delivering)
-✅ Financial guardrail: real-time margin calculation in assign-courier-sheet
-✅ Settlement integration: `total_delivery_fee`, `eksternal_courier_cost`, `eksternal_delivery_count`, `net_delivery_income`
-✅ 3 TDD test files: CourierProfileTest, DeliveryExternalCourierTest, SettlementCourierCostTest
-
-### Test Suite Discipline
-✅ 122 pre-existing failures eliminated across 30+ test files
-✅ StockDistribution dead tests removed, payment_method key fixes, period_start defaults, families assertions, Settlement STATUS_PENDING constant
-✅ 791 tests, 0 failures, 0 errors — 100% green
+### Phases
+- **Phase 1-4** (hardening, settlement, returns, inventory) — ✅
+- **Phase 5** (push, operating hours, owner UX, outlet features) — ✅
+- **Phase 6** (owner analytics) — ✅ charts + CSV export
+- **Phase 7** (courier management v2) — ✅
+- **Phase 8** (UI polish) — ✅ most; residual polish in PRD_GAP_REPORT non-blockers
+- **Phase 9** (production deploy) — 🔄 **blocked on release evidence** (see below)
 
 ---
 
-## What's NOT Done
+## Release Status
 
-### Phase 6: Owner Analytics
-| Task | Status |
-|------|--------|
-| Dashboard charts (line, bar, pie) | ⚠️ KPI cards rebuilt, charts not integrated |
-| Report Export (CSV) | ❌ `Owner/ReportController` not created |
+**Recommendation: GO** on code gates (see [PRD_GAP_REPORT.md](PRD_GAP_REPORT.md)). Both code blockers resolved:
 
-### Phase 8: UI/UX Polish
-| Task | Status |
-|------|--------|
-| Outlet bottom navigation | ❌ |
-| Outlet card-based layout | ❌ |
-| Outlet loading skeletons | ❌ |
-| Courier delivery timeline | ❌ |
-| Owner desktop tables | 🔄 Partially done |
-| Shared empty states | ❌ |
-| Shared skeleton loaders | ❌ |
+### Blocker 1 — TypeScript check fails 🔒 **RESOLVED**
+`products.build-sections.test.ts` fixture updated (added `is_recommended: false`, `image: null` to the `variant()` helper). `npm run types:check` now passes; the 3 fixture tests still pass.
 
-### Phase 9: Production Deployment
-| Task | Status |
-|------|--------|
-| Server provisioning | ❌ |
-| SSL/domain | ❌ |
-| DB migration | ❌ |
-| Backup/monitoring | ❌ |
-| Load testing | ❌ |
-| Go-live | ❌ |
+### Blocker 2 — Guest-cancel rate limiting unenforced (SYS-6) 🔒 **RESOLVED**
+`throttle:guest-cancel` (3/min/IP) wired to `customer.orders.cancel`. The orphaned `guest-cancel-token` limiter (depended on a removed token route) was removed. Cancel tests (20) pass.
+
+### Release evidence still required
+Operational evidence not yet present in `docs/PRODUCTION_CHECKLIST.md` / `docs/BACKUP_RESTORE.md`:
+- Staging smoke journey evidence
+- DOKU duplicate-webhook / sandbox matrix evidence
+- Migration rehearsal
+- Backup restore drill evidence (offsite restore currently **waived** for Hostinger — local only)
+- Queue/scheduler/failed-job monitoring active
+- Production env config + credentials provisioned
+- Rollback/roll-forward rehearsal
+
+---
+
+## What's NOT Done / Deferred
+
+| Item | Status | Note |
+|------|--------|------|
+| OUT-5 date filter on order history | PARTIAL | status filter present, date filter absent |
+| DEL-3 real-time assign margin | PARTIAL | margin bar exists in pricing pages, not in assign-courier sheet |
+| SYS-6 guest-cancel rate limiting | RESOLVED | `throttle:guest-cancel` wired to cancel route; token limiter removed |
+| Customer return/exchange flow (REF-3/4) | Done but deferred | implemented; outside soft-launch slice per Product Scope |
+| Offline sales + settlement (OUT-7/8) | Done but deferred | implemented; outside single-outlet slice |
+| Offsite S3 backup + restore drill | Waived | Hostinger-only scope; local backup only |
+| Advanced analytics / multi-language / PDF invoice / native app | Deferred | PRD Phase-lanjutan |
 
 ---
 
 ## Recommended Next Actions
 
-1. **Phase 9: Production Deploy** — server, SSL, backup, monitoring, go-live
-2. **Phase 6: Owner Analytics** — chart integration, CSV export
-3. **Phase 8: UI Polish** — outlet bottom nav, skeleton loaders, empty states
+1. **Close release evidence gaps** — staging smoke, DOKU matrix, migration rehearsal, backup restore drill, monitoring, production config.
+2. **Resolve PARTIAL items** — OUT-5 date filter, DEL-3 assign margin, when in scope.
 
 ---
 
 ## Branch Strategy
 
 ```
-main (production-stable) — all work merged directly
-  ├── Production readiness hardening
-  ├── Courier management v2
-  └── 791 tests green
+develop (integration) — active work
+  └── PRD gap audit + docs (this branch)
+main (production-stable) — release
 ```
 
-**Rule:** `main` stays production-stable. All new work must pass `php artisan test` before merge.
+**Rule:** `develop`/`main` stay stable. All work must pass `php artisan test` before merge; quality gate runs on push to `develop`/`main`.
 
 ---
 
-*Updated: 2026-07-22 | 791 tests passing | 0 failures | Build successful*
+*Snapshot: 2026-08-09 | 1210 tests passing | build + types:check pass | release GO on code gates*

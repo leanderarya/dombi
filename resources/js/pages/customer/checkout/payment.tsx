@@ -5,6 +5,7 @@ import NoticeBanner from '@/components/customer/checkout/notice-banner';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
 import Dialog from '@/components/ui/dialog';
+import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { formatCurrency, formatDistance } from '@/lib/format';
@@ -14,6 +15,7 @@ import { useCart } from '@/lib/use-cart';
 export default function CheckoutPayment({ draft, summary }: any) {
     const cart = useCart();
     const { markUsedForOrder } = useCustomerLocation();
+    useLockSwipeBack();
     const fulfillmentType = draft?.fulfillment?.fulfillment_type ?? 'pickup';
     const isDelivery = fulfillmentType === 'delivery_dombi';
     const [itemsExpanded, setItemsExpanded] = useState(false);
@@ -127,6 +129,20 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
                     return;
                 }
+
+                const fallbackError =
+                    data.message ||
+                    (data.errors
+                        ? Object.values(data.errors).flat()[0]
+                        : 'Terjadi kesalahan. Silakan coba lagi.');
+                setSubmitError(
+                    typeof fallbackError === 'string'
+                        ? fallbackError
+                        : 'Terjadi kesalahan. Silakan coba lagi.',
+                );
+                setProcessing(false);
+
+                return;
             }
 
             if (!response.ok) {
@@ -159,51 +175,14 @@ export default function CheckoutPayment({ draft, summary }: any) {
         }
     };
 
-    const handleConfirmAdjusted = async () => {
+    const handleConfirmAdjusted = () => {
         setAdjustmentModal(null);
-        setProcessing(true);
-
-        try {
-            const response = await fetch('/customer/checkout/payment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document
-                            .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') ?? '',
-                },
-                body: JSON.stringify({
-                    payment_method: paymentMethod,
-                    confirm_adjusted: true,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                setSubmitError(
-                    data.message || 'Terjadi kesalahan. Silakan coba lagi.',
-                );
+        router.reload({
+            only: ['draft', 'summary'],
+            onFinish: () => {
                 setProcessing(false);
-
-                return;
-            }
-
-            if (data.payment_url) {
-                cart.clear();
-                markUsedForOrder();
-                window.location.replace(data.payment_url);
-            } else {
-                setSubmitError('Tidak ada URL pembayaran. Silakan coba lagi.');
-                setProcessing(false);
-            }
-        } catch {
-            setSubmitError('Terjadi kesalahan jaringan. Silakan coba lagi.');
-            setProcessing(false);
-        }
+            },
+        });
     };
 
     return (
@@ -232,326 +211,415 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 backHref="/customer/checkout/customer"
             />
 
-            {/* Error Banner */}
-            {submitError && (
-                <div className="mt-4">
-                    <NoticeBanner
-                        variant="error"
-                        title="Pesanan gagal dibuat"
-                        message={submitError}
-                        onDismiss={() => setSubmitError(null)}
-                    />
-                </div>
-            )}
-
-            {/* Stock Warning Banner */}
-            {stockWarnings.length > 0 && (
-                <div className="mt-4">
-                    <NoticeBanner
-                        variant="warning"
-                        title="Stok Berubah"
-                        message={stockWarnings.join('. ')}
-                        onDismiss={() => setStockWarnings([])}
-                    />
-                </div>
-            )}
-
-            {/* Pesanan — collapsible */}
-            <section className="mt-4 rounded-xl border border-border bg-white p-4">
-                <button
-                    type="button"
-                    onClick={() => setItemsExpanded((value) => !value)}
-                    className="flex min-h-11 w-full items-center justify-between text-left active:opacity-80"
-                >
-                    <div>
-                        <div className="text-[13px] text-text-subtle">
-                            Pesanan
+            <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-6">
+                <div className="min-w-0">
+                    {/* Error Banner */}
+                    {submitError && (
+                        <div className="mt-4">
+                            <NoticeBanner
+                                variant="error"
+                                title="Pesanan gagal dibuat"
+                                message={submitError}
+                                onDismiss={() => setSubmitError(null)}
+                            />
                         </div>
-                        <div className="mt-0.5 text-sm font-semibold text-text">
-                            {draft?.items?.length ?? 0} Produk ·{' '}
-                            {formatCurrency(summary.subtotal)}
-                        </div>
-                    </div>
-                    {itemsExpanded ? (
-                        <ChevronUp className="h-4 w-4 text-text-muted" />
-                    ) : (
-                        <ChevronDown className="h-4 w-4 text-text-muted" />
                     )}
-                </button>
 
-                {itemsExpanded && (
-                    <div className="mt-3 space-y-2 border-t border-border pt-3">
-                        {(draft?.items ?? []).map((item: any) => (
-                            <div
-                                key={item.product_variant_id}
-                                className="flex items-start justify-between gap-3 text-sm"
-                            >
-                                <div className="min-w-0">
-                                    <span className="font-medium text-text">
-                                        {item.name}
-                                    </span>
-                                    {item.variant_name && (
-                                        <span className="ml-1 text-xs text-text-subtle">
-                                            {item.variant_name}
-                                        </span>
-                                    )}
-                                    <span className="ml-1 text-xs text-text-muted">
-                                        x{item.quantity}
-                                    </span>
+                    {/* Stock Warning Banner */}
+                    {stockWarnings.length > 0 && (
+                        <div className="mt-4">
+                            <NoticeBanner
+                                variant="warning"
+                                title="Stok Berubah"
+                                message={stockWarnings.join('. ')}
+                                onDismiss={() => setStockWarnings([])}
+                            />
+                        </div>
+                    )}
+
+                    {/* Pesanan — collapsible */}
+                    <section className="mt-4 rounded-xl border border-border bg-white p-4">
+                        <button
+                            type="button"
+                            onClick={() => setItemsExpanded((value) => !value)}
+                            className="flex min-h-11 w-full items-center justify-between text-left active:opacity-80"
+                        >
+                            <div>
+                                <div className="text-[13px] text-text-subtle">
+                                    Pesanan
                                 </div>
-                                <span className="shrink-0 font-medium text-text tabular-nums">
-                                    {formatCurrency(item.subtotal)}
+                                <div className="mt-0.5 text-sm font-semibold text-text">
+                                    {draft?.items?.length ?? 0} Produk ·{' '}
+                                    {formatCurrency(summary.subtotal)}
+                                </div>
+                            </div>
+                            {itemsExpanded ? (
+                                <ChevronUp className="h-4 w-4 text-text-muted" />
+                            ) : (
+                                <ChevronDown className="h-4 w-4 text-text-muted" />
+                            )}
+                        </button>
+
+                        {itemsExpanded && (
+                            <div className="mt-3 space-y-2 border-t border-border pt-3">
+                                {(draft?.items ?? []).map((item: any) => (
+                                    <div
+                                        key={item.product_variant_id}
+                                        className="flex items-start justify-between gap-3 text-sm"
+                                    >
+                                        <div className="min-w-0">
+                                            <span className="font-medium text-text">
+                                                {item.name}
+                                            </span>
+                                            {item.variant_name && (
+                                                <span className="ml-1 text-xs text-text-subtle">
+                                                    {item.variant_name}
+                                                </span>
+                                            )}
+                                            <span className="ml-1 text-xs text-text-muted">
+                                                x{item.quantity}
+                                            </span>
+                                        </div>
+                                        <span className="shrink-0 font-medium text-text tabular-nums">
+                                            {formatCurrency(item.subtotal)}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+
+                    {/* Pengiriman */}
+                    <section className="mt-4 rounded-xl border border-border bg-white p-4">
+                        <div className="text-[13px] text-text-subtle">
+                            Pengiriman
+                        </div>
+
+                        {isDelivery && summary.delivery_quote?.outlet && (
+                            <div className="mt-2 flex items-center justify-between text-sm">
+                                <div>
+                                    <div className="font-semibold text-text">
+                                        {summary.delivery_quote.outlet.name}
+                                    </div>
+                                    <div className="text-xs text-text-muted">
+                                        {formatDistance(
+                                            Number(
+                                                summary.delivery_quote
+                                                    .distance_km ?? 0,
+                                            ),
+                                        )}{' '}
+                                        · Kurir Dombi
+                                    </div>
+                                </div>
+                                <span className="font-bold text-text tabular-nums">
+                                    {formatCurrency(summary.delivery_fee)}
                                 </span>
                             </div>
-                        ))}
-                    </div>
-                )}
-            </section>
-
-            {/* Pengiriman */}
-            <section className="mt-4 rounded-xl border border-border bg-white p-4">
-                <div className="text-[13px] text-text-subtle">Pengiriman</div>
-
-                {isDelivery && summary.delivery_quote?.outlet && (
-                    <div className="mt-2 flex items-center justify-between text-sm">
-                        <div>
-                            <div className="font-semibold text-text">
-                                {summary.delivery_quote.outlet.name}
-                            </div>
-                            <div className="text-xs text-text-muted">
-                                {formatDistance(
-                                    Number(
-                                        summary.delivery_quote.distance_km ?? 0,
-                                    ),
-                                )}{' '}
-                                · Kurir Dombi
-                            </div>
-                        </div>
-                        <span className="font-bold text-text tabular-nums">
-                            {formatCurrency(summary.delivery_fee)}
-                        </span>
-                    </div>
-                )}
-
-                {isDelivery && draft?.location && (
-                    <div className="mt-2 text-xs text-text-muted">
-                        <MapPin className="mr-1 inline h-3 w-3 align-text-bottom" />
-                        {[
-                            draft.location.village,
-                            draft.location.district,
-                            draft.location.city,
-                        ]
-                            .filter(Boolean)
-                            .join(', ') || draft.location.address_line}
-                    </div>
-                )}
-
-                {fulfillmentType === 'pickup' && draft?.pickup_outlet && (
-                    <div className="mt-2 flex items-center gap-2 text-sm">
-                        <Store className="h-4 w-4 shrink-0 text-text-subtle" />
-                        <div>
-                            <div className="font-semibold text-text">
-                                {draft.pickup_outlet.name}
-                            </div>
-                            <div className="text-xs text-text-muted">
-                                {draft.pickup_outlet.address}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </section>
-
-            {/* Pembayaran */}
-            <section className="mt-4 rounded-xl border border-border bg-white p-4">
-                <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[13px] text-text-subtle">
-                        Metode Pembayaran
-                    </span>
-                    <button
-                        type="button"
-                        onClick={() => setPaymentExpanded(!paymentExpanded)}
-                        className="min-h-11 px-2 text-xs font-semibold text-primary active:opacity-80"
-                    >
-                        {paymentExpanded ? 'Tutup' : 'Ganti'}
-                    </button>
-                </div>
-
-                {/* Selected payment */}
-                <div className="flex items-center justify-between rounded-xl bg-surface-muted px-4 py-3">
-                    <div>
-                        <div className="text-sm font-semibold text-text">
-                            {selectedOption?.label ?? 'QRIS'}
-                        </div>
-                        <div className="mt-0.5 text-xs text-text-muted">
-                            {selectedOption?.description ??
-                                'Scan QR untuk membayar'}
-                        </div>
-                    </div>
-                    {paymentFee > 0 && (
-                        <div className="text-sm font-bold tabular-nums">
-                            <span className="text-text-muted">
-                                + {formatCurrency(paymentFee)}
-                            </span>
-                        </div>
-                    )}
-                </div>
-
-                {/* Other options — expandable */}
-                {paymentExpanded && (
-                    <div className="mt-2 space-y-2">
-                        {paymentOptions
-                            .filter(
-                                (option: any) => option.value !== paymentMethod,
-                            )
-                            .map((option: any) => {
-                                const optFee =
-                                    option.customer_fee ??
-                                    Math.round(
-                                        (summary.subtotal ?? 0) *
-                                            (option.fee_rate ?? 0) *
-                                            100,
-                                    ) / 100;
-                                return (
-                                    <button
-                                        key={option.value}
-                                        type="button"
-                                        onClick={() => {
-                                            setPaymentMethod(option.value);
-                                            setPaymentExpanded(false);
-                                        }}
-                                        className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-left transition-all active:opacity-80"
-                                    >
-                                        <div>
-                                            <div className="text-sm font-medium text-text">
-                                                {option.label}
-                                            </div>
-                                            <div className="mt-0.5 text-[11px] text-text-subtle">
-                                                {option.description}
-                                            </div>
-                                        </div>
-                                        {optFee > 0 && (
-                                            <div className="text-xs font-bold tabular-nums">
-                                                <span className="text-text-muted">
-                                                    + {formatCurrency(optFee)}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        <div className="px-1 pt-1 text-[11px] text-text-muted">
-                            *Subtotal &lt; Rp 500rb: QRIS/Transfer/E-Wallet
-                            Biaya Layanan Rp 0. Kartu Kredit selalu dikenakan
-                            biaya layanan. Threshold dari subtotal saja (tanpa
-                            ongkir).
-                        </div>
-                    </div>
-                )}
-            </section>
-
-            {/* Total Card */}
-            <section className="mt-4 rounded-xl bg-primary px-4 py-3 text-white">
-                <div className="space-y-1">
-                    <SummaryRow
-                        label="Subtotal"
-                        value={formatCurrency(summary.subtotal)}
-                    />
-                    {summary.delivery_fee > 0 && (
-                        <SummaryRow
-                            label="Ongkir"
-                            value={formatCurrency(summary.delivery_fee)}
-                        />
-                    )}
-                    <SummaryRow
-                        label="Biaya Layanan"
-                        value={
-                            paymentFee > 0 ? formatCurrency(paymentFee) : 'Rp 0'
-                        }
-                    />
-                </div>
-                <div className="mt-2 flex items-center justify-between border-t border-white/20 pt-2">
-                    <span className="text-sm font-semibold text-white">
-                        Total
-                    </span>
-                    <span className="text-lg font-bold text-white tabular-nums">
-                        {formatCurrency(total)}
-                    </span>
-                </div>
-                {deliveryBlocked && (
-                    <div className="mt-2">
-                        <NoticeBanner
-                            variant="warning"
-                            title="Lokasi di luar jangkauan"
-                            message="Kembali dan ubah lokasi pengiriman Anda."
-                        />
-                    </div>
-                )}
-            </section>
-
-            {/* Recipient — only when different */}
-            {hasDifferentRecipient && (
-                <section className="mt-4 rounded-xl border border-border bg-white p-4">
-                    <div className="text-[13px] text-text-subtle">Pemesan</div>
-                    <div className="mt-1 text-sm font-semibold text-text">
-                        {draft?.customer?.customer_name} ·{' '}
-                        {draft?.customer?.phone_number}
-                    </div>
-                    <div className="mt-2 border-t border-border pt-2">
-                        <div className="text-[13px] text-text-subtle">
-                            Penerima
-                        </div>
-                        <div className="mt-1 text-sm font-semibold text-text">
-                            {draft.customer.recipient_name} ·{' '}
-                            {draft.customer.recipient_phone ?? '-'}
-                        </div>
-                    </div>
-                </section>
-            )}
-
-            {/* Adjustment Confirmation Modal */}
-            {adjustmentModal && (
-                <Dialog
-                    open={!!adjustmentModal}
-                    onClose={() => setAdjustmentModal(null)}
-                    title="Stok Berubah"
-                >
-                    <p className="mb-3 text-sm text-zinc-600">
-                        Beberapa produk dalam pesanan Anda mengalami perubahan
-                        stok:
-                    </p>
-                    <ul className="mb-4 space-y-2">
-                        {adjustmentModal.warnings.map(
-                            (w: string, i: number) => (
-                                <li
-                                    key={i}
-                                    className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-zinc-800"
-                                >
-                                    {w}
-                                </li>
-                            ),
                         )}
-                    </ul>
-                    <div className="flex gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setAdjustmentModal(null)}
-                            className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 active:opacity-80"
-                        >
-                            Kembali
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleConfirmAdjusted}
-                            className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white active:opacity-80"
-                        >
-                            Konfirmasi & Bayar
-                        </button>
-                    </div>
-                </Dialog>
-            )}
 
-            {/* Spacer for sticky footer */}
-            <div className="h-24" />
+                        {isDelivery &&
+                            summary.delivery_quote &&
+                            !summary.delivery_quote.is_serviceable && (
+                                <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+                                    {summary.delivery_quote.reason ??
+                                        'Delivery belum tersedia untuk outlet terpilih.'}
+                                </div>
+                            )}
+
+                        {isDelivery && draft?.location && (
+                            <div className="mt-2 text-xs text-text-muted">
+                                <MapPin className="mr-1 inline h-3 w-3 align-text-bottom" />
+                                {[
+                                    draft.location.village,
+                                    draft.location.district,
+                                    draft.location.city,
+                                ]
+                                    .filter(Boolean)
+                                    .join(', ') || draft.location.address_line}
+                            </div>
+                        )}
+
+                        {fulfillmentType === 'pickup' &&
+                            draft?.pickup_outlet && (
+                                <div className="mt-2 flex items-center gap-2 text-sm">
+                                    <Store className="h-4 w-4 shrink-0 text-text-subtle" />
+                                    <div>
+                                        <div className="font-semibold text-text">
+                                            {draft.pickup_outlet.name}
+                                        </div>
+                                        <div className="text-xs text-text-muted">
+                                            {draft.pickup_outlet.address}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                    </section>
+
+                    {/* Pembayaran */}
+                    <section className="mt-4 rounded-xl border border-border bg-white p-4">
+                        <div className="mb-2 flex items-center justify-between">
+                            <span className="text-[13px] text-text-subtle">
+                                Metode Pembayaran
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setPaymentExpanded(!paymentExpanded)
+                                }
+                                className="min-h-11 px-2 text-xs font-semibold text-primary active:opacity-80"
+                            >
+                                {paymentExpanded ? 'Tutup' : 'Ganti'}
+                            </button>
+                        </div>
+
+                        {/* Selected payment */}
+                        <div className="flex items-center justify-between rounded-xl bg-surface-muted px-4 py-3">
+                            <div>
+                                <div className="text-sm font-semibold text-text">
+                                    {selectedOption?.label ?? 'QRIS'}
+                                </div>
+                                <div className="mt-0.5 text-xs text-text-muted">
+                                    {selectedOption?.description ??
+                                        'Scan QR untuk membayar'}
+                                </div>
+                            </div>
+                            {paymentFee > 0 && (
+                                <div className="text-sm font-bold tabular-nums">
+                                    <span className="text-text-muted">
+                                        + {formatCurrency(paymentFee)}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Other options — expandable */}
+                        {paymentExpanded && (
+                            <div className="mt-2 space-y-2">
+                                {paymentOptions
+                                    .filter(
+                                        (option: any) =>
+                                            option.value !== paymentMethod,
+                                    )
+                                    .map((option: any) => {
+                                        const optFee =
+                                            option.customer_fee ??
+                                            Math.round(
+                                                (summary.subtotal ?? 0) *
+                                                    (option.fee_rate ?? 0) *
+                                                    100,
+                                            ) / 100;
+
+                                        return (
+                                            <button
+                                                key={option.value}
+                                                type="button"
+                                                onClick={() => {
+                                                    setPaymentMethod(
+                                                        option.value,
+                                                    );
+                                                    setPaymentExpanded(false);
+                                                }}
+                                                className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-left transition-all active:opacity-80"
+                                            >
+                                                <div>
+                                                    <div className="text-sm font-medium text-text">
+                                                        {option.label}
+                                                    </div>
+                                                    <div className="mt-0.5 text-[11px] text-text-subtle">
+                                                        {option.description}
+                                                    </div>
+                                                </div>
+                                                {optFee > 0 && (
+                                                    <div className="text-xs font-bold tabular-nums">
+                                                        <span className="text-text-muted">
+                                                            +{' '}
+                                                            {formatCurrency(
+                                                                optFee,
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                <div className="px-1 pt-1 text-[11px] text-text-muted">
+                                    *Subtotal &lt; Rp 500rb:
+                                    QRIS/Transfer/E-Wallet Biaya Layanan Rp 0.
+                                    Kartu Kredit selalu dikenakan biaya layanan.
+                                    Threshold dari subtotal saja (tanpa ongkir).
+                                </div>
+                            </div>
+                        )}
+                    </section>
+
+                    {/* Total Card — mobile only */}
+                    <div className="lg:hidden">
+                        <section className="mt-4 rounded-xl bg-primary px-4 py-3 text-white">
+                            <div className="space-y-1">
+                                <SummaryRow
+                                    label="Subtotal"
+                                    value={formatCurrency(summary.subtotal)}
+                                />
+                                {summary.delivery_fee > 0 && (
+                                    <SummaryRow
+                                        label="Ongkir"
+                                        value={formatCurrency(
+                                            summary.delivery_fee,
+                                        )}
+                                    />
+                                )}
+                                <SummaryRow
+                                    label="Biaya Layanan"
+                                    value={
+                                        paymentFee > 0
+                                            ? formatCurrency(paymentFee)
+                                            : 'Rp 0'
+                                    }
+                                />
+                            </div>
+                            <div className="mt-2 flex items-center justify-between border-t border-white/20 pt-2">
+                                <span className="text-sm font-semibold text-white">
+                                    Total
+                                </span>
+                                <span className="text-lg font-bold text-white tabular-nums">
+                                    {formatCurrency(total)}
+                                </span>
+                            </div>
+                            {deliveryBlocked && (
+                                <div className="mt-2">
+                                    <NoticeBanner
+                                        variant="warning"
+                                        title="Lokasi di luar jangkauan"
+                                        message="Kembali dan ubah lokasi pengiriman Anda."
+                                    />
+                                </div>
+                            )}
+                        </section>
+                    </div>
+
+                    {/* Recipient — only when different */}
+                    {hasDifferentRecipient && (
+                        <section className="mt-4 rounded-xl border border-border bg-white p-4">
+                            <div className="text-[13px] text-text-subtle">
+                                Pemesan
+                            </div>
+                            <div className="mt-1 text-sm font-semibold text-text">
+                                {draft?.customer?.customer_name} ·{' '}
+                                {draft?.customer?.phone_number}
+                            </div>
+                            <div className="mt-2 border-t border-border pt-2">
+                                <div className="text-[13px] text-text-subtle">
+                                    Penerima
+                                </div>
+                                <div className="mt-1 text-sm font-semibold text-text">
+                                    {draft.customer.recipient_name} ·{' '}
+                                    {draft.customer.recipient_phone ?? '-'}
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Adjustment Confirmation Modal */}
+                    {adjustmentModal && (
+                        <Dialog
+                            open={!!adjustmentModal}
+                            onClose={() => setAdjustmentModal(null)}
+                            title="Stok Berubah"
+                        >
+                            <p className="mb-3 text-sm text-zinc-600">
+                                Beberapa produk dalam pesanan Anda mengalami
+                                perubahan stok:
+                            </p>
+                            <ul className="mb-4 space-y-2">
+                                {adjustmentModal.warnings.map(
+                                    (w: string, i: number) => (
+                                        <li
+                                            key={i}
+                                            className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-zinc-800"
+                                        >
+                                            {w}
+                                        </li>
+                                    ),
+                                )}
+                            </ul>
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setAdjustmentModal(null)}
+                                    className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 active:opacity-80"
+                                >
+                                    Kembali
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleConfirmAdjusted}
+                                    className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white active:opacity-80"
+                                >
+                                    Konfirmasi & Bayar
+                                </button>
+                            </div>
+                        </Dialog>
+                    )}
+
+                    {/* Spacer for sticky footer */}
+                    <div className="h-24 lg:hidden" />
+                </div>
+                <aside className="hidden lg:block">
+                    <div className="sticky top-0 rounded-xl border border-border bg-white p-4">
+                        <section className="rounded-xl bg-primary px-4 py-3 text-white">
+                            <div className="space-y-1">
+                                <SummaryRow
+                                    label="Subtotal"
+                                    value={formatCurrency(summary.subtotal)}
+                                />
+                                {summary.delivery_fee > 0 && (
+                                    <SummaryRow
+                                        label="Ongkir"
+                                        value={formatCurrency(
+                                            summary.delivery_fee,
+                                        )}
+                                    />
+                                )}
+                                <SummaryRow
+                                    label="Biaya Layanan"
+                                    value={
+                                        paymentFee > 0
+                                            ? formatCurrency(paymentFee)
+                                            : 'Rp 0'
+                                    }
+                                />
+                            </div>
+                            <div className="mt-2 flex items-center justify-between border-t border-white/20 pt-2">
+                                <span className="text-sm font-semibold text-white">
+                                    Total
+                                </span>
+                                <span className="text-lg font-bold text-white tabular-nums">
+                                    {formatCurrency(total)}
+                                </span>
+                            </div>
+                            {deliveryBlocked && (
+                                <div className="mt-2">
+                                    <NoticeBanner
+                                        variant="warning"
+                                        title="Lokasi di luar jangkauan"
+                                        message="Kembali dan ubah lokasi pengiriman Anda."
+                                    />
+                                </div>
+                            )}
+                        </section>
+                        <div className="mt-4">
+                            <button
+                                type="button"
+                                onClick={submit}
+                                disabled={processing || deliveryBlocked}
+                                className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                            >
+                                {processing ? 'Memproses...' : ctaLabel}
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
         </CustomerMobileLayout>
     );
 }

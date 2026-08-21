@@ -20,7 +20,7 @@ class PaymentStatusTest extends TestCase
     public function test_settled_is_terminal(): void
     {
         $this->assertSame('settled', PaymentStatus::Settled->value);
-        foreach (['pending','paid','settled','expired','failed','refund_pending','refund_in_progress','refunded','refund_rejected','refund_failed'] as $value) {
+        foreach (['pending', 'paid', 'settled', 'expired', 'failed', 'refund_pending', 'refund_in_progress', 'refunded', 'refund_rejected', 'refund_failed'] as $value) {
             $this->assertSame($value, PaymentStatus::from($value)->value);
         }
         $this->assertTrue(PaymentStatus::Settled->isTerminal());

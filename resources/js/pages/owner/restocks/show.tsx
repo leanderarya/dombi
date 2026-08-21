@@ -1,5 +1,4 @@
 import { router, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
 import {
     CheckCircle2,
     XCircle,
@@ -10,6 +9,7 @@ import {
     Truck,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,9 +38,9 @@ const STATUS_CONFIG: Record<
         border: 'border-amber-200',
     },
     approved: {
-        bg: 'bg-emerald-50',
-        text: 'text-emerald-700',
-        border: 'border-emerald-200',
+        bg: 'bg-amber-50',
+        text: 'text-amber-700',
+        border: 'border-amber-200',
     },
     rejected: {
         bg: 'bg-red-50',
@@ -48,14 +48,14 @@ const STATUS_CONFIG: Record<
         border: 'border-red-200',
     },
     preparing: {
-        bg: 'bg-purple-50',
-        text: 'text-purple-700',
-        border: 'border-purple-200',
+        bg: 'bg-amber-50',
+        text: 'text-amber-700',
+        border: 'border-amber-200',
     },
     shipped: {
-        bg: 'bg-blue-50',
-        text: 'text-blue-700',
-        border: 'border-blue-200',
+        bg: 'bg-amber-50',
+        text: 'text-amber-700',
+        border: 'border-amber-200',
     },
     completed: {
         bg: 'bg-mint-wash',
@@ -63,6 +63,21 @@ const STATUS_CONFIG: Record<
         border: 'border-primary/20',
     },
 };
+
+// Map a product's size_unit to a display unit label ('l'|'ml'|'g'|'kg' → Liter/Pcs).
+function unitLabel(item: any): string {
+    const unit = item?.product?.size_unit ?? item?.variant?.size_unit;
+
+    return unit === 'ml' || unit === 'l' || unit === 'g' || unit === 'kg'
+        ? 'Liter'
+        : 'Pcs';
+}
+
+function stockedQuantity(item: any, value: number | null | undefined): string {
+    return value == null || Number.isNaN(Number(value))
+        ? '—'
+        : `${value} ${unitLabel(item)}`;
+}
 
 export default function OwnerRestockShow({ restock, inventories }: any) {
     const [showApprove, setShowApprove] = useState(false);
@@ -129,7 +144,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     <User className="h-3.5 w-3.5" />
                     {restock.requester?.name ?? '—'}
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-text-muted">
+                <div className="flex items-center gap-1.5 text-xs text-text-muted tabular-nums">
                     <Clock className="h-3.5 w-3.5" />
                     {formatDate(restock.created_at)}
                 </div>
@@ -139,13 +154,24 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                 {/* Main */}
                 <div className="space-y-6 lg:col-span-2">
                     {/* Items Table */}
-                    <section className="overflow-hidden rounded-xl bg-surface shadow-card">
-                        <div className="flex items-center justify-between border-b border-border px-5 py-3 text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                            <span>Item Permintaan</span>
-                            <span className="font-mono text-text-muted">
+                    <section className="overflow-hidden rounded-2xl border border-border bg-surface">
+                        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                            <div className="flex items-center gap-2">
+                                <Package
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Item Permintaan
+                                </h3>
+                            </div>
+                            <span className="text-xs text-text-muted tabular-nums">
                                 {restock.items?.length ?? 0} item
                             </span>
                         </div>
+                        <p className="px-5 pb-3 text-xs text-text-muted">
+                            Daftar item yang diminta outlet
+                        </p>
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border/50 bg-surface-muted/50 text-left text-xs text-text-muted">
@@ -168,10 +194,11 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     const inv: any = inventoryByProduct.get(
                                         item.product_id,
                                     );
+
                                     return (
                                         <tr
                                             key={item.id}
-                                            className="hover:bg-mint-wash/50 border-t border-border/20 transition-colors"
+                                            className="border-t border-border/20 transition-colors hover:bg-emerald-50/40"
                                         >
                                             <td className="px-5 py-3 font-medium text-text">
                                                 {item.product?.name ??
@@ -179,10 +206,16 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                                     '-'}
                                             </td>
                                             <td className="px-5 py-3 text-right tabular-nums">
-                                                {item.requested_quantity}
+                                                {stockedQuantity(
+                                                    item,
+                                                    item.requested_quantity,
+                                                )}
                                             </td>
                                             <td className="px-5 py-3 text-right font-semibold tabular-nums">
-                                                {item.approved_quantity ?? '—'}
+                                                {stockedQuantity(
+                                                    item,
+                                                    item.approved_quantity,
+                                                )}
                                             </td>
                                             <td className="px-5 py-3 text-center">
                                                 {inv ? (
@@ -208,10 +241,10 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                 <tr className="border-t border-border bg-surface-muted/30 text-xs font-semibold">
                                     <td className="px-5 py-2.5">Total</td>
                                     <td className="px-5 py-2.5 text-right tabular-nums">
-                                        {totalRequested}
+                                        {stockedQuantity({}, totalRequested)}
                                     </td>
                                     <td className="px-5 py-2.5 text-right tabular-nums">
-                                        {totalApproved || '—'}
+                                        {stockedQuantity({}, totalApproved)}
                                     </td>
                                     <td />
                                 </tr>
@@ -220,10 +253,19 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     </section>
 
                     {/* Info Grid */}
-                    <section className="rounded-xl bg-surface p-5 shadow-card">
-                        <div className="mb-3 text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                            Informasi
+                    <section className="rounded-2xl border border-border bg-surface p-5">
+                        <div className="mb-3 flex items-center gap-2">
+                            <Building2
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Informasi
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Detail restock
+                        </p>
                         <div className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-sm">
                             <div className="text-text-muted">Outlet</div>
                             <div className="font-medium text-text">
@@ -234,7 +276,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                 {restock.requester?.name ?? '—'}
                             </div>
                             <div className="text-text-muted">Tanggal</div>
-                            <div className="font-medium text-text">
+                            <div className="font-medium text-text tabular-nums">
                                 {formatDate(restock.created_at)}
                             </div>
                             {restock.notes && (
@@ -282,7 +324,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     <div className="text-text-muted">
                                         Dikirim pada
                                     </div>
-                                    <div className="font-medium text-text">
+                                    <div className="font-medium text-text tabular-nums">
                                         {formatDate(restock.sent_at)}
                                     </div>
                                 </>
@@ -302,7 +344,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     <div className="text-text-muted">
                                         Diterima pada
                                     </div>
-                                    <div className="font-medium text-text">
+                                    <div className="font-medium text-text tabular-nums">
                                         {formatDate(restock.received_at)}
                                     </div>
                                 </>
@@ -335,13 +377,22 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                 <div className="space-y-6">
                     {/* Actions */}
                     {restock.status === 'requested' && (
-                        <section className="rounded-xl bg-surface p-5 shadow-card">
-                            <div className="mb-3 text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                                Aksi
+                        <section className="rounded-2xl border border-border bg-surface p-5">
+                            <div className="mb-3 flex items-center gap-2">
+                                <CheckCircle2
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Aksi
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Tinjau permintaan restock
+                            </p>
                             <div className="flex gap-2">
                                 <Button
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     onClick={() => setShowApprove(true)}
                                 >
                                     <CheckCircle2 className="mr-1.5 h-4 w-4" />
@@ -349,7 +400,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                 </Button>
                                 <Button
                                     variant="destructive"
-                                    className="flex-1"
+                                    className="min-h-11 flex-1"
                                     onClick={() => setShowReject(true)}
                                 >
                                     <XCircle className="mr-1.5 h-4 w-4" />
@@ -360,20 +411,35 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     )}
 
                     {restock.status === 'preparing' && (
-                        <section className="rounded-xl bg-surface p-5 shadow-card">
-                            <div className="mb-3 text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                                Aksi
+                        <section className="rounded-2xl border border-border bg-surface p-5">
+                            <div className="mb-3 flex items-center gap-2">
+                                <Truck
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Aksi
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Lanjutkan pengiriman stok
+                            </p>
                             <Button
-                                className="w-full"
+                                className="min-h-11 w-full"
                                 onClick={() =>
                                     router.post(
                                         `/owner/restocks/${restock.id}/mark-shipped`,
                                         {},
                                         {
                                             preserveScroll: true,
-                                            onSuccess: () => toast.success('Dikirim'),
-                                            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                            onSuccess: () =>
+                                                toast.success('Dikirim'),
+                                            onError: (errors) =>
+                                                toast.error(
+                                                    Object.values(errors)
+                                                        .flat()
+                                                        .join(', '),
+                                                ),
                                         },
                                     )
                                 }
@@ -386,10 +452,19 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
 
                     {/* Timeline */}
                     {timeline.length > 0 && (
-                        <section className="rounded-xl bg-surface p-5 shadow-card">
-                            <div className="mb-3 text-xs font-semibold tracking-wide text-text-subtle uppercase">
-                                Riwayat
+                        <section className="rounded-2xl border border-border bg-surface p-5">
+                            <div className="mb-3 flex items-center gap-2">
+                                <Clock
+                                    className="h-4 w-4 text-primary"
+                                    aria-hidden="true"
+                                />
+                                <h3 className="font-heading text-base font-bold text-text">
+                                    Riwayat
+                                </h3>
                             </div>
+                            <p className="mb-3 text-xs text-text-muted">
+                                Perjalanan restock
+                            </p>
                             <RestockTimeline events={timeline} />
                         </section>
                     )}
@@ -410,7 +485,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                             (item: any, index: number) => (
                                 <div
                                     key={item.id}
-                                    className="flex items-center gap-3 rounded-lg bg-surface-muted/50 px-3 py-2.5"
+                                    className="flex items-center gap-3 rounded-xl bg-surface-muted/50 px-3 py-2.5"
                                 >
                                     <div className="min-w-0 flex-1">
                                         <div className="truncate text-sm font-medium">
@@ -419,36 +494,45 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                                 '-'}
                                         </div>
                                         <div className="text-xs text-text-muted">
-                                            Diminta {item.requested_quantity}
+                                            Diminta{' '}
+                                            {stockedQuantity(
+                                                item,
+                                                item.requested_quantity,
+                                            )}
                                         </div>
                                     </div>
-                                    <input
-                                        type="number"
-                                        min={0}
-                                        value={
-                                            (
-                                                approveForm.data.items[
-                                                    index
-                                                ] as any
-                                            ).approved_quantity
-                                        }
-                                        onChange={(e) => {
-                                            const items = [
-                                                ...approveForm.data.items,
-                                            ] as any[];
-                                            items[index] = {
-                                                ...items[index],
-                                                approved_quantity: Number(
-                                                    e.target.value,
-                                                ),
-                                            };
-                                            approveForm.setData(
-                                                'items',
-                                                items as any,
-                                            );
-                                        }}
-                                        className="h-8 w-20 rounded-lg border border-border bg-surface px-2 text-right text-sm font-semibold outline-none focus:border-primary"
-                                    />
+                                    <div className="flex items-center gap-1">
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={
+                                                (
+                                                    approveForm.data.items[
+                                                        index
+                                                    ] as any
+                                                ).approved_quantity
+                                            }
+                                            onChange={(e) => {
+                                                const items = [
+                                                    ...approveForm.data.items,
+                                                ] as any[];
+                                                items[index] = {
+                                                    ...items[index],
+                                                    approved_quantity: Number(
+                                                        e.target.value,
+                                                    ),
+                                                };
+                                                approveForm.setData(
+                                                    'items',
+                                                    items as any,
+                                                );
+                                            }}
+                                            className="h-11 w-20 rounded-xl border border-border bg-surface px-2 text-right text-sm font-semibold tabular-nums outline-none focus:border-primary"
+                                        />
+                                        <span className="text-xs text-text-muted">
+                                            {unitLabel(item)}
+                                        </span>
+                                    </div>
                                 </div>
                             ),
                         )}
@@ -472,11 +556,13 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowApprove(false)}
                         >
                             Batal
                         </Button>
                         <Button
+                            className="min-h-11"
                             onClick={() =>
                                 approveForm.post(
                                     `/owner/restocks/${restock.id}/approve`,
@@ -486,7 +572,12 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                             setShowApprove(false);
                                             toast.success('Restock disetujui');
                                         },
-                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                        onError: (errors) =>
+                                            toast.error(
+                                                Object.values(errors)
+                                                    .flat()
+                                                    .join(', '),
+                                            ),
                                     },
                                 )
                             }
@@ -528,12 +619,14 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowReject(false)}
                         >
                             Batal
                         </Button>
                         <Button
                             variant="destructive"
+                            className="min-h-11"
                             onClick={() =>
                                 rejectForm.post(
                                     `/owner/restocks/${restock.id}/reject`,
@@ -544,7 +637,12 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                             rejectForm.reset();
                                             toast.success('Restock ditolak');
                                         },
-                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                        onError: (errors) =>
+                                            toast.error(
+                                                Object.values(errors)
+                                                    .flat()
+                                                    .join(', '),
+                                            ),
                                     },
                                 )
                             }

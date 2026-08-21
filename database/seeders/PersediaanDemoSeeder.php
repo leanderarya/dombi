@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\RestockRequest;
 use App\Models\RestockRequestItem;
 use App\Models\StockDistribution;
@@ -24,45 +24,38 @@ class PersediaanDemoSeeder extends Seeder
         }
 
         $outlets = Outlet::where('status', 'active')->get();
-        $variants = ProductVariant::where('is_active', true)->get();
+        $products = Product::where('is_active', true)->get();
 
-        if ($outlets->isEmpty() || $variants->isEmpty()) {
-            $this->command->warn('PersediaanDemoSeeder: No outlets or variants — run OutletSeeder + ProductCatalogSeeder first.');
+        if ($outlets->isEmpty() || $products->isEmpty()) {
+            $this->command->warn('PersediaanDemoSeeder: No outlets or products — run OutletSeeder + ProductCatalogSeeder first.');
 
             return;
         }
 
-        // ── 1. Varied outlet stock levels ──
-        $this->randomizeStock($outlets, $variants);
+        $this->randomizeStock($outlets, $products);
 
-        // ── 2. Restock requests per outlet ──
         foreach ($outlets as $outlet) {
             $outletUser = User::where('outlet_id', $outlet->id)->where('role', 'outlet')->first();
 
             $requesterId = $outletUser?->id ?? $owner->id;
-            $pickVariants = $variants->random(min(4, $variants->count()));
+            $pickProducts = $products->random(min(4, $products->count()));
 
-            // A. Requested (butuh approve)
-            $this->createRestock($outlet->id, $requesterId, 'requested', $pickVariants);
+            $this->createRestock($outlet->id, $requesterId, 'requested', $pickProducts);
 
-            // B. Preparing + distribution linked
-            $restock2 = $this->createRestock($outlet->id, $requesterId, 'preparing', $pickVariants, $owner->id);
-            $this->createDistribution($restock2->id, $outlet->id, 'preparing', $pickVariants);
+            $restock2 = $this->createRestock($outlet->id, $requesterId, 'preparing', $pickProducts, $owner->id);
+            $this->createDistribution($restock2->id, $outlet->id, 'preparing', $pickProducts);
 
-            // C. Shipped
-            $restock3 = $this->createRestock($outlet->id, $requesterId, 'shipped', $pickVariants, $owner->id);
-            $this->createDistribution($restock3->id, $outlet->id, 'shipped', $pickVariants);
+            $restock3 = $this->createRestock($outlet->id, $requesterId, 'shipped', $pickProducts, $owner->id);
+            $this->createDistribution($restock3->id, $outlet->id, 'shipped', $pickProducts);
 
-            // D. Completed
-            $restock4 = $this->createRestock($outlet->id, $requesterId, 'completed', $pickVariants, $owner->id);
-            $this->createDistribution($restock4->id, $outlet->id, 'completed', $pickVariants);
+            $restock4 = $this->createRestock($outlet->id, $requesterId, 'completed', $pickProducts, $owner->id);
+            $this->createDistribution($restock4->id, $outlet->id, 'completed', $pickProducts);
         }
 
-        // ── 3. One rejected restock ──
         $firstOutlet = $outlets->first();
         $outletUser = User::where('outlet_id', $firstOutlet->id)->where('role', 'outlet')->first();
         $requesterId = $outletUser?->id ?? $owner->id;
-        $pickVariants = $variants->random(min(3, $variants->count()));
+        $pickProducts = $products->random(min(3, $products->count()));
 
         RestockRequest::create([
             'outlet_id' => $firstOutlet->id,
@@ -78,25 +71,24 @@ class PersediaanDemoSeeder extends Seeder
         $this->command->info("PersediaanDemoSeeder: Created {$total} restock requests with varied statuses.");
     }
 
-    private function randomizeStock($outlets, $variants): void
+    private function randomizeStock($outlets, $products): void
     {
         foreach ($outlets as $outlet) {
-            foreach ($variants as $i => $variant) {
+            foreach ($products as $i => $product) {
                 $inventory = OutletInventory::where('outlet_id', $outlet->id)
-                    ->where('product_variant_id', $variant->id)
+                    ->where('product_id', $product->id)
                     ->first();
 
                 if (! $inventory) {
                     continue;
                 }
 
-                // Mix: some critical (0-2), some low (3-5), mostly healthy (8-30)
                 $roll = ($i + $outlet->id) % 5;
 
                 $stock = match ($roll) {
-                    0 => rand(0, 2),       // critical
-                    1 => rand(3, 5),       // low
-                    default => rand(8, 30), // healthy
+                    0 => rand(0, 2),
+                    1 => rand(3, 5),
+                    default => rand(8, 30),
                 };
 
                 $inventory->update([
@@ -104,8 +96,7 @@ class PersediaanDemoSeeder extends Seeder
                     'minimum_stock' => 5,
                 ]);
 
-                // Also vary center stock for central tab
-                $variant->update([
+                $product->update([
                     'center_stock' => match (($i + $outlet->id) % 4) {
                         0 => rand(0, 3),
                         1 => rand(4, 10),
@@ -120,7 +111,7 @@ class PersediaanDemoSeeder extends Seeder
         int $outletId,
         int $requesterId,
         string $status,
-        $variants,
+        $products,
         ?int $approverId = null
     ): RestockRequest {
         $restock = RestockRequest::create([
@@ -133,11 +124,10 @@ class PersediaanDemoSeeder extends Seeder
             'approved_at' => $approverId ? now()->subHours(rand(1, 48)) : null,
         ]);
 
-        foreach ($variants as $variant) {
+        foreach ($products as $product) {
             RestockRequestItem::create([
                 'restock_request_id' => $restock->id,
-                'product_id' => null,
-                'product_variant_id' => $variant->id,
+                'product_id' => $product->id,
                 'requested_quantity' => rand(5, 20),
                 'approved_quantity' => $approverId ? rand(5, 15) : null,
             ]);
@@ -150,7 +140,7 @@ class PersediaanDemoSeeder extends Seeder
         int $restockId,
         int $outletId,
         string $status,
-        $variants,
+        $products,
     ): StockDistribution {
         $sentAt = in_array($status, ['shipped', 'completed']) ? now()->subHours(rand(2, 24)) : null;
         $receivedAt = $status === 'completed' ? now()->subHours(rand(1, 3)) : null;
@@ -164,11 +154,10 @@ class PersediaanDemoSeeder extends Seeder
             'notes' => $status === 'shipped' ? 'Dalam perjalanan' : ($status === 'completed' ? 'Diterima lengkap' : null),
         ]);
 
-        foreach ($variants as $variant) {
+        foreach ($products as $product) {
             StockDistributionItem::create([
                 'stock_distribution_id' => $dist->id,
-                'product_id' => null,
-                'product_variant_id' => $variant->id,
+                'product_id' => $product->id,
                 'quantity' => rand(5, 15),
             ]);
         }

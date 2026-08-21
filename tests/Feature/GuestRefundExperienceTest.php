@@ -2,10 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\TrackController;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\OrderStatusService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 class GuestRefundExperienceTest extends TestCase
@@ -32,11 +38,11 @@ class GuestRefundExperienceTest extends TestCase
         $order = Order::factory()->create();
 
         try {
-            $controller = app(\App\Http\Controllers\TrackController::class);
-            $request = \Illuminate\Http\Request::create("/track/{$order->recovery_token}/cancel", 'POST');
-            $controller->cancel($order->recovery_token, $request, app(\App\Services\OrderStatusService::class));
+            $controller = app(TrackController::class);
+            $request = Request::create("/track/{$order->recovery_token}/cancel", 'POST');
+            $controller->cancel($order->recovery_token, $request, app(OrderStatusService::class));
             $this->fail('Expected exception not thrown');
-        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        } catch (HttpException $e) {
             $this->assertSame(403, $e->getStatusCode());
         } catch (\Throwable $e) {
             // If type error, the method itself doesn't throw — test via HTTP
@@ -53,15 +59,15 @@ class GuestRefundExperienceTest extends TestCase
             'payment_status' => 'pending',
         ]);
 
-        $controller = app(\App\Http\Controllers\TrackController::class);
-        $request = \Illuminate\Http\Request::create("/track/{$order->recovery_token}/cancel", 'POST', [
+        $controller = app(TrackController::class);
+        $request = Request::create("/track/{$order->recovery_token}/cancel", 'POST', [
             'reason' => 'test',
             'last4_hp' => substr(preg_replace('/[^0-9]/', '', $order->customer_phone), -4),
         ]);
         $request->setUserResolver(fn () => $user);
 
-        $response = $controller->cancel($order->recovery_token, $request, app(\App\Services\OrderStatusService::class));
+        $response = $controller->cancel($order->recovery_token, $request, app(OrderStatusService::class));
 
-        $this->assertTrue($response instanceof \Illuminate\Http\JsonResponse || $response instanceof \Illuminate\Http\RedirectResponse);
+        $this->assertTrue($response instanceof JsonResponse || $response instanceof RedirectResponse);
     }
 }

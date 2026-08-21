@@ -2,15 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
-use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\OutletPayable;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
-use App\Services\SettlementService;
+use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\WithTestOutlet;
@@ -20,9 +15,9 @@ class VariantCommerceFlowTest extends TestCase
     use RefreshDatabase;
     use WithTestOutlet;
 
-    private ProductFamily $family;
+    private ProductCategory $family;
 
-    private ProductVariant $variant;
+    private Product $variant;
 
     private Outlet $outlet;
 
@@ -34,23 +29,21 @@ class VariantCommerceFlowTest extends TestCase
 
         $this->product = Product::create([
             'name' => 'Domilk Premium Taste',
-            'slug' => 'domilk-premium-taste',
-            'unit' => 'liter',
-            'price' => 18000,
+            'selling_price' => 18000,
             'selling_price' => 25000,
             'center_price' => 18000,
             'is_active' => true,
         ]);
 
-        $this->family = ProductFamily::create([
+        $this->family = ProductCategory::create([
             'name' => 'Domilk Premium Taste',
             'brand' => 'Domilk',
             'description' => 'Susu premium rasa kopi',
             'is_active' => true,
         ]);
 
-        $this->variant = ProductVariant::create([
-            'product_family_id' => $this->family->id,
+        $this->variant = Product::create([
+            'product_category_id' => $this->family->id,
             'product_id' => $this->product->id,
             'name' => 'Coffee 1L',
             'flavor' => 'Coffee',
@@ -65,7 +58,7 @@ class VariantCommerceFlowTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,
             'product_id' => $this->product->id,
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'current_stock' => 50,
             'reserved_stock' => 0,
             'minimum_stock' => 5,
@@ -78,17 +71,17 @@ class VariantCommerceFlowTest extends TestCase
         $response->assertOk();
     }
 
-    public function test_variant_cart_stores_product_variant_id_in_session(): void
+    public function test_variant_cart_stores_product_id_in_session(): void
     {
         $this->post('/customer/checkout', [
             'items' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 3],
+                ['product_id' => $this->variant->id, 'quantity' => 3],
             ],
         ])->assertRedirect('/customer/checkout');
 
         $cart = session('checkout.cart');
         $this->assertCount(1, $cart);
-        $this->assertEquals($this->variant->id, $cart[0]['product_variant_id']);
+        $this->assertEquals($this->variant->id, $cart[0]['product_id']);
         $this->assertEquals(3, $cart[0]['quantity']);
     }
 
@@ -96,7 +89,7 @@ class VariantCommerceFlowTest extends TestCase
     {
         $this->withSession([
             'checkout.cart' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 1],
+                ['product_id' => $this->variant->id, 'quantity' => 1],
             ],
             'checkout.fulfillment' => [
                 'selected_outlet_id' => $this->outlet->id,
@@ -105,7 +98,7 @@ class VariantCommerceFlowTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/checkout/index')
-                ->where('draft.items.0.product_variant_id', $this->variant->id)
+                ->where('draft.items.0.product_id', $this->variant->id)
                 ->where('draft.items.0.name', 'Domilk Premium Taste')
                 ->where('draft.items.0.variant_name', 'Coffee 1L')
                 ->where('draft.items.0.price', 25000)
@@ -114,20 +107,20 @@ class VariantCommerceFlowTest extends TestCase
 
         $this->withSession([
             'checkout.cart' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 1],
+                ['product_id' => $this->variant->id, 'quantity' => 1],
             ],
             'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
         ])->get('/customer/checkout/customer')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/checkout/customer')
-                ->where('draft.items.0.product_variant_id', $this->variant->id)
+                ->where('draft.items.0.product_id', $this->variant->id)
                 ->where('draft.items.0.name', 'Domilk Premium Taste')
             );
 
         $this->withSession([
             'checkout.cart' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 2],
+                ['product_id' => $this->variant->id, 'quantity' => 2],
             ],
             'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
             'checkout.customer' => [
@@ -138,7 +131,7 @@ class VariantCommerceFlowTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/checkout/payment')
-                ->where('draft.items.0.product_variant_id', $this->variant->id)
+                ->where('draft.items.0.product_id', $this->variant->id)
                 ->where('summary.subtotal', 50000)
             );
     }
@@ -171,7 +164,7 @@ class VariantCommerceFlowTest extends TestCase
     {
         $this->post('/customer/checkout', [
             'items' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 1],
+                ['product_id' => $this->variant->id, 'quantity' => 1],
             ],
         ])->assertRedirect('/customer/checkout')
             ->assertSessionHas('checkout.cart')
@@ -186,7 +179,7 @@ class VariantCommerceFlowTest extends TestCase
             ],
             'fulfillment_type' => 'pickup',
         ])->assertRedirect('/customer/checkout/customer')
-            ->assertSessionHas('checkout.cart.0.product_variant_id', $this->variant->id);
+            ->assertSessionHas('checkout.cart.0.product_id', $this->product->id);
     }
 
     public function test_inactive_variant_rejected_at_checkout(): void
@@ -195,9 +188,9 @@ class VariantCommerceFlowTest extends TestCase
 
         $this->post('/customer/checkout', [
             'items' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 1],
+                ['product_id' => $this->variant->id, 'quantity' => 1],
             ],
-        ])->assertSessionHasErrors('items.0.product_variant_id');
+        ])->assertSessionHasErrors('items.0.product_id');
     }
 
     public function test_multiple_variants_in_single_order(): void

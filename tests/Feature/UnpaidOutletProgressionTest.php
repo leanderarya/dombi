@@ -2,10 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
 use App\Models\Order;
-use App\Models\User;
 use App\Models\Outlet as OutletModel;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

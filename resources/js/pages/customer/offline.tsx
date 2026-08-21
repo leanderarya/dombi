@@ -19,7 +19,7 @@ export default function Offline() {
             </p>
             <button
                 onClick={handleRetry}
-                className="rounded-xl bg-emerald-600 px-8 py-3 text-sm font-medium text-white active:scale-95 active:opacity-80 transition-all"
+                className="rounded-xl bg-emerald-600 px-8 py-3 text-sm font-medium text-white transition-all active:scale-95 active:opacity-80"
             >
                 Coba Lagi
             </button>

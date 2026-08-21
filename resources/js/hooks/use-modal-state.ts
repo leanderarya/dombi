@@ -1,7 +1,5 @@
 import { useCallback, useState } from 'react';
 
-type ModalKey = string | null;
-
 /**
  * Replace multiple boolean modal states with a single state.
  *

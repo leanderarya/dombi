@@ -53,6 +53,9 @@ class OrderController extends Controller
                                 ->orWhere('confirmation_expires_at', '>', now());
                         });
                 })
+                // Critical-first: pending_confirmation (belum expired) paling lama di atas,
+                // lalu order lain per created_at asc. Order yang menunggu konfirmasi terlama = paling urgent.
+                ->orderByRaw("CASE WHEN status = 'pending_confirmation' AND (confirmation_expires_at IS NULL OR confirmation_expires_at > NOW()) THEN 0 ELSE 1 END")
                 ->oldest(),
                 fn ($q) => $q->latest()
             )
@@ -87,9 +90,26 @@ class OrderController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet && $order->outlet_id === $outlet->id, 403);
 
+        $couriers = User::query()
+            ->where('role', 'courier')
+            ->where('is_active', true)
+            ->whereHas('courierProfile', fn ($query) => $query->availableForOutlet($outlet->id))
+            ->with('courierProfile')
+            ->withCount([
+                'courierDeliveries as active_deliveries_count' => fn ($query) => $query->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering']),
+            ])
+            ->orderBy('name')
+            ->get(['id', 'name', 'is_online'])
+            ->map(fn (User $courier) => [
+                'id' => $courier->id,
+                'name' => $courier->name,
+                'is_online' => $courier->is_online,
+                'at_capacity' => $courier->active_deliveries_count >= config('delivery.capacity.max_active_deliveries', 3),
+            ]);
+
         return Inertia::render('outlet/orders/show', [
             'order' => $order->load(['items.product', 'statusHistories.actor', 'delivery.courier']),
-            'couriers' => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'couriers' => $couriers,
             'rejectionReasons' => OrderStatusService::rejectionReasons(),
             'cancellationReasons' => OrderStatusService::outletCancellationReasons(),
         ]);
@@ -136,6 +156,8 @@ class OrderController extends Controller
             externalName: $request->validated('external_courier_name'),
             externalPhone: $request->validated('external_courier_phone'),
             externalPlate: $request->validated('external_plate_number'),
+            externalProvider: $request->validated('external_provider'),
+            externalReference: $request->validated('external_reference'),
             courierCost: $request->float('courier_cost'),
         );
 

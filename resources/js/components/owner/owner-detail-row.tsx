@@ -21,9 +21,9 @@ export default function OwnerDetailRow({
         <div
             className={`flex justify-between border-b border-border py-1 last:border-b-0 ${size === 'xs' ? 'text-xs' : 'text-sm'} ${danger ? 'text-red-700' : ''}`}
         >
-            <span className="text-text-muted">{label}</span>
+            <span className="text-text-muted tabular-nums">{label}</span>
             <span
-                className={`${align === 'right' ? 'text-right' : ''} ${bold ? 'font-semibold tabular-nums' : ''} ${danger ? 'text-red-700' : 'text-text'}`}
+                className={`${align === 'right' ? 'text-right' : ''} ${bold ? 'font-semibold' : ''} ${danger ? 'text-red-700' : 'text-text'} tabular-nums`}
             >
                 {value ?? '-'}
             </span>

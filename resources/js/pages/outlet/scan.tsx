@@ -158,7 +158,7 @@ export default function OutletScanPage() {
             <Head title="Scan QR Code" />
             <OutletPageShell>
                 {/* Scanner Area */}
-                <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-black">
+                <div className="overflow-hidden rounded-2xl border border-border bg-black">
                     <div
                         ref={containerRef}
                         id="qr-reader"
@@ -173,7 +173,7 @@ export default function OutletScanPage() {
                                     <div className="text-sm font-semibold text-white">
                                         Arahkan kamera ke QR code
                                     </div>
-                                    <div className="mt-1 text-xs text-text-subtle">
+                                    <div className="mt-1 text-xs text-white/60">
                                         QR code akan ter-scan otomatis
                                     </div>
                                 </div>
@@ -182,6 +182,7 @@ export default function OutletScanPage() {
                                     onClick={startScanner}
                                     icon={Camera}
                                     aria-label="Mulai scan QR code"
+                                    className="min-h-11"
                                 >
                                     Mulai Scan
                                 </Button>
@@ -206,7 +207,7 @@ export default function OutletScanPage() {
                         size="lg"
                         onClick={stopScanner}
                         icon={XCircle}
-                        className="mt-3 w-full"
+                        className="mt-3 min-h-11 w-full"
                         aria-label="Berhenti scan"
                     >
                         Berhenti Scan
@@ -258,6 +259,7 @@ export default function OutletScanPage() {
                             size="lg"
                             disabled={!manualCode.trim() || loading}
                             aria-label="Cari pesanan"
+                            className="min-h-11"
                         >
                             Cari
                         </Button>

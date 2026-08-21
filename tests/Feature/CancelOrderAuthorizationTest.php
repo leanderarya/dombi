@@ -88,6 +88,46 @@ class CancelOrderAuthorizationTest extends TestCase
         $response->assertRedirect();
     }
 
+    public function test_customer_cannot_cancel_with_hardcoded_frontend_reason(): void
+    {
+        $user = $this->createCustomerUser();
+        $outlet = $this->createOutlet();
+        $order = $this->createOrderForCustomer($user->customer, $outlet);
+
+        $response = $this->actingAs($user)->postJson("/customer/orders/{$order->id}/cancel", [
+            'reason' => 'Salah pesan',
+        ]);
+
+        $response->assertUnprocessable();
+    }
+
+    public function test_customer_cannot_cancel_lainnya_without_note(): void
+    {
+        $user = $this->createCustomerUser();
+        $outlet = $this->createOutlet();
+        $order = $this->createOrderForCustomer($user->customer, $outlet);
+
+        $response = $this->actingAs($user)->postJson("/customer/orders/{$order->id}/cancel", [
+            'reason' => 'Lainnya',
+        ]);
+
+        $response->assertUnprocessable();
+    }
+
+    public function test_customer_can_cancel_with_lainnya_and_note(): void
+    {
+        $user = $this->createCustomerUser();
+        $outlet = $this->createOutlet();
+        $order = $this->createOrderForCustomer($user->customer, $outlet);
+
+        $response = $this->actingAs($user)->postJson("/customer/orders/{$order->id}/cancel", [
+            'reason' => 'Lainnya',
+            'note' => 'Pesan salah produk',
+        ]);
+
+        $response->assertRedirect();
+    }
+
     public function test_customer_cannot_cancel_other_customer_order(): void
     {
         $user = $this->createCustomerUser();

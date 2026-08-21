@@ -1,9 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import {
-    AlertTriangle,
-    CheckCircle,
     ChevronDown,
-    ChevronUp,
     ClipboardCheck,
     Package,
     Plus,
@@ -14,10 +11,14 @@ import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import RestockCreateDialog from '@/components/outlet/restock-create-dialog';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
+import CollapsibleCard from '@/components/ui/collapsible-card';
 import Dialog from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
 import RestockStatusBadge from '@/components/ui/restock-status-badge';
+import SectionCard from '@/components/ui/section-card';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 import OutletLayout from '@/layouts/outlet-layout';
 
 export default function OutletInventory({
@@ -29,6 +30,7 @@ export default function OutletInventory({
     recentRestocks = [] as any[],
 }: any) {
     const [showRestock, setShowRestock] = useState(false);
+    const { loading } = useInertiaLoading();
     const [search, setSearch] = useState('');
     const [detailItem, setDetailItem] = useState<any>(null);
     const familyGroups = new Map<number, { family: any; items: any[] }>();
@@ -130,236 +132,229 @@ export default function OutletInventory({
         ([id]) => familyHealth.get(id) === 'success',
     );
 
-    const [showHealthy, setShowHealthy] = useState(false);
-
     return (
         <OutletLayout title="Inventaris" subtitle={outlet.name}>
             <Head title="Inventaris" />
             <OutletPageShell>
-                {/* Summary Bar + Restock CTA */}
-                <div className="flex items-center gap-3">
-                    <div className="flex flex-1 items-center divide-x divide-border rounded-xl border border-border bg-white">
-                        <SummaryCell
-                            label="Kritis"
-                            value={criticalFamilies.length}
-                            dot="bg-red-400"
-                        />
-                        <SummaryCell
-                            label="Rendah"
-                            value={lowStockFamilies.length}
-                            dot="bg-amber-400"
-                        />
-                        <SummaryCell
-                            label="Sehat"
-                            value={healthyFamilies.length}
-                            dot="bg-emerald-400"
-                        />
-                    </div>
-                    <Button
-                        size="lg"
-                        onClick={() => setShowRestock(true)}
-                        icon={Plus}
-                        title="Request Restock"
-                        className="h-12 w-12 shrink-0 !px-0"
-                    />
-                </div>
-
-                {/* Search */}
-                <div className="relative">
-                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-subtle" />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Cari produk..."
-                        className="w-full rounded-xl border border-border py-2.5 pr-4 pl-9 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
-                    />
-                </div>
-
-                {/* Critical */}
-                {filteredCriticalFamilies.length > 0 && (
-                    <div>
-                        <div className="mb-3 flex items-center gap-2">
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                            <h2 className="text-xs font-semibold tracking-wider text-text-subtle uppercase">
-                                Stok Kritis
-                            </h2>
-                            <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
-                                {filteredCriticalFamilies.length}
-                            </span>
-                        </div>
-                        <div className="space-y-2">
-                            {filteredCriticalFamilies.map(
-                                ([familyId, group]) => (
-                                    <FamilyGroup
-                                        key={familyId}
-                                        group={group}
-                                        centerStocks={centerStocks}
-                                        activeRestocks={activeRestocks}
-                                        onDetail={setDetailItem}
-                                    />
-                                ),
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Low Stock */}
-                {filteredLowStockFamilies.length > 0 && (
-                    <div>
-                        <div className="mb-3 flex items-center gap-2">
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                            <h2 className="text-xs font-semibold tracking-wider text-text-subtle uppercase">
-                                Stok Rendah
-                            </h2>
-                            <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
-                                {filteredLowStockFamilies.length}
-                            </span>
-                        </div>
-                        <div className="space-y-2">
-                            {filteredLowStockFamilies.map(
-                                ([familyId, group]) => (
-                                    <FamilyGroup
-                                        key={familyId}
-                                        group={group}
-                                        centerStocks={centerStocks}
-                                        activeRestocks={activeRestocks}
-                                        onDetail={setDetailItem}
-                                    />
-                                ),
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Healthy — collapsed */}
-                {filteredHealthyFamilies.length > 0 && (
-                    <div>
-                        <button
-                            type="button"
-                            onClick={() => setShowHealthy(!showHealthy)}
-                            className="flex min-h-11 w-full items-center justify-between rounded-xl border border-border bg-white px-4 text-left transition-colors active:bg-surface-muted"
-                        >
-                            <div className="flex items-center gap-2">
-                                <CheckCircle className="h-4 w-4 text-text-muted" />
-                                <span className="text-sm font-medium text-text">
-                                    Stok Sehat
-                                </span>
-                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
-                                    {filteredHealthyFamilies.length}
-                                </span>
+                {loading ? (
+                    <SkeletonPage showFilters />
+                ) : (
+                    <>
+                        {/* Summary Bar + Restock CTA */}
+                        <div className="flex items-center gap-3">
+                            <div className="flex flex-1 items-center divide-x divide-border rounded-xl border border-border bg-white">
+                                <SummaryCell
+                                    label="Kritis"
+                                    value={criticalFamilies.length}
+                                    dot="bg-red-400"
+                                />
+                                <SummaryCell
+                                    label="Rendah"
+                                    value={lowStockFamilies.length}
+                                    dot="bg-amber-400"
+                                />
+                                <SummaryCell
+                                    label="Sehat"
+                                    value={healthyFamilies.length}
+                                    dot="bg-emerald-400"
+                                />
                             </div>
-                            {showHealthy ? (
-                                <ChevronUp className="h-4 w-4 text-text-subtle" />
-                            ) : (
-                                <ChevronDown className="h-4 w-4 text-text-subtle" />
-                            )}
-                        </button>
-                        {showHealthy && (
-                            <div className="mt-2 space-y-2">
-                                {filteredHealthyFamilies.map(
-                                    ([familyId, group]) => (
-                                        <FamilyGroup
-                                            key={familyId}
-                                            group={group}
-                                            centerStocks={centerStocks}
-                                            activeRestocks={activeRestocks}
-                                            onDetail={setDetailItem}
-                                        />
-                                    ),
-                                )}
+                            <Button
+                                size="lg"
+                                onClick={() => setShowRestock(true)}
+                                icon={Plus}
+                                title="Request Restock"
+                                className="h-12 w-12 shrink-0 !px-0"
+                            />
+                        </div>
+
+                        {/* Search */}
+                        <div className="relative">
+                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Cari produk..."
+                                style={{ paddingLeft: 40 }}
+                                className="w-full rounded-xl border border-border py-2.5 pr-4 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
+                            />
+                        </div>
+
+                        {/* Critical */}
+                        {filteredCriticalFamilies.length > 0 && (
+                            <div>
+                                <div className="mb-3 flex items-center gap-2">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                                    <h2 className="text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                        Stok Kritis
+                                    </h2>
+                                    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
+                                        {filteredCriticalFamilies.length}
+                                    </span>
+                                </div>
+                                <div className="space-y-2">
+                                    {filteredCriticalFamilies.map(
+                                        ([familyId, group]) => (
+                                            <FamilyGroup
+                                                key={familyId}
+                                                group={group}
+                                                centerStocks={centerStocks}
+                                                activeRestocks={activeRestocks}
+                                                onDetail={setDetailItem}
+                                            />
+                                        ),
+                                    )}
+                                </div>
                             </div>
                         )}
-                    </div>
-                )}
 
-                {/* No-family items */}
-                {filteredNoFamilyItems.length > 0 && (
-                    <div>
-                        <h2 className="mb-3 text-xs font-semibold tracking-wider text-text-subtle uppercase">
-                            Lainnya
-                        </h2>
-                        <div className="space-y-2">
-                            {filteredNoFamilyItems.map((item: any) => (
-                                <InventoryRow
-                                    key={item.id}
-                                    item={item}
-                                    centerStocks={centerStocks}
-                                    activeRestock={
-                                        activeRestocks[
-                                            item.product_variant_id
-                                        ]
-                                    }
-                                    onDetail={setDetailItem}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* No results */}
-                {search && !hasSearchResults && (
-                    <EmptyState
-                        icon={<Search className="h-8 w-8 text-text-subtle" />}
-                        title="Tidak ditemukan"
-                        description={`Tidak ada produk yang cocok dengan "${search}".`}
-                    />
-                )}
-
-                {/* Empty State */}
-                {!search && inventories.length === 0 && (
-                    <EmptyState
-                        icon={<Package className="h-8 w-8 text-text-subtle" />}
-                        title="Belum ada inventaris"
-                        description="Inventaris akan muncul setelah produk ditambahkan ke outlet."
-                        action={{
-                            label: 'Request Restock',
-                            onClick: () => setShowRestock(true),
-                        }}
-                    />
-                )}
-
-                {recentRestocks.length > 0 && (
-                    <div className="mt-6 rounded-xl border border-border bg-white p-4">
-                        <div className="mb-3 flex items-center justify-between">
-                            <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">
-                                Riwayat Restock
-                            </div>
-                            <Link
-                                href="/outlet/restocks"
-                                className="text-[11px] font-semibold text-primary"
-                            >
-                                Lihat Semua →
-                            </Link>
-                        </div>
-                        <div className="space-y-2">
-                            {recentRestocks.slice(0, 5).map((r: any) => (
-                                <Link
-                                    key={r.id}
-                                    href={`/outlet/restocks/${r.id}`}
-                                    className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-surface-muted"
-                                >
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-medium">
-                                                #{r.id}
-                                            </span>
-                                            <RestockStatusBadge
-                                                status={r.status}
+                        {/* Low Stock */}
+                        {filteredLowStockFamilies.length > 0 && (
+                            <div>
+                                <div className="mb-3 flex items-center gap-2">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                                    <h2 className="text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                        Stok Rendah
+                                    </h2>
+                                    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
+                                        {filteredLowStockFamilies.length}
+                                    </span>
+                                </div>
+                                <div className="space-y-2">
+                                    {filteredLowStockFamilies.map(
+                                        ([familyId, group]) => (
+                                            <FamilyGroup
+                                                key={familyId}
+                                                group={group}
+                                                centerStocks={centerStocks}
+                                                activeRestocks={activeRestocks}
+                                                onDetail={setDetailItem}
                                             />
-                                        </div>
-                                        <div className="mt-0.5 text-[11px] text-text-subtle">
-                                            {new Date(
-                                                r.created_at,
-                                            ).toLocaleDateString('id-ID')}{' '}
-                                            · {r.items?.length ?? 0} item
-                                        </div>
-                                    </div>
-                                    <ChevronDown className="h-4 w-4 rotate-[-90deg] text-text-subtle" />
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
+                                        ),
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Healthy — collapsed */}
+                        {filteredHealthyFamilies.length > 0 && (
+                            <CollapsibleCard
+                                label="Stok Sehat"
+                                badge={`${filteredHealthyFamilies.length}`}
+                                defaultOpen={false}
+                            >
+                                <div className="space-y-2">
+                                    {filteredHealthyFamilies.map(
+                                        ([familyId, group]) => (
+                                            <FamilyGroup
+                                                key={familyId}
+                                                group={group}
+                                                centerStocks={centerStocks}
+                                                activeRestocks={activeRestocks}
+                                                onDetail={setDetailItem}
+                                            />
+                                        ),
+                                    )}
+                                </div>
+                            </CollapsibleCard>
+                        )}
+
+                        {/* No-family items */}
+                        {filteredNoFamilyItems.length > 0 && (
+                            <div>
+                                <h2 className="mb-3 text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                    Lainnya
+                                </h2>
+                                <div className="space-y-2">
+                                    {filteredNoFamilyItems.map((item: any) => (
+                                        <InventoryRow
+                                            key={item.id}
+                                            item={item}
+                                            centerStocks={centerStocks}
+                                            activeRestock={
+                                                activeRestocks[item.product_id]
+                                            }
+                                            onDetail={setDetailItem}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* No results */}
+                        {search && !hasSearchResults && (
+                            <EmptyState
+                                icon={
+                                    <Search className="h-8 w-8 text-text-subtle" />
+                                }
+                                title="Tidak ditemukan"
+                                description={`Tidak ada produk yang cocok dengan "${search}".`}
+                            />
+                        )}
+
+                        {/* Empty State */}
+                        {!search && inventories.length === 0 && (
+                            <EmptyState
+                                icon={
+                                    <Package className="h-8 w-8 text-text-subtle" />
+                                }
+                                title="Belum ada inventaris"
+                                description="Inventaris akan muncul setelah produk ditambahkan ke outlet."
+                                action={{
+                                    label: 'Request Restock',
+                                    onClick: () => setShowRestock(true),
+                                }}
+                            />
+                        )}
+
+                        {recentRestocks.length > 0 && (
+                            <SectionCard
+                                label="Riwayat Restock"
+                                labelRight={
+                                    <Link
+                                        href="/outlet/restocks"
+                                        className="text-[11px] font-semibold text-primary"
+                                    >
+                                        Lihat Semua →
+                                    </Link>
+                                }
+                            >
+                                <div className="mt-2 space-y-2">
+                                    {recentRestocks
+                                        .slice(0, 5)
+                                        .map((r: any) => (
+                                            <Link
+                                                key={r.id}
+                                                href={`/outlet/restocks/${r.id}`}
+                                                className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-surface-muted"
+                                            >
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-medium">
+                                                            #{r.id}
+                                                        </span>
+                                                        <RestockStatusBadge
+                                                            status={r.status}
+                                                        />
+                                                    </div>
+                                                    <div className="mt-0.5 text-[11px] text-text-subtle">
+                                                        {new Date(
+                                                            r.created_at,
+                                                        ).toLocaleDateString(
+                                                            'id-ID',
+                                                        )}{' '}
+                                                        · {r.items?.length ?? 0}{' '}
+                                                        item
+                                                    </div>
+                                                </div>
+                                                <ChevronDown className="h-4 w-4 rotate-[-90deg] text-text-subtle" />
+                                            </Link>
+                                        ))}
+                                </div>
+                            </SectionCard>
+                        )}
+                    </>
                 )}
             </OutletPageShell>
 
@@ -398,17 +393,19 @@ function VariantDetailSheet({
     open: boolean;
     onClose: () => void;
 }) {
-    if (!item) return null;
+    if (!item) {
+        return null;
+    }
+
     const available = item.current_stock - item.reserved_stock;
-    const center = centerStocks[item.product_variant_id] ?? 0;
-    const active = activeRestocks[item.product_variant_id];
+    const center = centerStocks[item.product_id] ?? 0;
+    const active = activeRestocks[item.product_id];
     const history = recentRestocks
         .filter((r: any) =>
-            r.items?.some(
-                (i: any) => i.product_variant_id === item.product_variant_id,
-            ),
+            r.items?.some((i: any) => i.product_id === item.product_id),
         )
         .slice(0, 3);
+
     return (
         <BottomSheet
             open={open}
@@ -487,7 +484,17 @@ function VariantDetailSheet({
     );
 }
 
-function FamilyGroup({ group, centerStocks = {}, activeRestocks = {}, onDetail }: { group: { family: any; items: any[] }; centerStocks?: Record<string | number, number>; activeRestocks?: Record<string | number, any>; onDetail?: (item: any) => void }) {
+function FamilyGroup({
+    group,
+    centerStocks = {},
+    activeRestocks = {},
+    onDetail,
+}: {
+    group: { family: any; items: any[] };
+    centerStocks?: Record<string | number, number>;
+    activeRestocks?: Record<string | number, any>;
+    onDetail?: (item: any) => void;
+}) {
     return (
         <div className="overflow-hidden rounded-xl border border-border bg-white">
             <div className="border-b border-border bg-surface-muted px-4 py-2">
@@ -497,7 +504,14 @@ function FamilyGroup({ group, centerStocks = {}, activeRestocks = {}, onDetail }
             </div>
             <div className="divide-y divide-border">
                 {group.items.map((item: any) => (
-                    <InventoryRow key={item.id} item={item} compact centerStocks={centerStocks} activeRestock={activeRestocks[item.product_variant_id]} onDetail={onDetail} />
+                    <InventoryRow
+                        key={item.id}
+                        item={item}
+                        compact
+                        centerStocks={centerStocks}
+                        activeRestock={activeRestocks[item.product_id]}
+                        onDetail={onDetail}
+                    />
                 ))}
             </div>
         </div>
@@ -542,7 +556,19 @@ function SummaryCell({
     );
 }
 
-function InventoryRow({ item, compact, centerStocks = {}, activeRestock, onDetail }: { item: any; compact?: boolean; centerStocks?: Record<string | number, number>; activeRestock?: any; onDetail?: (item: any) => void }) {
+function InventoryRow({
+    item,
+    compact,
+    centerStocks = {},
+    activeRestock,
+    onDetail,
+}: {
+    item: any;
+    compact?: boolean;
+    centerStocks?: Record<string | number, number>;
+    activeRestock?: any;
+    onDetail?: (item: any) => void;
+}) {
     const [showOpname, setShowOpname] = useState(false);
     const available = item.current_stock - item.reserved_stock;
     const displayName = item.variant?.name ?? item.product?.name ?? '-';
@@ -571,24 +597,25 @@ function InventoryRow({ item, compact, centerStocks = {}, activeRestock, onDetai
                         <span>
                             Tersedia: {available} · Min: {item.minimum_stock}
                         </span>
-                        {centerStocks[item.product_variant_id] !==
-                            undefined && (
+                        {centerStocks[item.product_id] !== undefined && (
                             <span
                                 className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                                    (centerStocks[item.product_variant_id] ??
-                                        0) <= 0
+                                    (centerStocks[item.product_id] ?? 0) <= 0
                                         ? 'bg-red-50 text-red-600'
                                         : 'bg-surface-muted text-text-muted'
                                 }`}
                             >
-                                Pusat:{' '}
-                                {centerStocks[item.product_variant_id] ?? 0}
+                                Pusat: {centerStocks[item.product_id] ?? 0}
                             </span>
                         )}
                         {activeRestock && (
                             <span className="flex items-center gap-1">
-                                <RestockStatusBadge status={activeRestock.status} />
-                                <span className="text-[10px] text-text-subtle">· {activeRestock.requested_qty} pcs</span>
+                                <RestockStatusBadge
+                                    status={activeRestock.status}
+                                />
+                                <span className="text-[10px] text-text-subtle">
+                                    · {activeRestock.requested_qty} pcs
+                                </span>
                             </span>
                         )}
                     </div>
@@ -628,7 +655,7 @@ function OpnameSheet({
     displayName: string;
 }) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        product_variant_id: item.product_variant_id ?? item.variant_id ?? '',
+        product_id: item.product_id ?? item.variant_id ?? '',
         actual_count: '',
         notes: '',
     });

@@ -110,7 +110,7 @@ export default function OwnerFilterCard({
                         placeholder={searchPlaceholder}
                         value={searchValue ?? ''}
                         onChange={(e) => onSearch?.(e.target.value)}
-                        className="w-[140px]"
+                        className="w-[200px]"
                         icon={Search}
                     />
                 )}

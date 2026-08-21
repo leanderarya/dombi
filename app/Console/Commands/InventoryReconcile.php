@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\OutletInventory;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +15,7 @@ class InventoryReconcile extends Command
         {--dry-run : Report only, no modifications}
         {--outlet= : Only check specific outlet ID}';
 
-    protected $description = 'Reconcile inventory: verify center stock + outlet stock against StockMovement history (variant-aware)';
+    protected $description = 'Reconcile inventory: verify center stock + outlet stock against StockMovement history';
 
     private int $centerChecked = 0;
 
@@ -54,40 +54,37 @@ class InventoryReconcile extends Command
             : self::SUCCESS;
     }
 
-    // ─── CENTER STOCK RECONCILIATION ──────────────────────────────
-
     private function reconcileCenterStock(bool $fix): void
     {
         $this->info('Checking center inventory...');
 
-        $variants = ProductVariant::query()
+        $products = Product::query()
             ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
-        $bar = $this->output->createProgressBar($variants->count());
+        $bar = $this->output->createProgressBar($products->count());
         $bar->start();
 
-        foreach ($variants as $variant) {
+        foreach ($products as $product) {
             $bar->advance();
             $this->centerChecked++;
 
-            $expected = $this->computeExpectedCenterStock($variant->id);
+            $expected = $this->computeExpectedCenterStock($product->id);
 
-            // Skip if no center movements exist (stored value is baseline)
             if ($expected === null) {
                 continue;
             }
 
-            $actual = (int) $variant->center_stock;
+            $actual = (int) $product->center_stock;
             $drift = $actual - $expected;
 
             if ($drift !== 0) {
                 $this->centerDrifted++;
                 $this->drifts[] = [
                     'location' => 'CENTER',
-                    'variant' => $variant->full_name,
-                    'variant_id' => $variant->id,
+                    'product' => $product->full_display_name,
+                    'product_id' => $product->id,
                     'outlet_id' => null,
                     'expected' => $expected,
                     'actual' => $actual,
@@ -95,7 +92,7 @@ class InventoryReconcile extends Command
                 ];
 
                 if ($fix) {
-                    $this->fixCenterStock($variant, $expected);
+                    $this->fixCenterStock($product, $expected);
                     $this->fixed++;
                 }
             }
@@ -105,15 +102,17 @@ class InventoryReconcile extends Command
         $this->newLine();
     }
 
-    private function computeExpectedCenterStock(int $variantId): ?int
+    private function computeExpectedCenterStock(int $productId): ?int
     {
         $hasMovements = StockMovement::query()
-            ->where('product_variant_id', $variantId)
+            ->where('product_id', $productId)
             ->where(function ($q) {
-                $q->where(function ($q2) {
-                    $q2->whereNull('outlet_id')
-                        ->whereIn('type', ['initial_stock', 'stock_adjustment']);
-                })->orWhereIn('type', ['distribution_out', 'return_in', 'exchange_out']);
+                $q->whereNull('outlet_id')
+                    ->whereIn('type', ['initial_stock', 'stock_adjustment']);
+            })
+            ->orWhere(function ($q) use ($productId) {
+                $q->where('product_id', $productId)
+                    ->whereIn('type', ['distribution_out', 'return_in', 'exchange_out']);
             })
             ->where(function ($q) {
                 $q->whereNull('notes')->orWhere('notes', 'NOT LIKE', '%reconciliation correction%');
@@ -125,7 +124,7 @@ class InventoryReconcile extends Command
         }
 
         $baseline = (int) StockMovement::query()
-            ->where('product_variant_id', $variantId)
+            ->where('product_id', $productId)
             ->whereNull('outlet_id')
             ->whereIn('type', ['initial_stock', 'stock_adjustment'])
             ->where(function ($q) {
@@ -134,7 +133,7 @@ class InventoryReconcile extends Command
             ->sum('quantity');
 
         $transfers = (int) StockMovement::query()
-            ->where('product_variant_id', $variantId)
+            ->where('product_id', $productId)
             ->whereIn('type', ['distribution_out', 'return_in', 'exchange_out'])
             ->where(function ($q) {
                 $q->whereNull('notes')->orWhere('notes', 'NOT LIKE', '%reconciliation correction%');
@@ -144,17 +143,17 @@ class InventoryReconcile extends Command
         return max(0, $baseline + $transfers);
     }
 
-    private function fixCenterStock(ProductVariant $variant, int $expected): void
+    private function fixCenterStock(Product $product, int $expected): void
     {
-        DB::transaction(function () use ($variant, $expected) {
-            $variant = ProductVariant::query()->lockForUpdate()->findOrFail($variant->id);
+        DB::transaction(function () use ($product, $expected) {
+            $product = Product::query()->lockForUpdate()->findOrFail($product->id);
 
-            $before = (int) $variant->center_stock;
-            $variant->update(['center_stock' => $expected]);
+            $before = (int) $product->center_stock;
+            $product->update(['center_stock' => $expected]);
 
             StockMovement::create([
                 'outlet_id' => null,
-                'product_variant_id' => $variant->id,
+                'product_id' => $product->id,
                 'type' => 'stock_adjustment',
                 'quantity' => $expected - $before,
                 'before_stock' => $before,
@@ -167,16 +166,14 @@ class InventoryReconcile extends Command
         });
     }
 
-    // ─── OUTLET STOCK RECONCILIATION ──────────────────────────────
-
     private function reconcileOutletStock(bool $fix, ?int $outletFilter): void
     {
         $this->info('Checking outlet inventory...');
 
         $query = OutletInventory::query()
-            ->with('variant')
+            ->with('product')
             ->orderBy('outlet_id')
-            ->orderBy('product_variant_id');
+            ->orderBy('product_id');
 
         if ($outletFilter) {
             $query->where('outlet_id', $outletFilter);
@@ -193,12 +190,12 @@ class InventoryReconcile extends Command
 
             $expectedCurrent = $this->computeExpectedOutletStock(
                 $inventory->outlet_id,
-                $inventory->product_variant_id
+                $inventory->product_id
             );
 
             $expectedReserved = $this->computeExpectedReservedStock(
                 $inventory->outlet_id,
-                $inventory->product_variant_id
+                $inventory->product_id
             );
 
             $currentDrift = $inventory->current_stock - $expectedCurrent;
@@ -206,12 +203,12 @@ class InventoryReconcile extends Command
 
             if ($currentDrift !== 0 || $reservedDrift !== 0) {
                 $this->outletDrifted++;
-                $variantName = $inventory->variant?->full_name ?? "variant #{$inventory->product_variant_id}";
+                $productName = $inventory->product?->full_display_name ?? "product #{$inventory->product_id}";
 
                 $this->drifts[] = [
                     'location' => "OUTLET #{$inventory->outlet_id}",
-                    'variant' => $variantName,
-                    'variant_id' => $inventory->product_variant_id,
+                    'product' => $productName,
+                    'product_id' => $inventory->product_id,
                     'outlet_id' => $inventory->outlet_id,
                     'expected_current' => $expectedCurrent,
                     'actual_current' => $inventory->current_stock,
@@ -233,11 +230,11 @@ class InventoryReconcile extends Command
         $this->newLine();
     }
 
-    private function computeExpectedOutletStock(int $outletId, int $variantId): int
+    private function computeExpectedOutletStock(int $outletId, int $productId): int
     {
         $movements = StockMovement::query()
             ->where('outlet_id', $outletId)
-            ->where('product_variant_id', $variantId)
+            ->where('product_id', $productId)
             ->whereIn('type', [
                 'initial_stock',
                 'stock_adjustment',
@@ -262,12 +259,12 @@ class InventoryReconcile extends Command
         return max(0, $stock);
     }
 
-    private function computeExpectedReservedStock(int $outletId, int $variantId): int
+    private function computeExpectedReservedStock(int $outletId, int $productId): int
     {
         return (int) DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.outlet_id', $outletId)
-            ->where('order_items.product_variant_id', $variantId)
+            ->where('order_items.product_id', $productId)
             ->whereIn('orders.status', [
                 'pending_confirmation',
                 'confirmed',
@@ -294,7 +291,7 @@ class InventoryReconcile extends Command
 
             StockMovement::create([
                 'outlet_id' => $inventory->outlet_id,
-                'product_variant_id' => $inventory->product_variant_id,
+                'product_id' => $inventory->product_id,
                 'type' => 'stock_adjustment',
                 'quantity' => $expectedCurrent - $beforeCurrent,
                 'before_stock' => $beforeCurrent,
@@ -307,8 +304,6 @@ class InventoryReconcile extends Command
         });
     }
 
-    // ─── ROOT CAUSE ANALYSIS ──────────────────────────────────────
-
     private function analyzeRootCause(OutletInventory $inventory, int $expectedCurrent, int $expectedReserved): string
     {
         $currentDrift = $inventory->current_stock - $expectedCurrent;
@@ -316,21 +311,18 @@ class InventoryReconcile extends Command
 
         $causes = [];
 
-        // Check for movements without product_variant_id (legacy)
         $legacyMovements = StockMovement::query()
             ->where('outlet_id', $inventory->outlet_id)
-            ->where('product_id', $inventory->product_id)
-            ->whereNull('product_variant_id')
+            ->whereNull('product_id')
             ->count();
 
         if ($legacyMovements > 0) {
-            $causes[] = "{$legacyMovements} legacy movement(s) without variant ID";
+            $causes[] = "{$legacyMovements} legacy movement(s) without product ID";
         }
 
-        // Check for duplicate movements (same reference)
         $duplicateRefs = StockMovement::query()
             ->where('outlet_id', $inventory->outlet_id)
-            ->where('product_variant_id', $inventory->product_variant_id)
+            ->where('product_id', $inventory->product_id)
             ->select('reference_type', 'reference_id', 'type')
             ->groupBy('reference_type', 'reference_id', 'type')
             ->havingRaw('COUNT(*) > 1')
@@ -340,17 +332,15 @@ class InventoryReconcile extends Command
             $causes[] = "{$duplicateRefs} duplicate movement reference(s)";
         }
 
-        // Check for missing reserved adjustments
         if ($reservedDrift > 0) {
             $causes[] = 'Reserved stock higher than expected - possible missing cancellation';
         } elseif ($reservedDrift < 0) {
             $causes[] = 'Reserved stock lower than expected - possible over-release';
         }
 
-        // Check for manual stock adjustments
         $adjustments = StockMovement::query()
             ->where('outlet_id', $inventory->outlet_id)
-            ->where('product_variant_id', $inventory->product_variant_id)
+            ->where('product_id', $inventory->product_id)
             ->where('type', 'stock_adjustment')
             ->count();
 
@@ -365,22 +355,20 @@ class InventoryReconcile extends Command
         return implode('; ', $causes);
     }
 
-    // ─── CONSERVATION AUDIT ───────────────────────────────────────
-
     private function auditConservation(?int $outletFilter): void
     {
         $this->info('Checking center + outlet conservation...');
 
-        $variants = ProductVariant::query()
+        $products = Product::query()
             ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
-        foreach ($variants as $variant) {
-            $centerStock = (int) $variant->center_stock;
+        foreach ($products as $product) {
+            $centerStock = (int) $product->center_stock;
 
             $outletQuery = OutletInventory::query()
-                ->where('product_variant_id', $variant->id);
+                ->where('product_id', $product->id);
 
             if ($outletFilter) {
                 $outletQuery->where('outlet_id', $outletFilter);
@@ -388,14 +376,13 @@ class InventoryReconcile extends Command
 
             $outletStock = (int) $outletQuery->sum('current_stock');
 
-            // Expected total from movements
-            $expectedTotal = $this->computeTotalExpectedStock($variant->id, $outletFilter);
+            $expectedTotal = $this->computeTotalExpectedStock($product->id, $outletFilter);
             $actualTotal = $centerStock + $outletStock;
 
             if ($expectedTotal !== null && $actualTotal !== $expectedTotal) {
                 $this->conservationViolations[] = [
-                    'variant' => $variant->full_name,
-                    'variant_id' => $variant->id,
+                    'product' => $product->full_display_name,
+                    'product_id' => $product->id,
                     'center' => $centerStock,
                     'outlet' => $outletStock,
                     'actual_total' => $actualTotal,
@@ -406,10 +393,10 @@ class InventoryReconcile extends Command
         }
     }
 
-    private function computeTotalExpectedStock(int $variantId, ?int $outletFilter): ?int
+    private function computeTotalExpectedStock(int $productId, ?int $outletFilter): ?int
     {
         $hasMovements = StockMovement::query()
-            ->where('product_variant_id', $variantId)
+            ->where('product_id', $productId)
             ->where(function ($q) {
                 $q->whereNull('notes')->orWhere('notes', 'NOT LIKE', '%reconciliation correction%');
             })
@@ -420,7 +407,7 @@ class InventoryReconcile extends Command
         }
 
         $query = StockMovement::query()
-            ->where('product_variant_id', $variantId)
+            ->where('product_id', $productId)
             ->where(function ($q) {
                 $q->whereNull('notes')->orWhere('notes', 'NOT LIKE', '%reconciliation correction%');
             })
@@ -436,23 +423,19 @@ class InventoryReconcile extends Command
         return max(0, (int) $query->sum('quantity'));
     }
 
-    // ─── REPORT ───────────────────────────────────────────────────
-
     private function printReport(bool $fix): void
     {
         $this->newLine();
         $this->info('=== RECONCILIATION REPORT ===');
         $this->newLine();
 
-        // Center
         $this->info('CENTER INVENTORY');
         $this->info('----------------');
-        $this->info("Checked: {$this->centerChecked} variants");
+        $this->info("Checked: {$this->centerChecked} products");
         $this->info('Healthy: '.($this->centerChecked - $this->centerDrifted));
         $this->line("Drifted: <comment>{$this->centerDrifted}</comment>");
         $this->newLine();
 
-        // Outlet
         $this->info('OUTLET INVENTORY');
         $this->info('----------------');
         $this->info("Checked: {$this->outletChecked} inventories");
@@ -460,18 +443,16 @@ class InventoryReconcile extends Command
         $this->line("Drifted: <comment>{$this->outletDrifted}</comment>");
         $this->newLine();
 
-        // Drift details
         if (! empty($this->drifts)) {
             $this->warn('DRIFT DETECTED');
             $this->warn('--------------');
 
             foreach ($this->drifts as $d) {
                 $this->newLine();
-                $this->line("  <comment>{$d['variant']}</comment>");
+                $this->line("  <comment>{$d['product']}</comment>");
                 $this->line("  Location: {$d['location']}");
 
                 if (isset($d['expected_current'])) {
-                    // Outlet drift
                     $this->table(
                         ['Field', 'Expected', 'Actual', 'Drift'],
                         [
@@ -483,7 +464,6 @@ class InventoryReconcile extends Command
                         $this->line("  Likely cause: <fg=red>{$d['root_cause']}</>");
                     }
                 } else {
-                    // Center drift
                     $this->table(
                         ['Field', 'Expected', 'Actual', 'Drift'],
                         [
@@ -494,7 +474,6 @@ class InventoryReconcile extends Command
             }
         }
 
-        // Conservation
         if (! empty($this->conservationViolations)) {
             $this->newLine();
             $this->error('CONSERVATION VIOLATIONS');
@@ -502,13 +481,12 @@ class InventoryReconcile extends Command
 
             foreach ($this->conservationViolations as $cv) {
                 $this->newLine();
-                $this->line("  <comment>{$cv['variant']}</comment>");
+                $this->line("  <comment>{$cv['product']}</comment>");
                 $this->line("  Center: {$cv['center']}  Outlet: {$cv['outlet']}  Total: {$cv['actual_total']}");
                 $this->line("  Expected total: {$cv['expected_total']}  Drift: <fg=red>{$cv['drift']}</>");
             }
         }
 
-        // Summary
         $this->newLine();
         $totalDrift = $this->centerDrifted + $this->outletDrifted;
         $conservation = count($this->conservationViolations);

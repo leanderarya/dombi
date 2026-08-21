@@ -1,7 +1,7 @@
 import { router, useForm } from '@inertiajs/react';
-import { Bike, Car, MapPin, Package, Search, Truck, Users } from 'lucide-react';
+import { Bike, Car, Package, Truck, Users } from 'lucide-react';
 import { useState } from 'react';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +15,7 @@ import {
 import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import Pagination from '@/components/ui/pagination';
-import StatusBadge from '@/components/ui/status-badge';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 const vehicleTypes = [
@@ -38,6 +38,10 @@ export default function CouriersIndex({
         vehicle_type: '' as '' | 'motorcycle' | 'bicycle' | 'car',
         vehicle_plate: '',
     });
+
+    if (!couriers) {
+        return <SkeletonPage />;
+    }
 
     const filtered = search
         ? couriers.data.filter(
@@ -67,47 +71,74 @@ export default function CouriersIndex({
                 </Button>
             }
         >
-            <div className="space-y-4">
-                <OwnerKpiStrip
-                    cols={4}
-                    items={[
-                        {
-                            label: 'Total Kurir',
-                            value: stats.total,
-                            icon: <Users className="h-5 w-5" />,
-                            accentColor: '#2563EB',
-                        },
-                        {
-                            label: 'Online',
-                            value: stats.online,
-                            icon: <Truck className="h-5 w-5" />,
-                            accentColor: '#16A34A',
-                        },
-                        {
-                            label: 'Lokasi Aktif',
-                            value: stats.active_location,
-                            icon: <MapPin className="h-5 w-5" />,
-                            accentColor: '#4F46E5',
-                        },
-                        {
-                            label: 'Pengiriman Hari Ini',
-                            value: todayDeliveries,
-                            icon: <Bike className="h-5 w-5" />,
-                            accentColor: '#D97706',
-                        },
-                    ]}
-                />
+            <div className="space-y-6">
+                {/* KPI Strip */}
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Total Kurir
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                                <Users className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                            {stats.total}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Online
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                                <Truck className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                            {stats.online}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Pengiriman Hari Ini
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                                <Bike className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                            {todayDeliveries}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">
+                                Lokasi Aktif
+                            </span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
+                                <Users className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                            {stats.active_location}
+                        </div>
+                    </div>
+                </div>
 
                 {/* Search */}
-                <Input
-                    type="text"
-                    placeholder="Cari kurir..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    icon={Search}
+                <OwnerFilterCard
+                    searchPlaceholder="Cari kurir..."
+                    searchValue={search}
+                    onSearch={setSearch}
                 />
 
-                {/* Table */}
+                {/* Courier Cards Grid */}
                 {filtered.length === 0 ? (
                     <EmptyState
                         icon={<Package className="h-8 w-8" />}
@@ -117,113 +148,112 @@ export default function CouriersIndex({
                         description={
                             search
                                 ? 'Coba kata kunci lain'
-                                : 'Tambah kurir untuk mulai mengelola pengiriman'
+                                : 'Klik tambah untuk mendaftarkan kurir'
                         }
                     />
                 ) : (
-                    <div
-                        className="overflow-x-auto rounded-xl bg-surface shadow-card"
-                        aria-label="Daftar Kurir"
-                    >
-                        <table className="w-full min-w-[500px]">
-                            <thead>
-                                <tr className="bg-surface-muted/50">
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
-                                        Kurir
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
-                                        Kendaraan
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
-                                        Status
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
-                                        Aksi
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filtered.map((courier: any) => {
-                                    const vehicleIcon =
-                                        courier.vehicle_type === 'car'
-                                            ? Car
-                                            : Bike;
-                                    const VehicleIcon = vehicleIcon;
+                    <>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {filtered.map((courier: any) => {
+                                const VehicleIcon =
+                                    courier.vehicle_type === 'car' ? Car : Bike;
 
-                                    return (
-                                        <tr
-                                            key={courier.id}
-                                            className="hover:bg-mint-wash border-t border-border/20 transition-colors"
-                                        >
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
-                                                        {courier.name
-                                                            .charAt(0)
-                                                            .toUpperCase()}
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-sm font-semibold text-text">
-                                                            {courier.name}
-                                                        </div>
-                                                        <div className="text-xs text-text-muted">
-                                                            {courier.phone ??
-                                                                '-'}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-1.5 text-xs text-text-muted">
-                                                    <VehicleIcon
-                                                        className="h-3.5 w-3.5"
-                                                        aria-hidden="true"
-                                                    />
-                                                    <span className="capitalize">
-                                                        {courier.vehicle_type ??
-                                                            '-'}
+                                return (
+                                    <div
+                                        key={courier.id}
+                                        className="group rounded-2xl border border-border bg-surface p-5 transition-all hover:border-primary/30 hover:shadow-card"
+                                    >
+                                        {/* Header */}
+                                        <div className="mb-3 flex items-center gap-3">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                                                {courier.name
+                                                    .charAt(0)
+                                                    .toUpperCase()}
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="text-sm font-bold text-text">
+                                                    {courier.name}
+                                                </h3>
+                                                <p className="text-xs text-text-muted">
+                                                    {courier.phone ?? '-'}
+                                                </p>
+                                            </div>
+                                            {courier.is_online ? (
+                                                <span className="flex h-2.5 w-2.5 items-center justify-center">
+                                                    <span className="absolute h-2.5 w-2.5 animate-ping rounded-full bg-emerald-400 opacity-75" />
+                                                    <span className="relative h-2 w-2 rounded-full bg-emerald-500" />
+                                                </span>
+                                            ) : (
+                                                <span className="h-2 w-2 rounded-full bg-gray-300" />
+                                            )}
+                                        </div>
+
+                                        {/* Info */}
+                                        <div className="mb-3 flex items-center gap-2 text-xs text-text-muted">
+                                            <VehicleIcon className="h-3.5 w-3.5" />
+                                            <span className="capitalize">
+                                                {courier.vehicle_type ?? '-'}
+                                            </span>
+                                            {courier.vehicle_plate && (
+                                                <>
+                                                    <span className="text-border">
+                                                        |
                                                     </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {courier.is_online ? (
-                                                    <StatusBadge
-                                                        variant="success"
-                                                        size="sm"
-                                                    >
-                                                        Online
-                                                    </StatusBadge>
-                                                ) : (
-                                                    <StatusBadge
-                                                        variant="neutral"
-                                                        size="sm"
-                                                    >
-                                                        Offline
-                                                    </StatusBadge>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3 text-right">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        router.visit(
-                                                            `/owner/couriers/${courier.id}`,
-                                                        )
-                                                    }
-                                                >
-                                                    Detail
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
+                                                    <span>
+                                                        {courier.vehicle_plate}
+                                                    </span>
+                                                </>
+                                            )}
+                                        </div>
 
-                <Pagination links={couriers.links} />
+                                        {/* Divider */}
+                                        <div className="mb-3 border-t border-border" />
+
+                                        {/* Stats */}
+                                        <div className="mb-4 flex items-center justify-between text-xs">
+                                            <span className="text-text-muted">
+                                                Pengiriman Hari Ini
+                                            </span>
+                                            <span className="font-bold text-text tabular-nums">
+                                                {courier.today_deliveries ?? 0}
+                                            </span>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="flex-1"
+                                                onClick={() =>
+                                                    router.visit(
+                                                        `/owner/couriers/${courier.id}`,
+                                                    )
+                                                }
+                                            >
+                                                Detail
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="flex-1"
+                                                onClick={() =>
+                                                    router.visit(
+                                                        `/owner/couriers/${courier.id}`,
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </Button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <Pagination links={couriers.links} />
+                    </>
+                )}
             </div>
 
             <Dialog open={showCreate} onOpenChange={setShowCreate}>
@@ -282,7 +312,7 @@ export default function CouriersIndex({
                                                 'flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold transition-all',
                                                 isSelected
                                                     ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
-                                                    : 'hover:bg-mint-wash border-border bg-surface text-text-muted',
+                                                    : 'border-border bg-surface text-text-muted hover:bg-mint-wash',
                                             )}
                                         >
                                             <Icon

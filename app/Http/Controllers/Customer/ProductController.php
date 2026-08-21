@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Outlet;
-use App\Models\ProductFamily;
+use App\Models\ProductCategory;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,12 +16,25 @@ class ProductController extends Controller
         return Inertia::render('customer/products');
     }
 
-    public function show(Request $request, ProductFamily $family): Response
+    public function show(Request $request, ?ProductCategory $category = null): Response
     {
+        // Resolve category from route param
+        if (! $category) {
+            $routeParam = $request->route('category');
+            if ($routeParam instanceof ProductCategory) {
+                $category = $routeParam;
+            } elseif ($routeParam) {
+                $id = is_object($routeParam) ? $routeParam->id : $routeParam;
+                $category = ProductCategory::findOrFail($id);
+            } else {
+                abort(404);
+            }
+        }
+
         $outletId = $request->integer('outlet_id') ?: null;
 
-        $family->load([
-            'variants' => function ($query) use ($outletId) {
+        $category->load([
+            'products' => function ($query) use ($outletId) {
                 $query->where('is_active', true)
                     ->orderBy('name');
 
@@ -38,43 +51,59 @@ class ProductController extends Controller
             },
         ]);
 
-        // Resolve image URLs for Inertia serialization
-        $family->image = $this->resolveImage($family->image);
-        $family->variants->each(function ($variant) {
-            $variant->image = $this->resolveImage($variant->image);
-        });
-
-        // Compute stock status and outlet price for each variant
-        $family->variants->each(function ($variant) use ($outletId) {
+        // Build family structure matching frontend Variant interface
+        $products = $category->products->map(function ($product) use ($outletId) {
             $availableStock = 0;
             $minimumStock = 0;
-            if ($variant->relationLoaded('inventories')) {
-                $availableStock = max(0, (int) $variant->inventories->sum(
+            if ($product->relationLoaded('inventories')) {
+                $availableStock = max(0, (int) $product->inventories->sum(
                     fn ($inv) => $inv->current_stock - $inv->reserved_stock
                 ));
-                $minimumStock = (int) $variant->inventories->sum('minimum_stock');
+                $minimumStock = (int) $product->inventories->sum('minimum_stock');
             }
 
-            $variant->available_stock = $availableStock;
-            $variant->stock_status = $availableStock <= 0
+            $stockStatus = $availableStock <= 0
                 ? 'out_of_stock'
                 : ($minimumStock > 0 && $availableStock <= $minimumStock ? 'low' : 'available');
 
-            // Override selling_price with outlet-specific price if available
-            if ($outletId) {
-                $outletPrice = $variant->priceForOutlet($outletId);
-                $variant->selling_price = $outletPrice;
-            }
-        });
+            $price = $outletId ? $product->priceForOutlet($outletId) : $product->selling_price;
 
-        // Other families for cross-sell recommendations
-        $otherFamilies = ProductFamily::query()
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'flavor' => $product->flavor,
+                'size' => $product->size,
+                'selling_price' => $price,
+                'is_active' => $product->is_active,
+                'image' => $this->resolveImage($product->display_image),
+                'available_stock' => $availableStock,
+                'stock_status' => $stockStatus,
+            ];
+        })->values()->toArray();
+
+        $family = [
+            'id' => $category->id,
+            'name' => $category->name,
+            'description' => $category->description,
+            'image' => null,
+            'variants' => $products,
+        ];
+
+        // Other categories for cross-sell recommendations
+        $otherCategories = ProductCategory::query()
             ->where('is_active', true)
-            ->where('id', '!=', $family->id)
-            ->with(['variants' => fn ($q) => $q->where('is_active', true)])
+            ->where('id', '!=', $category->id)
+            ->with(['products' => fn ($q) => $q->where('is_active', true)])
             ->orderBy('name')
             ->limit(4)
-            ->get();
+            ->get()
+            ->map(fn ($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'variants' => $cat->products->map(fn ($p) => [
+                    'selling_price' => $outletId ? $p->priceForOutlet($outletId) : $p->selling_price,
+                ])->toArray(),
+            ]);
 
         $isOpen = true;
         if ($outletId) {
@@ -84,7 +113,7 @@ class ProductController extends Controller
 
         return Inertia::render('customer/product-detail', [
             'family' => $family,
-            'otherFamilies' => $otherFamilies,
+            'otherFamilies' => $otherCategories,
             'outletId' => $outletId,
             'is_open' => $isOpen,
         ]);

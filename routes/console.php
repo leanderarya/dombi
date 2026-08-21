@@ -3,6 +3,7 @@
 use App\Support\SchedulerHeartbeat;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -16,10 +17,10 @@ Schedule::command('orders:expire-pending')
     ->withoutOverlapping()
     ->onOneServer()
     ->after(function () {
-        \Illuminate\Support\Facades\Log::info('orders:expire-pending completed');
+        Log::info('orders:expire-pending completed');
     })
     ->onFailure(function () {
-        \Illuminate\Support\Facades\Log::alert('orders:expire-pending FAILED');
+        Log::alert('orders:expire-pending FAILED');
     })
     ->appendOutputTo(storage_path('logs/expire-pending.log'));
 
@@ -29,10 +30,10 @@ Schedule::command('orders:resolve-stale')
     ->withoutOverlapping()
     ->onOneServer()
     ->after(function () {
-        \Illuminate\Support\Facades\Log::info('orders:resolve-stale completed');
+        Log::info('orders:resolve-stale completed');
     })
     ->onFailure(function () {
-        \Illuminate\Support\Facades\Log::alert('orders:resolve-stale FAILED');
+        Log::alert('orders:resolve-stale FAILED');
     })
     ->appendOutputTo(storage_path('logs/resolve-stale.log'));
 

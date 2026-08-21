@@ -80,10 +80,10 @@ export default function CreateCourier() {
                                             )
                                         }
                                         className={cn(
-                                            'flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold transition-all',
+                                            'flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold transition-all',
                                             isSelected
                                                 ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
-                                                : 'hover:bg-mint-wash border-border bg-surface text-text-muted',
+                                                : 'border-border bg-surface text-text-muted hover:bg-emerald-50/40',
                                         )}
                                     >
                                         <Icon
@@ -124,6 +124,7 @@ export default function CreateCourier() {
                     <div className="flex items-center gap-3 pt-2">
                         <Button
                             type="submit"
+                            className="min-h-11 bg-accent-orange text-white shadow-sm hover:bg-accent-orange-hover"
                             loading={form.processing}
                             disabled={form.processing}
                         >
@@ -131,7 +132,7 @@ export default function CreateCourier() {
                         </Button>
                         <a
                             href="/owner/couriers"
-                            className="text-xs font-semibold text-text-muted hover:text-text"
+                            className="flex min-h-11 items-center text-xs font-semibold text-text-muted hover:text-text"
                         >
                             Batal
                         </a>

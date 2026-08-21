@@ -97,7 +97,7 @@ class ReportController extends Controller
 
         return response()->streamDownload(function () use ($dateFrom, $dateTo, $outletId): void {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Order Code', 'Customer', 'Outlet', 'Status', 'Total', 'Created At']);
+            fputcsv($handle, ['Kode Order', 'Customer', 'Outlet', 'Status', 'Total', 'Tanggal']);
 
             Order::query()
                 ->with('outlet:id,name')
@@ -110,9 +110,23 @@ class ReportController extends Controller
                             $order->order_code,
                             $order->customer_name,
                             $order->outlet?->name ?? '-',
-                            $order->status,
-                            $order->total,
-                            $order->created_at->format('Y-m-d H:i'),
+                            match ($order->status) {
+                                'pending_confirmation' => 'Menunggu Konfirmasi',
+                                'confirmed' => 'Dikonfirmasi',
+                                'preparing' => 'Disiapkan',
+                                'ready_for_pickup' => 'Siap Diambil',
+                                'picked_up' => 'Diambil',
+                                'delivering' => 'Dikirim',
+                                'completed' => 'Selesai',
+                                'cancelled_by_customer' => 'Dibatalkan Customer',
+                                'cancelled_by_outlet' => 'Dibatalkan Outlet',
+                                'rejected_by_outlet' => 'Ditolak Outlet',
+                                'failed_delivery' => 'Gagal Kirim',
+                                'expired' => 'Kedaluwarsa',
+                                default => $order->status,
+                            },
+                            'Rp '.number_format($order->total, 0, ',', '.'),
+                            $order->created_at->format('d/m/Y H:i'),
                         ]);
                     }
                 });
@@ -146,7 +160,7 @@ class ReportController extends Controller
                     $order->order_code,
                     $order->outlet->name,
                     $order->customer_name,
-                    $order->total,
+                    'Rp '.number_format($order->total, 0, ',', '.'),
                     $order->items->count(),
                 ]);
             }
@@ -177,10 +191,16 @@ class ReportController extends Controller
                     $s->outlet->name,
                     $s->period_date->format('d/m/Y'),
                     $s->due_date->format('d/m/Y'),
-                    $s->amount_due,
-                    $s->paid_amount,
-                    $s->outstanding_amount,
-                    $s->status,
+                    'Rp '.number_format($s->amount_due, 0, ',', '.'),
+                    'Rp '.number_format($s->paid_amount, 0, ',', '.'),
+                    'Rp '.number_format($s->outstanding_amount, 0, ',', '.'),
+                    match ($s->status) {
+                        'pending' => 'Menunggu',
+                        'partial' => 'Sebagian',
+                        'paid' => 'Lunas',
+                        'overdue' => 'Jatuh Tempo',
+                        default => $s->status,
+                    },
                 ]);
             }
 

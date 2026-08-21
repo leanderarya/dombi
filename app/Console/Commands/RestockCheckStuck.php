@@ -25,6 +25,7 @@ class RestockCheckStuck extends Command
 
         if ($stuck->isEmpty()) {
             $this->info('No stuck restock requests found.');
+
             return self::SUCCESS;
         }
 

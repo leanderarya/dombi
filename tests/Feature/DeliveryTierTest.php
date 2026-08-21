@@ -79,6 +79,27 @@ class DeliveryTierTest extends TestCase
         $response->assertSessionHasErrors('max_km');
     }
 
+    public function test_active_delivery_tiers_cannot_overlap(): void
+    {
+        DeliveryTier::create([
+            'min_km' => 0,
+            'max_km' => 5,
+            'fee' => 10000,
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        $response = $this->actingAs($this->owner)->post('/owner/delivery-tiers', [
+            'min_km' => 4,
+            'max_km' => 8,
+            'fee' => 15000,
+            'is_active' => true,
+            'sort_order' => 2,
+        ]);
+
+        $response->assertSessionHasErrors('min_km');
+    }
+
     public function test_non_owner_cannot_manage_tiers(): void
     {
         $user = User::factory()->create(['role' => 'customer']);

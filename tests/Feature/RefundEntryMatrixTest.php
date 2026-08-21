@@ -8,8 +8,6 @@ use App\Models\Outlet;
 use App\Models\RefundStatusHistory;
 use App\Models\User;
 use App\Services\OrderStatusService;
-use App\Services\RefundService;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,6 +16,7 @@ class RefundEntryMatrixTest extends TestCase
     use RefreshDatabase;
 
     private OrderStatusService $service;
+
     private Outlet $outlet;
 
     protected function setUp(): void

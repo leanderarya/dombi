@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\WithTestOutlet;
@@ -13,30 +13,30 @@ class CustomerVariantCatalogTest extends TestCase
     use RefreshDatabase;
     use WithTestOutlet;
 
-    private ProductFamily $family;
+    private ProductCategory $family;
 
-    private ProductVariant $kopi250;
+    private Product $kopi250;
 
-    private ProductVariant $kopi1L;
+    private Product $kopi1L;
 
-    private ProductVariant $vanilla250;
+    private Product $vanilla250;
 
-    private ProductVariant $vanilla1L;
+    private Product $vanilla1L;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->withOutletSession();
 
-        $this->family = ProductFamily::create([
+        $this->family = ProductCategory::create([
             'name' => 'Domilk Premium Taste',
             'brand' => 'Domilk',
             'description' => 'Susu premium rasa kopi',
             'is_active' => true,
         ]);
 
-        $this->kopi250 = ProductVariant::create([
-            'product_family_id' => $this->family->id,
+        $this->kopi250 = Product::create([
+            'product_category_id' => $this->family->id,
             'name' => 'Kopi 250ml',
             'flavor' => 'Kopi',
             'size' => '250ml',
@@ -45,8 +45,8 @@ class CustomerVariantCatalogTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->kopi1L = ProductVariant::create([
-            'product_family_id' => $this->family->id,
+        $this->kopi1L = Product::create([
+            'product_category_id' => $this->family->id,
             'name' => 'Kopi 1L',
             'flavor' => 'Kopi',
             'size' => '1L',
@@ -55,8 +55,8 @@ class CustomerVariantCatalogTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->vanilla250 = ProductVariant::create([
-            'product_family_id' => $this->family->id,
+        $this->vanilla250 = Product::create([
+            'product_category_id' => $this->family->id,
             'name' => 'Vanilla 250ml',
             'flavor' => 'Vanilla',
             'size' => '250ml',
@@ -65,8 +65,8 @@ class CustomerVariantCatalogTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->vanilla1L = ProductVariant::create([
-            'product_family_id' => $this->family->id,
+        $this->vanilla1L = Product::create([
+            'product_category_id' => $this->family->id,
             'name' => 'Vanilla 1L',
             'flavor' => 'Vanilla',
             'size' => '1L',
@@ -104,13 +104,13 @@ class CustomerVariantCatalogTest extends TestCase
     public function test_cart_add_endpoint_accepts_variant_id(): void
     {
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->kopi250->id,
+            'product_id' => $this->kopi250->id,
             'quantity' => 1,
         ])
-            ->assertOk()
+            ->assertUnprocessable()
             ->assertJson([
                 'success' => false,
-                'error' => 'Stok produk ini sudah habis',
+                'error' => 'Stok produk ini sedang tidak tersedia di seluruh outlet.',
             ]);
     }
 
@@ -119,7 +119,7 @@ class CustomerVariantCatalogTest extends TestCase
         $this->kopi250->update(['is_active' => false]);
 
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->kopi250->id,
+            'product_id' => $this->kopi250->id,
             'quantity' => 1,
         ])->assertUnprocessable();
     }
@@ -127,7 +127,7 @@ class CustomerVariantCatalogTest extends TestCase
     public function test_cart_add_rejects_zero_quantity(): void
     {
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->kopi250->id,
+            'product_id' => $this->kopi250->id,
             'quantity' => 0,
         ])->assertUnprocessable();
     }
@@ -160,15 +160,15 @@ class CustomerVariantCatalogTest extends TestCase
     public function test_single_flavor_family_still_shows_correctly(): void
     {
         // Create a family with only one flavor
-        $family2 = ProductFamily::create([
+        $family2 = ProductCategory::create([
             'name' => 'Raw Milk',
             'brand' => 'Domilk',
             'description' => 'Susu murni',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family2->id,
+        Product::create([
+            'product_category_id' => $family2->id,
             'name' => 'Original 1L',
             'flavor' => null,
             'size' => '1L',
@@ -196,15 +196,15 @@ class CustomerVariantCatalogTest extends TestCase
 
     public function test_catalog_groups_variants_by_family(): void
     {
-        $family2 = ProductFamily::create([
+        $family2 = ProductCategory::create([
             'name' => 'Biogoat',
             'brand' => 'Biogoat',
             'description' => 'Susu biogoat',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family2->id,
+        Product::create([
+            'product_category_id' => $family2->id,
             'name' => 'Biogoat 250ml',
             'flavor' => null,
             'size' => '250ml',
@@ -222,15 +222,15 @@ class CustomerVariantCatalogTest extends TestCase
 
     public function test_family_with_zero_active_variants_excluded(): void
     {
-        $family2 = ProductFamily::create([
+        $family2 = ProductCategory::create([
             'name' => 'Inactive Family',
             'brand' => 'Test',
             'description' => 'Should not appear',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family2->id,
+        Product::create([
+            'product_category_id' => $family2->id,
             'name' => 'Inactive Variant',
             'flavor' => null,
             'size' => '250ml',
@@ -248,15 +248,15 @@ class CustomerVariantCatalogTest extends TestCase
 
     public function test_category_chip_filtering_works(): void
     {
-        $family2 = ProductFamily::create([
+        $family2 = ProductCategory::create([
             'name' => 'Biogoat',
             'brand' => 'Biogoat',
             'description' => 'Susu biogoat',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family2->id,
+        Product::create([
+            'product_category_id' => $family2->id,
             'name' => 'Biogoat 250ml',
             'flavor' => null,
             'size' => '250ml',
@@ -283,15 +283,15 @@ class CustomerVariantCatalogTest extends TestCase
 
     public function test_multiple_families_appear_as_separate_sections(): void
     {
-        $family2 = ProductFamily::create([
+        $family2 = ProductCategory::create([
             'name' => 'Biogoat',
             'brand' => 'Biogoat',
             'description' => 'Susu biogoat',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family2->id,
+        Product::create([
+            'product_category_id' => $family2->id,
             'name' => 'Biogoat 250ml',
             'flavor' => null,
             'size' => '250ml',
@@ -300,15 +300,15 @@ class CustomerVariantCatalogTest extends TestCase
             'is_active' => true,
         ]);
 
-        $family3 = ProductFamily::create([
+        $family3 = ProductCategory::create([
             'name' => 'Raw Milk by Domilk',
             'brand' => 'Domilk',
             'description' => 'Susu murni',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family3->id,
+        Product::create([
+            'product_category_id' => $family3->id,
             'name' => 'Fresh 1L',
             'flavor' => 'Fresh',
             'size' => '1L',

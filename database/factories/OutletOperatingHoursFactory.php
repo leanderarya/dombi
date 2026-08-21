@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Outlet;
 use App\Models\OutletOperatingHours;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -12,7 +13,7 @@ class OutletOperatingHoursFactory extends Factory
     public function definition(): array
     {
         return [
-            'outlet_id' => \App\Models\Outlet::factory(),
+            'outlet_id' => Outlet::factory(),
             'day_of_week' => $this->faker->numberBetween(0, 6),
             'open_time' => '08:00',
             'close_time' => '20:00',

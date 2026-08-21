@@ -1,9 +1,19 @@
 import { router, useForm } from '@inertiajs/react';
+import {
+    Edit2,
+    GripVertical,
+    Plus,
+    ToggleLeft,
+    ToggleRight,
+    Trash2,
+    Truck,
+} from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { Edit2, GripVertical, Plus, Trash2, Truck } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -15,7 +25,14 @@ import {
 import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
-import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
 
 interface DeliveryTier {
@@ -51,17 +68,16 @@ export default function DeliveryTiersIndex({
         is_active: true,
     });
 
-    useEffect(() => {
-        if (editingTier) {
-            editForm.setData({
-                min_km: String(editingTier.min_km),
-                max_km: String(editingTier.max_km),
-                fee: String(editingTier.fee),
-                sort_order: String(editingTier.sort_order),
-                is_active: editingTier.is_active,
-            });
-        }
-    }, [editingTier]);
+    const openEditDialog = (tier: DeliveryTier) => {
+        editForm.setData({
+            min_km: String(tier.min_km),
+            max_km: String(tier.max_km),
+            fee: String(tier.fee),
+            sort_order: String(tier.sort_order),
+            is_active: tier.is_active,
+        });
+        setEditingTier(tier);
+    };
 
     if (tiers === undefined || tiers === null) {
         return (
@@ -82,7 +98,8 @@ export default function DeliveryTiersIndex({
                 addForm.reset();
                 toast.success('Tier ongkir disimpan');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -97,7 +114,8 @@ export default function DeliveryTiersIndex({
                 setEditingTier(null);
                 toast.success('Tier ongkir disimpan');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -109,17 +127,23 @@ export default function DeliveryTiersIndex({
                     setDeleteId(null);
                     toast.success('Tier ongkir disimpan');
                 },
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
             });
         }
     };
 
     const handleToggle = (tierId: number) => {
-        router.patch(`/owner/delivery-tiers/${tierId}/toggle`, {
-            preserveScroll: true,
-            onSuccess: () => toast.success('Tier ongkir disimpan'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
-        });
+        router.patch(
+            `/owner/delivery-tiers/${tierId}/toggle`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Tier ongkir disimpan'),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
+            },
+        );
     };
 
     return (
@@ -146,94 +170,102 @@ export default function DeliveryTiersIndex({
                 />
             ) : (
                 <div
-                    className="overflow-x-auto rounded-xl bg-surface shadow-card"
+                    className="overflow-x-auto rounded-xl bg-surface shadow-xs ring-1 ring-foreground/10"
                     aria-label="Daftar tier pengiriman"
                 >
-                    <table className="w-full min-w-[500px] text-sm">
-                        <thead>
-                            <tr className="bg-surface-muted text-xs font-medium text-text-muted">
-                                <th className="w-10 px-4 py-3"></th>
-                                <th className="px-4 py-3 text-left">Jarak</th>
-                                <th className="px-4 py-3 text-left">Tarif</th>
-                                <th className="px-4 py-3 text-left">Status</th>
-                                <th className="px-4 py-3 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tiers.map((tier) => (
-                                <tr
-                                    key={tier.id}
-                                    className={`hover:bg-mint-wash border-t border-border/20 transition-colors ${!tier.is_active ? 'opacity-50' : ''}`}
-                                >
-                                    <td className="px-4 py-3">
-                                        <GripVertical
-                                            className="h-4 w-4 text-text-subtle"
-                                            aria-hidden="true"
-                                        />
-                                    </td>
-                                    <td className="px-4 py-3 font-medium text-text">
-                                        {tier.min_km} – {tier.max_km} km
-                                    </td>
-                                    <td className="px-4 py-3 font-bold text-text tabular-nums">
-                                        {formatCurrency(tier.fee)}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                handleToggle(tier.id)
-                                            }
-                                            className="inline-flex"
-                                        >
-                                            <StatusBadge
-                                                variant={
+                    <OwnerTable minWidth="600px">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-surface-muted text-xs font-medium text-text-muted">
+                                    <TableHead className="w-10 px-4 py-3"></TableHead>
+                                    <TableHead className="px-4 py-3 text-left">
+                                        Jarak
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left">
+                                        Tarif
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left">
+                                        Status
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-right">
+                                        Aksi
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {tiers.map((tier) => (
+                                    <TableRow
+                                        key={tier.id}
+                                        className={`border-t border-border/20 transition-colors hover:bg-mint-wash ${!tier.is_active ? 'opacity-50' : ''}`}
+                                    >
+                                        <TableCell className="px-4 py-3">
+                                            <GripVertical
+                                                className="h-4 w-4 text-text-subtle"
+                                                aria-hidden="true"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 font-medium text-text">
+                                            {tier.min_km} – {tier.max_km} km
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 font-bold text-text tabular-nums">
+                                            {formatCurrency(tier.fee)}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handleToggle(tier.id)
+                                                }
+                                                className="group inline-flex items-center"
+                                                title={
                                                     tier.is_active
-                                                        ? 'success'
-                                                        : 'muted'
+                                                        ? 'Nonaktifkan'
+                                                        : 'Aktifkan'
                                                 }
-                                                size="sm"
                                             >
-                                                {tier.is_active
-                                                    ? 'Aktif'
-                                                    : 'Nonaktif'}
-                                            </StatusBadge>
-                                        </button>
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() =>
-                                                    setEditingTier(tier)
-                                                }
-                                                aria-label={`Edit tier ${tier.min_km}–${tier.max_km} km`}
-                                            >
-                                                <Edit2
-                                                    className="h-3.5 w-3.5"
-                                                    aria-hidden="true"
-                                                />
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() =>
-                                                    setDeleteId(tier.id)
-                                                }
-                                                className="text-red-500 hover:bg-red-50 hover:text-red-600"
-                                                aria-label={`Hapus tier ${tier.min_km}–${tier.max_km} km`}
-                                            >
-                                                <Trash2
-                                                    className="h-3.5 w-3.5"
-                                                    aria-hidden="true"
-                                                />
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                                {tier.is_active ? (
+                                                    <ToggleRight className="h-5 w-5 text-primary" />
+                                                ) : (
+                                                    <ToggleLeft className="h-5 w-5 text-text-muted" />
+                                                )}
+                                            </button>
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        openEditDialog(tier)
+                                                    }
+                                                    aria-label={`Edit tier ${tier.min_km}–${tier.max_km} km`}
+                                                >
+                                                    <Edit2
+                                                        className="h-3.5 w-3.5"
+                                                        aria-hidden="true"
+                                                    />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        setDeleteId(tier.id)
+                                                    }
+                                                    className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                                                    aria-label={`Hapus tier ${tier.min_km}–${tier.max_km} km`}
+                                                >
+                                                    <Trash2
+                                                        className="h-3.5 w-3.5"
+                                                        aria-hidden="true"
+                                                    />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </OwnerTable>
                 </div>
             )}
 
@@ -425,17 +457,13 @@ export default function DeliveryTiersIndex({
                             />
                         </div>
                     </div>
-                    <label className="mt-2 flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            checked={editForm.data.is_active}
-                            onChange={(e) =>
-                                editForm.setData('is_active', e.target.checked)
-                            }
-                            className="h-4 w-4 rounded border-border"
-                        />
-                        <span className="text-xs text-text-muted">Aktif</span>
-                    </label>
+                    <Checkbox
+                        label="Aktif"
+                        checked={editForm.data.is_active}
+                        onChange={(e) =>
+                            editForm.setData('is_active', e.target.checked)
+                        }
+                    />
                     {Object.keys(editForm.errors).length > 0 && (
                         <div className="mt-2">
                             {Object.values(editForm.errors).map((err, i) => (

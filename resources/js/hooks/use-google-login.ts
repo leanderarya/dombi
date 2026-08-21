@@ -1,6 +1,6 @@
-import { router } from '@inertiajs/react';
-import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
 import { Capacitor } from '@capacitor/core';
+import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
+import { router } from '@inertiajs/react';
 
 const WEB_CLIENT_ID =
     '732242789854-7kvv13nq10hnkovq9j0ji9nrbmdku3oh.apps.googleusercontent.com';
@@ -16,6 +16,7 @@ export function useGoogleLogin() {
 
                 if (!result.idToken) {
                     alert('Login gagal: tidak mendapat token dari Google.');
+
                     return;
                 }
 
@@ -34,7 +35,11 @@ export function useGoogleLogin() {
                 try {
                     data = JSON.parse(text);
                 } catch {
-                    alert('Login gagal: response bukan JSON.\n' + text.substring(0, 200));
+                    alert(
+                        'Login gagal: response bukan JSON.\n' +
+                            text.substring(0, 200),
+                    );
+
                     return;
                 }
 
@@ -42,8 +47,7 @@ export function useGoogleLogin() {
                     router.visit(data.redirect || '/customer/home');
                 } else {
                     alert(
-                        'Login gagal: ' +
-                            (data.error || JSON.stringify(data)),
+                        'Login gagal: ' + (data.error || JSON.stringify(data)),
                     );
                 }
             } catch (err: any) {

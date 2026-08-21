@@ -1,15 +1,28 @@
 import { router } from '@inertiajs/react';
 import { useEffect, useRef, useCallback } from 'react';
 
-export function usePolling(intervalMs: number = 30000, only: string[] = []) {
+export const pollingReloadActive = { current: false };
+
+export function usePolling(
+    intervalMs: number = 30000,
+    only: string[] = [],
+    enabled: boolean = true,
+) {
     const isOnline = useRef(true);
     const wasHidden = useRef(false);
 
     const handleOnline = useCallback(() => {
         isOnline.current = true;
+
         // Reload immediately when coming back online
-        router.reload({ only: only.length > 0 ? only : undefined });
-    }, [only]);
+        if (enabled) {
+            pollingReloadActive.current = true;
+            router.reload({ only: only.length > 0 ? only : undefined });
+            setTimeout(() => {
+                pollingReloadActive.current = false;
+            }, 500);
+        }
+    }, [only, enabled]);
 
     const handleOffline = useCallback(() => {
         isOnline.current = false;
@@ -20,12 +33,16 @@ export function usePolling(intervalMs: number = 30000, only: string[] = []) {
 
         if (isHidden) {
             wasHidden.current = true;
-        } else if (wasHidden.current && isOnline.current) {
+        } else if (wasHidden.current && isOnline.current && enabled) {
             // Page just became visible after being hidden — reload immediately
             wasHidden.current = false;
+            pollingReloadActive.current = true;
             router.reload({ only: only.length > 0 ? only : undefined });
+            setTimeout(() => {
+                pollingReloadActive.current = false;
+            }, 500);
         }
-    }, [only]);
+    }, [only, enabled]);
 
     useEffect(() => {
         window.addEventListener('online', handleOnline);
@@ -43,12 +60,20 @@ export function usePolling(intervalMs: number = 30000, only: string[] = []) {
     }, [handleOnline, handleOffline, handleVisibilityChange]);
 
     useEffect(() => {
+        if (!enabled) {
+            return;
+        }
+
         const interval = setInterval(() => {
             if (isOnline.current && !document.hidden) {
+                pollingReloadActive.current = true;
                 router.reload({ only: only.length > 0 ? only : undefined });
+                setTimeout(() => {
+                    pollingReloadActive.current = false;
+                }, 500);
             }
         }, intervalMs);
 
         return () => clearInterval(interval);
-    }, [intervalMs, only]);
+    }, [intervalMs, only, enabled]);
 }

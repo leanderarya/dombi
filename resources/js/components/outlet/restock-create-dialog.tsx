@@ -3,23 +3,23 @@ import { X, Plus, Minus, StickyNote, ChevronDown } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import CustomSelect from '@/components/ui/custom-select';
 
-interface Variant {
+interface MenuItem {
     id: number;
     name: string;
     sku: string | null;
-    product: { name: string };
+    category: { name: string };
 }
 
 interface Family {
     id: number;
     name: string;
-    variants: Variant[];
+    products: MenuItem[];
 }
 
 interface InventoryItem {
     id: number;
-    quantity: number;
-    variant: Variant;
+    product: { id: number; name: string };
+    current_stock?: number;
 }
 
 interface Props {
@@ -36,16 +36,16 @@ export default function RestockCreateDialog({
     onClose,
 }: Props) {
     const form = useForm({
-        items: [{ product_variant_id: '', requested_quantity: 1 }],
+        items: [{ product_id: '', requested_quantity: 1 }],
         notes: '',
     });
 
-    // Build options from families → variants
+    // Build options from families → products
     const variantOptions = families.flatMap((fam) =>
-        fam.variants.map((v) => ({
+        fam.products.map((v) => ({
             value: String(v.id),
             label: `${fam.name} — ${v.name}`,
-            subtitle: `Stok: ${inventories.find((inv) => inv.variant?.id === v.id)?.quantity ?? 0}`,
+            subtitle: `Stok: ${inventories.find((inv) => inv.product?.id === v.id)?.current_stock ?? 0}`,
         })),
     );
 
@@ -71,7 +71,7 @@ export default function RestockCreateDialog({
     }
 
     const selectedCount = form.data.items.filter(
-        (i: any) => i.product_variant_id,
+        (i: any) => i.product_id,
     ).length;
     const totalQty = form.data.items.reduce(
         (sum: number, i: any) => sum + (i.requested_quantity ?? 0),
@@ -111,9 +111,9 @@ export default function RestockCreateDialog({
                         <CustomSelect
                             label="Produk"
                             options={variantOptions}
-                            value={form.data.items[0]?.product_variant_id ?? ''}
+                            value={form.data.items[0]?.product_id ?? ''}
                             onChange={(v: string) =>
-                                updateItem(0, 'product_variant_id', v)
+                                updateItem(0, 'product_id', v)
                             }
                             placeholder="Pilih produk"
                             searchable

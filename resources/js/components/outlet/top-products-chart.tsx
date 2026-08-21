@@ -24,12 +24,17 @@ interface ChartTooltipProps {
 }
 
 function truncateName(name: string, max = 17): string {
-    if (name.length <= max) return name;
+    if (name.length <= max) {
+        return name;
+    }
+
     return name.slice(0, max) + '…';
 }
 
 function ChartTooltip({ active, payload }: ChartTooltipProps) {
-    if (!active || !payload?.length) return null;
+    if (!active || !payload?.length) {
+        return null;
+    }
 
     const { product_name, total_qty, total_revenue } = payload[0].payload;
 

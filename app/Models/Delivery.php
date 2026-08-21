@@ -55,6 +55,8 @@ class Delivery extends Model
         'external_courier_name',
         'external_courier_phone',
         'external_plate_number',
+        'external_provider',
+        'external_reference',
         'courier_cost',
         'courier_type',
     ];

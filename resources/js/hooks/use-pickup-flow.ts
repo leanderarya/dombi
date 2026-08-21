@@ -16,7 +16,9 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
         error: null,
         foundOutletName: null,
     });
-    const timerRef = useRef<ReturnType<typeof setTimeout>>();
+    const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+        undefined,
+    );
     const { autoSave } = useOutletStore();
 
     useEffect(() => () => clearTimeout(timerRef.current), []);
@@ -69,7 +71,9 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
 
             // Pick nearest open outlet
             const allOutlets = data.alternatives ?? [];
-            const openOutlets = allOutlets.filter((o: any) => o.is_open !== false);
+            const openOutlets = allOutlets.filter(
+                (o: any) => o.is_open !== false,
+            );
             const pick = openOutlets[0] ?? data.recommended;
             outletName = pick?.name ?? null;
 
@@ -89,11 +93,22 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
                 let storedLng: number | null = null;
 
                 try {
-                    for (const key of ['customer.location', 'dombi_customer_location']) {
+                    for (const key of [
+                        'customer.location',
+                        'dombi_customer_location',
+                    ]) {
                         const raw = localStorage.getItem(key);
-                        if (!raw) continue;
+
+                        if (!raw) {
+                            continue;
+                        }
+
                         const parsed = JSON.parse(raw);
-                        if (typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number') {
+
+                        if (
+                            typeof parsed.latitude === 'number' &&
+                            typeof parsed.longitude === 'number'
+                        ) {
                             storedLat = parsed.latitude;
                             storedLng = parsed.longitude;
                             break;
@@ -104,6 +119,7 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
                 }
 
                 let fallbackUrl = '/customer/outlets';
+
                 if (storedLat !== null && storedLng !== null) {
                     fallbackUrl += `?latitude=${storedLat}&longitude=${storedLng}`;
                 }
@@ -115,6 +131,7 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
                 // When we have lat/lng (stored), outlets are distance-sorted, pick first open = true nearest
                 // When no lat/lng, don't auto-pick alphabetically — keep null to avoid fake Bangetayu
                 let pick = null;
+
                 if (storedLat !== null) {
                     pick = open[0] ?? outlets[0];
                 } else {

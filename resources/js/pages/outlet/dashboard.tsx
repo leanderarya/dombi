@@ -1,7 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
-import { Package, QrCode, DollarSign } from 'lucide-react';
+import { BarChart3, DollarSign, FileText, Package, QrCode } from 'lucide-react';
 import OutletDashboardSkeleton from '@/components/outlet/outlet-dashboard-skeleton';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import PushBanner from '@/components/shared/push-banner';
 import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
@@ -66,8 +67,9 @@ export default function OutletDashboard({
                 </div>
             ) : (
                 <OutletPageShell>
+                    <PushBanner variant="home" />
                     {/* Hero — stats + alerts */}
-                    <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+                    <div className="rounded-xl border border-primary/10 bg-primary-light p-4">
                         <div className="flex items-center justify-center">
                             <div className="flex items-center gap-3 text-center">
                                 <div>
@@ -78,7 +80,7 @@ export default function OutletDashboard({
                                         Pesanan
                                     </div>
                                 </div>
-                                <div className="h-6 w-px bg-emerald-200" />
+                                <div className="h-6 w-px bg-primary/20" />
                                 <div>
                                     <div className="flex items-center justify-center gap-1">
                                         {urgentTasks > 0 && (
@@ -158,7 +160,7 @@ export default function OutletDashboard({
                     {/* QR Scan — one big button */}
                     <Link
                         href="/outlet/scan"
-                        className="mb-4 flex items-center justify-center gap-3 rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-white transition-all active:opacity-80"
+                        className="flex items-center justify-center gap-3 rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-white transition-all active:opacity-80"
                     >
                         <QrCode className="h-5 w-5" />
                         Scan QR Ambil Pesanan
@@ -280,6 +282,24 @@ export default function OutletDashboard({
                             className="mt-2.5 flex min-h-11 items-center justify-center text-xs font-semibold text-primary"
                         >
                             Lihat Semua Pesanan →
+                        </Link>
+                    </div>
+
+                    {/* Quick Access — report links */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <Link
+                            href="/outlet/analytics"
+                            className="flex min-h-11 items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
+                        >
+                            <BarChart3 className="h-5 w-5 text-primary" />
+                            Analitik
+                        </Link>
+                        <Link
+                            href="/outlet/reports"
+                            className="flex min-h-11 items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
+                        >
+                            <FileText className="h-5 w-5 text-primary" />
+                            Laporan
                         </Link>
                     </div>
 

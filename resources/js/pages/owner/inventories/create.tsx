@@ -1,9 +1,19 @@
 import { useForm } from '@inertiajs/react';
+import { useMemo } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+
+// DESIGN.md: stock quantities are displayed with an explicit unit (Liter/Pcs).
+function unitLabel(item: any): string {
+    const unit = item?.product?.size_unit ?? item?.variant?.size_unit;
+
+    return unit === 'ml' || unit === 'l' || unit === 'g' || unit === 'kg'
+        ? 'Liter'
+        : 'Pcs';
+}
 
 export default function CreateInventory({ outlets, families }: any) {
     const form = useForm({
@@ -13,6 +23,20 @@ export default function CreateInventory({ outlets, families }: any) {
         minimum_stock: 0,
         notes: '',
     });
+
+    const stockUnit = useMemo(
+        () =>
+            unitLabel(
+                (families ?? [])
+                    .flatMap((f: any) => (f.variants ?? []).map((v: any) => v))
+                    .find(
+                        (v: any) =>
+                            String(v.id) ===
+                            String(form.data.product_variant_id),
+                    ),
+            ),
+        [families, form.data.product_variant_id],
+    );
 
     return (
         <OwnerPageShell
@@ -73,10 +97,11 @@ export default function CreateInventory({ outlets, families }: any) {
                             )
                         }
                         error={form.errors.current_stock}
+                        className="min-h-11 tabular-nums focus-visible:ring-primary"
                     />
 
                     <Input
-                        label="Stok Minimum"
+                        label={`Stok Minimum (${stockUnit})`}
                         type="number"
                         min={0}
                         value={form.data.minimum_stock}
@@ -87,6 +112,7 @@ export default function CreateInventory({ outlets, families }: any) {
                             )
                         }
                         error={form.errors.minimum_stock}
+                        className="min-h-11 tabular-nums focus-visible:ring-primary"
                     />
 
                     <Textarea
@@ -94,19 +120,21 @@ export default function CreateInventory({ outlets, families }: any) {
                         value={form.data.notes}
                         onChange={(e) => form.setData('notes', e.target.value)}
                         error={form.errors.notes}
+                        className="min-h-[44px] focus-visible:ring-primary"
                     />
 
                     <div className="flex items-center gap-3 pt-2">
                         <Button
                             type="submit"
+                            className="min-h-11 bg-accent-orange text-white shadow-sm hover:bg-accent-orange-hover"
                             loading={form.processing}
                             disabled={form.processing}
                         >
-                            Simpan
+                            Tambah Stok
                         </Button>
                         <a
                             href="/owner/inventories"
-                            className="text-xs font-semibold text-text-muted hover:text-text"
+                            className="flex min-h-11 items-center text-xs font-semibold text-text-muted hover:text-text"
                         >
                             Batal
                         </a>

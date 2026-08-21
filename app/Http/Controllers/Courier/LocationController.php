@@ -22,7 +22,7 @@ class LocationController extends Controller
 
         $user = $request->user();
 
-        if (!$user->isCourier()) {
+        if (! $user->isCourier()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

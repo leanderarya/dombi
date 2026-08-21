@@ -23,8 +23,8 @@ class RefundRequested extends Notification
             'type' => 'refund_requested',
             'order_id' => $this->order->id,
             'order_code' => $this->order->order_code,
-            'message' => 'Pesanan ' . $this->order->order_code . ' dibatalkan. Refund sebesar Rp ' .
-                number_format($this->order->total, 0, ',', '.') . ' sedang diproses.',
+            'message' => 'Pesanan '.$this->order->order_code.' dibatalkan. Refund sebesar Rp '.
+                number_format($this->order->total, 0, ',', '.').' sedang diproses.',
         ];
     }
 }

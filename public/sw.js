@@ -1,5 +1,5 @@
-const CACHE_NAME = 'dombi-v3';
-const OFFLINE_URL = '/offline';
+const CACHE_NAME = 'dombi-v6';
+const OFFLINE_URL = '/offline.html';
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
@@ -53,17 +53,10 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (request.headers.get('Accept')?.includes('application/json') || request.url.includes('/api/')) {
-        event.respondWith(
-            fetch(request)
-                .then((response) => {
-                    if (response.ok) {
-                        const clone = response.clone();
-                        caches.open(CACHE_NAME).then((c) => c.put(request, clone));
-                    }
-                    return response;
-                })
-                .catch(() => caches.match(request))
-        );
+        // Never cache API/JSON responses: they may hold per-user data and the cache
+        // key stays identical across accounts, leaking stale data between users.
+        event.respondWith(fetch(request));
+        return;
     }
 });
 

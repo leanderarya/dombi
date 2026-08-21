@@ -1,15 +1,15 @@
 import {
     CheckCircle2,
-    ChevronDown,
     LocateFixed,
     MapPin,
-    Plus,
     Search,
     Star,
+    Trash2,
     X,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
 import {
     syncCustomerLocationDraft,
@@ -60,13 +60,56 @@ type LocationDraft = {
     delivery_notes?: string;
 };
 
+const EMPTY_LOCATION_DRAFT: LocationDraft = {
+    address_line: '',
+    address_detail: '',
+    province: '',
+    city: '',
+    district: '',
+    village: '',
+    postal_code: '',
+    latitude: null,
+    longitude: null,
+    accuracy: null,
+    timestamp: 0,
+};
+
 export default function LocationSheet({
     open,
     onClose,
     onLocationSaved,
     isLoggedIn = true,
 }: Props) {
-    const { location, saveLocation } = useCustomerLocation();
+    const { location, saveLocation, clearLocation } = useCustomerLocation();
+
+    if (!open) {
+        return null;
+    }
+
+    return (
+        <LocationSheetContent
+            onClose={onClose}
+            onLocationSaved={onLocationSaved}
+            isLoggedIn={isLoggedIn}
+            location={location}
+            saveLocation={saveLocation}
+            clearLocation={clearLocation}
+        />
+    );
+}
+
+function LocationSheetContent({
+    onClose,
+    onLocationSaved,
+    isLoggedIn,
+    location,
+    saveLocation,
+    clearLocation,
+}: Omit<Props, 'open'> & {
+    location: CustomerLocation | null;
+    saveLocation: (location: CustomerLocation) => void;
+    clearLocation: () => void;
+}) {
     const [mode, setMode] = useState<SheetMode>('options');
     const [loadingCurrent, setLoadingCurrent] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -77,6 +120,8 @@ export default function LocationSheet({
     const [saveLabel, setSaveLabel] = useState('');
     const [saving, setSaving] = useState(false);
     const [canAdd, setCanAdd] = useState(true);
+    const [deleteTarget, setDeleteTarget] = useState<SavedAddress | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     // Fetch saved addresses from server
     const fetchAddresses = useCallback(async () => {
@@ -84,6 +129,7 @@ export default function LocationSheet({
             return;
         }
 
+        await Promise.resolve();
         setLoadingAddresses(true);
 
         try {
@@ -108,14 +154,26 @@ export default function LocationSheet({
     }, [isLoggedIn]);
 
     useEffect(() => {
-        if (open) {
-            setMode('options');
-            setError(null);
-            setDraft(toDraft(location));
-            setGpsAccuracy(null);
-            fetchAddresses();
+        const timeout = window.setTimeout(fetchAddresses, 0);
+
+        return () => window.clearTimeout(timeout);
+    }, [fetchAddresses]);
+
+    useEffect(() => {
+        if (!deleteTarget) {
+            return;
         }
-    }, [open, location, fetchAddresses]);
+
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setDeleteTarget(null);
+            }
+        };
+
+        window.addEventListener('keydown', onKey);
+
+        return () => window.removeEventListener('keydown', onKey);
+    }, [deleteTarget]);
 
     async function handleUseCurrentLocation() {
         if (!navigator.geolocation) {
@@ -198,7 +256,10 @@ export default function LocationSheet({
         );
     }
 
-    function handleSelectSavedAddress(addr: SavedAddress) {
+    async function handleSelectSavedAddress(
+        addr: SavedAddress,
+        timestamp: number,
+    ) {
         const nextLocation: CustomerLocation = {
             address_id: addr.id,
             address_line: addr.address_line,
@@ -210,13 +271,13 @@ export default function LocationSheet({
             postal_code: addr.postal_code,
             latitude: addr.latitude,
             longitude: addr.longitude,
-            timestamp: Date.now(),
+            timestamp,
             landmark: addr.landmark,
             delivery_notes: addr.delivery_notes,
         };
 
         saveLocation(nextLocation);
-        syncCustomerLocationDraft(nextLocation);
+        await syncCustomerLocationDraft(nextLocation);
         onLocationSaved?.(nextLocation);
         onClose();
     }
@@ -265,20 +326,108 @@ export default function LocationSheet({
             });
 
             if (res.ok) {
+                const data = await res.json().catch(() => null);
+                const saved = data?.address;
+
+                // Apply the returned saved address so the checkout selection uses it
+                // (prevents a duplicate row being created on order placement).
+                if (saved?.id) {
+                    onLocationSaved?.({
+                        ...toCustomerLocation(draft),
+                        address_id: saved.id,
+                        timestamp: Date.now(),
+                    });
+                }
+
+                toast.success('Alamat berhasil disimpan.');
                 onClose();
             } else {
                 const data = await res.json().catch(() => null);
-                setError(data?.error ?? 'Gagal menyimpan alamat.');
+                toast.error(
+                    data?.message ?? data?.error ?? 'Gagal menyimpan alamat.',
+                );
             }
         } catch {
-            setError('Gagal menyimpan alamat.');
+            toast.error('Gagal menyimpan alamat.');
         } finally {
             setSaving(false);
         }
     }
 
-    if (!open) {
-        return null;
+    async function confirmDeleteSavedAddress() {
+        if (!deleteTarget) {
+            return;
+        }
+
+        setDeleting(true);
+        setError(null);
+
+        try {
+            const res = await fetch(`/customer/addresses/${deleteTarget.id}`, {
+                method: 'DELETE',
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') ?? '',
+                },
+                credentials: 'same-origin',
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => null);
+                const msg =
+                    data?.message ?? data?.error ?? 'Gagal menghapus alamat.';
+
+                // Ownership/auth/CSRF staleness: the list may be stale or the
+                // session expired. Refresh the address list to recover.
+                if (
+                    res.status === 401 ||
+                    res.status === 403 ||
+                    res.status === 404
+                ) {
+                    await fetchAddresses();
+                }
+
+                toast.error(msg);
+                setDeleteTarget(null);
+
+                return;
+            }
+
+            setSavedAddresses((prev) =>
+                prev.filter((a) => a.id !== deleteTarget.id),
+            );
+            setCanAdd(true);
+            toast.success('Alamat berhasil dihapus.');
+
+            // If the deleted address is the active selection, clear it.
+            if (location?.address_id === deleteTarget.id) {
+                // 0 = falsy sentinel; type is non-nullable number, downstream !latitude checks treat 0 as unset.
+                onLocationSaved?.({
+                    address_line: '',
+                    address_detail: '',
+                    province: '',
+                    city: '',
+                    district: '',
+                    village: '',
+                    postal_code: '',
+                    latitude: 0,
+                    longitude: 0,
+                    landmark: '',
+                    delivery_notes: '',
+                    timestamp: Date.now(),
+                });
+                clearLocation();
+            }
+        } catch {
+            toast.error('Terjadi kesalahan. Coba lagi.');
+        } finally {
+            setDeleting(false);
+            setDeleteTarget(null);
+        }
     }
 
     return createPortal(
@@ -345,36 +494,54 @@ export default function LocationSheet({
                                         Alamat Tersimpan
                                     </div>
                                     {savedAddresses.map((addr) => (
-                                        <button
+                                        <div
                                             key={addr.id}
-                                            type="button"
-                                            onClick={() =>
-                                                handleSelectSavedAddress(addr)
-                                            }
                                             className="flex h-14 w-full items-center gap-3 rounded-xl border border-border bg-white px-4 transition-all active:bg-zinc-50 active:opacity-80"
                                         >
-                                            <MapPin className="h-4 w-4 shrink-0 text-text-subtle" />
-                                            <div className="min-w-0 flex-1 text-left">
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="text-sm font-semibold text-text">
-                                                        {addr.label}
-                                                    </span>
-                                                    {addr.is_default && (
-                                                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                                                    )}
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handleSelectSavedAddress(
+                                                        addr,
+                                                        Date.now(),
+                                                    )
+                                                }
+                                                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                                            >
+                                                <MapPin className="h-4 w-4 shrink-0 text-text-subtle" />
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-sm font-semibold text-text">
+                                                            {addr.label}
+                                                        </span>
+                                                        {addr.is_default && (
+                                                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                                        )}
+                                                    </div>
+                                                    <div className="truncate text-[11px] text-text-muted">
+                                                        {[
+                                                            addr.village,
+                                                            addr.district,
+                                                            addr.city,
+                                                        ]
+                                                            .filter(Boolean)
+                                                            .join(', ') ||
+                                                            addr.address_line}
+                                                    </div>
                                                 </div>
-                                                <div className="truncate text-[11px] text-text-muted">
-                                                    {[
-                                                        addr.village,
-                                                        addr.district,
-                                                        addr.city,
-                                                    ]
-                                                        .filter(Boolean)
-                                                        .join(', ') ||
-                                                        addr.address_line}
-                                                </div>
-                                            </div>
-                                        </button>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                aria-label={`Hapus alamat ${addr.label}`}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setDeleteTarget(addr);
+                                                }}
+                                                className="shrink-0 rounded-lg p-2 text-text-muted active:bg-red-50 active:text-red-600"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
                                     ))}
                                 </>
                             )}
@@ -431,21 +598,7 @@ export default function LocationSheet({
                             </button>
 
                             <LocationSearchPanel
-                                value={
-                                    draft ?? {
-                                        address_line: '',
-                                        address_detail: '',
-                                        province: '',
-                                        city: '',
-                                        district: '',
-                                        village: '',
-                                        postal_code: '',
-                                        latitude: null,
-                                        longitude: null,
-                                        accuracy: null,
-                                        timestamp: Date.now(),
-                                    }
-                                }
+                                value={draft ?? EMPTY_LOCATION_DRAFT}
                                 onChange={(next) =>
                                     setDraft((current) => ({
                                         address_line:
@@ -663,6 +816,50 @@ export default function LocationSheet({
                     )}
                 </div>
             </div>
+
+            {deleteTarget && (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="delete-address-title"
+                    className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40"
+                    onClick={() => setDeleteTarget(null)}
+                >
+                    <div
+                        className="w-full max-w-lg rounded-t-3xl bg-white p-5 shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3
+                            id="delete-address-title"
+                            className="text-[15px] font-semibold text-text"
+                        >
+                            Hapus alamat?
+                        </h3>
+                        <p className="mt-1 text-xs text-text-muted">
+                            "{deleteTarget.label}" akan dihapus dari alamat
+                            tersimpan.
+                        </p>
+                        <div className="mt-4 flex gap-2">
+                            <button
+                                type="button"
+                                disabled={deleting}
+                                onClick={() => setDeleteTarget(null)}
+                                className="flex-1 rounded-lg border border-border px-3 py-2.5 text-xs font-semibold text-text active:opacity-80"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                disabled={deleting}
+                                onClick={confirmDeleteSavedAddress}
+                                className="flex-1 rounded-lg bg-red-600 px-3 py-2.5 text-xs font-bold text-white active:opacity-80 disabled:opacity-60"
+                            >
+                                {deleting ? 'Menghapus...' : 'Hapus'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>,
         document.body,
     );

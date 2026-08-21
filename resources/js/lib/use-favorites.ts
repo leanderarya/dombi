@@ -15,8 +15,8 @@ class FavoritesStore {
         return this.snapshot;
     }
 
-    isFavorite(variantId: number): boolean {
-        return this.favorites.has(variantId);
+    isFavorite(productId: number): boolean {
+        return this.favorites.has(productId);
     }
 
     /**
@@ -79,35 +79,35 @@ class FavoritesStore {
         this.commit();
     }
 
-    async toggle(variantId: number): Promise<void> {
+    async toggle(productId: number): Promise<void> {
         if (this.mode === 'guest') {
-            this.toggleLocal(variantId);
+            this.toggleLocal(productId);
         } else {
-            await this.toggleServer(variantId);
+            await this.toggleServer(productId);
         }
     }
 
     // ── Private ───────────────────────────────────────────────────
 
-    private toggleLocal(variantId: number): void {
-        if (this.favorites.has(variantId)) {
-            this.favorites.delete(variantId);
+    private toggleLocal(productId: number): void {
+        if (this.favorites.has(productId)) {
+            this.favorites.delete(productId);
         } else {
-            this.favorites.add(variantId);
+            this.favorites.add(productId);
         }
 
         this.commit();
         this.persistGuestToStorage();
     }
 
-    private async toggleServer(variantId: number): Promise<void> {
+    private async toggleServer(productId: number): Promise<void> {
         // Optimistic update
-        const wasFavorite = this.favorites.has(variantId);
+        const wasFavorite = this.favorites.has(productId);
 
         if (wasFavorite) {
-            this.favorites.delete(variantId);
+            this.favorites.delete(productId);
         } else {
-            this.favorites.add(variantId);
+            this.favorites.add(productId);
         }
 
         this.commit();
@@ -117,7 +117,10 @@ class FavoritesStore {
                 method: 'POST',
                 headers: this.headers(),
                 credentials: 'same-origin',
-                body: JSON.stringify({ product_variant_id: variantId }),
+                body: JSON.stringify({
+                    product_id: productId,
+                    product_variant_id: productId, // backward compat
+                }),
             });
 
             if (res.ok) {
@@ -125,18 +128,18 @@ class FavoritesStore {
 
                 // Reconcile with server response
                 if (data.favorited) {
-                    this.favorites.add(variantId);
+                    this.favorites.add(productId);
                 } else {
-                    this.favorites.delete(variantId);
+                    this.favorites.delete(productId);
                 }
 
                 this.commit();
             } else {
                 // Revert on failure
                 if (wasFavorite) {
-                    this.favorites.add(variantId);
+                    this.favorites.add(productId);
                 } else {
-                    this.favorites.delete(variantId);
+                    this.favorites.delete(productId);
                 }
 
                 this.commit();
@@ -144,9 +147,9 @@ class FavoritesStore {
         } catch {
             // Revert on network error
             if (wasFavorite) {
-                this.favorites.add(variantId);
+                this.favorites.add(productId);
             } else {
-                this.favorites.delete(variantId);
+                this.favorites.delete(productId);
             }
 
             this.commit();
@@ -166,7 +169,7 @@ class FavoritesStore {
 
             if (res.ok) {
                 const data = await res.json();
-                const ids = (data.variant_ids ?? []).filter(
+                const ids = (data.product_ids ?? data.variant_ids ?? []).filter(
                     (id: unknown): id is number => typeof id === 'number',
                 );
                 this.favorites = new Set(ids);
@@ -191,12 +194,15 @@ class FavoritesStore {
                 method: 'POST',
                 headers: this.headers(),
                 credentials: 'same-origin',
-                body: JSON.stringify({ variant_ids: guestIds }),
+                body: JSON.stringify({
+                    product_ids: guestIds,
+                    variant_ids: guestIds, // backward compat
+                }),
             });
 
             if (res.ok) {
                 const data = await res.json();
-                const ids = (data.variant_ids ?? []).filter(
+                const ids = (data.product_ids ?? data.variant_ids ?? []).filter(
                     (id: unknown): id is number => typeof id === 'number',
                 );
                 this.favorites = new Set(ids);
@@ -298,11 +304,11 @@ export function useFavorites() {
     );
 
     const isFavorite = useCallback(
-        (variantId: number) => favoritesStore.isFavorite(variantId),
+        (productId: number) => favoritesStore.isFavorite(productId),
         [],
     );
     const toggle = useCallback(
-        (variantId: number) => favoritesStore.toggle(variantId),
+        (productId: number) => favoritesStore.toggle(productId),
         [],
     );
 

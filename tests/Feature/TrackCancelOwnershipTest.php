@@ -191,7 +191,8 @@ class TrackCancelOwnershipTest extends TestCase
             'reason' => 'Tidak Jadi Membeli',
         ]);
 
-        $response->assertForbidden();
+        // Guest cancel route removed — now 404 (or 403 if controller directly). Both are safe, no cancellation.
+        $this->assertTrue(in_array($response->status(), [403, 404], true), 'Expected 403 or 404, got '.$response->status());
 
         $this->order->refresh();
         $this->assertEquals(Order::STATUS_PENDING_CONFIRMATION, $this->order->status);

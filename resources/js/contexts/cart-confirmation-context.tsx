@@ -1,5 +1,4 @@
 import { createContext, useContext, useCallback, useState } from 'react';
-import type { ReactNode } from 'react';
 
 interface CartConfirmationData {
     productName: string;

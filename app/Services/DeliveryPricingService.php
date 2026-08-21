@@ -22,7 +22,7 @@ class DeliveryPricingService
         $tiers = $this->loadTiers();
 
         foreach ($tiers as $tier) {
-            if ($distanceKm <= $tier['max_km']) {
+            if ($distanceKm >= $tier['min_km'] && $distanceKm <= $tier['max_km']) {
                 return [
                     'distance_km' => $distanceKm,
                     'delivery_fee' => (float) $tier['fee'],
@@ -53,6 +53,10 @@ class DeliveryPricingService
             ])->all();
         }
 
-        return config('delivery.tiers', []);
+        return array_map(fn (array $tier) => [
+            'min_km' => (float) ($tier['min_km'] ?? 0),
+            'max_km' => (float) $tier['max_km'],
+            'fee' => (float) $tier['fee'],
+        ], config('delivery.tiers', []));
     }
 }

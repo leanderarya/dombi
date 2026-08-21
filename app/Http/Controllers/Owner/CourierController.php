@@ -4,14 +4,17 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\StoreCourierRequest;
-use App\Models\CourierProfile;
+use App\Models\CourierInvitation;
 use App\Models\Delivery;
+use App\Models\Outlet;
 use App\Models\User;
+use App\Services\CourierInvitationService;
 use App\Services\CourierService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CourierController extends Controller
 {
@@ -61,6 +64,7 @@ class CourierController extends Controller
 
     public function show(User $courier): Response
     {
+        $courier = $this->courierUser($courier);
         $courier->load('courierProfile');
         $courier->loadCount([
             'courierDeliveries as total_deliveries_count',
@@ -74,27 +78,36 @@ class CourierController extends Controller
             ->limit(10)
             ->get();
 
-        $invitation = \App\Models\CourierInvitation::where('courier_user_id', $courier->id)
+        $invitation = CourierInvitation::where('courier_user_id', $courier->id)
             ->where('status', 'pending')
             ->latest()
             ->first();
 
         $inviteUrl = $invitation && $invitation->expires_at->isFuture()
-            ? app(\App\Services\CourierInvitationService::class)->invitationUrl($invitation)
+            ? app(CourierInvitationService::class)->invitationUrl($invitation)
             : null;
 
         return Inertia::render('owner/couriers/show', [
             'courier' => $courier,
             'recentDeliveries' => $recentDeliveries,
             'inviteUrl' => $inviteUrl,
+            'outlets' => Outlet::where('status', 'active')->get(['id', 'name']),
+            'assignedOutlets' => $courier->courierProfile?->assignedOutlets->pluck('id') ?? collect(),
+            'legacyClassification' => [
+                'isLegacy' => $courier->courierProfile !== null && $courier->courierProfile->courier_source === null,
+                'source' => $courier->courierProfile?->courier_source,
+                'outletId' => $courier->courierProfile?->outlet_id,
+            ],
         ]);
     }
 
     public function update(Request $request, User $courier): RedirectResponse
     {
+        $courier = $this->courierUser($courier);
+
         $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'phone' => ['sometimes', 'string', 'max:20', 'unique:users,phone,' . $courier->id],
+            'phone' => ['sometimes', 'string', 'max:20', 'unique:users,phone,'.$courier->id],
             'vehicle_type' => ['nullable', 'in:motorcycle,bicycle,car'],
             'vehicle_plate' => ['nullable', 'string', 'max:20'],
             'is_active' => ['sometimes', 'boolean'],
@@ -109,12 +122,14 @@ class CourierController extends Controller
 
     public function destroy(User $courier): RedirectResponse
     {
+        $courier = $this->courierUser($courier);
+
         $activeDeliveries = Delivery::where('courier_id', $courier->id)
             ->whereIn('status', ['waiting_assignment', 'waiting_pickup', 'picked_up', 'delivering'])
             ->count();
 
         if ($activeDeliveries > 0) {
-            return back()->with('error', 'Kurir masih memiliki ' . $activeDeliveries . ' pengiriman aktif. Selesaikan dulu sebelum menghapus.');
+            return back()->with('error', 'Kurir masih memiliki '.$activeDeliveries.' pengiriman aktif. Selesaikan dulu sebelum menghapus.');
         }
 
         $courier->delete();
@@ -122,5 +137,14 @@ class CourierController extends Controller
         return redirect()
             ->route('owner.couriers.index')
             ->with('success', 'Kurir berhasil dihapus.');
+    }
+
+    private function courierUser(User $courier): User
+    {
+        if ($courier->role !== 'courier') {
+            throw new NotFoundHttpException;
+        }
+
+        return $courier;
     }
 }

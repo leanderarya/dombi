@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import OwnerModalShell from '@/components/owner/owner-modal-shell';
-import { formatCurrency } from '@/lib/format';
 
 interface Props {
     open: boolean;

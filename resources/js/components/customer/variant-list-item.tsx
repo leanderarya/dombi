@@ -1,12 +1,11 @@
 import { Link } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import ProductImage from '@/components/customer/product-image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOutlet } from '@/contexts/outlet-context';
-import { mutationFetch } from '@/lib/api';
+import { useQuickAddCart } from '@/hooks/use-quick-add-cart';
 import { formatCurrency } from '@/lib/format';
-import { useCart } from '@/lib/use-cart';
 import { useFavorites } from '@/lib/use-favorites';
 
 interface Variant {
@@ -25,7 +24,6 @@ interface Props {
     variant: Variant;
     familyId: number;
     familyDescription: string | null;
-    familyImage?: string | null;
     displayPrice: number;
     displayLabel: string;
     variantCount?: number;
@@ -37,18 +35,15 @@ const VariantListItem = memo(function VariantListItem({
     variant,
     familyId,
     familyDescription,
-    familyImage,
     displayPrice,
     displayLabel,
     variantCount = 1,
     onQuickAdd,
     loading,
 }: Props) {
-    const [adding, setAdding] = useState(false);
-    const [toast, setToast] = useState(false);
-    const cart = useCart();
     const { isFavorite, toggle } = useFavorites();
     const { selectedOutlet } = useOutlet();
+    const { addToCart, adding, toast } = useQuickAddCart();
 
     const isFav = isFavorite(variant.id);
     const isOutOfStock = variant.stock_status === 'out_of_stock';
@@ -91,30 +86,11 @@ const VariantListItem = memo(function VariantListItem({
             return;
         }
 
-        setAdding(true);
-        cart.addItem(variant.id, 1, displayPrice);
-
-        try {
-            const token = document
-                .querySelector('meta[name="csrf-token"]')
-                ?.getAttribute('content');
-            await mutationFetch('/customer/cart/add', {
-                method: 'POST',
-                headers: {
-                    ...(token ? { 'X-CSRF-TOKEN': token } : {}),
-                },
-                body: JSON.stringify({
-                    product_variant_id: variant.id,
-                    quantity: 1,
-                }),
-            });
-        } catch {
-            // Frontend cart already updated
-        }
-
-        setAdding(false);
-        setToast(true);
-        setTimeout(() => setToast(false), 2000);
+        await addToCart({
+            productId: variant.id,
+            price: displayPrice,
+            quantity: 1,
+        });
     };
 
     const handleFavorite = (e: React.MouseEvent) => {
@@ -136,7 +112,7 @@ const VariantListItem = memo(function VariantListItem({
                     <>
                         <ProductImage
                             name={variant.name}
-                            src={variant.image ?? familyImage}
+                            src={variant.image}
                             size="md"
                         />
                         {/* Favorite button */}
@@ -211,16 +187,36 @@ const VariantListItem = memo(function VariantListItem({
                                 : 'bg-primary text-white active:bg-primary-hover'
                         }`}
                         aria-label={
-                            isOutOfStock ? 'Habis' : isOutletClosed ? 'Outlet Tutup' : 'Tambah ke keranjang'
+                            isOutOfStock
+                                ? 'Habis'
+                                : isOutletClosed
+                                  ? 'Outlet Tutup'
+                                  : 'Tambah ke keranjang'
                         }
                     >
                         {isOutOfStock ? (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                            >
                                 <path strokeLinecap="round" d="M18 12H6" />
                             </svg>
                         ) : isOutletClosed ? (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
                             </svg>
                         ) : (
                             <svg
