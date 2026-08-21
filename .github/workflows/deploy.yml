@@ -39,53 +39,32 @@ jobs:
           npm ci
           npm run build
 
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Deploy code via SSH
+        uses: appleboy/ssh-action@v1
         with:
-          server: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          port: 21
-          server-dir: /domains/dombicenter.com/public_html/app/
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/vendor/**
-            **/tests/**
-            **/docs/**
-            **/.env
-            **/.env.example
-            **/.env.staging.example
-            **/.env.production.example
-            **/.github/**
-            **/.agents/**
-            **/.claude/**
-            **/.superpowers/**
-            **/.opencode/**
-            **/.codex/**
-            **/.phpunit.cache/**
-            **/storage/logs/**
-            **/storage/framework/sessions/**
-            **/storage/framework/cache/**
-            **/storage/framework/views/**
-            .editorconfig
-            .eslintrc.cjs
-            .npmrc
-            .prettierrc
-            .prettierignore
-            phpunit.xml
-            pint.json
-            tsconfig.json
-            vite.config.ts
-            vitest.config.ts
-            README.md
-            DESIGN.md
-            STITCH_PROMPTS.md
-            skills-lock.json
-            pnpm-lock.yaml
-            pnpm-workspace.yaml
-            package-lock.json
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          script: |
+            cd domains/dombicenter.com/public_html/app
+            DEPLOY_SHA='${{ github.sha }}'
+            echo "Deploying SHA $DEPLOY_SHA to production"
+            git fetch --no-tags origin "$DEPLOY_SHA"
+            git reset --hard "$DEPLOY_SHA"
+            test "$(git rev-parse HEAD)" = "$DEPLOY_SHA"
+            echo "Production code synced"
+
+      - name: Upload built assets via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          source: "public/build/*"
+          target: "domains/dombicenter.com/public_html/app/"
+          strip_components: 0
 
       - name: Run migrations and cache clear via SSH
         uses: appleboy/ssh-action@v1
