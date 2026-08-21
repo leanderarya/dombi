@@ -1,10 +1,14 @@
 import { useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
 import { Package, TriangleAlert } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useReducer } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
-import { formatDate } from '@/lib/format';
+import {
+    closeResolveDeliverySheet,
+    initialResolveDeliveryDialogState,
+    resolveDeliveryDialogReducer,
+} from './resolve-delivery-state';
 
 interface Props {
     delivery: any;
@@ -51,26 +55,29 @@ export default function ResolveDeliverySheet({
     onClose,
 }: Props) {
     const form = useForm({ resolution: '', resolution_notes: '' });
-    const [confirmDestructive, setConfirmDestructive] = useState(false);
+    const [dialogState, dispatchDialog] = useReducer(
+        resolveDeliveryDialogReducer,
+        initialResolveDeliveryDialogState,
+    );
+    const { confirmDestructive } = dialogState;
 
     const selectedOption = resolutionOptions.find(
         (o) => o.value === form.data.resolution,
     );
     const isDestructive = selectedOption?.destructive ?? false;
 
-    // Reset state when sheet opens/closes
-    useEffect(() => {
-        if (!open) {
-            form.reset();
-            setConfirmDestructive(false);
-        }
-    }, [open]);
+    const closeSheet = () =>
+        closeResolveDeliverySheet({
+            resetForm: form.reset,
+            resetDialog: () => dispatchDialog({ type: 'reset' }),
+            onClose,
+        });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
         if (isDestructive && !confirmDestructive) {
-            setConfirmDestructive(true);
+            dispatchDialog({ type: 'confirm-destructive' });
 
             return;
         }
@@ -78,10 +85,11 @@ export default function ResolveDeliverySheet({
         form.post(`/owner/deliveries/${delivery.id}/resolve`, {
             preserveScroll: true,
             onSuccess: () => {
-                onClose();
+                closeSheet();
                 toast.success('Pengiriman diselesaikan');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     }
 
@@ -90,7 +98,7 @@ export default function ResolveDeliverySheet({
     return (
         <Dialog
             open={open}
-            onClose={onClose}
+            onClose={closeSheet}
             title="Selesaikan Pengiriman Gagal"
         >
             <p className="text-sm text-text-muted">
@@ -177,7 +185,7 @@ export default function ResolveDeliverySheet({
                                                 'resolution',
                                                 opt.value,
                                             );
-                                            setConfirmDestructive(false);
+                                            dispatchDialog({ type: 'reset' });
                                         }}
                                         className="sr-only"
                                     />

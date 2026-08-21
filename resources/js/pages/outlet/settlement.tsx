@@ -1,14 +1,18 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ChartColumn, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChartColumn } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
+import CollapsibleCard from '@/components/ui/collapsible-card';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import SectionCard from '@/components/ui/section-card';
+import { Skeleton, SkeletonTable } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
 
@@ -22,6 +26,14 @@ interface SettlementSummary {
     outstanding_amount: number;
     units_sold: number;
     orders_count: number;
+    net_amount: number;
+    direction: 'owner_pays_outlet' | 'outlet_pays_owner';
+    breakdown: {
+        online_outlet_share: number;
+        delivery_cost: number;
+        refund: number;
+        offline_sales: number;
+    };
 }
 
 interface Reconciliation {
@@ -41,6 +53,7 @@ interface Payment {
     payment_date: string;
     status: string;
     notes: string | null;
+    proof_image: string | null;
     rejection_reason: string | null;
     verifier: string | null;
     verified_at: string | null;
@@ -58,6 +71,14 @@ interface TimelineEntry {
     due_date: string;
     status: string;
     outstanding: number;
+    net_amount: number;
+    direction: string;
+    breakdown: {
+        online_outlet_share: number;
+        delivery_cost: number;
+        refund: number;
+        offline_sales: number;
+    };
     notes: string | null;
     created_at: string;
 }
@@ -78,6 +99,11 @@ interface Props {
     hasPendingPayment: boolean;
     period: string;
     periodRange: { from: string; to: string } | null;
+    outletBank: {
+        bank_name: string | null;
+        bank_account_number: string | null;
+        bank_account_holder: string | null;
+    };
 }
 
 const periods = [
@@ -106,9 +132,16 @@ export default function OutletSettlement({
     paymentAccounts,
     hasPendingPayment,
     period,
+    outletBank,
 }: Props) {
     const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
-    const [detailOpen, setDetailOpen] = useState(false);
+    const [selectedPayment, setSelectedPayment] = useState<any>(null);
+    const { loading } = useInertiaLoading();
+    const bankForm = useForm({
+        bank_name: outletBank?.bank_name ?? '',
+        bank_account_number: outletBank?.bank_account_number ?? '',
+        bank_account_holder: outletBank?.bank_account_holder ?? '',
+    });
 
     const handlePeriodChange = (newPeriod: string) => {
         router.get(
@@ -123,7 +156,6 @@ export default function OutletSettlement({
     const hasSales = summary.orders_count > 0;
     const isSettled = reconciliation.outstanding <= 0;
     const visiblePayments = payments.slice(0, 3);
-    const hasMorePayments = payments.length > 3;
 
     return (
         <OutletLayout
@@ -137,7 +169,10 @@ export default function OutletSettlement({
                 />
             }
             actionBarSlot={
-                hasSales && !isSettled && !hasPendingPayment ? (
+                hasSales &&
+                !isSettled &&
+                !hasPendingPayment &&
+                summary.direction === 'outlet_pays_owner' ? (
                     <StickyActionBar
                         actions={[
                             {
@@ -151,308 +186,446 @@ export default function OutletSettlement({
         >
             <Head title="Settlement" />
             <OutletPageShell>
-                {/* ── 1. Hero: Outstanding + Rekening + Action ── */}
-                {isSettled ? (
-                    <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-                        <div className="flex items-center gap-2">
-                            <svg
-                                className="h-5 w-5 text-emerald-600"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                            >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                            <span className="text-sm font-semibold text-text">
-                                Semua settlement sudah lunas
-                            </span>
+                {loading ? (
+                    <div className="space-y-4">
+                        <div className="space-y-2 rounded-xl border border-border bg-surface p-5">
+                            <Skeleton className="h-3 w-1/3" />
+                            <Skeleton className="h-8 w-1/2" />
                         </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div
+                                    key={i}
+                                    className="space-y-1.5 rounded-xl border border-border bg-white p-4"
+                                >
+                                    <Skeleton className="h-3 w-2/3" />
+                                    <Skeleton className="h-5 w-1/3" />
+                                </div>
+                            ))}
+                        </div>
+                        <SkeletonTable rows={3} />
                     </div>
                 ) : (
-                    <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                        <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
-                            Total Belum Disetor
-                        </div>
-                        <div className="mt-1 text-3xl font-bold text-red-600 tabular-nums">
-                            {formatCurrency(reconciliation.outstanding)}
-                        </div>
-
-                        {/* Compact unpaid breakdown */}
-                        {timeline.filter((t) => t.outstanding > 0).length >
-                            0 && (
-                            <div className="mt-3 space-y-1">
-                                {timeline
-                                    .filter((t) => t.outstanding > 0)
-                                    .map((t) => (
-                                        <div
-                                            key={t.id}
-                                            className="flex items-center justify-between text-xs"
-                                        >
-                                            <span className="text-text-muted">
-                                                {t.period_label}
-                                            </span>
-                                            <span className="font-semibold text-red-600 tabular-nums">
-                                                {formatCurrency(t.outstanding)}
-                                            </span>
-                                        </div>
-                                    ))}
-                            </div>
-                        )}
-
-                        {paymentAccounts.length > 0 && (
-                            <div className="mt-3 space-y-1.5">
-                                {paymentAccounts.map((account) => (
-                                    <div
-                                        key={account.id}
-                                        className="flex items-center gap-2 rounded-lg bg-red-100/50 px-3 py-2"
-                                    >
-                                        <span className="text-[11px] font-bold text-red-800">
-                                            {account.bank_name}
-                                        </span>
-                                        <span className="text-[11px] text-red-700">
-                                            {account.account_number}
-                                        </span>
-                                        <span className="text-[10px] text-red-600">
-                                            a.n. {account.account_holder}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {hasPendingPayment ? (
-                            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <>
+                        {/* ── 1. Hero: Outstanding + Rekening + Action ── */}
+                        {isSettled ? (
+                            <div className="rounded-xl border border-primary/20 bg-primary-light p-5">
                                 <div className="flex items-center gap-2">
                                     <svg
-                                        className="h-4 w-4 text-amber-600"
+                                        className="h-5 w-5 text-primary"
                                         viewBox="0 0 20 20"
                                         fill="currentColor"
                                     >
                                         <path
                                             fillRule="evenodd"
-                                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                             clipRule="evenodd"
                                         />
                                     </svg>
-                                    <span className="text-xs font-medium text-amber-800">
-                                        Pembayaran sedang menunggu verifikasi
+                                    <span className="text-sm font-semibold text-text">
+                                        Semua settlement sudah lunas
                                     </span>
                                 </div>
                             </div>
                         ) : (
-                            <Button
-                                size="lg"
-                                onClick={() => setPaymentSheetOpen(true)}
-                                className="mt-3 w-full"
-                            >
-                                Ajukan Pembayaran
-                            </Button>
-                        )}
-                    </div>
-                )}
-
-                {/* No Sales Empty State */}
-                {!hasSales && (
-                    <EmptyState
-                        icon={
-                            <ChartColumn className="h-8 w-8 text-text-subtle" />
-                        }
-                        title="Belum ada penjualan"
-                        description="Belum ada penjualan pada periode ini."
-                    />
-                )}
-
-                {/* No Settlement but has sales */}
-                {!hasTimeline && hasSales && (
-                    <EmptyState
-                        title="Belum ada settlement"
-                        description="Settlement akan dibuat otomatis setiap minggu berdasarkan penjualan."
-                    />
-                )}
-
-                {/* Persistent Rekening Info */}
-                {paymentAccounts.length > 0 && isSettled && (
-                    <SectionCard label="Rekening Setoran">
-                        <div className="mt-2 space-y-1.5">
-                            {paymentAccounts.map((account) => (
-                                <div
-                                    key={account.id}
-                                    className="flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2"
-                                >
-                                    <span className="text-[11px] font-bold text-text">
-                                        {account.bank_name}
-                                    </span>
-                                    <span className="text-[11px] text-text-muted">
-                                        {account.account_number}
-                                    </span>
-                                    <span className="text-[10px] text-text-subtle">
-                                        a.n. {account.account_holder}
-                                    </span>
+                            <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                                <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                    Total Belum Disetor
                                 </div>
-                            ))}
-                        </div>
-                    </SectionCard>
-                )}
+                                <div className="mt-1 text-3xl font-bold text-red-600 tabular-nums">
+                                    {formatCurrency(reconciliation.outstanding)}
+                                </div>
 
-                {/* ── 2. Settlement Mingguan ── */}
-                {hasTimeline && (
-                    <SectionCard label="Settlement Mingguan">
-                        <div className="mt-2 space-y-0">
-                            {timeline.map((entry, idx) => (
-                                <TimelineItem
-                                    key={entry.id}
-                                    entry={entry}
-                                    isLast={idx === timeline.length - 1}
-                                />
-                            ))}
-                        </div>
-                    </SectionCard>
-                )}
-
-                {/* ── 3. Riwayat Pembayaran (max 3) ── */}
-                {hasPayments && (
-                    <SectionCard label="Riwayat Pembayaran">
-                        <div className="mt-2 space-y-2">
-                            {visiblePayments.map((payment) => (
-                                <div
-                                    key={payment.id}
-                                    className="rounded-xl border border-border bg-surface-muted p-3"
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <div className="text-sm font-semibold text-text">
-                                                {formatCurrency(payment.amount)}
-                                            </div>
-                                            <div className="text-[11px] text-text-subtle">
-                                                {formatDate(
-                                                    payment.payment_date,
-                                                )}
-                                            </div>
-                                            <div className="mt-0.5 text-xs text-text-muted">
-                                                {payment.reference_number}
-                                            </div>
-                                        </div>
-                                        <StatusBadge
-                                            variant={
-                                                statusVariants[payment.status]
-                                            }
-                                        >
-                                            {statusLabels[payment.status]}
-                                        </StatusBadge>
+                                {/* Compact unpaid breakdown */}
+                                {timeline.filter((t) => t.outstanding > 0)
+                                    .length > 0 && (
+                                    <div className="mt-3 space-y-1">
+                                        {timeline
+                                            .filter((t) => t.outstanding > 0)
+                                            .map((t) => (
+                                                <div
+                                                    key={t.id}
+                                                    className="flex items-center justify-between text-xs"
+                                                >
+                                                    <span className="text-text-muted">
+                                                        {t.period_label}
+                                                    </span>
+                                                    <span className="font-semibold text-red-600 tabular-nums">
+                                                        {formatCurrency(
+                                                            t.outstanding,
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            ))}
                                     </div>
-                                    {payment.rejection_reason && (
-                                        <div className="mt-2 rounded-md bg-red-50 p-2 text-xs text-red-700">
-                                            Ditolak: {payment.rejection_reason}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                            {hasMorePayments && (
-                                <Link
-                                    href="/outlet/settlement-payments"
-                                    className="flex min-h-11 items-center justify-center text-xs font-semibold text-primary"
-                                >
-                                    Lihat Semua Pembayaran →
-                                </Link>
-                            )}
-                        </div>
-                    </SectionCard>
-                )}
-
-                {!hasPayments && hasSales && (
-                    <SectionCard label="Riwayat Pembayaran">
-                        <EmptyState title="Belum ada riwayat pembayaran" />
-                    </SectionCard>
-                )}
-
-                {/* ── 4. Detail Rincian (expandable) ── */}
-                {hasSales && (
-                    <SectionCard label="Detail Rincian" className="mb-24">
-                        <button
-                            type="button"
-                            onClick={() => setDetailOpen(!detailOpen)}
-                            className="flex w-full items-center justify-between py-1 text-xs font-semibold text-text-muted"
-                        >
-                            <span>
-                                {detailOpen
-                                    ? 'Sembunyikan rincian'
-                                    : 'Lihat rincian periode'}
-                            </span>
-                            {detailOpen ? (
-                                <ChevronUp className="h-4 w-4" />
-                            ) : (
-                                <ChevronDown className="h-4 w-4" />
-                            )}
-                        </button>
-
-                        {detailOpen && (
-                            <div className="mt-3 space-y-2">
-                                <BreakdownRow
-                                    label="Total Pesanan"
-                                    value={summary.orders_count}
-                                    isCurrency={false}
-                                />
-                                <BreakdownRow
-                                    label="Omset Produk"
-                                    value={summary.sales_amount}
-                                />
-                                <BreakdownRow
-                                    label="Ongkos Kirim"
-                                    value={summary.delivery_fee_amount}
-                                />
-                                <div className="border-t border-border pt-2">
-                                    <BreakdownRow
-                                        label="Total Pendapatan"
-                                        value={summary.gross_revenue}
-                                    />
-                                </div>
-                                <BreakdownRow
-                                    label="Kewajiban (Harga Pusat)"
-                                    value={summary.center_share}
-                                />
-                                <BreakdownRow
-                                    label="Keuntungan Outlet"
-                                    value={summary.outlet_margin}
-                                    accent
-                                />
-                                {reconciliation.adjustments !== 0 && (
-                                    <BreakdownRow
-                                        label="Penyesuaian Return/Exchange"
-                                        value={reconciliation.adjustments}
-                                        negative={
-                                            reconciliation.adjustments < 0
-                                        }
-                                    />
                                 )}
-                                <div className="border-t border-border pt-2">
-                                    <BreakdownRow
-                                        label="Sudah Disetor"
-                                        value={reconciliation.verified_payments}
-                                    />
-                                    {reconciliation.pending_payments > 0 && (
-                                        <BreakdownRow
-                                            label="Menunggu Verifikasi"
-                                            value={
-                                                reconciliation.pending_payments
-                                            }
-                                            muted
-                                        />
-                                    )}
-                                    <div className="mt-1">
-                                        <BreakdownRow
-                                            label="Belum Disetor"
-                                            value={reconciliation.outstanding}
-                                            negative={false}
-                                            accent
-                                        />
+
+                                {paymentAccounts.length > 0 && (
+                                    <div className="mt-3 space-y-1.5">
+                                        {paymentAccounts.map((account) => (
+                                            <div
+                                                key={account.id}
+                                                className="flex items-center gap-2 rounded-lg bg-red-100/50 px-3 py-2"
+                                            >
+                                                <span className="text-[11px] font-bold text-red-800">
+                                                    {account.bank_name}
+                                                </span>
+                                                <span className="text-[11px] text-red-700">
+                                                    {account.account_number}
+                                                </span>
+                                                <span className="text-[10px] text-red-600">
+                                                    a.n.{' '}
+                                                    {account.account_holder}
+                                                </span>
+                                            </div>
+                                        ))}
                                     </div>
-                                </div>
+                                )}
+
+                                {hasPendingPayment ? (
+                                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                                        <div className="flex items-center gap-2">
+                                            <svg
+                                                className="h-4 w-4 text-amber-600"
+                                                viewBox="0 0 20 20"
+                                                fill="currentColor"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                                    clipRule="evenodd"
+                                                />
+                                            </svg>
+                                            <span className="text-xs font-medium text-amber-800">
+                                                Pembayaran sedang menunggu
+                                                verifikasi
+                                            </span>
+                                        </div>
+                                    </div>
+                                ) : summary.direction ===
+                                  'outlet_pays_owner' ? (
+                                    <Button
+                                        size="lg"
+                                        onClick={() =>
+                                            setPaymentSheetOpen(true)
+                                        }
+                                        className="mt-3 w-full"
+                                    >
+                                        Ajukan Pembayaran
+                                    </Button>
+                                ) : null}
                             </div>
                         )}
-                    </SectionCard>
+
+                        {/* No Sales Empty State */}
+                        {!hasSales && (
+                            <EmptyState
+                                icon={
+                                    <ChartColumn className="h-8 w-8 text-text-subtle" />
+                                }
+                                title="Belum ada penjualan"
+                                description="Belum ada penjualan pada periode ini."
+                            />
+                        )}
+
+                        {/* No Settlement but has sales */}
+                        {!hasTimeline && hasSales && (
+                            <EmptyState
+                                title="Belum ada settlement"
+                                description="Settlement akan dibuat otomatis setiap minggu berdasarkan penjualan."
+                            />
+                        )}
+
+                        {/* Persistent Rekening Info */}
+                        {paymentAccounts.length > 0 && isSettled && (
+                            <SectionCard label="Rekening Setoran">
+                                <div className="mt-2 space-y-1.5">
+                                    {paymentAccounts.map((account) => (
+                                        <div
+                                            key={account.id}
+                                            className="flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2"
+                                        >
+                                            <span className="text-[11px] font-bold text-text">
+                                                {account.bank_name}
+                                            </span>
+                                            <span className="text-[11px] text-text-muted">
+                                                {account.account_number}
+                                            </span>
+                                            <span className="text-[10px] text-text-subtle">
+                                                a.n. {account.account_holder}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </SectionCard>
+                        )}
+
+                        {/* Rekening Saya — target payout dari owner */}
+                        <SectionCard label="Rekening Saya (untuk payout)">
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    bankForm.put('/outlet/settlement/bank', {
+                                        onSuccess: () =>
+                                            toast.success(
+                                                'Rekening pembayaran diperbarui.',
+                                            ),
+                                    });
+                                }}
+                                className="mt-2 space-y-2"
+                            >
+                                <input
+                                    type="text"
+                                    placeholder="Nama Bank (cth: BCA)"
+                                    value={bankForm.data.bank_name}
+                                    onChange={(e) =>
+                                        bankForm.setData(
+                                            'bank_name',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Nomor Rekening"
+                                    value={bankForm.data.bank_account_number}
+                                    onChange={(e) =>
+                                        bankForm.setData(
+                                            'bank_account_number',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Atas Nama"
+                                    value={bankForm.data.bank_account_holder}
+                                    onChange={(e) =>
+                                        bankForm.setData(
+                                            'bank_account_holder',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm"
+                                />
+                                <Button
+                                    type="submit"
+                                    size="sm"
+                                    loading={bankForm.processing}
+                                    className="w-full"
+                                >
+                                    Simpan Rekening
+                                </Button>
+                            </form>
+                        </SectionCard>
+
+                        {/* ── 2. Settlement Mingguan ── */}
+                        {hasTimeline && (
+                            <SectionCard label="Settlement Mingguan">
+                                <div className="mt-2 space-y-0">
+                                    {timeline.map((entry, idx) => (
+                                        <TimelineItem
+                                            key={entry.id}
+                                            entry={entry}
+                                            isLast={idx === timeline.length - 1}
+                                        />
+                                    ))}
+                                </div>
+                            </SectionCard>
+                        )}
+
+                        {/* ── 3. Riwayat Pembayaran (max 3) ── */}
+                        {hasPayments && (
+                            <SectionCard label="Riwayat Pembayaran">
+                                <div className="mt-2 space-y-2">
+                                    {visiblePayments.map((payment) => (
+                                        <button
+                                            key={payment.id}
+                                            onClick={() =>
+                                                setSelectedPayment(payment)
+                                            }
+                                            className="w-full rounded-xl border border-border bg-surface-muted p-3 text-left transition-colors active:bg-surface"
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <div className="text-sm font-semibold text-text">
+                                                        {formatCurrency(
+                                                            payment.amount,
+                                                        )}
+                                                    </div>
+                                                    <div className="text-[11px] text-text-subtle">
+                                                        {formatDate(
+                                                            payment.payment_date,
+                                                        )}
+                                                    </div>
+                                                    <div className="mt-0.5 text-xs text-text-muted">
+                                                        {
+                                                            payment.reference_number
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <StatusBadge
+                                                    variant={
+                                                        statusVariants[
+                                                            payment.status
+                                                        ]
+                                                    }
+                                                >
+                                                    {
+                                                        statusLabels[
+                                                            payment.status
+                                                        ]
+                                                    }
+                                                </StatusBadge>
+                                            </div>
+                                            <div className="mt-2 text-[11px] font-medium text-primary">
+                                                Lihat Detail →
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </SectionCard>
+                        )}
+
+                        {!hasPayments && hasSales && (
+                            <SectionCard label="Riwayat Pembayaran">
+                                <EmptyState title="Belum ada riwayat pembayaran" />
+                            </SectionCard>
+                        )}
+
+                        {/* ── 4. Detail Rincian (expandable) ── */}
+                        {hasSales && (
+                            <CollapsibleCard
+                                label="Detail Rincian"
+                                defaultOpen={false}
+                            >
+                                <div className="space-y-2">
+                                    <BreakdownRow
+                                        label="Total Pesanan"
+                                        value={summary.orders_count}
+                                        isCurrency={false}
+                                    />
+                                    <BreakdownRow
+                                        label="Omset Produk"
+                                        value={summary.sales_amount}
+                                    />
+                                    <BreakdownRow
+                                        label="Ongkos Kirim"
+                                        value={summary.delivery_fee_amount}
+                                    />
+                                    <div className="border-t border-border pt-2">
+                                        <BreakdownRow
+                                            label="Total Pendapatan"
+                                            value={summary.gross_revenue}
+                                        />
+                                    </div>
+                                    <BreakdownRow
+                                        label="Kewajiban (Harga Pusat)"
+                                        value={summary.center_share}
+                                    />
+                                    <BreakdownRow
+                                        label="Keuntungan Outlet"
+                                        value={summary.outlet_margin}
+                                        accent
+                                    />
+                                    <div className="border-t border-border pt-2">
+                                        <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                            Rincian Net Settlement
+                                        </div>
+                                    </div>
+                                    <BreakdownRow
+                                        label="Online Outlet Share"
+                                        value={
+                                            summary.breakdown
+                                                .online_outlet_share
+                                        }
+                                    />
+                                    <BreakdownRow
+                                        label="Biaya Kurir"
+                                        value={summary.breakdown.delivery_cost}
+                                        negative={
+                                            summary.breakdown.delivery_cost > 0
+                                        }
+                                    />
+                                    <BreakdownRow
+                                        label="Refund"
+                                        value={summary.breakdown.refund}
+                                        negative={summary.breakdown.refund > 0}
+                                    />
+                                    <BreakdownRow
+                                        label="Setoran Offline"
+                                        value={summary.breakdown.offline_sales}
+                                        negative={
+                                            summary.breakdown.offline_sales > 0
+                                        }
+                                    />
+                                    <div className="border-t border-border pt-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-bold text-text">
+                                                Net Settlement
+                                            </span>
+                                            <span
+                                                className={`text-sm font-bold tabular-nums ${
+                                                    summary.net_amount >= 0
+                                                        ? 'text-emerald-700'
+                                                        : 'text-red-600'
+                                                }`}
+                                            >
+                                                {summary.direction ===
+                                                'owner_pays_outlet'
+                                                    ? 'Owner bayar '
+                                                    : 'Outlet bayar '}
+                                                {formatCurrency(
+                                                    Math.abs(
+                                                        summary.net_amount,
+                                                    ),
+                                                )}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {reconciliation.adjustments !== 0 && (
+                                        <BreakdownRow
+                                            label="Penyesuaian Return/Exchange"
+                                            value={reconciliation.adjustments}
+                                            negative={
+                                                reconciliation.adjustments < 0
+                                            }
+                                        />
+                                    )}
+                                    <div className="border-t border-border pt-2">
+                                        <BreakdownRow
+                                            label="Sudah Disetor"
+                                            value={
+                                                reconciliation.verified_payments
+                                            }
+                                        />
+                                        {reconciliation.pending_payments >
+                                            0 && (
+                                            <BreakdownRow
+                                                label="Menunggu Verifikasi"
+                                                value={
+                                                    reconciliation.pending_payments
+                                                }
+                                                muted
+                                            />
+                                        )}
+                                        <div className="mt-1">
+                                            <BreakdownRow
+                                                label="Belum Disetor"
+                                                value={
+                                                    reconciliation.outstanding
+                                                }
+                                                negative={false}
+                                                accent
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </CollapsibleCard>
+                        )}
+                    </>
                 )}
             </OutletPageShell>
 
@@ -461,6 +634,12 @@ export default function OutletSettlement({
                 open={paymentSheetOpen}
                 onClose={() => setPaymentSheetOpen(false)}
                 outstanding={reconciliation.outstanding}
+            />
+
+            {/* Payment Detail Sheet */}
+            <PaymentDetailSheet
+                payment={selectedPayment}
+                onClose={() => setSelectedPayment(null)}
             />
         </OutletLayout>
     );
@@ -565,6 +744,11 @@ function TimelineItem({
                         <div className="text-sm font-bold text-text tabular-nums">
                             {formatCurrency(entry.amount)}
                         </div>
+                        {entry.direction === 'owner_pays_outlet' && (
+                            <div className="text-[11px] font-medium text-emerald-600 tabular-nums">
+                                Owner bayar
+                            </div>
+                        )}
                         {entry.outstanding > 0 && (
                             <div className="text-[11px] font-medium text-red-600 tabular-nums">
                                 Sisa: {formatCurrency(entry.outstanding)}
@@ -572,6 +756,20 @@ function TimelineItem({
                         )}
                     </div>
                 </div>
+
+                {entry.outstanding > 0 && (
+                    <Link
+                        href={`/outlet/settlement/${entry.id}`}
+                        className="mt-2 flex items-center justify-between rounded-lg border border-border bg-surface-muted px-3 py-2 active:bg-surface"
+                    >
+                        <span className="text-xs font-medium text-text">
+                            Lihat Detail Settlement
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                            <span aria-hidden>→</span>
+                        </span>
+                    </Link>
+                )}
             </div>
         </div>
     );
@@ -716,14 +914,110 @@ function PaymentSheet({
                     />
                 </div>
 
-                <button
+                <Button
                     type="submit"
+                    variant="primary"
                     disabled={processing}
-                    className="flex min-h-12 w-full items-center justify-center rounded-lg bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                    loading={processing}
+                    className="w-full"
                 >
-                    {processing ? 'Mengirim...' : 'Kirim Bukti Pembayaran'}
-                </button>
+                    Kirim Bukti Pembayaran
+                </Button>
             </form>
         </BottomSheet>
+    );
+}
+
+/* ── Payment Detail Sheet ── */
+function PaymentDetailSheet({
+    payment,
+    onClose,
+}: {
+    payment: any;
+    onClose: () => void;
+}) {
+    const open = !!payment;
+
+    return (
+        <BottomSheet
+            open={open}
+            onClose={onClose}
+            title={payment ? `Detail Pembayaran` : ''}
+        >
+            {payment && (
+                <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <div className="text-2xl font-bold text-text tabular-nums">
+                                {formatCurrency(payment.amount)}
+                            </div>
+                            <div className="mt-1 text-xs text-text-muted">
+                                {payment.reference_number}
+                            </div>
+                        </div>
+                        <StatusBadge variant={statusVariants[payment.status]}>
+                            {statusLabels[payment.status]}
+                        </StatusBadge>
+                    </div>
+
+                    <div className="space-y-2 rounded-xl border border-border bg-surface-muted p-3 text-sm">
+                        <Row
+                            label="Tanggal Bayar"
+                            value={formatDate(payment.payment_date)}
+                        />
+                        {payment.verifier && (
+                            <Row
+                                label="Diverifikasi oleh"
+                                value={payment.verifier}
+                            />
+                        )}
+                        {payment.verified_at && (
+                            <Row
+                                label="Waktu Verifikasi"
+                                value={formatDate(payment.verified_at)}
+                            />
+                        )}
+                    </div>
+
+                    {payment.notes && (
+                        <div className="rounded-xl border border-border p-3 text-sm text-text-muted">
+                            <div className="text-[11px] font-semibold tracking-wider text-text-subtle uppercase">
+                                Catatan
+                            </div>
+                            <p className="mt-1">{payment.notes}</p>
+                        </div>
+                    )}
+
+                    {payment.rejection_reason && (
+                        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+                            <div className="text-[11px] font-semibold tracking-wider text-red-600 uppercase">
+                                Alasan Ditolak
+                            </div>
+                            <p className="mt-1">{payment.rejection_reason}</p>
+                        </div>
+                    )}
+
+                    {payment.proof_image && (
+                        <a
+                            href={`/storage/${payment.proof_image}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block w-full rounded-xl bg-primary px-4 py-3 text-center text-sm font-semibold text-white"
+                        >
+                            Lihat Bukti Transfer
+                        </a>
+                    )}
+                </div>
+            )}
+        </BottomSheet>
+    );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="flex items-center justify-between gap-2">
+            <span className="text-text-subtle">{label}</span>
+            <span className="font-medium text-text">{value}</span>
+        </div>
     );
 }

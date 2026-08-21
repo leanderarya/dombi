@@ -9,8 +9,8 @@ class ExchangeRequestItem extends Model
 {
     protected $fillable = [
         'exchange_request_id',
-        'product_variant_id',
-        'replacement_variant_id',
+        'product_id',
+        'replacement_product_id',
         'quantity',
         'replacement_quantity',
         'unit_price',
@@ -29,13 +29,13 @@ class ExchangeRequestItem extends Model
         return $this->belongsTo(ExchangeRequest::class);
     }
 
-    public function variant(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
-    public function replacementVariant(): BelongsTo
+    public function replacementProduct(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'replacement_variant_id');
+        return $this->belongsTo(Product::class, 'replacement_product_id');
     }
 }

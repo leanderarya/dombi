@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import {
     CircleCheck,
     CircleX,
@@ -14,10 +15,10 @@ import {
     Mail,
     AlertTriangle,
 } from 'lucide-react';
-import { router } from '@inertiajs/react';
 import { useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { usePushSubscription } from '@/hooks/use-push-subscription';
 
 interface Notification {
     id: number;
@@ -54,11 +55,17 @@ const typeIcons: Record<string, ReactNode> = {
     'order.cancelled': <Ban className="h-5 w-5 text-slate-500" />,
     // Refund
     'order.refund_requested': <Undo2 className="h-5 w-5 text-amber-600" />,
-    'order.refund_destination_submitted': <ClipboardList className="h-5 w-5 text-blue-600" />,
-    'order.refund_processing_started': <RefreshCw className="h-5 w-5 text-blue-600" />,
+    'order.refund_destination_submitted': (
+        <ClipboardList className="h-5 w-5 text-blue-600" />
+    ),
+    'order.refund_processing_started': (
+        <RefreshCw className="h-5 w-5 text-blue-600" />
+    ),
     'order.refund_rolled_back': <Undo2 className="h-5 w-5 text-amber-600" />,
     'order.refund_rejected': <CircleX className="h-5 w-5 text-red-600" />,
-    'order.refund_processed': <CircleCheck className="h-5 w-5 text-emerald-600" />,
+    'order.refund_processed': (
+        <CircleCheck className="h-5 w-5 text-emerald-600" />
+    ),
     'order.refund_failed': <TriangleAlert className="h-5 w-5 text-red-600" />,
     // Pengiriman
     'delivery.courier_assigned': <Truck className="h-5 w-5 text-blue-600" />,
@@ -110,6 +117,7 @@ export default function NotificationSheet({
     const [loading, setLoading] = useState(false);
 
     const fetchNotifications = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
 
         try {
@@ -128,14 +136,20 @@ export default function NotificationSheet({
     }, []);
 
     useEffect(() => {
+        let fetchTimeout: number | undefined;
+
         if (open) {
-            fetchNotifications();
+            fetchTimeout = window.setTimeout(fetchNotifications, 0);
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
         }
 
         return () => {
+            if (fetchTimeout !== undefined) {
+                window.clearTimeout(fetchTimeout);
+            }
+
             document.body.style.overflow = '';
         };
     }, [open, fetchNotifications]);
@@ -192,7 +206,11 @@ export default function NotificationSheet({
         }
 
         // Navigate refund notifications by URL
-        if (data?.url && typeof data.url === 'string' && data.url.startsWith('/')) {
+        if (
+            data?.url &&
+            typeof data.url === 'string' &&
+            data.url.startsWith('/')
+        ) {
             onClose();
             router.visit(data.url);
         }
@@ -215,6 +233,8 @@ export default function NotificationSheet({
             // Silently fail
         }
     };
+
+    const { pushState, requestEnable } = usePushSubscription();
 
     if (!open) {
         return null;
@@ -239,16 +259,49 @@ export default function NotificationSheet({
                         {unreadCount > 0 && (
                             <button
                                 onClick={handleMarkAllAsRead}
-                                className="text-xs font-semibold text-emerald-600"
+                                className="text-xs font-semibold text-primary"
                             >
                                 Tandai semua dibaca
                             </button>
                         )}
                     </div>
 
+                    {/* Push notification status */}
+                    {pushState !== 'unsupported' && pushState !== 'active' && (
+                        <div className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface-muted/50 px-3 py-2.5">
+                            <Bell className="h-4 w-4 shrink-0 text-primary" />
+                            {pushState === 'denied' ? (
+                                <p className="min-w-0 flex-1 text-xs text-text-muted">
+                                    Notifikasi dimatikan. Aktifkan lewat
+                                    Settings browser.
+                                </p>
+                            ) : (
+                                <>
+                                    <p className="min-w-0 flex-1 text-xs text-text-muted">
+                                        Aktifkan notifikasi untuk info pesanan
+                                    </p>
+                                    <button
+                                        onClick={requestEnable}
+                                        className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
+                                    >
+                                        Aktifkan
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    )}
+                    {pushState === 'active' && (
+                        <div className="mt-3 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 py-2.5">
+                            <CircleCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+                            <p className="text-xs font-medium text-emerald-700">
+                                Notifikasi aktif
+                            </p>
+                        </div>
+                    )}
+
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
-                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-600" />
+                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-primary" />
                         </div>
                     ) : notifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -272,7 +325,7 @@ export default function NotificationSheet({
                                     className={`w-full rounded-lg border p-3 text-left transition-colors ${
                                         notification.read_at
                                             ? 'border-slate-100 bg-white'
-                                            : 'border-emerald-100 bg-emerald-50/50'
+                                            : 'border-primary/10 bg-primary-light/50'
                                     }`}
                                 >
                                     <div className="flex items-start gap-3">
@@ -288,8 +341,13 @@ export default function NotificationSheet({
                                                 </span>
                                                 {!notification.read_at && (
                                                     <>
-                                                        <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
-                                                        <span className="sr-only">Belum dibaca</span>
+                                                        <span
+                                                            className="h-2 w-2 rounded-full bg-primary"
+                                                            aria-hidden="true"
+                                                        />
+                                                        <span className="sr-only">
+                                                            Belum dibaca
+                                                        </span>
                                                     </>
                                                 )}
                                             </div>

@@ -3,7 +3,7 @@ import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { getExchangeStatus, getReturnStatus } from '@/lib/status-labels';
+import { getExchangeStatus } from '@/lib/status-labels';
 
 export default function OutletExchangesShow({ exchange }: any) {
     const status = getExchangeStatus(exchange.status);
@@ -64,8 +64,9 @@ export default function OutletExchangesShow({ exchange }: any) {
                             >
                                 <div>
                                     <div className="text-sm font-medium text-text">
-                                        {item.variant?.full_name ??
-                                            item.variant?.name}
+                                        {item.product?.name ??
+                                            item.product?.full_name ??
+                                            '-'}
                                     </div>
                                     <div className="text-xs text-text-muted">
                                         {item.quantity} x{' '}

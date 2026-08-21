@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,15 +13,15 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_product_detail_sends_all_active_variants_with_size_and_price(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Biogoat',
             'brand' => 'Biogoat',
             'description' => 'Susu biogoat',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Original 250ml',
             'flavor' => 'Original',
             'size' => '250ml',
@@ -30,8 +30,8 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Original 1L',
             'flavor' => 'Original',
             'size' => '1L',
@@ -56,14 +56,14 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_inactive_variants_excluded_from_detail(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Test Family',
             'brand' => 'Test',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Active 250ml',
             'flavor' => 'Original',
             'size' => '250ml',
@@ -72,8 +72,8 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Inactive 1L',
             'flavor' => 'Original',
             'size' => '1L',
@@ -92,14 +92,14 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_single_size_product_sends_one_variant(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Raw Milk',
             'brand' => 'Domilk',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Fresh 1L',
             'flavor' => 'Fresh',
             'size' => '1L',
@@ -122,14 +122,14 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_catalog_sends_variants_with_size_data(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Domilk Premium',
             'brand' => 'Domilk',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Kopi 1L',
             'flavor' => 'Kopi',
             'size' => '1L',
@@ -138,8 +138,8 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Kopi 250ml',
             'flavor' => 'Kopi',
             'size' => '250ml',
@@ -157,7 +157,7 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_multiple_sizes_with_different_prices(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Multi Size',
             'brand' => 'Test',
             'is_active' => true,
@@ -171,8 +171,8 @@ class VariantOrderingAndPricingTest extends TestCase
         ];
 
         foreach ($sizes as $s) {
-            ProductVariant::create([
-                'product_family_id' => $family->id,
+            Product::create([
+                'product_category_id' => $family->id,
                 'name' => "Original {$s['size']}",
                 'flavor' => 'Original',
                 'size' => $s['size'],
@@ -199,14 +199,14 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_variant_selling_price_is_decimal_string(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Price Test',
             'brand' => 'Test',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Original 250ml',
             'flavor' => 'Original',
             'size' => '250ml',
@@ -224,7 +224,7 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_all_variant_sizes_are_present_for_frontend_sorting(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Sort Test',
             'brand' => 'Test',
             'is_active' => true,
@@ -233,8 +233,8 @@ class VariantOrderingAndPricingTest extends TestCase
         $expectedSizes = ['250ml', '500ml', '750ml', '1L', '2L'];
 
         foreach ($expectedSizes as $size) {
-            ProductVariant::create([
-                'product_family_id' => $family->id,
+            Product::create([
+                'product_category_id' => $family->id,
                 'name' => "Original $size",
                 'flavor' => 'Original',
                 'size' => $size,
@@ -259,14 +259,14 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_single_flavor_single_size_sends_one_variant(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Raw Milk',
             'brand' => 'Domilk',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Fresh 1L',
             'flavor' => 'Fresh',
             'size' => '1L',
@@ -290,27 +290,27 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_multi_flavor_multi_size_sends_all_combinations(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Domilk Premium',
             'brand' => 'Domilk',
             'is_active' => true,
         ]);
 
         $combinations = [
-            ['flavor' => 'Kopi', 'size' => '250ml', 'price' => 15000],
-            ['flavor' => 'Kopi', 'size' => '1L', 'price' => 48000],
-            ['flavor' => 'Vanilla', 'size' => '250ml', 'price' => 15000],
-            ['flavor' => 'Vanilla', 'size' => '1L', 'price' => 48000],
+            ['flavor' => 'Kopi', 'size' => '250ml', 'selling_price' => 15000],
+            ['flavor' => 'Kopi', 'size' => '1L', 'selling_price' => 48000],
+            ['flavor' => 'Vanilla', 'size' => '250ml', 'selling_price' => 15000],
+            ['flavor' => 'Vanilla', 'size' => '1L', 'selling_price' => 48000],
         ];
 
         foreach ($combinations as $c) {
-            ProductVariant::create([
-                'product_family_id' => $family->id,
+            Product::create([
+                'product_category_id' => $family->id,
                 'name' => "{$c['flavor']} {$c['size']}",
                 'flavor' => $c['flavor'],
                 'size' => $c['size'],
-                'center_price' => (int) ($c['price'] * 0.7),
-                'selling_price' => $c['price'],
+                'center_price' => (int) ($c['selling_price'] * 0.7),
+                'selling_price' => $c['selling_price'],
                 'is_active' => true,
             ]);
         }
@@ -332,14 +332,14 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_smallest_size_price_is_lowest(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Price Check',
             'brand' => 'Test',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Original 250ml',
             'flavor' => 'Original',
             'size' => '250ml',
@@ -348,8 +348,8 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Original 1L',
             'flavor' => 'Original',
             'size' => '1L',
@@ -374,14 +374,14 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_single_flavor_family_sends_correct_variant(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Biogoat',
             'brand' => 'Biogoat',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Original 250ml',
             'flavor' => 'Original',
             'size' => '250ml',
@@ -390,8 +390,8 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Original 1L',
             'flavor' => 'Original',
             'size' => '1L',
@@ -418,14 +418,14 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_no_flavor_family_sends_variants_without_flavor(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Plain Milk',
             'brand' => 'Test',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => '250ml',
             'flavor' => null,
             'size' => '250ml',
@@ -434,8 +434,8 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => '1L',
             'flavor' => null,
             'size' => '1L',
@@ -457,14 +457,14 @@ class VariantOrderingAndPricingTest extends TestCase
 
     public function test_catalog_page_sends_families_with_variant_counts(): void
     {
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Test Family',
             'brand' => 'Test',
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'A 250ml',
             'flavor' => 'A',
             'size' => '250ml',
@@ -473,8 +473,8 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'A 1L',
             'flavor' => 'A',
             'size' => '1L',
@@ -483,8 +483,8 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'B 250ml',
             'flavor' => 'B',
             'size' => '250ml',

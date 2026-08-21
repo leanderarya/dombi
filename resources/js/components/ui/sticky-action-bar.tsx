@@ -17,7 +17,7 @@ interface Props {
 }
 
 const variantStyles = {
-    primary: 'bg-emerald-700 text-white active:bg-emerald-800 disabled:opacity-50',
+    primary: 'bg-primary text-white active:bg-primary-hover disabled:opacity-50',
     secondary: 'border border-border bg-white text-text active:bg-surface-muted',
     danger: 'bg-red-600 text-white active:bg-red-700 disabled:opacity-50',
 };

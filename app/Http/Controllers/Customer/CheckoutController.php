@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Enums\PaymentMethod;
 use App\Exceptions\DokuPaymentException;
 use App\Exceptions\StockAdjustedException;
 use App\Http\Controllers\Controller;
@@ -10,10 +11,11 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductVariant;
 use App\Services\DeliveryPricingService;
 use App\Services\DokuService;
 use App\Services\OrderService;
+use App\Services\OutletAssignmentService;
+use App\Services\PaymentFeeCalculator;
 use App\Services\RecommendOutletService;
 use App\Support\PhoneNormalizer;
 use Illuminate\Http\JsonResponse;
@@ -35,6 +37,10 @@ class CheckoutController extends Controller
 
     private const PAYMENT_METHODS = ['qris', 'transfer', 'ewallet', 'credit_card', 'gopay', 'shopeepay', 'dana'];
 
+    public function __construct(
+        private readonly OutletAssignmentService $outletAssignmentService,
+    ) {}
+
     public function redirect(Request $request): RedirectResponse
     {
         return redirect()->route('customer.checkout', array_filter([
@@ -50,7 +56,7 @@ class CheckoutController extends Controller
         $draftItems = collect($request->session()->get('checkout.cart', []));
 
         // Load variants with family info
-        $variantIds = $draftItems->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
+        $variantIds = $draftItems->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
         $variants = $this->loadCartVariants($variantIds);
 
         $items = $this->mapVariantItems($draftItems, $variants);
@@ -112,26 +118,13 @@ class CheckoutController extends Controller
     {
         $validated = $request->validate([
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_variant_id' => ['required_without:items.*.product_id', 'nullable', 'integer', Rule::exists('product_variants', 'id')->where('is_active', true)],
-            'items.*.product_id' => ['required_without:items.*.product_variant_id', 'nullable', 'integer'],
+            'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('is_active', true)],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
             'fulfillment_type' => ['nullable', Rule::in(self::CHECKOUT_VISIBLE_FULFILLMENT_TYPES)],
             'selected_outlet_id' => ['nullable', 'integer', Rule::exists('outlets', 'id')],
         ]);
 
-        // Normalize items to use product_variant_id
         $items = collect($validated['items'])->map(function ($item) {
-            if (! empty($item['product_variant_id'])) {
-                return $item;
-            }
-            // Legacy: find variant from product_id
-            if (! empty($item['product_id'])) {
-                $variant = ProductVariant::where('product_id', $item['product_id'])->where('is_active', true)->first();
-                if ($variant) {
-                    $item['product_variant_id'] = $variant->id;
-                }
-            }
-
             return $item;
         })->toArray();
 
@@ -180,7 +173,7 @@ class CheckoutController extends Controller
         $cart = collect($request->session()->get('checkout.cart', []));
 
         // Load variants with family info
-        $variantIds = $cart->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
+        $variantIds = $cart->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
         $variants = $this->loadCartVariants($variantIds);
 
         $fulfillment = $request->session()->get('checkout.fulfillment.fulfillment_type');
@@ -204,7 +197,7 @@ class CheckoutController extends Controller
             )
             : ['recommended' => null, 'alternatives' => []];
         $deliveryQuote = $fulfillment === 'delivery_dombi'
-            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService)
+            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService, $orderService, $this->selectedOutletId($request))
             : null;
 
         $user = $request->user();
@@ -244,7 +237,9 @@ class CheckoutController extends Controller
             $bestDist = PHP_FLOAT_MAX;
 
             foreach ($savedAddresses as $addr) {
-                if (! $addr['latitude'] || ! $addr['longitude']) continue;
+                if (! $addr['latitude'] || ! $addr['longitude']) {
+                    continue;
+                }
                 $dist = $this->haversineDistance($userLat, $userLon, (float) $addr['latitude'], (float) $addr['longitude']);
                 if ($dist < $bestDist) {
                     $bestDist = $dist;
@@ -401,7 +396,9 @@ class CheckoutController extends Controller
         $fulfillmentDraft = $request->session()->get('checkout.fulfillment', []);
         $request->session()->put('checkout.fulfillment', [
             ...$fulfillmentDraft,
-            'selected_outlet_id' => ! $isDelivery ? ($validated['selected_outlet_id'] ?? null) : null,
+            'selected_outlet_id' => ! $isDelivery
+                ? ($validated['selected_outlet_id'] ?? null)
+                : $this->selectedOutletId($request),
         ]);
 
         if ($isDelivery) {
@@ -439,12 +436,12 @@ class CheckoutController extends Controller
         return redirect()->route('customer.checkout.payment');
     }
 
-    public function payment(Request $request, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService): Response|RedirectResponse
+    public function payment(Request $request, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService, OrderService $orderService): Response|RedirectResponse
     {
         $cart = collect($request->session()->get('checkout.cart', []));
 
         // Load variants with family info
-        $variantIds = $cart->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
+        $variantIds = $cart->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
         $variants = $this->loadCartVariants($variantIds);
 
         $items = $this->mapVariantItems($cart, $variants);
@@ -457,20 +454,21 @@ class CheckoutController extends Controller
             ? Outlet::query()->find($request->session()->get('checkout.fulfillment.selected_outlet_id'), ['id', 'name', 'address', 'kelurahan', 'kecamatan'])
             : null;
         $deliveryQuote = $fulfillmentType === 'delivery_dombi'
-            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService)
+            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService, $orderService, $this->selectedOutletId($request))
             : null;
 
         // Payment via DOKU — 4 metode, threshold subtotal only, full absorb <500k except CC
         $methods = config('doku.methods', []);
         $enabled = config('doku.enabled_methods', ['qris', 'transfer', 'ewallet', 'credit_card']);
-        $calculator = app(\App\Services\PaymentFeeCalculator::class);
+        $calculator = app(PaymentFeeCalculator::class);
 
         $paymentOptions = collect($enabled)
             ->map(fn ($key) => isset($methods[$key]) ? array_merge($methods[$key], ['value' => $key]) : null)
             ->filter()
             ->map(function ($m) use ($subtotal, $calculator) {
-                $methodEnum = \App\Enums\PaymentMethod::tryFrom($m['value']) ?? \App\Enums\PaymentMethod::Qris;
+                $methodEnum = PaymentMethod::tryFrom($m['value']) ?? PaymentMethod::Qris;
                 $feeResult = $calculator->calculate($methodEnum, (float) $subtotal);
+
                 return [
                     'value' => $m['value'],
                     'label' => $m['label'],
@@ -554,14 +552,18 @@ class CheckoutController extends Controller
 
         $subtotal = $this->calculateSubtotal($cart);
         $deliveryQuote = $fulfillmentType === 'delivery_dombi'
-            ? $this->resolveDeliveryQuote($cart, $location, $recommendOutletService, $deliveryPricingService)
+            ? $this->resolveDeliveryQuote($cart, $location, $recommendOutletService, $deliveryPricingService, $orderService, $this->selectedOutletId($request))
             : null;
 
         if ($fulfillmentType === 'delivery_dombi' && (! $deliveryQuote || ! ($deliveryQuote['is_serviceable'] ?? false))) {
-            return redirect()->route('customer.checkout.customer')->withErrors([
-                'latitude' => 'Maaf, lokasi Anda berada di luar area layanan Kurir Dombi.',
-            ]);
+            $reason = ($deliveryQuote['reason'] ?? null)
+                ?: 'Maaf, lokasi Anda berada di luar area layanan Kurir Dombi.';
+            $route = $deliveryQuote['reason'] ?? null ? 'customer.checkout.payment' : 'customer.checkout.customer';
+            $field = $deliveryQuote['reason'] ?? null ? 'selected_outlet_id' : 'latitude';
+
+            return redirect()->route($route)->withErrors([$field => $reason]);
         }
+        $selectedOutletIdForPayload = $this->selectedOutletId($request);
 
         $deliveryFee = $fulfillmentType === 'delivery_dombi' ? (float) ($deliveryQuote['delivery_fee'] ?? 0) : 0;
         $paymentFee = $this->calculatePaymentFee($validated['payment_method'], $subtotal);
@@ -574,7 +576,7 @@ class CheckoutController extends Controller
                 ...$customer,
                 'items' => $cart,
                 'fulfillment_type' => $fulfillmentType,
-                'selected_outlet_id' => $request->session()->get('checkout.fulfillment.selected_outlet_id'),
+                'selected_outlet_id' => $selectedOutletIdForPayload,
                 'payment_method' => $validated['payment_method'],
                 'delivery_fee' => $deliveryFee,
                 'delivery_distance_km' => $deliveryQuote['distance_km'] ?? 0,
@@ -589,15 +591,16 @@ class CheckoutController extends Controller
             Cache::put($idempotencyKey, $order->id, 60);
         } catch (StockAdjustedException $e) {
             // Batch load variants to avoid N+1
-            $variantIds = collect($e->adjustments)->pluck('variant_id')->unique()->toArray();
-            $variants = ProductVariant::whereIn('id', $variantIds)
-                ->with('family')
+            $variantIds = collect($e->adjustments)->pluck('product_id')->unique()->toArray();
+            $variants = Product::whereIn('id', $variantIds)
+                ->with('category')
                 ->get()
                 ->keyBy('id');
 
             $warnings = collect($e->adjustments)->map(function ($adj) use ($variants) {
-                $variant = $variants->get($adj['variant_id']);
-                $name = $variant?->family?->name ?? $variant?->name ?? 'Produk';
+                $variantId = $adj['product_id'] ?? $adj['variant_id'] ?? 0;
+                $variant = $variants->get($variantId);
+                $name = $variant?->category?->name ?? $variant?->name ?? 'Produk';
 
                 if ($adj['adjusted_qty'] <= 0) {
                     return "{$name}: stok habis, item dihapus dari pesanan";
@@ -753,25 +756,50 @@ class CheckoutController extends Controller
             ]);
         }
 
-        $variantIds = collect($cart)->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $variants = ProductVariant::whereIn('id', $variantIds)
+        $variantIds = collect($cart)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->values()->all();
+        $variants = Product::whereIn('id', $variantIds)
             ->where('is_active', true)
-            ->with('family')
+            ->with('category')
             ->get()
             ->keyBy('id');
 
-        // Batch load inventories to avoid N+1
-        $inventories = OutletInventory::whereIn('product_variant_id', $variantIds)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('product_variant_id');
+        $outletId = $request->session()->get('checkout.fulfillment.selected_outlet_id')
+            ?: $request->session()->get('checkout.selected_outlet_id');
+
+        // No anchored outlet → resolve to nearest open outlet that serves the whole
+        // cart (deterministic, not arbitrary first()). If none, surface as empty.
+        if (! $outletId && ! empty($variantIds)) {
+            $outlet = $this->outletAssignmentService->findAvailableOutlet(
+                null,
+                null,
+                $cart,
+            );
+
+            if ($outlet) {
+                $outletId = $outlet->id;
+                $request->session()->put('checkout.fulfillment.selected_outlet_id', $outlet->id);
+            }
+        }
+
+        $inventoriesQuery = OutletInventory::whereIn('product_id', $variantIds)
+            ->where('is_active', true);
+
+        if ($outletId) {
+            $inventoriesQuery->where('outlet_id', (int) $outletId);
+        } else {
+            // No outlet can serve the cart — no stock anywhere.
+            $inventoriesQuery->whereRaw('1 = 0');
+        }
+
+        $inventories = $inventoriesQuery->get()->keyBy('product_id');
 
         $items = [];
         $warnings = [];
         $valid = true;
+        $updatedCart = $cart;
 
-        foreach ($cart as $cartItem) {
-            $variantId = (int) $cartItem['product_variant_id'];
+        foreach ($cart as $index => $cartItem) {
+            $variantId = (int) ($cartItem['product_id'] ?? 0);
             $requestedQty = (int) $cartItem['quantity'];
             $variant = $variants->get($variantId);
 
@@ -794,17 +822,20 @@ class CheckoutController extends Controller
                 $adjustedQty = 0;
                 $removed = true;
                 $valid = false;
-                $warnings[] = "{$variant->family->name} {$variant->name}: stok habis, item dihapus dari pesanan";
+                $warnings[] = "{$variant->category->name} {$variant->name}: stok habis, item dihapus dari pesanan";
+                $updatedCart[$index]['quantity'] = 0;
             } elseif ($availableStock < $requestedQty) {
                 $adjusted = true;
                 $adjustedQty = $availableStock;
                 $valid = false;
-                $warnings[] = "{$variant->family->name} {$variant->name}: jumlah dikurangi dari {$requestedQty} ke {$availableStock} (stok tersisa {$availableStock})";
+                $warnings[] = "{$variant->category->name} {$variant->name}: jumlah dikurangi dari {$requestedQty} ke {$availableStock} (stok tersisa {$availableStock})";
+                $updatedCart[$index]['quantity'] = $availableStock;
             }
 
             $items[] = [
-                'product_variant_id' => $variantId,
-                'name' => $variant->family->name ?? $variant->name,
+                'product_id' => $variantId,
+                'product_variant_id' => $variantId, // backward compat
+                'name' => $variant->category->name ?? $variant->name,
                 'variant_name' => $variant->name,
                 'requested_qty' => $requestedQty,
                 'available_stock' => $availableStock,
@@ -813,6 +844,12 @@ class CheckoutController extends Controller
                 'removed' => $removed,
             ];
         }
+
+        $updatedCart = collect($updatedCart)
+            ->filter(fn ($item) => ((int) $item['quantity']) > 0)
+            ->values()
+            ->toArray();
+        $request->session()->put('checkout.cart', $updatedCart);
 
         return response()->json([
             'valid' => $valid,
@@ -851,10 +888,10 @@ class CheckoutController extends Controller
             return $cache[$key];
         }
 
-        $cache[$key] = ProductVariant::query()
+        $cache[$key] = Product::query()
             ->whereIn('id', $variantIds)
             ->where('is_active', true)
-            ->with('family')
+            ->with('category')
             ->get();
 
         return $cache[$key];
@@ -864,43 +901,31 @@ class CheckoutController extends Controller
     {
         $variantMap = $variants->keyBy('id');
 
-        // Load legacy products for fallback
-        $productIds = collect($rawItems)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $products = Product::query()
-            ->whereIn('id', $productIds)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('id');
-
-        return collect($rawItems)->map(function (array $item) use ($variantMap, $products): array {
-            $variantId = (int) ($item['product_variant_id'] ?? 0);
+        return collect($rawItems)->map(function (array $item) use ($variantMap): array {
+            $variantId = (int) ($item['product_id'] ?? $item['product_variant_id'] ?? 0);
             $variant = $variantMap->get($variantId);
             $quantity = (int) $item['quantity'];
 
-            // If variant found, use variant data
             if ($variant) {
                 return [
-                    'product_variant_id' => $variantId,
+                    'product_id' => $variantId,
+                    'product_variant_id' => $variantId, // backward compat
                     'quantity' => $quantity,
-                    'name' => $variant->family?->name ?? $variant->name ?? 'Produk',
+                    'name' => $variant->category?->name ?? $variant->name ?? 'Produk',
                     'variant_name' => $variant->name ?? '',
                     'price' => (float) $variant->selling_price,
                     'subtotal' => (float) $variant->selling_price * $quantity,
                 ];
             }
 
-            // Legacy fallback: use product data
-            $productId = (int) ($item['product_id'] ?? 0);
-            $product = $products->get($productId);
-            $price = $product && $product->selling_price > 0 ? (float) $product->selling_price : (float) ($product?->price ?? 0);
-
             return [
+                'product_id' => $variantId,
                 'product_variant_id' => $variantId,
                 'quantity' => $quantity,
-                'name' => $product?->name ?? 'Produk',
+                'name' => 'Produk',
                 'variant_name' => '',
-                'price' => $price,
-                'subtotal' => $price * $quantity,
+                'price' => 0,
+                'subtotal' => 0,
             ];
         })->values()->all();
     }
@@ -915,9 +940,6 @@ class CheckoutController extends Controller
 
     private function calculateSubtotal(array $cart): float
     {
-        $variantIds = collect($cart)->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $variants = $this->loadCartVariants($variantIds)->keyBy('id');
-
         $productIds = collect($cart)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
         $products = Product::query()
             ->whereIn('id', $productIds)
@@ -925,20 +947,11 @@ class CheckoutController extends Controller
             ->get()
             ->keyBy('id');
 
-        return (float) collect($cart)->sum(function (array $item) use ($variants, $products): float {
-            // Prefer variant
-            $variantId = (int) ($item['product_variant_id'] ?? 0);
-            if ($variantId) {
-                $variant = $variants->get($variantId);
-
-                return $variant ? (float) $variant->selling_price * (int) $item['quantity'] : 0;
-            }
-
-            // Legacy: product fallback
-            $productId = (int) ($item['product_id'] ?? 0);
+        return (float) collect($cart)->sum(function (array $item) use ($products): float {
+            $productId = (int) ($item['product_id'] ?? $item['product_variant_id'] ?? 0);
             if ($productId) {
                 $product = $products->get($productId);
-                $price = $product?->selling_price > 0 ? $product->selling_price : ($product?->price ?? 0);
+                $price = $product?->selling_price > 0 ? $product->selling_price : 0;
 
                 return (float) $price * (int) $item['quantity'];
             }
@@ -949,20 +962,23 @@ class CheckoutController extends Controller
 
     private function calculatePaymentFee(string $paymentMethod, float $subtotal): float
     {
-        $method = \App\Enums\PaymentMethod::tryFrom($paymentMethod) ?? \App\Enums\PaymentMethod::Qris;
-        return app(\App\Services\PaymentFeeCalculator::class)->calculate($method, $subtotal)['customer_fee'];
+        $method = PaymentMethod::tryFrom($paymentMethod) ?? PaymentMethod::Qris;
+
+        return app(PaymentFeeCalculator::class)->calculate($method, $subtotal)['customer_fee'];
     }
 
     private function calculateGatewayFee(string $paymentMethod, float $subtotal): float
     {
-        $method = \App\Enums\PaymentMethod::tryFrom($paymentMethod) ?? \App\Enums\PaymentMethod::Qris;
-        return app(\App\Services\PaymentFeeCalculator::class)->calculate($method, $subtotal)['gateway_fee'];
+        $method = PaymentMethod::tryFrom($paymentMethod) ?? PaymentMethod::Qris;
+
+        return app(PaymentFeeCalculator::class)->calculate($method, $subtotal)['gateway_fee'];
     }
 
     private function calculateAbsorbedFee(string $paymentMethod, float $subtotal): float
     {
-        $method = \App\Enums\PaymentMethod::tryFrom($paymentMethod) ?? \App\Enums\PaymentMethod::Qris;
-        return app(\App\Services\PaymentFeeCalculator::class)->calculate($method, $subtotal)['dombi_fee'];
+        $method = PaymentMethod::tryFrom($paymentMethod) ?? PaymentMethod::Qris;
+
+        return app(PaymentFeeCalculator::class)->calculate($method, $subtotal)['dombi_fee'];
     }
 
     private function normalizeIndonesianPhone(string $phone): string
@@ -970,33 +986,85 @@ class CheckoutController extends Controller
         return PhoneNormalizer::normalize($phone);
     }
 
-    private function resolveDeliveryQuote(array $cart, $location, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService): ?array
+    private function selectedOutletId(Request $request): ?int
     {
+        $id = $request->session()->get('checkout.selected_outlet_id')
+            ?? $request->session()->get('checkout.fulfillment.selected_outlet_id');
+
+        return $id !== null ? (int) $id : null;
+    }
+
+    private function resolveDeliveryQuote(
+        array $cart,
+        $location,
+        RecommendOutletService $recommendOutletService,
+        DeliveryPricingService $deliveryPricingService,
+        OrderService $orderService,
+        ?int $selectedOutletId = null,
+    ): ?array {
         if (! is_array($location) || ! isset($location['latitude'], $location['longitude'])) {
             return null;
         }
 
-        $recommendedOutlet = $recommendOutletService->recommendForDelivery(
-            (float) $location['latitude'],
-            (float) $location['longitude'],
-            $cart
-        );
+        $outlet = null;
 
-        if (! $recommendedOutlet) {
-            return null;
+        if ($selectedOutletId) {
+            $outlet = Outlet::query()
+                ->active()
+                ->find($selectedOutletId, ['id', 'name', 'address', 'kelurahan', 'kecamatan', 'latitude', 'longitude', 'delivery_radius_km']);
         }
 
-        $outlet = Outlet::query()->find($recommendedOutlet['id'], ['id', 'name', 'address', 'kelurahan', 'kecamatan', 'latitude', 'longitude']);
+        // Candidate quote
+        if (! $outlet) {
+            $recommendedOutlet = $recommendOutletService->recommendForDelivery(
+                (float) $location['latitude'],
+                (float) $location['longitude'],
+                $cart,
+            );
+
+            if (! $recommendedOutlet) {
+                return null;
+            }
+
+            $outlet = Outlet::query()->find($recommendedOutlet['id'], ['id', 'name', 'address', 'kelurahan', 'kecamatan', 'latitude', 'longitude']);
+        }
 
         if (! $outlet || $outlet->latitude === null || $outlet->longitude === null) {
             return null;
+        }
+
+        // Selected outlet must be eligible BEFORE quoting: if it is not, do NOT fall back
+        // to a nearest outlet — surface the reason so the user can change outlet.
+        if ($selectedOutletId !== null) {
+            $eligibility = $orderService->resolveDeliveryOutletEligibility(
+                $outlet->id,
+                (float) $location['latitude'],
+                (float) $location['longitude'],
+                $this->cartToItemsForEligibility($cart),
+            );
+
+            if (! $eligibility['eligible']) {
+                return [
+                    'is_serviceable' => false,
+                    'delivery_fee' => 0,
+                    'distance_km' => 0,
+                    'outlet' => [
+                        'id' => $outlet->id,
+                        'name' => $outlet->name,
+                        'address' => $outlet->address,
+                        'kelurahan' => $outlet->kelurahan,
+                        'kecamatan' => $outlet->kecamatan,
+                    ],
+                    'reason' => $eligibility['reason'],
+                ];
+            }
         }
 
         $quote = $deliveryPricingService->quote(
             (float) $location['latitude'],
             (float) $location['longitude'],
             (float) $outlet->latitude,
-            (float) $outlet->longitude
+            (float) $outlet->longitude,
         );
 
         return [
@@ -1008,7 +1076,25 @@ class CheckoutController extends Controller
                 'kelurahan' => $outlet->kelurahan,
                 'kecamatan' => $outlet->kecamatan,
             ],
+            'reason' => null,
         ];
+    }
+
+    private function cartToItemsForEligibility(array $cart): array
+    {
+        $variantIds = collect($cart)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
+        $variants = $this->loadCartVariants($variantIds);
+
+        return collect($cart)->map(function (array $item) use ($variants) {
+            $variant = $variants->get((int) ($item['product_id'] ?? 0));
+            $price = $variant?->selling_price ?? 0;
+
+            return [
+                'product_id' => (int) ($item['product_id'] ?? 0),
+                'quantity' => (int) ($item['quantity'] ?? 1),
+                'price' => $price,
+            ];
+        })->values()->all();
     }
 
     private function haversineDistance(float $lat1, float $lon1, float $lat2, float $lon2): float

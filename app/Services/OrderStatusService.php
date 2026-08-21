@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use App\Enums\PaymentStatus;
+use App\Exceptions\InvalidOrderTransitionException;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class OrderStatusService
@@ -148,7 +148,7 @@ class OrderStatusService
                 'actor_type' => 'customer',
                 'notes' => "Pesanan dibatalkan customer. Alasan: {$reason}",
             ]);
-        } catch (\App\Exceptions\InvalidOrderTransitionException $e) {
+        } catch (InvalidOrderTransitionException $e) {
             throw ValidationException::withMessages([
                 'status' => 'Pesanan tidak dapat dibatalkan pada status ini.',
             ]);
@@ -170,7 +170,7 @@ class OrderStatusService
         }
 
         $lockedOrder = Order::lockForUpdate()->find($order->id);
-        if (!in_array($lockedOrder->payment_status ?? $order->payment_status, [
+        if (! in_array($lockedOrder->payment_status ?? $order->payment_status, [
             PaymentStatus::Paid->value,
             PaymentStatus::Settled->value,
         ], true)) {
@@ -237,7 +237,7 @@ class OrderStatusService
             $fromStatus = $order->status;
 
             if (! $this->canTransition($fromStatus, $newStatus)) {
-                throw new \App\Exceptions\InvalidOrderTransitionException($fromStatus, $newStatus);
+                throw new InvalidOrderTransitionException($fromStatus, $newStatus);
             }
 
             // Fulfillment-aware guard
@@ -245,7 +245,7 @@ class OrderStatusService
                 Order::STATUS_PICKED_UP,
                 Order::STATUS_DELIVERING,
             ], true)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'status' => 'Pesanan pickup tidak dapat masuk ke status pengiriman.',
                 ]);
             }
@@ -258,11 +258,11 @@ class OrderStatusService
                 Order::STATUS_PICKED_UP,
                 Order::STATUS_DELIVERING,
                 Order::STATUS_COMPLETED,
-            ], true) && !in_array($order->payment_status, [
+            ], true) && ! in_array($order->payment_status, [
                 PaymentStatus::Paid->value,
                 PaymentStatus::Settled->value,
             ], true)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'payment_status' => 'Pesanan belum dibayar dan tidak dapat diproses.',
                 ]);
             }
@@ -330,7 +330,6 @@ class OrderStatusService
         // Re-reserve stock when retrying from failed delivery
         if ($from === 'failed_delivery' && $to === 'preparing') {
             $items = $order->items->map(fn ($item) => [
-                'product_variant_id' => $item->product_variant_id,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
             ])->all();

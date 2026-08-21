@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import {
     createContext,
     useCallback,
@@ -8,7 +9,6 @@ import {
     useState,
 } from 'react';
 import type { ReactNode } from 'react';
-import { usePage } from '@inertiajs/react';
 import { registerOutletClosedHandler } from '@/lib/api';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { useOutletStore } from '@/lib/outlet-store';
@@ -29,6 +29,7 @@ export type OutletOption = {
 type OutletContextValue = {
     selectedOutlet: OutletOption | null;
     selectManual: (outlet: OutletOption) => void;
+    syncOutletId: (outletId: number) => void;
     outlets: OutletOption[];
     loading: boolean;
     error: string | null;
@@ -63,9 +64,6 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         const controller = new AbortController();
         abortRef.current = controller;
 
-        setLoading(true);
-        setError(null);
-
         const params = new URLSearchParams();
 
         if (location?.latitude !== undefined) {
@@ -76,14 +74,22 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
             params.set('longitude', String(location.longitude));
         }
 
-        fetch(`/customer/outlets?${params.toString()}`, {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            signal: controller.signal,
-        })
+        Promise.resolve()
+            .then(() => {
+                if (!controller.signal.aborted) {
+                    setLoading(true);
+                    setError(null);
+                }
+
+                return fetch(`/customer/outlets?${params.toString()}`, {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'same-origin',
+                    signal: controller.signal,
+                });
+            })
             .then(async (res) => {
                 if (!res.ok) {
                     throw new Error('Failed to load outlets');
@@ -107,26 +113,38 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         return () => controller.abort();
     }, [location?.latitude, location?.longitude, fetchKey]);
 
-    // Auto-select logic: manual pick → nearest open → fallback
+    // Auto-select logic: manual pick → nearest open+stock → nearest open → fallback
     const selectedOutlet = useMemo(() => {
         if (outlets.length === 0) {
             return null;
         }
 
         const openOutlets = outlets.filter((o) => o.is_open !== false);
+        const openWithStock = openOutlets.filter((o) => o.stock_available);
 
         // User manually picked an outlet — keep it (even if GPS changes)
         if (!autoSelected && outletId !== null) {
             const saved = outlets.find((o) => o.id === outletId);
+
             if (saved && saved.is_open !== false) {
                 return saved;
             }
             // If saved outlet is closed, fall through to nearest open
         }
 
-        // Auto-select nearest open outlet
+        // Auto-select nearest open outlet that has stock
+        const stockOutlet = openWithStock[0];
+
+        if (stockOutlet) {
+            return stockOutlet;
+        }
+
+        // Fallback: nearest open outlet (even without stock)
         const nearestOpen = openOutlets[0];
-        if (nearestOpen) return nearestOpen;
+
+        if (nearestOpen) {
+            return nearestOpen;
+        }
 
         // If everything closed, fallback to nearest (user will see Tutup label)
         return outlets[0];
@@ -157,8 +175,10 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         }
 
         // No saved outlet or saved outlet no longer exists — auto-pick nearest open
+        // with stock, falling back to nearest open, then first.
         const openOutlets = outlets.filter((o) => o.is_open !== false);
-        const nearest = openOutlets[0] ?? outlets[0];
+        const openWithStock = openOutlets.filter((o) => o.stock_available);
+        const nearest = openWithStock[0] ?? openOutlets[0] ?? outlets[0];
         autoSave(nearest.id);
 
         // Sync to PHP session
@@ -167,7 +187,8 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN':
-                    document.querySelector('meta[name="csrf-token"]')
+                    document
+                        .querySelector('meta[name="csrf-token"]')
                         ?.getAttribute('content') ?? '',
             },
             body: JSON.stringify({ outlet_id: nearest.id }),
@@ -195,15 +216,39 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         [save],
     );
 
+    // Sync context to an outlet id chosen server-side (e.g. smart switch), without
+    // re-selecting if the outlet is already present in the list.
+    const syncOutletId = useCallback(
+        (outletId: number) => {
+            const target = outlets.find((o) => o.id === outletId);
+
+            if (target) {
+                save(outletId);
+                fetch('/customer/select-outlet', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN':
+                            document
+                                .querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content') ?? '',
+                    },
+                    body: JSON.stringify({ outlet_id: outletId }),
+                }).catch(() => {});
+            }
+        },
+        [outlets, save],
+    );
+
     const retry = useCallback(() => {
         setFetchKey((k) => k + 1);
     }, []);
 
     const markCurrentOutletClosed = useCallback(() => {
-        setOutlets(prev =>
-            prev.map(o =>
-                o.id === selectedOutlet?.id ? { ...o, is_open: false } : o
-            )
+        setOutlets((prev) =>
+            prev.map((o) =>
+                o.id === selectedOutlet?.id ? { ...o, is_open: false } : o,
+            ),
         );
     }, [selectedOutlet?.id]);
 
@@ -216,7 +261,9 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         if (errors?.outlet_closed) {
-            markCurrentOutletClosed();
+            const timeout = window.setTimeout(markCurrentOutletClosed, 0);
+
+            return () => window.clearTimeout(timeout);
         }
     }, [errors?.outlet_closed, markCurrentOutletClosed]);
 
@@ -224,13 +271,23 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         () => ({
             selectedOutlet,
             selectManual,
+            syncOutletId,
             outlets,
             loading,
             error,
             retry,
             markCurrentOutletClosed,
         }),
-        [selectedOutlet, selectManual, outlets, loading, error, retry, markCurrentOutletClosed],
+        [
+            selectedOutlet,
+            selectManual,
+            syncOutletId,
+            outlets,
+            loading,
+            error,
+            retry,
+            markCurrentOutletClosed,
+        ],
     );
 
     return (

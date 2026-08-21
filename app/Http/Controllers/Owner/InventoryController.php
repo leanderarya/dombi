@@ -8,8 +8,7 @@ use App\Http\Requests\Owner\StoreInventoryRequest;
 use App\Http\Requests\Owner\UpdateInventoryRequest;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Services\InventoryService;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
@@ -29,7 +28,7 @@ class InventoryController extends Controller
 
         // Outlet inventory (always loaded)
         $outlets = Outlet::where('status', 'active')
-            ->with(['inventories' => fn ($q) => $q->with(['variant.family', 'product'])->orderBy('product_variant_id')])
+            ->with(['inventories' => fn ($q) => $q->with(['product.category'])->orderBy('product_id')])
             ->orderBy('name')
             ->get();
 
@@ -62,25 +61,27 @@ class InventoryController extends Controller
 
         // Central stock (loaded when tab is pusat)
         if ($tab === 'pusat') {
-            $variants = ProductVariant::where('is_active', true)
-                ->with('family:id,name')
+            $products = Product::where('is_active', true)
+                ->with('category:id,name')
                 ->orderBy('name')
                 ->get()
-                ->map(fn (ProductVariant $v) => [
-                    'id' => $v->id,
-                    'name' => $v->full_name,
-                    'family_name' => $v->family?->name,
-                    'sku' => $v->sku,
-                    'center_stock' => $v->center_stock,
-                    'center_price' => (float) $v->center_price,
+                ->map(fn (Product $p) => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'category_name' => $p->category?->name,
+                    'family_name' => $p->category?->name, // backward compat
+                    'sku' => $p->sku,
+                    'center_stock' => $p->center_stock,
+                    'center_price' => (float) $p->center_price,
                 ]);
 
-            $data['centralStock'] = $variants;
+            $data['centralStock'] = $products;
             $data['centralStats'] = [
-                'total_variants' => $variants->count(),
-                'total_stock' => $variants->sum('center_stock'),
-                'zero_stock' => $variants->filter(fn ($v) => $v['center_stock'] <= 0)->count(),
-                'low_stock' => $variants->filter(fn ($v) => $v['center_stock'] > 0 && $v['center_stock'] <= 10)->count(),
+                'total_variants' => $products->count(),
+                'total_products' => $products->count(),
+                'total_stock' => $products->sum('center_stock'),
+                'zero_stock' => $products->filter(fn ($v) => $v['center_stock'] <= 0)->count(),
+                'low_stock' => $products->filter(fn ($v) => $v['center_stock'] > 0 && $v['center_stock'] <= 10)->count(),
             ];
         }
 
@@ -89,50 +90,59 @@ class InventoryController extends Controller
 
     public function create(): Response
     {
-        $families = ProductFamily::where('is_active', true)
-            ->with(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
+        $categories = ProductCategory::where('is_active', true)
+            ->with(['products' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
             ->orderBy('name')
             ->get();
 
         return Inertia::render('owner/inventories/create', [
             'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
-            'families' => $families,
+            'families' => $categories, // backward compat for old frontend
+            'categories' => $categories,
         ]);
     }
 
     /**
-     * Update center stock for a variant (quick edit from Stok Pusat tab).
+     * Update center stock for a product (quick edit from Stok Pusat tab).
      */
-    public function updateCenterStock(Request $request, ProductVariant $variant): RedirectResponse
+    public function updateCenterStock(Request $request, ?Product $product = null): RedirectResponse
     {
+        if (! $product) {
+            $routeVal = $request->route('variant') ?? $request->route('product');
+            $id = is_object($routeVal) ? $routeVal->id : $routeVal;
+            $product = Product::findOrFail($id);
+        }
+
         $validated = $request->validate([
             'center_stock' => ['required', 'integer', 'min:0'],
             'reason' => ['nullable', 'string', 'max:255'],
         ]);
 
         app(InventoryService::class)->updateCenterStock(
-            $variant->id,
+            $product->id,
             $validated['center_stock'],
             $validated['reason'] ?? null,
         );
 
-        return back()->with('success', "Stok pusat {$variant->full_name} berhasil diperbarui.");
+        return back()->with('success', "Stok pusat {$product->name} berhasil diperbarui.");
     }
 
     public function store(StoreInventoryRequest $request, InventoryService $inventoryService): RedirectResponse
     {
         $data = $request->validated();
+        $productId = $data['product_id'] ?? null;
+        $data['product_id'] = $productId;
 
         try {
             DB::transaction(function () use ($data, $inventoryService): void {
-                $variant = ProductVariant::findOrFail($data['product_variant_id']);
+                $product = Product::findOrFail($data['product_id']);
 
                 $inventory = OutletInventory::updateOrCreate(
-                    ['outlet_id' => $data['outlet_id'], 'product_variant_id' => $data['product_variant_id']],
-                    ['product_id' => $variant->product_id, 'minimum_stock' => $data['minimum_stock']]
+                    ['outlet_id' => $data['outlet_id'], 'product_id' => $data['product_id']],
+                    ['minimum_stock' => $data['minimum_stock']]
                 );
 
-                $inventoryService->adjustStock($inventory->outlet_id, (int) $data['product_variant_id'], (int) $data['current_stock'], $data['notes'] ?? null);
+                $inventoryService->adjustStock($inventory->outlet_id, (int) $data['product_id'], (int) $data['current_stock'], $data['notes'] ?? null);
                 $inventory->update(['minimum_stock' => $data['minimum_stock']]);
             });
         } catch (InsufficientStockException $e) {
@@ -145,7 +155,7 @@ class InventoryController extends Controller
     public function edit(OutletInventory $inventory): Response
     {
         return Inertia::render('owner/inventories/edit', [
-            'inventory' => $inventory->load(['outlet', 'variant.family', 'product']),
+            'inventory' => $inventory->load(['outlet', 'product.category']),
         ]);
     }
 
@@ -155,8 +165,8 @@ class InventoryController extends Controller
 
         try {
             DB::transaction(function () use ($data, $inventory, $inventoryService): void {
-                $variantId = $inventory->product_variant_id;
-                $inventoryService->adjustStock($inventory->outlet_id, (int) $variantId, (int) $data['current_stock'], $data['notes'] ?? null);
+                $productId = $inventory->product_id;
+                $inventoryService->adjustStock($inventory->outlet_id, (int) $productId, (int) $data['current_stock'], $data['notes'] ?? null);
                 $inventory->update(['minimum_stock' => $data['minimum_stock']]);
             });
         } catch (InsufficientStockException $e) {
@@ -173,19 +183,21 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'outlet_id' => ['required', 'exists:outlets,id'],
-            'product_variant_id' => ['required', 'exists:product_variants,id'],
+            'product_id' => ['required', 'exists:products,id'],
         ]);
 
+        $productId = $validated['product_id'];
+
         $inventory = OutletInventory::where('outlet_id', $validated['outlet_id'])
-            ->where('product_variant_id', $validated['product_variant_id'])
+            ->where('product_id', $productId)
             ->first();
 
         if (! $inventory) {
             return response()->json(['message' => 'Item tidak ditemukan.'], 404);
         }
 
-        $variant = ProductVariant::find($validated['product_variant_id']);
-        $productName = $variant->full_name ?? 'Produk';
+        $product = Product::find($productId);
+        $productName = $product->name ?? $product->full_display_name ?? 'Produk';
         $available = max(0, $inventory->current_stock - $inventory->reserved_stock);
 
         app(NotificationService::class)->notifyLowStock(

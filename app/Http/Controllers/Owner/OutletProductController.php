@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Owner;
 
+use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Services\InventoryService;
 use App\Services\OutletAuditService;
-use App\Exceptions\InsufficientStockException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,16 +20,18 @@ class OutletProductController extends Controller
     public function index(Outlet $outlet): JsonResponse
     {
         $inventories = OutletInventory::where('outlet_id', $outlet->id)
-            ->with('variant:id,name,flavor,size,selling_price,center_price,product_family_id')
-            ->with('variant.family:id,name')
+            ->with('product:id,name,flavor,size,selling_price,center_price,product_category_id')
+            ->with('product.category:id,name')
             ->get();
 
         $products = $inventories->map(fn ($inv) => [
             'id' => $inv->id,
-            'variant_id' => $inv->product_variant_id,
-            'name' => $inv->variant?->full_name ?? '-',
-            'family_name' => $inv->variant?->family?->name ?? '-',
-            'selling_price' => (float) ($inv->variant?->selling_price ?? 0),
+            'product_id' => $inv->product_id,
+            'variant_id' => $inv->product_id, // backward compat
+            'name' => $inv->product?->name ?? '-',
+            'category_name' => $inv->product?->category?->name ?? '-',
+            'family_name' => $inv->product?->category?->name ?? '-', // backward compat
+            'selling_price' => (float) ($inv->product?->selling_price ?? 0),
             'is_active' => (bool) $inv->is_active,
             'current_stock' => (int) $inv->current_stock,
             'available_stock' => (int) $inv->current_stock - (int) $inv->reserved_stock,
@@ -49,23 +51,25 @@ class OutletProductController extends Controller
     public function availableProducts(Outlet $outlet): JsonResponse
     {
         $assignedIds = OutletInventory::where('outlet_id', $outlet->id)
-            ->pluck('product_variant_id')
+            ->pluck('product_id')
             ->toArray();
 
-        $variants = ProductVariant::query()
+        $products = Product::query()
             ->where('is_active', true)
             ->whereNotIn('id', $assignedIds)
-            ->with('family:id,name')
+            ->with('category:id,name')
             ->orderBy('name')
-            ->get(['id', 'name', 'flavor', 'size', 'selling_price', 'product_family_id'])
-            ->map(fn (ProductVariant $v) => [
-                'variant_id' => $v->id,
-                'name' => $v->full_name,
-                'family_name' => $v->family?->name ?? '-',
-                'selling_price' => (float) $v->selling_price,
+            ->get(['id', 'name', 'flavor', 'size', 'selling_price', 'product_category_id'])
+            ->map(fn (Product $p) => [
+                'product_id' => $p->id,
+                'variant_id' => $p->id, // backward compat
+                'name' => $p->name,
+                'category_name' => $p->category?->name ?? '-',
+                'family_name' => $p->category?->name ?? '-',
+                'selling_price' => (float) $p->selling_price,
             ]);
 
-        return response()->json($variants);
+        return response()->json($products);
     }
 
     /**
@@ -74,17 +78,28 @@ class OutletProductController extends Controller
     public function addProducts(Request $request, Outlet $outlet, OutletAuditService $auditService): JsonResponse
     {
         $validated = $request->validate([
-            'variant_ids' => ['required', 'array', 'min:1'],
-            'variant_ids.*' => ['integer'],
+            'product_ids' => ['sometimes', 'array', 'min:1'],
+            'variant_ids' => ['sometimes', 'array', 'min:1'],
+            'product_ids.*' => ['integer', 'exists:products,id'],
+            'variant_ids.*' => ['integer', 'exists:products,id'],
             'initial_stock' => ['nullable', 'integer', 'min:0'],
         ]);
+
+        // Backward compat: support variant_ids param
+        $productIds = $validated['product_ids'] ?? $validated['variant_ids'] ?? [];
+        // Also support legacy key 'variant_ids' directly in request without being validated via product_ids
+        if (empty($productIds) && $request->has('variant_ids')) {
+            $productIds = $request->input('variant_ids');
+        }
+        // Support also 'product_ids' legacy spelled? Already handled
+        // Also handle raw 'variant_ids' that might be sent as 'product_ids'? covered
 
         $initialStock = (int) ($validated['initial_stock'] ?? 0);
         $added = 0;
 
-        foreach ($validated['variant_ids'] as $variantId) {
+        foreach ($productIds as $productId) {
             $exists = OutletInventory::where('outlet_id', $outlet->id)
-                ->where('product_variant_id', $variantId)
+                ->where('product_id', $productId)
                 ->exists();
 
             if ($exists) {
@@ -93,7 +108,7 @@ class OutletProductController extends Controller
 
             OutletInventory::create([
                 'outlet_id' => $outlet->id,
-                'product_variant_id' => $variantId,
+                'product_id' => $productId,
                 'current_stock' => $initialStock,
                 'reserved_stock' => 0,
                 'minimum_stock' => 0,
@@ -118,10 +133,14 @@ class OutletProductController extends Controller
     /**
      * Toggle product active status.
      */
-    public function toggle(Request $request, Outlet $outlet, int $variantId, OutletAuditService $auditService): JsonResponse
+    public function toggle(Request $request, Outlet $outlet, OutletAuditService $auditService): JsonResponse
     {
+        $routeProduct = $request->route('product');
+        $routeProductId = $routeProduct instanceof Product ? $routeProduct->id : $routeProduct;
+        $productId = (int) ($routeProductId ?? $request->route('productId') ?? $request->route('variantId') ?? $request->route('product_id') ?? $request->route('variant_id') ?? 0);
+
         $inventory = OutletInventory::where('outlet_id', $outlet->id)
-            ->where('product_variant_id', $variantId)
+            ->where('product_id', $productId)
             ->first();
 
         if (! $inventory) {
@@ -145,10 +164,14 @@ class OutletProductController extends Controller
     /**
      * Remove product from outlet (soft — sets is_active=false).
      */
-    public function remove(Request $request, Outlet $outlet, int $variantId, OutletAuditService $auditService): JsonResponse
+    public function remove(Request $request, Outlet $outlet, OutletAuditService $auditService): JsonResponse
     {
+        $routeProduct = $request->route('product');
+        $routeProductId = $routeProduct instanceof Product ? $routeProduct->id : $routeProduct;
+        $productId = (int) ($routeProductId ?? $request->route('productId') ?? $request->route('variantId') ?? $request->route('product_id') ?? $request->route('variant_id') ?? 0);
+
         $inventory = OutletInventory::where('outlet_id', $outlet->id)
-            ->where('product_variant_id', $variantId)
+            ->where('product_id', $productId)
             ->first();
 
         if (! $inventory) {
@@ -174,21 +197,24 @@ class OutletProductController extends Controller
     public function restock(Request $request, Outlet $outlet): JsonResponse
     {
         $validated = $request->validate([
-            'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'product_id' => ['sometimes', 'required', 'integer', 'exists:products,id'],
+            'variant_id' => ['sometimes', 'required', 'integer', 'exists:products,id'],
             'quantity' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $productId = $validated['product_id'] ?? $validated['variant_id'] ?? null;
+
         try {
             app(InventoryService::class)->restockOutlet(
                 $outlet->id,
-                $validated['variant_id'],
+                $productId,
                 $validated['quantity'],
                 $validated['notes'] ?? null,
             );
 
             $inventory = OutletInventory::where('outlet_id', $outlet->id)
-                ->where('product_variant_id', $validated['variant_id'])
+                ->where('product_id', $productId)
                 ->first();
 
             return response()->json([
@@ -201,8 +227,14 @@ class OutletProductController extends Controller
             return response()->json(['error' => $e->getMessage()], 404);
         } catch (\Throwable $e) {
             report($e);
+
             return response()->json(['error' => 'Gagal melakukan restock.'], 500);
         }
+    }
+
+    public function bulkAssign(Request $request, Outlet $outlet, OutletAuditService $auditService): JsonResponse
+    {
+        return $this->addProducts($request, $outlet, $auditService);
     }
 
     private function getStockStatus(int $available, int $minimum): string

@@ -1,10 +1,9 @@
 import { router } from '@inertiajs/react';
+import { CheckCircle, Clock, DollarSign, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { DollarSign, Clock, CheckCircle, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import PaymentHistoryCard from '@/components/owner/finance/payment-history-card';
 import PaymentProofModal from '@/components/owner/finance/payment-proof-modal';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -21,7 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
 
 const STATUS_FILTERS = [
-    { key: '', label: 'Semua' },
+    { key: 'all', label: 'Semua' },
     { key: 'pending_verification', label: 'Pending' },
     { key: 'verified', label: 'Diverifikasi' },
     { key: 'rejected', label: 'Ditolak' },
@@ -40,16 +39,6 @@ export default function PembayaranTab({
     const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
     const [verifyTargetId, setVerifyTargetId] = useState<number | null>(null);
     const [batchDialogOpen, setBatchDialogOpen] = useState(false);
-
-    useEffect(() => {
-        if (!statusFilter || statusFilter === 'all') {
-            router.get(
-                '/owner/finance',
-                { tab: 'pembayaran', status: 'pending_verification' },
-                { replace: true, preserveState: true },
-            );
-        }
-    }, []);
 
     if (!payments) {
         return <SkeletonPage />;
@@ -74,7 +63,8 @@ export default function PembayaranTab({
                 onSuccess: () => {
                     toast.success('Pembayaran diverifikasi');
                 },
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
                 onFinish: () => {
                     setProcessing(false);
                     setVerifyTargetId(null);
@@ -101,7 +91,8 @@ export default function PembayaranTab({
                         setRejectingId(null);
                         setRejectReason('');
                     },
-                    onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                    onError: (errors) =>
+                        toast.error(Object.values(errors).flat().join(', ')),
                     onFinish: () => setProcessing(false),
                 },
             );
@@ -123,7 +114,8 @@ export default function PembayaranTab({
             {},
             {
                 onSuccess: () => toast.success('Berhasil'),
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
                 onFinish: () => setBatchVerifying(false),
             },
         );
@@ -143,27 +135,54 @@ export default function PembayaranTab({
 
     return (
         <>
-            <OwnerKpiStrip
-                items={[
-                    {
-                        label: 'Pending',
-                        value: paymentKpis?.pending_count ?? 0,
-                        sublabel:
-                            (paymentKpis?.pending_count ?? 0) > 0
-                                ? 'Perlu verifikasi'
-                                : undefined,
-                        sublabelColor: 'text-amber-600',
-                    },
-                    {
-                        label: 'Hari Ini',
-                        value: formatCurrency(paymentKpis?.verified_today ?? 0),
-                    },
-                    {
-                        label: 'Bulan Ini',
-                        value: formatCurrency(paymentKpis?.verified_month ?? 0),
-                    },
-                ]}
-            />
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Pending
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                            <Clock className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${(paymentKpis?.pending_count ?? 0) > 0 ? 'text-amber-600' : 'text-text'}`}
+                    >
+                        {paymentKpis?.pending_count ?? 0}
+                    </div>
+                    {(paymentKpis?.pending_count ?? 0) > 0 && (
+                        <p className="text-[11px] text-amber-500">
+                            Perlu verifikasi
+                        </p>
+                    )}
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Hari Ini
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                            <DollarSign className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {formatCurrency(paymentKpis?.verified_today ?? 0)}
+                    </div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Bulan Ini
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                            <CheckCircle className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                        {formatCurrency(paymentKpis?.verified_month ?? 0)}
+                    </div>
+                </div>
+            </div>
 
             <div
                 className="mb-4 flex flex-wrap items-center gap-2"
@@ -171,9 +190,9 @@ export default function PembayaranTab({
                 aria-label="Filter dan aksi pembayaran"
             >
                 {STATUS_FILTERS.map((sf) => {
-                    const isActive = (statusFilter ?? '') === sf.key;
+                    const isActive = (statusFilter ?? 'all') === sf.key;
                     const colorMap: Record<string, string> = {
-                        '': 'text-text bg-surface-muted ring-border',
+                        all: 'text-text bg-surface-muted ring-border',
                         pending_verification:
                             'text-amber-600 bg-amber-50 ring-amber-200',
                         verified:
@@ -190,7 +209,7 @@ export default function PembayaranTab({
                                 isActive
                                     ? (colorMap[sf.key] ??
                                       'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
                             {sf.label}

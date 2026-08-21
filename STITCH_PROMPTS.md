@@ -2,13 +2,95 @@
 
 Gunakan `DESIGN.md` sebagai reference design system. Setiap prompt menghasilkan **satu screen prototype**. Semua screen adalah **desktop-first web app** dengan fixed sidebar.
 
-**PENTING — Style Rules untuk semua prompt:**
-- Font: Poppins. Primary accent: emerald-700 (#047857). Background: #F6FBF5 (Mint Canvas, bukan putih).
-- All status badges: rounded-full, background + text color only. NO border. NO outline. NO ring. Contoh: badge hijau = bg-green-100 text-green-700.
-- Primary buttons: OUTLINED only (`border border-primary text-primary`). Jangan filled/solid.
+**PENTING — Style Rules untuk semua prompt (berdasarkan DESIGN.md):**
+
+**Font & Layout:**
+- Font: Poppins (400 body, 500 labels, 600 headings, 700 KPI numbers). Monospace untuk tabular numbers.
+- Desktop-first sidebar layout. Fixed left sidebar (w-56, 224px). Main scrolls independently.
+- Sidebar: White surface. Brand "Dombi" at top. Nav groups with icons. Active nav: emerald left border + mint-wash bg. User section at bottom.
+- Main content: Mint Canvas (#F6FBF5) with subtle diagonal/radial gradient to #EDF5F0. `max-w-7xl mx-auto` with generous padding (`px-6 py-6`).
+
+**Color Palette:**
+- Mint Canvas (#F6FBF5) — page background
+- Pure Surface (#FFFFFF) — sidebar, cards, modals
+- Soft Cement (#F2F2F2) — table headers, inactive tabs, muted surfaces
+- Quiet Border (#E5E5E5) — card borders, table dividers, 1px lines
+- Strong Border (#D4D4D4) — active input borders
+- Deep Ink (#1A1A1A) — primary text, headings
+- Steel Gray (#717171) — secondary text, labels
+- Whisper Gray (#A3A3A3) — subtle text, placeholders, SKU codes
+- Botanical Emerald (#005D42) — single accent, saturation < 80%
+- Deep Emerald (#065F46) — FAB buttons, hover depth
+- Mint Wash (#ECFDF5) — active row, selected states, accent backgrounds
+- Success Green (#16A34A) — healthy stock, completed
+- Amber Alert (#D97706) — warning, low stock, pending
+- Crisis Red (#DC2626) — critical stock, rejected, danger
+- Signal Blue (#2563EB) — info badges, in-progress, delivery states
+- Teal Accent (#0D9488) — chart fills, icon badges, secondary accent
+- Lavender Accent (#7C3AED) — tertiary metric icons
+- Rose Accent (#E11D48) — alert/warning icons, quaternary accent
+
+**KPI Cards — ENHANCED (LIVE FEEL):**
+- Colored icon badge (40×40px rounded-xl) in Teal/Blue/Lavender/Rose per metric
+- Big number: `text-2xl font-bold tabular-nums` Deep Ink
+- Label: `text-xs` Steel Gray below number
+- Trend indicator: Small colored text below label showing change from previous period
+  - "+12.5% dari Kemarin" in Success Green
+  - "-3.2% dari Kemarin" in Crisis Red
+  - "— sama" in Steel Gray
+- Sparkline/mini-bar: Optional tiny bar chart (3-4 bars, 60px wide, 20px tall) inside KPI card showing 4-day mini trend. Emerald/Teal fill for positive.
+- Horizontal flex row, 3-4 cards. Cards have subtle hover elevation lift.
+
+**Data Visualization:**
+- Area Chart: Smooth area curve with gradient fill (Teal Accent #0D9488 at 20% opacity fading to 0%). Grid lines in Whisper Gray 10% opacity. Interactive hover dot + tooltip showing exact value.
+- Bar Chart: Horizontal bars in Emerald/Teal, labels left, values right. Animate bars on load (width from 0, spring transition).
+- Sparklines: Tiny inline charts (60×20px) inside KPI cards. 4 bars showing recent trend. No labels, pure visual indicator.
+
+**Buttons:**
+- Primary: OUTLINED only (`border border-primary text-primary` with `hover:bg-mint-wash`). Tactile: `active:scale-[0.98]`. Spring: `transition-all duration-200 ease-out`.
+- Ghost: Text only, no border. `hover:bg-surface-muted transition-colors`.
+- FAB: Fixed bottom-right. Circular (w-14 h-14). Deep Emerald fill. White `+` icon. Tooltip on hover. `shadow-2xl`.
+
+**Status Badges:**
+- Shape: `rounded-full`, `px-2.5 py-1`, `text-[12px] font-medium`
+- NO border. bg + text color only.
+- Success: `bg-green-100 text-success`
+- Warning: `bg-amber-100 text-warning`
+- Danger: `bg-red-100 text-danger`
+- Info: `bg-blue-100 text-info`
+- Neutral: `bg-gray-100 text-secondary`
+
+**Cards & Surfaces:**
+- White surface. `rounded-2xl`. Shadow tinted to green: `shadow-[0_1px_3px_rgba(0,109,50,0.04),0_4px_12px_rgba(0,109,50,0.03)]`.
+- Modals: `Dialog` with header + footer.
+- Tables: HTML `<table>` elements. Striped headers. Row dividers. Generous cell padding (`px-6 py-4`). Row hover.
+- Tabs: Segmented control — `inline-flex rounded-lg bg-surface-muted p-1`.
+- Filter Chips: Rounded-full pills. Active: mint-wash bg + emerald text.
+
+**Motion & Interaction:**
+- Spring Physics: `transition-all duration-200 ease-out`. No linear easing.
+- Button Press: `active:scale-[0.98]`.
+- Row Hover: `bg-surface-muted transition-colors`.
+- Chart animations: Bars animate width from 0 on load. Area charts fade in.
+- Staggered List Reveal: `animation-delay: calc(var(--index) * 50ms)`.
+- No perpetual animations. Animate via `transform` and `opacity` only.
+
+**Data Display Patterns:**
+- Product Name: Two-line `Family — Variant` bold + `SKU-XXX` muted.
+- Stock Display: Color-coded. Right-aligned.
+- Currency: `Rp 12.500` format, tabular-nums.
+- Trend indicators: "+12.5%" green, "-3.2%" red with small arrow icon.
+
+**General Rules:**
+- All status badges: rounded-full, background + text color only. NO border. NO outline. NO ring.
 - Tabel pakai `<table>` HTML asli, bukan div flex. Cell padding minimum px-6 py-4.
-- No emojis. No dark mode. No gradient text. No neon glow. All copy in Bahasa Indonesia.
-- Material Symbols untuk icons (bukan Lucide).
+- No emojis. No dark mode. No gradient text. No neon glow. No serif fonts. No overlapping elements.
+- No 3-column equal card layouts. No AI copywriting clichés. No filler UI.
+- No generic names — use realistic Indonesian names. No fake round numbers — use organic messy data.
+- No inline editing — modal popups only. No dark mode toggle — light only. No flexbox fake tables.
+- No badge borders. No cramped table cells. No Indonesian-English mixing — Bahasa Indonesia only.
+- No flat white backgrounds — add subtle gradient depth.
+- Lucide React untuk icons.
 
 ---
 
@@ -21,28 +103,47 @@ Gunakan `DESIGN.md` sebagai reference design system. Setiap prompt menghasilkan 
 Generate a DESKTOP web dashboard screen for "Dombi", a goat-milk supply chain management app. The user is the business owner overseeing 12 outlets.
 
 LAYOUT: Fixed left sidebar (w-56, ~224px wide, full height). Sidebar contents:
-- Top: brand "Dombi" in emerald-700 (#047857) bold text on white background
+- Top: brand "Dombi" in Botanical Emerald (#005D42) bold text on white background
 - Below brand: user name "Arya Ajisadda" and role "Owner" label
 - Navigation groups with icons and labels:
-  - Dasbor (grid icon, ACTIVE — highlighted emerald)
-  - Operasional (folder icon): Outlet, Pesanan, Pengiriman, Kurir, Return & Tukar, Tier Ongkir
-  - Keuangan (dollar icon)
-  - Master Data (database icon): Produk, Harga
-  - Persediaan (package icon): Inventaris, Restock, Distribusi
-  - Analitik (chart icon)
+  - Dasbor (LayoutDashboard icon, ACTIVE — emerald left border + Mint Wash #ECFDF5 bg)
+  - Operasional (Truck icon): Outlet, Pesanan, Pengiriman, Kurir, Return & Tukar, Tier Ongkir
+  - Keuangan (Wallet icon)
+  - Master Data (Database icon): Produk, Harga
+  - Persediaan (Package icon): Inventaris, Restock, Distribusi
+  - Analitik (BarChart3 icon)
 - Bottom section: notification bell icon with red badge "3", "Logout" button, "v1.0.0"
 
-MAIN CONTENT (to the right of sidebar, max-w-7xl, px-6 py-6):
+MAIN CONTENT (to the right of sidebar, max-w-7xl, px-6 py-6, Mint Canvas #F6FBF5 bg with subtle gradient to #EDF5F0):
 
-Top section: horizontal KPI strip with 4 stat cards in a row. Each card: a Lucide icon on the left in muted gray circle, a large bold number, and a small muted label below. Cards: "34 Pesanan Hari Ini", "Rp 4.250.000 Pendapatan Hari Ini", "12 Outlet Aktif", "5 Restock Pending".
+GREETING SECTION: Large bold heading "Selamat Pagi, Arya" in Botanical Emerald. Subtitle "Berikut ringkasan kinerja bisnis Dombi Anda hari ini." in Steel Gray.
 
-Middle section: "Stok Kritis" warning card spanning full width. Red-amber left border accent. Lists 3 products critically low across outlets. Each row: product name (bold, "Family — Variant" format), outlet name, "2 pcs" in crisis red (#DC2626), and an "Ingatkan" button with Bell icon.
+KPI STRIP — ENHANCED (4 cards in horizontal row):
+Each card: White surface, rounded-2xl, green-tinted shadow. Colored icon badge (40×40px rounded-xl) on left, big number in center, label below.
+- Card 1: Teal Accent (#0D9488) icon badge (Receipt icon). "Rp 4.250.000" big bold number. "Pendapatan Hari Ini" label. Trend: "+12.5% dari Kemarin" in Success Green. Sparkline: 4 mini bars showing 4-day trend (60px wide, 20px tall, Teal fill).
+- Card 2: Signal Blue (#2563EB) icon badge (ShoppingCart icon). "34" big bold number. "Pesanan Hari Ini" label. Trend: "+8 dari Kemarin" in Success Green. Sparkline: 4 mini bars.
+- Card 3: Lavender Accent (#7C3AED) icon badge (Store icon). "12" big bold number. "Outlet Aktif" label. Sublabel "Semua beroperasi" in Steel Gray.
+- Card 4: Rose Accent (#E11D48) icon badge (AlertTriangle icon). "5" big bold number. "Restock Pending" label. Trend: "+3 menunggu" in Crisis Red. Sparkline: 4 mini bars.
 
-Bottom half: split into two cards side by side:
-- Left card "Pesanan Terbaru" (60% width): table with 5 rows. Columns: Kode (#ORD-001), Pelanggan, Outlet, Total (bold Rp format), Status badge. Rows hover light gray.
-- Right card "Aktivitas Outlet" (40% width): 4 outlet cards showing outlet name, order count today, and a green/amber/red health dot indicator.
+70/30 SPLIT LAYOUT:
 
-Font: Poppins. Primary accent: emerald-700 (#047857). Surfaces: white. Muted backgrounds: #F2F2F2. No dark mode. All copy in Bahasa Indonesia.
+LEFT (70%): "Tren Pendapatan" area chart card.
+- Header: "Tren Pendapatan" title + subtitle "Total 7 hari: Rp 28.500.000" + segmented tabs [7 Hari | 30 Hari]
+- Chart: Smooth area curve with gradient fill (Teal Accent #0D9488 at 20% opacity fading to 0%). Grid lines in Whisper Gray 10% opacity. Interactive hover dot + tooltip showing exact value in dark pill. X-axis: dates. Y-axis: Rp values. Last point pulsing.
+
+RIGHT (30%): Two stacked cards.
+- "Stok Kritis" card: Header with red badge count "3". List of 3 products with progress bars showing stock level. Bar color: red (critical), amber (low). Product name bold, stock count right-aligned. "Lihat semua" link at bottom.
+- "Tindakan Cepat" card: Header "Tindakan Cepat". List of action items with colored dots (red=restock, amber=return, blue=exchange, violet=settlement). Each row: dot + label + ChevronRight icon. Clickable rows with hover state.
+
+BOTTOM: "Outlet Tertunggak" table card (if any).
+- Table: HTML <table>. Columns: Outlet (with avatar circle), Keterlambatan (Clock icon + days), Tagihan (right-aligned, amber), Aksi (Tutup button).
+- Row hover: bg-mint-wash.
+
+ALERT BANNER (if critical stock): Red-50 background, AlertTriangle icon, message, link to inventaris.
+
+ALL CLEAR STATE (if no issues): Sparkles icon, "Hari ini tenang", "Semua operasional berjalan lancar".
+
+Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia. Tabular-nums for numbers. Spring transitions on interactive elements.
 ```
 
 ---
@@ -51,53 +152,59 @@ Font: Poppins. Primary accent: emerald-700 (#047857). Surfaces: white. Muted bac
 
 ### Prompt 2A — Daftar Produk (Product Families)
 ```
-A DESKTOP product family list screen for Dombi owner panel. Fixed sidebar on left as described in DESIGN.md (Dasbor sidebar with "Master Data > Produk" active).
+A DESKTOP product family list screen for Dombi owner panel. Fixed sidebar on left as described in DESIGN.md (Dasbor sidebar with "Master Data > Produk" active — Database icon with emerald left border + Mint Wash bg).
 
-MAIN CONTENT:
-- Page header: "Produk" in large bold Poppins. Subtitle "Kelola kategori dan varian produk susu kambing".
-- Top-right: emerald "+ Tambah Keluarga Produk" button.
+MAIN CONTENT (Mint Canvas #F6FBF5 bg):
+- Page header: "Produk" in large bold Poppins (Deep Ink). Subtitle "Kelola kategori dan varian produk susu kambing" in Steel Gray.
+- Top-right: outlined button "+ Tambah Keluarga Produk" (`border border-primary text-primary` with `hover:bg-mint-wash`, `active:scale-[0.98]`).
 
 Below header: filter bar with:
-- Search input with Search icon, placeholder "Cari produk...", rounded-[10px]
-- Filter pills: "Semua" (active=emerald), "Aktif", "Nonaktif"
+- Search input with Search icon (Lucide), placeholder "Cari produk...", rounded-[10px], Quiet Border
+- Filter chips: Rounded-full pills. "Semua" (active: Mint Wash bg + Botanical Emerald text), "Aktif", "Nonaktif"
 
-Main table (full-width HTML table):
+Main table (full-width HTML `<table>`):
 - Columns: "Nama Keluarga", "Brand", "Jumlah Varian", "Status", "Aksi"
+- Table headers: `text-xs font-semibold uppercase tracking-wide`, Soft Cement (#F2F2F2) bg
 - Sortable headers with ▲▼ on active column
-- Each row: family name bold, brand muted, variant count, Active/Inactive badge, action buttons (Edit ghost + Hapus ghost)
-- Row hover: bg-surface-muted (#F2F2F2)
-- Example rows: "Susu Kambing | Dombi | 5 varian | Aktif | [Edit] [Hapus]", "Yogurt | Dombi | 3 varian | Aktif"
+- Each row: family name bold (Deep Ink), brand muted (Steel Gray), variant count (tabular-nums), Status badge (rounded-full, bg + text, NO border), action buttons (Edit ghost + Hapus ghost)
+- Row hover: `bg-surface-muted transition-colors`
+- Cell padding: `px-6 py-4`
+- Example rows: "Susu Kambing | Dombi | 5 varian | [Aktif badge] | [Edit] [Hapus]", "Yogurt | Dombi | 3 varian | [Aktif badge]"
 
-Empty state (when no products): centered column with Package icon, "Belum ada produk", "Klik tombol tambah untuk mulai".
+Empty state (when no products): centered column with Package icon (Lucide), "Belum ada produk", "Klik tombol tambah untuk mulai".
 
-Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia only.
+Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia only. Green-tinted shadow on cards.
 ```
 
 ### Prompt 2B — Detail Produk + Varian
 ```
 A DESKTOP product family detail screen for Dombi owner panel. Fixed sidebar on left.
 
-MAIN CONTENT:
-- Breadcrumb: "Produk > Susu Kambing" in muted text with chevron separator
-- Page header: "Susu Kambing" (large bold) with "Edit" ghost button next to it
-- Subtitle line: "Brand: Dombi" and description text "Susu kambing etawa segar"
+MAIN CONTENT (Mint Canvas #F6FBF5 bg):
+- Breadcrumb: "Produk > Susu Kambing" in Steel Gray with ChevronRight separator
+- Page header: "Susu Kambing" (large bold, Deep Ink) with "Edit" ghost button next to it
+- Subtitle line: "Brand: Dombi" and description text "Susu kambing etawa segar" in Steel Gray
 
-Below: tab bar with 2 segments — "Varian" (active, white bg), "Riwayat Harga" (muted bg)
+Below: segmented tabs `inline-flex rounded-lg bg-surface-muted p-1` — "Varian" (active, white bg), "Riwayat Harga" (muted bg)
 
-Two action buttons above table: "Tambah Varian" (emerald fill) and "Edit Massal" (outline)
+Two action buttons above table: "Tambah Varian" (outlined: `border border-primary text-primary`) and "Edit Massal" (ghost)
 
-Main table for "Varian" tab:
+Main table for "Varian" tab (full-width HTML `<table>`):
+- Table headers: `text-xs font-semibold uppercase tracking-wide`, Soft Cement bg
 - Columns: "Nama Varian", "SKU", "Size", "Flavor", "HPP", "Harga Jual", "Status", "Aksi"
-- Sortable headers
-- Each row: variant name bold, SKU in gray, size, flavor, HPP Rp format muted, selling price Rp bold, Active/Inactive toggle switch, Edit button
-- Example: "Original | SKU-001 | 250ml | Original | Rp 12.500 | Rp 18.000 | 🟢 | Edit"
+- Sortable headers with ▲▼
+- Each row: variant name bold (Deep Ink), SKU in Whisper Gray, size, flavor, HPP Rp format muted (Steel Gray), selling price Rp bold (Deep Ink), Status badge (rounded-full, bg + text, NO border), Edit ghost button
+- Cell padding: `px-6 py-4`
+- Row hover: `bg-surface-muted transition-colors`
+- Example: "Original | SKU-001 | 250ml | Original | Rp 12.500 | Rp 18.000 | [Aktif badge] | Edit"
 
 When Edit is clicked: MODAL popup (not inline):
 - Modal title "Edit Varian — Original"
+- White surface, rounded-2xl, green-tinted shadow
 - Form: Nama, SKU, Size, Flavor, HPP, Harga Jual, Active toggle
-- Footer: Cancel (outline) + Simpan (emerald) buttons
+- Footer: Cancel (outline) + Simpan (outlined primary) buttons
 
-Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia.
+Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia. Tabular-nums for numbers.
 ```
 
 ---
@@ -109,13 +216,14 @@ Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia.
 A DESKTOP pricing management screen for Dombi owner panel. Fixed sidebar with "Master Data > Harga" active.
 
 MAIN CONTENT:
-- Tab bar: "Harga Pusat" (active, emerald-700 text), "Harga Outlet", "Riwayat" — segmented control in bg-surface-muted
+- Tab bar: "Harga Pusat" (active, Botanical Emerald text), "Harga Outlet", "Riwayat" — segmented control `inline-flex rounded-lg bg-surface-muted p-1`
 
-KPI strip (4 cards in a row):
-- "Total Produk" — Package icon, "28"
-- "Rata-rata HPP" — DollarSign icon, "Rp 14.200"
-- "Rata-rata Margin" — TrendingUp icon, "Rp 5.800"
-- "Margin Negatif" — TrendingDown icon, "0" (red if >0)
+KPI STRIP — ENHANCED (4 cards in horizontal row):
+Each card: White surface, rounded-2xl, green-tinted shadow. Colored icon badge (40×40px rounded-xl) on left, big number in center, label below.
+- "Total Produk" — Teal Accent badge (Package icon), "28" big bold number, label "Total Produk"
+- "Rata-rata HPP" — Signal Blue badge (DollarSign icon), "Rp 14.200" big bold number, label "Rata-rata HPP"
+- "Rata-rata Margin" — Lavender Accent badge (TrendingUp icon), "Rp 5.800" big bold number, label "Rata-rata Margin"
+- "Margin Negatif" — Rose Accent badge (TrendingDown icon), "0" big bold number (Crisis Red if >0), label "Margin Negatif"
 
 Filter bar: search input + margin filter dropdown ("Margin Tinggi", "Margin Rendah", "Margin Negatif")
 
@@ -143,9 +251,9 @@ A DESKTOP split-panel pricing screen for individual outlet pricing. Fixed sideba
 
 LAYOUT: Two panels side by side.
 
-LEFT PANEL (280px wide, border-right):
-- Search input at top "Cari outlet...", Search icon
-- Scrollable outlet list below. Each outlet card: name in bold, address in small muted text, Active badge. Selected outlet card: emerald-50 background. Unselected: white, hover light gray.
+LEFT PANEL (280px wide, Quiet Border border-right):
+- Search input at top "Cari outlet...", Search icon (Lucide)
+- Scrollable outlet list below. Each outlet card: name in bold (Deep Ink), address in small muted text (Steel Gray), Status badge (rounded-full, bg + text, NO border). Selected outlet card: Mint Wash (#ECFDF5) background. Unselected: white, hover bg-surface-muted.
 - Example outlets: "Senayan", "Kemang", "BSD", "Depok"
 
 RIGHT PANEL (fills remaining space):
@@ -181,7 +289,7 @@ MAIN CONTENT:
 - Page header: "Perbandingan Harga Outlet"
 - Subtitle: "Bandingkan harga antar outlet"
 
-Multi-select outlet picker at top: "Pilih outlet untuk dibandingkan" with chips. Shows 3 selected outlets as removable chips: "Senayan ✕", "Kemang ✕", "BSD ✕". Clicking opens dropdown to add more.
+Multi-select outlet picker at top: "Pilih outlet untuk dibandingkan" with filter chips. Shows 3 selected outlets as removable chips: "Senayan ✕", "Kemang ✕", "BSD ✕". Clicking opens dropdown to add more.
 
 Below: matrix table.
 - First column (sticky left, white bg): "Produk" — listing variant names in Family — Variant format, bold
@@ -204,9 +312,14 @@ A DESKTOP inventory monitoring screen for Dombi owner panel. Fixed sidebar with 
 
 MAIN CONTENT:
 - Page header: "Inventaris" in bold. Subtitle: "Pantau stok semua outlet dan pusat".
-- Tab bar: "Stok Pusat", "Outlet" (active, emerald) — segmented control
+- Tab bar: "Stok Pusat", "Outlet" (active, Botanical Emerald text) — segmented control `inline-flex rounded-lg bg-surface-muted p-1`
 
-KPI strip (4 cards): "Total SKU: 156", "Stok Kritis" (red, "≤ 2 pcs, 8 items"), "Stok Rendah" (amber, "≤ minimum, 23 items"), "Stok Sehat: 125" (emerald)
+KPI STRIP — ENHANCED (4 cards):
+Each card: White surface, rounded-2xl, green-tinted shadow. Colored icon badge (40×40px rounded-xl) on left, big number in center, label below.
+- "Total SKU: 156" — Teal Accent badge (Package icon), big bold number, label "Total SKU"
+- "Stok Kritis: 8" — Rose Accent badge (AlertTriangle icon), Crisis Red number, label "Stok Kritis", sublabel "≤ 2 pcs"
+- "Stok Rendah: 23" — Amber Alert badge (AlertCircle icon), Amber number, label "Stok Rendah", sublabel "≤ minimum"
+- "Stok Sehat: 125" — Success Green badge (CheckCircle icon), green number, label "Stok Sehat"
 
 Filter bar: search input "Cari produk atau outlet..." + outlet dropdown "Semua Outlet"
 
@@ -243,9 +356,14 @@ Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia.
 A DESKTOP central stock screen for Dombi owner panel. Fixed sidebar on left. "Stok Pusat" tab active.
 
 MAIN CONTENT:
-- KPI strip (4 cards): "Total Varian: 28", "Total Stok: 1,240 pcs", "Stok Habis: 3" (red), "Stok Rendah: 5" (amber)
+KPI STRIP — ENHANCED (4 cards):
+Each card: White surface, rounded-2xl, green-tinted shadow. Colored icon badge (40×40px rounded-xl) on left, big number in center, label below.
+- "Total Varian: 28" — Teal Accent badge (Package icon), big bold number, label "Total Varian"
+- "Total Stok: 1,240 pcs" — Signal Blue badge (Layers icon), big bold number, label "Total Stok"
+- "Stok Habis: 3" — Rose Accent badge (XCircle icon), Crisis Red number, label "Stok Habis"
+- "Stok Rendah: 5" — Amber Alert badge (AlertCircle icon), Amber number, label "Stok Rendah"
 
-Filter bar: search input "Cari produk atau SKU..." + filter pills: "Semua" (active/emerald), "Habis", "Rendah", "Aman"
+Filter bar: search input "Cari produk atau SKU..." + filter chips: Rounded-full pills. "Semua" (active: Mint Wash bg + Botanical Emerald text), "Habis", "Rendah", "Aman"
 
 Full-width table:
 - Columns: "Produk / SKU" (sortable), "Stok" (sortable, right-aligned), "HPP" (sortable, right-aligned), "Status" (sortable), "Aksi"
@@ -273,11 +391,16 @@ A DESKTOP restock request management screen for Dombi owner panel. Fixed sidebar
 
 MAIN CONTENT:
 - Page header: "Restock" in bold. Subtitle: "Kelola permintaan restock dari outlet".
-- Top-right: "+ Buat Restock" emerald button.
+- Top-right: outlined button "+ Buat Restock" (`border border-primary text-primary` with `hover:bg-mint-wash`, `active:scale-[0.98]`).
 
-KPI strip (4 cards): "Total Request: 28", "Pending: 12" (amber), "Disetujui: 14" (green), "Ditolak: 2" (red)
+KPI STRIP — ENHANCED (4 cards):
+Each card: White surface, rounded-2xl, green-tinted shadow. Colored icon badge (40×40px rounded-xl) on left, big number in center, label below.
+- "Total Request: 28" — Teal Accent badge (Package icon), big bold number, label "Total Request"
+- "Pending: 12" — Amber Alert badge (Clock icon), Amber number, label "Pending"
+- "Disetujui: 14" — Success Green badge (CheckCircle icon), green number, label "Disetujui"
+- "Ditolak: 2" — Crisis Red badge (XCircle icon), red number, label "Ditolak"
 
-Filter pills: "Semua" (active), "Pending", "Disetujui", "Ditolak"
+Filter chips: Rounded-full pills. "Semua" (active: Mint Wash bg + Botanical Emerald text), "Pending", "Disetujui", "Ditolak"
 
 Full-width table with sortable headers:
 - Columns: "Outlet", "Produk", "Jumlah", "Status", "Tanggal", "Aksi"
@@ -315,41 +438,6 @@ Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia.
 
 ---
 
-## Grup 6: Persediaan — Distribusi
-
-### Prompt 6A — Daftar Distribusi
-```
-A DESKTOP stock distribution list screen for Dombi owner panel. Fixed sidebar with "Persediaan > Distribusi" active.
-
-MAIN CONTENT:
-- Page header: "Distribusi" in bold. Subtitle: "Pantau distribusi stok antar outlet".
-
-KPI strip (3 cards): "Total Distribusi: 42", "Dalam Perjalanan: 8" (blue), "Diterima: 34" (green)
-
-Full-width table with sortable headers:
-- Columns: "Dari", "Ke", "Produk", "Jumlah", "Status", "Tanggal", "Aksi"
-
-Each row:
-- Col 1: Source outlet name
-- Col 2: "→" arrow + destination outlet name
-- Col 3: Product name (Family — Variant bold)
-- Col 4: "30 pcs" right-aligned
-- Col 5: Status badge — "Dikirim" (blue bg, blue text), "Diterima" (green bg, green text), "Dibatalkan" (gray bg, gray text)
-- Col 6: "5 jam lalu" muted
-- Col 7: "Detail" ghost button
-
-DETAIL MODAL (on "Detail" click):
-- Distribution info: Dari Pusat → Outlet Senayan
-- Product table: variant name, quantity per product
-- Timeline: Dibuat (timestamp), Dikirim (timestamp), Diterima (timestamp)
-- Notes section
-- Close button
-
-Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia.
-```
-
----
-
 ## Grup 7: Operasional — Pesanan
 
 ### Prompt 7A — Daftar Pesanan
@@ -359,9 +447,14 @@ A DESKTOP orders management screen for Dombi owner panel. Fixed sidebar with "Op
 MAIN CONTENT:
 - Page header: "Pesanan" in bold. Subtitle: "Pantau seluruh pesanan pelanggan".
 
-KPI strip (4 cards): "Pesanan Hari Ini: 34", "Pendapatan: Rp 4.250.000", "Rata-rata: Rp 125.000", "Pending: 8"
+KPI STRIP — ENHANCED (4 cards):
+Each card: White surface, rounded-2xl, green-tinted shadow. Colored icon badge (40×40px rounded-xl) on left, big number in center, label below.
+- "Pesanan Hari Ini: 34" — Teal Accent badge (ShoppingCart icon), big bold number, label "Pesanan Hari Ini"
+- "Pendapatan: Rp 4.250.000" — Success Green badge (DollarSign icon), big bold number, label "Pendapatan Hari Ini"
+- "Rata-rata: Rp 125.000" — Signal Blue badge (TrendingUp icon), big bold number, label "Rata-rata per Pesanan"
+- "Pending: 8" — Amber Alert badge (Clock icon), Amber number, label "Menunggu Proses"
 
-Filter pills: "Semua" (active), "Menunggu", "Diproses", "Dikirim", "Selesai", "Dibatalkan"
+Filter chips: Rounded-full pills. "Semua" (active: Mint Wash bg + Botanical Emerald text), "Menunggu", "Diproses", "Dikirim", "Selesai", "Dibatalkan"
 
 Filter bar: search "Cari pesanan atau pelanggan..." + outlet dropdown "Semua Outlet"
 
@@ -412,7 +505,7 @@ RIGHT COLUMN (~35% width):
   - 🔵 Dalam Pengiriman — 13:10 (active, pulsing dot)
   - ⚪ Selesai (pending)
 
-STICKY BOTTOM BAR (if order is pending): "Konfirmasi Pesanan" emerald button + "Tolak Pesanan" red ghost button.
+STICKY BOTTOM BAR (if order is pending): outlined button "Konfirmasi Pesanan" (`border border-primary text-primary` with `hover:bg-mint-wash`, `active:scale-[0.98]`) + ghost button "Tolak Pesanan" (Crisis Red text, `hover:bg-red-50`).
 
 Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia.
 ```
@@ -427,9 +520,9 @@ A DESKTOP outlet list screen for Dombi owner panel. Fixed sidebar with "Operasio
 
 MAIN CONTENT:
 - Page header: "Outlet" in bold. Subtitle: "Kelola seluruh outlet Dombi".
-- Top-right: "+ Tambah Outlet" emerald button.
+- Top-right: outlined button "+ Tambah Outlet" (`border border-primary text-primary` with `hover:bg-mint-wash`, `active:scale-[0.98]`).
 
-Filter bar: search "Cari outlet..." + status pills: "Semua" (active), "Aktif", "Nonaktif"
+Filter bar: search "Cari outlet..." + filter chips: Rounded-full pills. "Semua" (active: Mint Wash bg + Botanical Emerald text), "Aktif", "Nonaktif"
 
 Outlet CARDS in a grid (3 columns on desktop, gap-4):
 Each card (white, rounded-2xl, subtle shadow):
@@ -454,7 +547,7 @@ MAIN CONTENT:
 - Breadcrumb: "Outlet > Senayan"
 - Page header: "Outlet Senayan" bold with "Edit" ghost button
 
-Tab bar: "Informasi" (active), "Jam Operasional", "Produk", "Kurir"
+Tab bar: "Informasi" (active, Botanical Emerald text), "Jam Operasional", "Produk", "Kurir" — segmented control `inline-flex rounded-lg bg-surface-muted p-1`
 
 INFORMASI TAB:
 Two-column layout:
@@ -488,7 +581,12 @@ A DESKTOP delivery tracking screen for Dombi owner panel. Fixed sidebar with "Op
 MAIN CONTENT:
 - Page header: "Pengiriman" in bold. Subtitle: "Lacak status pengiriman pesanan".
 
-KPI strip (4 cards): "Pengiriman Aktif: 12", "Selesai Hari Ini: 28", "Gagal: 2" (red), "Return: 1" (amber)
+KPI STRIP — ENHANCED (4 cards):
+Each card: White surface, rounded-2xl, green-tinted shadow. Colored icon badge (40×40px rounded-xl) on left, big number in center, label below.
+- "Pengiriman Aktif: 12" — Signal Blue badge (Truck icon), blue number, label "Pengiriman Aktif"
+- "Selesai Hari Ini: 28" — Success Green badge (CheckCircle icon), green number, label "Selesai Hari Ini"
+- "Gagal: 2" — Crisis Red badge (XCircle icon), red number, label "Gagal"
+- "Return: 1" — Amber Alert badge (RotateCcw icon), amber number, label "Return"
 
 Filter pills: "Semua" (active), "Dijadwalkan", "Diambil", "Dalam Perjalanan", "Selesai", "Gagal"
 
@@ -520,14 +618,15 @@ A DESKTOP financial overview screen for Dombi owner panel. Fixed sidebar with "K
 MAIN CONTENT:
 - Page header: "Keuangan" in bold. Subtitle: "Ringkasan pendapatan dan pembayaran".
 
-Tab bar: "Ringkasan" (active), "Tagihan Outlet", "Pembayaran", "Refund", "Rekening"
+Tab bar: "Ringkasan" (active, Botanical Emerald text), "Tagihan Outlet", "Pembayaran", "Refund", "Rekening" — segmented control `inline-flex rounded-lg bg-surface-muted p-1`
 
 RINGKASAN TAB:
-4 large KPI cards in a row:
-- "Total Pendapatan" — DollarSign icon, "Rp 485.000.000", subtitle "Sepanjang waktu"
-- "Pendapatan Bulan Ini" — TrendingUp icon, "Rp 52.300.000", "+12% dari bulan lalu" green
-- "Outstanding" — Clock icon, "Rp 8.500.000", "3 outlet belum lunas" amber
-- "Refund" — Undo2 icon, "Rp 1.200.000", "2 refund diproses"
+KPI STRIP — ENHANCED (4 large cards):
+Each card: White surface, rounded-2xl, green-tinted shadow. Colored icon badge (40×40px rounded-xl) on left, big number in center, label below.
+- "Total Pendapatan" — Teal Accent badge (DollarSign icon), "Rp 485.000.000" big bold number, label "Total Pendapatan", sublabel "Sepanjang waktu" in Steel Gray
+- "Pendapatan Bulan Ini" — Success Green badge (TrendingUp icon), "Rp 52.300.000" big bold number, label "Pendapatan Bulan Ini", trend "+12% dari bulan lalu" in Success Green
+- "Outstanding" — Amber Alert badge (Clock icon), "Rp 8.500.000" big bold number, label "Outstanding", sublabel "3 outlet belum lunas" in Amber Alert
+- "Refund" — Rose Accent badge (Undo2 icon), "Rp 1.200.000" big bold number, label "Refund", sublabel "2 refund diproses" in Steel Gray
 
 Below: two cards side by side (50/50 split):
 - Left "Pendapatan per Outlet": simple horizontal bar chart. Outlet names on left, amounts on right. Bars in emerald gradient (darker = higher). Example: Senayan Rp 125jt ████████, Kemang Rp 98jt ██████, BSD Rp 72jt █████
@@ -546,9 +645,9 @@ A DESKTOP courier management screen for Dombi owner panel. Fixed sidebar with "O
 
 MAIN CONTENT:
 - Page header: "Kurir" in bold. Subtitle: "Kelola kurir pengiriman".
-- Top-right: "+ Tambah Kurir" emerald button.
+- Top-right: outlined button "+ Tambah Kurir" (`border border-primary text-primary` with `hover:bg-mint-wash`, `active:scale-[0.98]`).
 
-Filter bar: search "Cari kurir..." + status pills: "Semua" (active), "Online", "Offline", "Nonaktif"
+Filter bar: search "Cari kurir..." + filter chips: Rounded-full pills. "Semua" (active: Mint Wash bg + Botanical Emerald text), "Online", "Offline", "Nonaktif"
 
 Courier CARDS grid (3 columns on desktop):
 Each card (white, rounded-2xl, shadow):
@@ -580,11 +679,17 @@ A DESKTOP returns & exchanges management screen for Dombi owner panel. Fixed sid
 MAIN CONTENT:
 - Page header: "Return & Tukar" in bold. Subtitle: "Kelola pengembalian dan penukaran produk".
 
-Tab bar: "Pengembalian" (active), "Penukaran"
+Tab bar: "Pengembalian" (active, Botanical Emerald text), "Penukaran" — segmented control `inline-flex rounded-lg bg-surface-muted p-1`
 
 PENGEMBALIAN TAB:
-- KPI strip (4 cards): "Total: 18", "Pending: 5" (amber), "Disetujui: 10" (green), "Selesai: 3" (emerald)
-- Filter pills: "Semua" (active), "Pending", "Disetujui", "Ditolak", "Diterima", "Selesai"
+KPI STRIP — ENHANCED (4 cards):
+Each card: White surface, rounded-2xl, green-tinted shadow. Colored icon badge (40×40px rounded-xl) on left, big number in center, label below.
+- "Total: 18" — Teal Accent badge (Package icon), big bold number, label "Total Pengembalian"
+- "Pending: 5" — Amber Alert badge (Clock icon), Amber number, label "Menunggu"
+- "Disetujui: 10" — Success Green badge (CheckCircle icon), green number, label "Disetujui"
+- "Selesai: 3" — Success Green badge (CheckCircle2 icon), green number, label "Selesai"
+
+Filter chips: Rounded-full pills. "Semua" (active: Mint Wash bg + Botanical Emerald text), "Pending", "Disetujui", "Ditolak", "Diterima", "Selesai"
 
 Full-width table with sortable headers:
 - Columns: "Kode", "Pesanan", "Pelanggan", "Produk", "Jumlah", "Alasan", "Status", "Tanggal", "Aksi"
@@ -609,7 +714,59 @@ Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia.
 
 ---
 
-## Grup 13: Analitik
+## Grup 13: Keuangan — Refund
+
+### Prompt 13A — Daftar Refund
+```
+A DESKTOP refund management screen for Dombi owner panel. Fixed sidebar with "Keuangan > Refund" active.
+
+MAIN CONTENT:
+- Page header: "Refund" in bold. Subtitle: "Kelola pengembalian dana pelanggan".
+
+Tab bar: "Antrian" (active, Botanical Emerald text), "Riwayat" — segmented control `inline-flex rounded-lg bg-surface-muted p-1`
+
+ANTRIAN TAB:
+KPI STRIP — ENHANCED (4 cards):
+Each card: White surface, rounded-2xl, green-tinted shadow. Colored icon badge (40×40px rounded-xl) on left, big number in center, label below.
+- "Menunggu Data: 3" — Amber Alert badge (Clock icon), Amber number, label "Menunggu Data"
+- "Siap Diproses: 5" — Signal Blue badge (CheckCircle icon), blue number, label "Siap Diproses"
+- "Sedang Diproses: 2" — Teal Accent badge (Loader icon), Teal number, label "Sedang Diproses"
+- "Perlu Tindakan: 1" — Rose Accent badge (AlertTriangle icon), red number, label "Perlu Tindakan"
+
+Queue cards (NOT table): Each card represents one refund request.
+- Card: White surface, rounded-2xl, border, p-4
+- Top row: Order number bold "#ORD-045" + queue status badge (rounded-full, bg + text, NO border)
+- Customer name + phone
+- Product: "Susu Kambing — Original 250ml" bold
+- Amount: "Rp 75.000" large bold tabular-nums
+- Reason: "Produk rusak saat diterima" muted
+- Bottom: action buttons vary by queue:
+  - "Siap Diproses": "Proses Refund" outlined primary + "Tolak" ghost red
+  - "Menunggu Data": "Ingatkan Customer" ghost
+  - "Perlu Tindakan": "Lihat Detail" ghost
+
+RIWAYAT TAB:
+Filter bar: search "Cari order atau pelanggan..." + date range picker
+
+Full-width table with sortable headers:
+- Columns: "Order", "Pelanggan", "Produk", "Jumlah", "Status", "Tanggal", "Aksi"
+- Each row:
+  - Col 1: "#ORD-045" bold
+  - Col 2: Customer name
+  - Col 3: Product name bold
+  - Col 4: "Rp 75.000" tabular-nums
+  - Col 5: Status badge — "Selesai" (green), "Ditolak" (red), "Dibatalkan" (gray)
+  - Col 6: "2 hari lalu" muted
+  - Col 7: "Detail" ghost button
+
+DETAIL MODAL: Full refund info + timeline + destination (rekening/e-wallet) + approve/reject buttons if pending.
+
+Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia. Tabular-nums for amounts.
+```
+
+---
+
+## Grup 14: Analitik
 
 ### Prompt 13A — Dasbor Analitik
 ```
@@ -619,10 +776,15 @@ MAIN CONTENT:
 - Page header: "Analitik" in bold. Subtitle: "Wawasan performa bisnis".
 - Top-right: date range picker "10 Jun — 10 Jul 2026"
 
-Tab bar: "Dasbor" (active), "Laporan", "Audit", "Masalah"
+Tab bar: "Dasbor" (active, Botanical Emerald text), "Laporan", "Audit", "Masalah" — segmented control `inline-flex rounded-lg bg-surface-muted p-1`
 
 DASBOR TAB:
-4 KPI cards: "Total Pesanan: 1,234", "Pendapatan: Rp 185.000.000", "Rata-rata: Rp 150.000", "Pelanggan Aktif: 856"
+KPI STRIP — ENHANCED (4 cards):
+Each card: White surface, rounded-2xl, green-tinted shadow. Colored icon badge (40×40px rounded-xl) on left, big number in center, label below.
+- "Total Pesanan: 1,234" — Teal Accent badge (ShoppingCart icon), big bold number, label "Total Pesanan"
+- "Pendapatan: Rp 185.000.000" — Success Green badge (DollarSign icon), big bold number, label "Pendapatan"
+- "Rata-rata: Rp 150.000" — Signal Blue badge (TrendingUp icon), big bold number, label "Rata-rata per Pesanan"
+- "Pelanggan Aktif: 856" — Lavender Accent badge (Users icon), big bold number, label "Pelanggan Aktif"
 
 2×2 card grid layout:
 - Top-left "Tren Pendapatan" (spans 2 columns): line/area chart showing daily revenue over 30 days. Emerald gradient fill below line, subtle grid. X-axis: dates. Y-axis: Rp values.
@@ -640,7 +802,7 @@ A DESKTOP reports screen for Dombi owner panel. Fixed sidebar with "Analitik > L
 MAIN CONTENT:
 - Date range picker "10 Jun — 10 Jul 2026" + outlet filter "Semua Outlet" + "Export" outline button
 
-Report type selector: pills "Ringkasan Harian" (active), "Per Outlet", "Per Produk", "Keuangan"
+Report type selector: filter chips: Rounded-full pills. "Ringkasan Harian" (active: Mint Wash bg + Botanical Emerald text), "Per Outlet", "Per Produk", "Keuangan"
 
 Below: full-width data table depending on selected type.
 
@@ -652,39 +814,6 @@ Below: full-width data table depending on selected type.
 Bottom: two buttons "Export CSV" (outline, Download icon) and "Export PDF" (outline, FileText icon).
 
 Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia. Tabular-nums for all numeric columns.
-```
-
----
-
-## Grup 14: Tier Ongkir
-
-### Prompt 14A — Tier Ongkir
-```
-A DESKTOP delivery tier management screen for Dombi owner panel. Fixed sidebar with "Operasional > Tier Ongkir" active.
-
-MAIN CONTENT:
-- Page header: "Tier Ongkir" in bold. Subtitle: "Atur biaya pengiriman berdasarkan jarak".
-- Top-right: "+ Tambah Tier" emerald button.
-
-Full-width table:
-- Columns: "Nama Tier", "Jarak Min", "Jarak Maks", "Biaya", "Outlet", "Status", "Aksi"
-
-Each row:
-- Col 1: Tier name bold — "Zona 1 — Dekat"
-- Col 2: "0 km" muted
-- Col 3: "3 km" muted
-- Col 4: "Rp 5.000" bold tabular-nums
-- Col 5: "Senayan, Kemang" (outlet names, truncated if many)
-- Col 6: Active/Inactive toggle
-- Col 7: "Edit" ghost + "Hapus" red ghost
-
-Empty state: MapPin icon, "Belum ada tier ongkir".
-
-ADD TIER MODAL:
-- Form: Nama Tier, Jarak Minimum (km), Jarak Maksimum (km), Biaya (Rp), Outlet (multi-select chips)
-- Footer: Batal + Simpan
-
-Font: Poppins. Colors per DESIGN.md. Bahasa Indonesia.
 ```
 
 ---

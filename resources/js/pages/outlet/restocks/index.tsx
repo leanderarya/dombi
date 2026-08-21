@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
+import { SkeletonList } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 import OutletLayout from '@/layouts/outlet-layout';
 
 const statusFilters = [
@@ -27,6 +29,7 @@ export default function OutletRestocksIndex({
 }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
     const [showCreate, setShowCreate] = useState(false);
+    const { loading } = useInertiaLoading();
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
@@ -50,72 +53,83 @@ export default function OutletRestocksIndex({
         >
             <Head title="Restock" />
             <OutletPageShell>
-                {/* Action Bar */}
-                <div className="flex justify-end">
-                    <Button
-                        size="lg"
-                        onClick={() => setShowCreate(true)}
-                        icon={Plus}
-                    >
-                        Buat Restock
-                    </Button>
-                </div>
-
-                {restocks.data.length === 0 ? (
-                    <EmptyState
-                        icon={
-                            <ClipboardList className="h-8 w-8 text-text-subtle" />
-                        }
-                        title="Belum ada restock"
-                        description={
-                            activeFilter
-                                ? 'Tidak ada restock dengan filter ini.'
-                                : 'Buat request baru untuk meminta stok tambahan.'
-                        }
-                        action={
-                            activeFilter
-                                ? {
-                                      label: 'Reset Filter',
-                                      onClick: () => handleFilterChange(''),
-                                  }
-                                : {
-                                      label: 'Buat Request Restock',
-                                      onClick: () => setShowCreate(true),
-                                  }
-                        }
-                    />
+                {loading ? (
+                    <SkeletonList count={5} />
                 ) : (
-                    <div className="space-y-2">
-                        {restocks.data.map((restock: any) => (
-                            <Link
-                                key={restock.id}
-                                href={`/outlet/restocks/${restock.id}`}
-                                className="block rounded-xl border border-border bg-white p-4 transition-colors active:bg-surface-muted"
+                    <>
+                        {/* Action Bar */}
+                        <div className="flex justify-end">
+                            <Button
+                                size="lg"
+                                onClick={() => setShowCreate(true)}
+                                icon={Plus}
+                                className="min-h-11"
                             >
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm font-bold text-text">
-                                        Request #{restock.id}
-                                    </div>
-                                    <StatusBadge status={restock.status} />
-                                </div>
-                                <div className="mt-1.5 text-xs text-text-muted">
-                                    {restock.items?.length ?? 0} item
-                                </div>
-                                <div className="mt-1 text-xs text-text-subtle">
-                                    {new Date(
-                                        restock.created_at,
-                                    ).toLocaleString('id-ID', {
-                                        day: '2-digit',
-                                        month: 'short',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                    })}
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
+                                Buat Restock
+                            </Button>
+                        </div>
+
+                        {restocks.data.length === 0 ? (
+                            <EmptyState
+                                icon={
+                                    <ClipboardList className="h-8 w-8 text-text-subtle" />
+                                }
+                                title="Belum ada restock"
+                                description={
+                                    activeFilter
+                                        ? 'Tidak ada restock dengan filter ini.'
+                                        : 'Buat request baru untuk meminta stok tambahan.'
+                                }
+                                action={
+                                    activeFilter
+                                        ? {
+                                              label: 'Reset Filter',
+                                              onClick: () =>
+                                                  handleFilterChange(''),
+                                          }
+                                        : {
+                                              label: 'Buat Request Restock',
+                                              onClick: () =>
+                                                  setShowCreate(true),
+                                          }
+                                }
+                            />
+                        ) : (
+                            <div className="space-y-2">
+                                {restocks.data.map((restock: any) => (
+                                    <Link
+                                        key={restock.id}
+                                        href={`/outlet/restocks/${restock.id}`}
+                                        className="block rounded-xl border border-border bg-white p-4 transition-colors active:bg-surface-muted"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-sm font-bold text-text">
+                                                Request #{restock.id}
+                                            </div>
+                                            <StatusBadge
+                                                status={restock.status}
+                                            />
+                                        </div>
+                                        <div className="mt-1.5 text-xs text-text-muted">
+                                            {restock.items?.length ?? 0} item
+                                        </div>
+                                        <div className="mt-1 text-xs text-text-subtle">
+                                            {new Date(
+                                                restock.created_at,
+                                            ).toLocaleString('id-ID', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            })}
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+                        <Pagination links={restocks.links} />
+                    </>
                 )}
-                <Pagination links={restocks.links} />
             </OutletPageShell>
 
             {/* Create Restock Dialog */}

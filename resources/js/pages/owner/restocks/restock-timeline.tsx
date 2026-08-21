@@ -74,6 +74,7 @@ export default function RestockTimeline({
         <div className="space-y-0" role="list" aria-label="Linimasa Restock">
             {events.map((event, index) => {
                 const isLast = index === events.length - 1;
+
                 return (
                     <div
                         key={`${event.label}-${index}`}

@@ -1,3 +1,4 @@
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Clock,
     DollarSign,
@@ -12,15 +13,14 @@ import {
     User,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Link, router, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 import OutletInfoModal from '@/components/owner/outlet-info-modal';
 import OutletLocationModal from '@/components/owner/outlet-location-modal';
-import OutletScheduleModal from '@/components/owner/outlet-schedule-modal';
-import OutletStatusModal from '@/components/owner/outlet-status-modal';
 import OutletProducts from '@/components/owner/outlet-products';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
+import OutletScheduleModal from '@/components/owner/outlet-schedule-modal';
 import OutletStatusBadge from '@/components/owner/outlet-status-badge';
+import OutletStatusModal from '@/components/owner/outlet-status-modal';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
@@ -67,18 +67,18 @@ export default function OutletShow({
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-6 w-3/4" />
                         </div>
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-20 w-full" />
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
@@ -99,7 +99,8 @@ export default function OutletShow({
                     setShowArchiveConfirm(false);
                     toast.success('Outlet diarsipkan');
                 },
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
             },
         );
     };
@@ -114,6 +115,7 @@ export default function OutletShow({
                     <Button
                         variant="danger"
                         size="sm"
+                        className="min-h-11"
                         onClick={() => setShowArchiveConfirm(true)}
                     >
                         <Trash2 className="h-3 w-3" aria-hidden="true" />
@@ -125,13 +127,18 @@ export default function OutletShow({
             <div className="grid gap-4 lg:grid-cols-3">
                 <div className="space-y-4 lg:col-span-2">
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Informasi Outlet"
                     >
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="text-xs font-semibold text-text-subtle">Informasi Outlet</div>
-                            <button type="button" onClick={() => setInfoModalOpen(true)}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80">
+                        <div className="mb-3 flex items-center justify-between">
+                            <h2 className="font-heading text-base font-bold text-text">
+                                Informasi Outlet
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={() => setInfoModalOpen(true)}
+                                className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                            >
                                 <Pencil className="h-3.5 w-3.5" />
                             </button>
                         </div>
@@ -148,7 +155,7 @@ export default function OutletShow({
                         )}
 
                         {outlet.pic_name && (
-                            <div className="shadow-card-muted mt-3 rounded-xl bg-surface p-3">
+                            <div className="mt-3 rounded-2xl border border-border bg-surface-muted/50 p-3">
                                 <div className="flex items-center gap-1.5 text-xs font-medium text-text-subtle">
                                     <User
                                         className="h-3 w-3"
@@ -173,49 +180,74 @@ export default function OutletShow({
                         )}
                     </div>
 
-                    <OutletInfoModal outlet={outlet} open={infoModalOpen} onClose={() => setInfoModalOpen(false)} onSuccess={() => router.reload({ preserveScroll: true })} />
+                    <OutletInfoModal
+                        outlet={outlet}
+                        open={infoModalOpen}
+                        onClose={() => setInfoModalOpen(false)}
+                        onSuccess={() => router.reload()}
+                    />
 
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Akun Operasional"
                     >
-                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
-                            <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
-                            Akun Operasional
+                        <div className="mb-3 flex items-center gap-2">
+                            <KeyRound
+                                className="h-3.5 w-3.5"
+                                aria-hidden="true"
+                            />
+                            <h2 className="font-heading text-base font-bold text-text">
+                                Akun Operasional
+                            </h2>
                         </div>
                         <div className="space-y-1 text-xs">
                             <div className="flex justify-between">
                                 <span className="text-text-muted">Email</span>
-                                <span className="font-medium text-text">{user?.email ?? '-'}</span>
+                                <span className="font-medium text-text">
+                                    {user?.email ?? '-'}
+                                </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-text-muted">Status</span>
-                                <span className="font-medium text-text">{user?.is_active ? 'Aktif' : 'Nonaktif'}</span>
+                                <span className="font-medium text-text">
+                                    {user?.is_active ? 'Aktif' : 'Nonaktif'}
+                                </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-text-muted">Wajib Ganti</span>
-                                <span className="font-medium text-text">{user?.must_change_password ? 'Ya' : 'Tidak'}</span>
+                                <span className="text-text-muted">
+                                    Wajib Ganti
+                                </span>
+                                <span className="font-medium text-text">
+                                    {user?.must_change_password
+                                        ? 'Ya'
+                                        : 'Tidak'}
+                                </span>
                             </div>
                         </div>
                         <Button
                             variant="outline"
                             size="sm"
-                            className="mt-3"
+                            className="mt-3 min-h-11"
                             disabled={outlet.status === 'archived'}
                             onClick={() => setResetOpen(true)}
                         >
-                            <KeyRound className="h-4 w-4 mr-1" /> Reset Password
+                            <KeyRound className="mr-1 h-4 w-4" /> Reset Password
                         </Button>
                     </div>
 
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Lokasi"
                     >
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="text-xs font-semibold text-text-subtle">Lokasi</div>
-                            <button type="button" onClick={() => setLocationModalOpen(true)}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80">
+                        <div className="mb-3 flex items-center justify-between">
+                            <h2 className="font-heading text-base font-bold text-text">
+                                Lokasi
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={() => setLocationModalOpen(true)}
+                                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                            >
                                 <Pencil className="h-3.5 w-3.5" />
                             </button>
                         </div>
@@ -226,51 +258,77 @@ export default function OutletShow({
                         </p>
                         {location && (
                             <p className="mt-1 text-xs text-text-muted tabular-nums">
-                                {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+                                {location.lat.toFixed(6)},{' '}
+                                {location.lng.toFixed(6)}
                             </p>
                         )}
                     </div>
 
-                    <OutletLocationModal outlet={outlet} open={locationModalOpen} onClose={() => setLocationModalOpen(false)} onSuccess={() => router.reload({ preserveScroll: true })} />
+                    <OutletLocationModal
+                        outlet={outlet}
+                        open={locationModalOpen}
+                        onClose={() => setLocationModalOpen(false)}
+                        onSuccess={() => router.reload()}
+                    />
 
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Jadwal Outlet"
                     >
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="mb-3 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                                <div className="text-xs font-semibold text-text-subtle">Jadwal Outlet</div>
+                                <Clock
+                                    className="h-3.5 w-3.5"
+                                    aria-hidden="true"
+                                />
+                                <h2 className="font-heading text-base font-bold text-text">
+                                    Jadwal Outlet
+                                </h2>
                             </div>
-                            <button type="button" onClick={() => setScheduleModalOpen(true)}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80">
+                            <button
+                                type="button"
+                                onClick={() => setScheduleModalOpen(true)}
+                                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                            >
                                 <Pencil className="h-3.5 w-3.5" />
                             </button>
                         </div>
                         {operatingHours && operatingHours.length > 0 ? (
-                            <p className="text-xs text-text-muted">{operatingHours.length} hari operasional</p>
+                            <p className="text-xs text-text-muted tabular-nums">
+                                {operatingHours.length} hari operasional
+                            </p>
                         ) : (
-                            <p className="text-xs text-text-muted">Jam operasional belum diatur</p>
+                            <p className="text-xs text-text-muted">
+                                Jam operasional belum diatur
+                            </p>
                         )}
                         {holidays && holidays.length > 0 && (
-                            <p className="mt-1 text-xs text-text-muted">{holidays.length} hari libur tercatat</p>
+                            <p className="mt-1 text-xs text-text-muted tabular-nums">
+                                {holidays.length} hari libur tercatat
+                            </p>
                         )}
                     </div>
 
-                    <OutletScheduleModal outletId={outlet.id} initialHours={operatingHours ?? []} initialHolidays={holidays ?? []} open={scheduleModalOpen} onClose={() => setScheduleModalOpen(false)} />
+                    <OutletScheduleModal
+                        outletId={outlet.id}
+                        initialHours={operatingHours ?? []}
+                        initialHolidays={holidays ?? []}
+                        open={scheduleModalOpen}
+                        onClose={() => setScheduleModalOpen(false)}
+                    />
 
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Produk Outlet"
                     >
-                        <div className="mb-3 flex items-center justify-between text-xs font-semibold text-text-subtle">
-                            <div className="flex items-center gap-2">
-                                <Package
-                                    className="h-3.5 w-3.5"
-                                    aria-hidden="true"
-                                />
+                        <div className="mb-3 flex items-center gap-2">
+                            <Package
+                                className="h-3.5 w-3.5"
+                                aria-hidden="true"
+                            />
+                            <h2 className="font-heading text-base font-bold text-text">
                                 Produk Outlet
-                            </div>
+                            </h2>
                         </div>
                         <p className="mb-2 text-xs text-text-muted">
                             Kelola produk, stok, dan restock outlet ini.
@@ -281,48 +339,50 @@ export default function OutletShow({
                     {settlementSummary &&
                         Number(settlementSummary.outstanding) > 0 && (
                             <div
-                                className="rounded-lg border border-border p-4"
+                                className="rounded-2xl border border-border bg-surface p-5"
                                 aria-label="Settlement Outlet"
                             >
-                                <div className="mb-3 flex items-center justify-between text-xs font-semibold text-text-subtle">
+                                <div className="mb-3 flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <DollarSign
                                             className="h-3.5 w-3.5"
                                             aria-hidden="true"
                                         />
-                                        Settlement Outlet
+                                        <h2 className="font-heading text-base font-bold text-text">
+                                            Settlement Outlet
+                                        </h2>
                                     </div>
                                     <Link
                                         href={`/owner/finance/settlements/${outlet.id}`}
-                                        className="text-xs font-semibold text-primary hover:text-primary"
+                                        className="flex min-h-11 items-center text-xs font-semibold text-primary hover:text-primary"
                                     >
                                         Lihat Semua
                                     </Link>
                                 </div>
                                 <div className="grid grid-cols-3 gap-2">
-                                    <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                        <div className="text-xs font-semibold text-text-subtle">
+                                    <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                        <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Outstanding
                                         </div>
-                                        <div className="mt-0.5 text-xs font-bold text-red-600 tabular-nums">
+                                        <div className="font-heading mt-0.5 text-base font-bold text-red-600 tabular-nums">
                                             {formatCurrency(
                                                 settlementSummary.outstanding,
                                             )}
                                         </div>
                                     </div>
-                                    <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                        <div className="text-xs font-semibold text-text-subtle">
+                                    <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                        <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Terlambat
                                         </div>
-                                        <div className="mt-0.5 text-xs font-bold text-amber-600 tabular-nums">
+                                        <div className="font-heading mt-0.5 text-base font-bold text-amber-600 tabular-nums">
                                             {settlementSummary.overdue_count}
                                         </div>
                                     </div>
-                                    <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                        <div className="text-xs font-semibold text-text-subtle">
+                                    <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                        <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Dibayar
                                         </div>
-                                        <div className="mt-0.5 text-xs font-bold text-emerald-600 tabular-nums">
+                                        <div className="font-heading mt-0.5 text-base font-bold text-emerald-600 tabular-nums">
                                             {formatCurrency(
                                                 settlementSummary.paid_this_month,
                                             )}
@@ -399,15 +459,17 @@ export default function OutletShow({
 
                     {auditLogs && auditLogs.length > 0 && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Riwayat Perubahan"
                         >
-                            <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
+                            <div className="mb-3 flex items-center gap-2">
                                 <History
                                     className="h-3.5 w-3.5"
                                     aria-hidden="true"
                                 />
-                                Riwayat Perubahan
+                                <h2 className="font-heading text-base font-bold text-text">
+                                    Riwayat Perubahan
+                                </h2>
                             </div>
                             {auditLogs.map((log: any) => (
                                 <OwnerDetailRow
@@ -432,13 +494,18 @@ export default function OutletShow({
 
                 <div className="space-y-4">
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Status & Aksi"
                     >
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="text-xs font-semibold text-text-subtle">Status & Aksi</div>
-                            <button type="button" onClick={() => setStatusModalOpen(true)}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80">
+                        <div className="mb-3 flex items-center justify-between">
+                            <h2 className="font-heading text-base font-bold text-text">
+                                Status & Aksi
+                            </h2>
+                            <button
+                                type="button"
+                                onClick={() => setStatusModalOpen(true)}
+                                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                            >
                                 <Pencil className="h-3.5 w-3.5" />
                             </button>
                         </div>
@@ -460,7 +527,7 @@ export default function OutletShow({
                         <div className="space-y-1.5">
                             <Link
                                 href={`/owner/inventories?outlet_id=${outlet.id}`}
-                                className="hover:bg-mint-wash flex h-8 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
                             >
                                 <RefreshCw
                                     className="h-3.5 w-3.5 text-text-subtle"
@@ -470,7 +537,7 @@ export default function OutletShow({
                             </Link>
                             <Link
                                 href={`/owner/orders?outlet_id=${outlet.id}`}
-                                className="hover:bg-mint-wash flex h-8 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl bg-surface px-2.5 text-xs font-semibold text-text shadow-card transition-colors hover:bg-mint-wash"
                             >
                                 <ShoppingBag
                                     className="h-3.5 w-3.5 text-text-subtle"
@@ -480,24 +547,24 @@ export default function OutletShow({
                             </Link>
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-2">
-                            <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                <div className="text-sm font-bold text-blue-600 tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                <div className="font-heading text-base font-bold text-primary tabular-nums">
                                     {outlet.active_orders_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-subtle">
                                     Pesanan Aktif
                                 </div>
                             </div>
-                            <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                <div className="text-sm font-bold text-emerald-600 tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                <div className="font-heading text-base font-bold text-emerald-600 tabular-nums">
                                     {activeDeliveriesCount ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-subtle">
                                     Pengiriman
                                 </div>
                             </div>
-                            <div className="shadow-card-muted rounded-xl bg-surface p-2">
-                                <div className="text-sm font-bold text-text tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
+                                <div className="font-heading text-base font-bold text-text tabular-nums">
                                     {outlet.today_orders_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-subtle">
@@ -505,9 +572,9 @@ export default function OutletShow({
                                 </div>
                             </div>
                             <div
-                                className={`rounded-lg border p-2 ${Number(outlet.low_stock_count) > 0 ? 'border-amber-200 bg-amber-50' : 'border-border bg-surface-muted'}`}
+                                className={`rounded-xl border p-3 ${Number(outlet.low_stock_count) > 0 ? 'border-amber-200 bg-amber-50' : 'border-border bg-surface-muted/50'}`}
                             >
-                                <div className="text-sm font-bold text-amber-600 tabular-nums">
+                                <div className="font-heading text-base font-bold text-amber-600 tabular-nums">
                                     {outlet.low_stock_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-subtle">
@@ -517,22 +584,30 @@ export default function OutletShow({
                         </div>
                     </div>
 
-                    <OutletStatusModal outlet={outlet} open={statusModalOpen} onClose={() => setStatusModalOpen(false)} onSuccess={() => router.reload({ preserveScroll: true })} />
+                    <OutletStatusModal
+                        outlet={outlet}
+                        open={statusModalOpen}
+                        onClose={() => setStatusModalOpen(false)}
+                        onSuccess={() => router.reload()}
+                    />
 
                     {outlet.delivery_radius_km && (
                         <div
-                            className="rounded-lg border border-border p-4"
+                            className="rounded-2xl border border-border bg-surface p-5"
                             aria-label="Area Layanan"
                         >
-                            <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
+                            <div className="mb-3 flex items-center gap-2">
                                 <MapPin
                                     className="h-3.5 w-3.5"
                                     aria-hidden="true"
                                 />
-                                Area Layanan
+                                <h2 className="font-heading text-base font-bold text-text">
+                                    Area Layanan
+                                </h2>
                             </div>
                             <OwnerDetailRow
                                 label="Radius"
+                                bold
                                 value={`${outlet.delivery_radius_km} km`}
                             />
                             <p className="mt-1 text-xs text-text-muted">
@@ -560,11 +635,16 @@ export default function OutletShow({
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowArchiveConfirm(false)}
                         >
                             Batal
                         </Button>
-                        <Button variant="destructive" onClick={handleArchive}>
+                        <Button
+                            variant="destructive"
+                            className="min-h-11"
+                            onClick={handleArchive}
+                        >
                             Arsipkan
                         </Button>
                     </DialogFooter>
@@ -576,24 +656,39 @@ export default function OutletShow({
                     <DialogHeader>
                         <DialogTitle>Reset password {outlet.name}?</DialogTitle>
                         <DialogDescription>
-                            Akun akan logout paksa dan wajib ganti password saat login berikutnya. Password baru hanya tampil sekali.
+                            Akun akan logout paksa dan wajib ganti password saat
+                            login berikutnya. Password baru hanya tampil sekali.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setResetOpen(false)}>
+                        <Button
+                            variant="outline"
+                            className="min-h-11"
+                            onClick={() => setResetOpen(false)}
+                        >
                             Batal
                         </Button>
-                        <Button variant="destructive" onClick={() => {
-                            setResetOpen(false);
-                            router.post(`/owner/outlets/${outlet.id}/reset-password`, {}, { preserveScroll: true });
-                        }}>
+                        <Button
+                            variant="destructive"
+                            className="min-h-11"
+                            onClick={() => {
+                                setResetOpen(false);
+                                router.post(
+                                    `/owner/outlets/${outlet.id}/reset-password`,
+                                    {},
+                                    { preserveScroll: true },
+                                );
+                            }}
+                        >
                             Ya, Reset
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            <OutletProvisioningSummary provisioning={flash?.outlet_provisioning} />
+            <OutletProvisioningSummary
+                provisioning={flash?.outlet_provisioning}
+            />
         </OwnerPageShell>
     );
 }

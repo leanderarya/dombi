@@ -128,6 +128,8 @@ class NotificationService
 
     public const PAYMENT_REJECTED = 'payment.rejected';
 
+    public const PAYOUT_RECORDED = 'payout.recorded';
+
     /**
      * Get the owner user(s) for notification targeting.
      */
@@ -734,11 +736,11 @@ class NotificationService
 
     public function notifyReturnRequestCreated(ReturnRequest $return): void
     {
-        $return->loadMissing(['outlet', 'items.variant.family']);
+        $return->loadMissing(['outlet', 'items.product.category']);
 
         $firstItem = $return->items->first();
         $itemSummary = $firstItem
-            ? (($firstItem->variant?->full_name ?: $firstItem->variant?->name ?: 'Produk')." x{$firstItem->quantity}")
+            ? (($firstItem->product?->full_display_name ?: $firstItem->product?->name ?: 'Produk')." x{$firstItem->quantity}")
             : 'Tanpa item';
 
         foreach ($this->getOwners() as $ownerId) {
@@ -763,11 +765,11 @@ class NotificationService
 
     public function notifyExchangeRequestCreated(ExchangeRequest $exchange): void
     {
-        $exchange->loadMissing(['outlet', 'items.variant.family', 'returnRequest']);
+        $exchange->loadMissing(['outlet', 'items.product.category', 'returnRequest']);
 
         $firstItem = $exchange->items->first();
         $itemSummary = $firstItem
-            ? (($firstItem->variant?->full_name ?: $firstItem->variant?->name ?: 'Produk')." x{$firstItem->quantity}")
+            ? (($firstItem->product?->full_display_name ?: $firstItem->product?->name ?: 'Produk')." x{$firstItem->quantity}")
             : 'Tanpa item';
 
         foreach ($this->getOwners() as $ownerId) {
@@ -794,7 +796,7 @@ class NotificationService
 
     public function notifyReturnApproved(ReturnRequest $return): void
     {
-        $return->loadMissing(['outlet', 'items.variant.family']);
+        $return->loadMissing(['outlet', 'items.product.category']);
 
         $outletUser = $this->getOutletUser($return->outlet_id);
         if ($outletUser) {
@@ -1133,6 +1135,24 @@ class NotificationService
         }
     }
 
+    public function notifyPayoutRecorded(SettlementPayment $payment): void
+    {
+        $outletUser = $this->getOutletUser($payment->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::PAYOUT_RECORDED,
+                title: 'Payout Dibayar',
+                message: 'Owner telah mentransfer Rp '.number_format($payment->amount, 0, ',', '.').' ke rekening outlet Anda.',
+                data: ['payment_id' => $payment->id, 'amount' => $payment->amount, 'reference_number' => $payment->reference_number],
+                entityType: 'settlement_payment',
+                entityId: $payment->id
+            );
+        }
+    }
+
     // ─── REFUND NOTIFICATIONS ────────────────────────────────────────
 
     public function notifyRefundRequested(Order $order): void
@@ -1341,7 +1361,7 @@ class NotificationService
 
     private function createRefundOnce(RefundStatusHistory $history, string $userType, ?int $userId, ?int $customerId, string $type, string $title, string $message, array $data, string $url): void
     {
-        DB::transaction(function () use ($history, $userType, $userId, $customerId, $type, $title, $message, $data, $url) {
+        DB::transaction(function () use ($history, $userType, $userId, $customerId, $type, $title, $message, $data) {
             $history->fresh();
             RefundStatusHistory::lockForUpdate()->find($history->id);
 

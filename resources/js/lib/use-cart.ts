@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 export interface CartItem {
-    product_variant_id: number;
+    product_id: number;
+    product_variant_id?: number; // backward compat
     quantity: number;
     price: number;
 }
@@ -22,16 +23,21 @@ class CartStore {
         return this.snapshot;
     }
 
-    getQuantity(variantId: number): number {
+    getQuantity(productId: number): number {
         return (
-            this.items.find((i) => i.product_variant_id === variantId)
-                ?.quantity ?? 0
+            this.items.find(
+                (i) =>
+                    i.product_id === productId ||
+                    i.product_variant_id === productId,
+            )?.quantity ?? 0
         );
     }
 
-    addItem(variantId: number, qty: number = 1, price: number = 0): void {
+    addItem(productId: number, qty: number = 1, price: number = 0): void {
         const existing = this.items.find(
-            (i) => i.product_variant_id === variantId,
+            (i) =>
+                i.product_id === productId ||
+                i.product_variant_id === productId,
         );
 
         if (existing) {
@@ -40,9 +46,17 @@ class CartStore {
             if (price > 0) {
                 existing.price = price;
             }
+
+            // Ensure product_id is set for migrated entries
+            if (!existing.product_id) {
+                existing.product_id =
+                    (existing as any).product_variant_id ?? productId;
+            }
+
+            existing.product_id = productId;
         } else {
             this.items.push({
-                product_variant_id: variantId,
+                product_id: productId,
                 quantity: qty,
                 price,
             });
@@ -51,22 +65,25 @@ class CartStore {
         this.commit();
     }
 
-    setQuantity(variantId: number, quantity: number): void {
+    setQuantity(productId: number, quantity: number): void {
         if (quantity <= 0) {
-            this.removeItem(variantId);
+            this.removeItem(productId);
 
             return;
         }
 
         const existing = this.items.find(
-            (i) => i.product_variant_id === variantId,
+            (i) =>
+                i.product_id === productId ||
+                i.product_variant_id === productId,
         );
 
         if (existing) {
             existing.quantity = quantity;
+            existing.product_id = productId;
         } else {
             this.items.push({
-                product_variant_id: variantId,
+                product_id: productId,
                 quantity,
                 price: 0,
             });
@@ -75,9 +92,11 @@ class CartStore {
         this.commit();
     }
 
-    removeItem(variantId: number): void {
+    removeItem(productId: number): void {
         this.items = this.items.filter(
-            (i) => i.product_variant_id !== variantId,
+            (i) =>
+                i.product_id !== productId &&
+                i.product_variant_id !== productId,
         );
         this.commit();
     }
@@ -107,7 +126,15 @@ class CartStore {
 
     private persist(): void {
         try {
-            sessionStorage.setItem('dombi_cart', JSON.stringify(this.items));
+            const data = JSON.stringify(this.items);
+            sessionStorage.setItem('dombi_cart', data);
+
+            // Also persist to localStorage for backward compat migration path
+            try {
+                localStorage.setItem('dombi_cart', data);
+            } catch {
+                // ignore
+            }
         } catch {
             // Non-critical
         }
@@ -115,24 +142,57 @@ class CartStore {
 
     private load(): void {
         try {
-            const stored = sessionStorage.getItem('dombi_cart');
+            // Try sessionStorage first, fallback to localStorage for migration
+            let stored: string | null = null;
+
+            try {
+                stored = sessionStorage.getItem('dombi_cart');
+            } catch {
+                stored = null;
+            }
+
+            if (!stored) {
+                try {
+                    stored = localStorage.getItem('dombi_cart');
+                } catch {
+                    stored = null;
+                }
+            }
 
             if (stored) {
                 const parsed = JSON.parse(stored);
 
                 if (Array.isArray(parsed)) {
-                    this.items = parsed
+                    const migrated = parsed
+                        .map((i: any) => ({
+                            product_id:
+                                typeof i.product_id === 'number'
+                                    ? i.product_id
+                                    : typeof i.product_variant_id === 'number'
+                                      ? i.product_variant_id
+                                      : null,
+                            quantity: i.quantity,
+                            price: typeof i.price === 'number' ? i.price : 0,
+                        }))
                         .filter(
                             (i: any) =>
-                                typeof i.product_variant_id === 'number' &&
+                                typeof i.product_id === 'number' &&
                                 typeof i.quantity === 'number' &&
                                 i.quantity > 0,
                         )
                         .map((i: any) => ({
-                            product_variant_id: i.product_variant_id,
+                            product_id: i.product_id,
                             quantity: i.quantity,
-                            price: typeof i.price === 'number' ? i.price : 0,
+                            price: i.price,
                         }));
+                    this.items = migrated;
+
+                    // Persist migrated format immediately
+                    try {
+                        this.persist();
+                    } catch {
+                        // ignore
+                    }
                 }
             }
         } catch {
@@ -199,12 +259,18 @@ export function useCart() {
     };
 }
 
-export function useProductQuantity(variantId: number): number {
+export function useProductQuantity(productId: number): number {
     const items = useSyncExternalStore(
         subscribe,
         getSnapshot,
         getServerSnapshot,
     );
 
-    return items.find((i) => i.product_variant_id === variantId)?.quantity ?? 0;
+    return (
+        items.find(
+            (i) =>
+                i.product_id === productId ||
+                i.product_variant_id === productId,
+        )?.quantity ?? 0
+    );
 }

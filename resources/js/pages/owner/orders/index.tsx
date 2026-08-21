@@ -1,29 +1,45 @@
 import { router } from '@inertiajs/react';
-import { Package } from 'lucide-react';
+import {
+    CheckCircle,
+    Clock,
+    DollarSign,
+    Package,
+    ShoppingCart,
+} from 'lucide-react';
 import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell,
+} from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
 
 const statusFilters = [
-    { key: '', label: 'Semua' },
+    { key: 'all', label: 'Semua' },
     { key: 'needs_action', label: 'Butuh Tindakan' },
     { key: 'active', label: 'Aktif' },
     { key: 'completed', label: 'Selesai' },
     { key: 'cancelled', label: 'Dibatalkan' },
-    { key: 'failed', label: 'Gagal' },
+    { key: 'offline', label: 'Offline' },
 ];
 
 export default function OwnerOrdersIndex({
     orders,
+    offlineSales,
     outlets,
     filters,
     stats,
@@ -35,7 +51,7 @@ export default function OwnerOrdersIndex({
         return (
             <OwnerPageShell
                 title="Pesanan"
-                subtitle="Kelola semua pesanan dari semua outlet"
+                subtitle="Pantau seluruh pesanan pelanggan"
             >
                 <SkeletonPage />
             </OwnerPageShell>
@@ -55,80 +71,95 @@ export default function OwnerOrdersIndex({
     return (
         <OwnerPageShell
             title="Pesanan"
-            subtitle="Kelola semua pesanan dari semua outlet"
+            subtitle="Pantau seluruh pesanan pelanggan"
         >
-            {/* KPI Strip - Moved to top */}
-            <OwnerKpiStrip
-                cols={4}
-                items={[
-                    {
-                        label: 'Total',
-                        value: stats?.total_today ?? 0,
-                        sublabel:
-                            (stats?.total_today ?? 0) > 0
-                                ? 'Hari ini'
-                                : undefined,
-                        sublabelColor: 'text-blue-600',
-                    },
-                    {
-                        label: 'Tindakan',
-                        value: stats?.pending ?? 0,
-                        sublabel:
-                            (stats?.pending ?? 0) > 0
-                                ? 'Perlu assign kurir'
-                                : undefined,
-                        sublabelColor: 'text-amber-600',
-                    },
-                    { label: 'Selesai', value: stats?.completed_today ?? 0 },
-                    {
-                        label: 'Revenue',
-                        value: formatCurrency(stats?.revenue_today ?? 0),
-                    },
-                ]}
-            />
+            {/* KPI Strip */}
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Pesanan Hari Ini
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                            <ShoppingCart className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {stats?.total_today ?? 0}
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                        Total hari ini
+                    </p>
+                </div>
 
-            {/* Status Pills */}
-            <div
-                aria-label="Filter status pesanan"
-                className="mb-4 flex flex-wrap items-center gap-2"
-            >
-                {statusFilters.map((sf) => {
-                    const isActive = currentStatus === sf.key;
-                    const colorMap: Record<string, string> = {
-                        '': 'text-text bg-surface-muted ring-border',
-                        needs_action:
-                            'text-amber-600 bg-amber-50 ring-amber-200',
-                        active: 'text-blue-600 bg-blue-50 ring-blue-200',
-                        completed:
-                            'text-emerald-600 bg-emerald-50 ring-emerald-200',
-                        cancelled:
-                            'text-text-muted bg-surface-muted ring-border',
-                        failed: 'text-red-600 bg-red-50 ring-red-200',
-                    };
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Pendapatan
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                            <DollarSign className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {formatCurrency(stats?.revenue_today ?? 0)}
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                        Pendapatan hari ini
+                    </p>
+                </div>
 
-                    return (
-                        <button
-                            key={sf.key}
-                            type="button"
-                            onClick={() => setFilter('status', sf.key)}
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive
-                                    ? (colorMap[sf.key] ??
-                                      'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
-                            }`}
-                        >
-                            {sf.label}
-                        </button>
-                    );
-                })}
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Butuh Tindakan
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                            <Clock className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {stats?.pending ?? 0}
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                        Perlu tugaskan kurir
+                    </p>
+                </div>
+
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Selesai
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                            <CheckCircle className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {stats?.completed_today ?? 0}
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                        Selesai hari ini
+                    </p>
+                </div>
             </div>
 
-            {/* Filter controls - Collapsible */}
+            {/* Status Filter Chips */}
+            <div className="mb-4">
+                <FilterChips
+                    options={statusFilters}
+                    active={currentStatus}
+                    onChange={(key) => setFilter('status', key)}
+                    variant="ring"
+                    size="sm"
+                />
+            </div>
+
+            {/* Filter controls */}
             <OwnerFilterCard
                 collapsible
                 defaultExpanded={false}
-                searchPlaceholder="Cari kode..."
+                searchPlaceholder="Cari kode atau pelanggan..."
                 searchValue={filters.search ?? ''}
                 onSearch={(val) => setFilter('search', val)}
                 outletOptions={outlets.map((o: any) => ({
@@ -147,71 +178,151 @@ export default function OwnerOrdersIndex({
                 onDateChange={(val) => setFilter('date', val)}
             />
 
-            {/* Table - Responsive with horizontal scroll */}
-            {orders.data.length === 0 ? (
+            {/* Offline sales table */}
+            {currentStatus === 'offline' ? (
+                offlineSales.data.length === 0 ? (
+                    <EmptyState
+                        icon={
+                            <Package aria-hidden="true" className="h-8 w-8" />
+                        }
+                        title="Tidak ada penjualan offline"
+                        description="Penjualan offline yang dicatat outlet akan muncul di sini"
+                    />
+                ) : (
+                    <OwnerTable>
+                        <Table>
+                            <TableHeader>
+                                <tr className="bg-surface-muted/50">
+                                    <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                        Produk
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                        Outlet
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                        Qty
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                        Metode
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                        Tanggal
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
+                                        Total
+                                    </TableHead>
+                                </tr>
+                            </TableHeader>
+                            <TableBody>
+                                {offlineSales.data.map((sale: any) => (
+                                    <TableRow
+                                        key={sale.id}
+                                        className="border-t border-border/20"
+                                    >
+                                        <TableCell className="px-4 py-3">
+                                            <div className="font-medium text-text">
+                                                {sale.product?.name ?? '-'}
+                                            </div>
+                                            {sale.product?.category?.name ? (
+                                                <div className="text-xs text-text-muted">
+                                                    {sale.product.category.name}
+                                                </div>
+                                            ) : null}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
+                                            {sale.outlet?.name ?? '-'}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
+                                            {sale.quantity}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
+                                            {sale.payment_method ? (
+                                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-text-muted uppercase">
+                                                    {sale.payment_method}
+                                                </span>
+                                            ) : (
+                                                '-'
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
+                                            {sale.created_at
+                                                ? new Date(
+                                                      sale.created_at,
+                                                  ).toLocaleDateString('id-ID')
+                                                : '-'}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-right font-semibold text-text tabular-nums">
+                                            {formatCurrency(sale.total_amount)}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </OwnerTable>
+                )
+            ) : orders.data.length === 0 ? (
                 <EmptyState
                     icon={<Package aria-hidden="true" className="h-8 w-8" />}
                     title="Tidak ada pesanan"
                     description="Pesanan akan muncul di sini setelah pelanggan melakukan pemesanan"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table
-                        aria-label="Daftar pesanan"
-                        className="w-full min-w-[600px]"
-                    >
-                        <thead>
+                <OwnerTable>
+                    <Table>
+                        <TableHeader>
                             <tr className="bg-surface-muted/50">
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Kode
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
-                                    Customer
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                    Pelanggan
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Outlet
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Status
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
                                     Total
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
                                     Aksi
-                                </th>
+                                </TableHead>
                             </tr>
-                        </thead>
-                        <tbody>
+                        </TableHeader>
+                        <TableBody>
                             {orders.data.map((order: any) => {
                                 const s = getOrderStatus(order.status);
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={order.id}
-                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors"
+                                        className="border-t border-border/20 transition-colors hover:bg-emerald-50/40"
                                     >
-                                        <td className="px-4 py-3 font-bold text-text tabular-nums">
+                                        <TableCell className="px-4 py-3 font-mono font-bold text-primary tabular-nums">
                                             {order.order_code}
-                                        </td>
-                                        <td className="px-4 py-3 text-text-muted">
-                                            {order.customer_name ?? '—'}
-                                        </td>
-                                        <td className="px-4 py-3 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
+                                            <div className="font-medium text-text">
+                                                {order.customer_name ?? '—'}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
                                             {order.outlet?.name ?? '—'}
-                                        </td>
-                                        <td className="px-4 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
                                             <StatusBadge
                                                 variant={s.variant}
                                                 size="sm"
                                             >
                                                 {s.label}
                                             </StatusBadge>
-                                        </td>
-                                        <td className="px-4 py-3 text-right font-semibold text-primary tabular-nums">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-right font-semibold text-text tabular-nums">
                                             {formatCurrency(order.total)}
-                                        </td>
-                                        <td className="px-4 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-2">
                                                 {order.status ===
                                                     'ready_for_pickup' &&
@@ -224,7 +335,7 @@ export default function OwnerOrdersIndex({
                                                                 )
                                                             }
                                                         >
-                                                            Assign
+                                                            Tugaskan
                                                         </Button>
                                                     )}
                                                 <Button
@@ -239,16 +350,22 @@ export default function OwnerOrdersIndex({
                                                     Detail
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
-            <Pagination links={orders.links} />
+            <Pagination
+                links={
+                    currentStatus === 'offline'
+                        ? offlineSales.links
+                        : orders.links
+                }
+            />
 
             <AssignCourierSheet
                 order={assignOrder}

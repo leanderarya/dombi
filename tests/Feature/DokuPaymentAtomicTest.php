@@ -2,12 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Enums\PaymentStatus;
-use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
-use App\Models\RefundStatusHistory;
-use App\Models\User;
 use App\Services\DokuService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

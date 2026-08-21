@@ -6,7 +6,6 @@ use App\Enums\PaymentStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Order;
 use App\Models\RefundStatusHistory;
-use App\Services\NotificationService;
 use Carbon\Carbon;
 use DomainException;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +16,7 @@ class RefundService
     public function __construct(
         private readonly NotificationService $notifications,
     ) {}
+
     private const REQUEST_SOURCES = [
         'customer_cancellation',
         'outlet_rejection',
@@ -32,11 +32,11 @@ class RefundService
 
     public function request(Order $order, string $actorType, ?int $actorId, string $source): ?RefundStatusHistory
     {
-        if (!in_array($actorType, self::ACTOR_TYPES, true)) {
+        if (! in_array($actorType, self::ACTOR_TYPES, true)) {
             throw new DomainException('Invalid actor type.');
         }
 
-        if (!in_array($source, self::REQUEST_SOURCES, true)) {
+        if (! in_array($source, self::REQUEST_SOURCES, true)) {
             throw new DomainException('Invalid refund source.');
         }
 
@@ -55,7 +55,7 @@ class RefundService
                 return null;
             }
 
-            if (!in_array($locked->payment_status, [
+            if (! in_array($locked->payment_status, [
                 PaymentStatus::Paid->value,
                 PaymentStatus::Settled->value,
             ], true)) {
@@ -110,7 +110,7 @@ class RefundService
                 throw new DomainException('Tujuan refund tidak dapat diubah pada status ini.');
             }
 
-            if ($actorType === 'owner' && !$customer?->isGuest()) {
+            if ($actorType === 'owner' && ! $customer?->isGuest()) {
                 throw new DomainException('Tujuan refund tidak dapat diubah pada status ini.');
             }
 
@@ -296,7 +296,7 @@ class RefundService
 
     public function rollback(Order $order, int $ownerId, string $mode, string $reason): RefundStatusHistory
     {
-        if (!in_array($mode, ['retry', 'fix_destination'], true)) {
+        if (! in_array($mode, ['retry', 'fix_destination'], true)) {
             throw new DomainException('Mode rollback tidak valid.');
         }
 
@@ -341,7 +341,7 @@ class RefundService
     public function complete(Order $order, int $ownerId, string $proofPath, ?string $transferReference, ?string $transferNote): RefundStatusHistory
     {
         $prefix = "private:refund-proofs/{$order->id}/";
-        if (!Str::startsWith($proofPath, $prefix)) {
+        if (! Str::startsWith($proofPath, $prefix)) {
             throw new DomainException('Path bukti refund tidak valid.');
         }
 
@@ -381,6 +381,24 @@ class RefundService
             DB::afterCommit(fn () => $this->notifications->notifyRefundEvent($history->order->loadMissing('customer'), $history));
 
             return $history;
+        });
+    }
+
+    public function startAndComplete(Order $order, int $actorId, string $proofPath, ?string $transferRef, ?string $transferNote): RefundStatusHistory
+    {
+        return DB::transaction(function () use ($order, $actorId, $proofPath, $transferRef, $transferNote) {
+            $locked = Order::lockForUpdate()->findOrFail($order->id);
+
+            if ($locked->payment_status === PaymentStatus::RefundPending->value) {
+                $this->start($order, $actorId);
+                $locked->refresh();
+            }
+
+            if ($locked->payment_status !== PaymentStatus::RefundInProgress->value) {
+                throw new DomainException('Order ini tidak dalam status refund yang bisa diselesaikan.');
+            }
+
+            return $this->complete($order, $actorId, $proofPath, $transferRef, $transferNote);
         });
     }
 

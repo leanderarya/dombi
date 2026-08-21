@@ -1,8 +1,9 @@
 import { router, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
+import { Banknote, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -58,7 +59,8 @@ export default function RekeningTab({
                     setShowForm(false);
                     setEditingId(null);
                 },
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
             });
         } else {
             post('/owner/finance/payment-accounts', {
@@ -67,7 +69,8 @@ export default function RekeningTab({
                     reset();
                     setShowForm(false);
                 },
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
             });
         }
     };
@@ -96,7 +99,8 @@ export default function RekeningTab({
         setDeleteDialogOpen(false);
         router.delete(`/owner/finance/payment-accounts/${deleteTargetId}`, {
             onSuccess: () => toast.success('Rekening dihapus'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
             onFinish: () => setDeleteTargetId(null),
         });
     };
@@ -109,12 +113,34 @@ export default function RekeningTab({
 
     return (
         <>
-            <OwnerKpiStrip
-                items={[
-                    { label: 'Total Rekening', value: accounts.length },
-                    { label: 'Aktif', value: activeCount },
-                ]}
-            />
+            <div className="mb-6 grid grid-cols-2 gap-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Total Rekening
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                            <Banknote className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
+                        {accounts.length}
+                    </div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Aktif
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                            <CheckCircle2 className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                        {activeCount}
+                    </div>
+                </div>
+            </div>
 
             <div
                 className="mb-4 flex items-center justify-between"
@@ -145,7 +171,7 @@ export default function RekeningTab({
                     {accounts.map((account) => (
                         <div
                             key={account.id}
-                            className="hover:bg-mint-wash rounded-xl bg-surface p-4 shadow-card transition-colors sm:flex sm:items-center sm:justify-between sm:gap-4"
+                            className="rounded-xl bg-surface p-4 shadow-card transition-colors hover:bg-mint-wash sm:flex sm:items-center sm:justify-between sm:gap-4"
                         >
                             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
                                 <span className="font-bold text-text">
@@ -211,7 +237,6 @@ export default function RekeningTab({
                             data={data}
                             setData={setData}
                             errors={errors}
-                            editingId={editingId}
                         />
                     </form>
                     <DialogFooter>
@@ -265,7 +290,6 @@ function AccountForm({
     data,
     setData,
     errors,
-    editingId,
 }: {
     data: {
         bank_name: string;
@@ -275,7 +299,6 @@ function AccountForm({
     };
     setData: (key: string, value: any) => void;
     errors: Record<string, string>;
-    editingId: number | null;
 }) {
     return (
         <div className="space-y-3">
@@ -331,16 +354,12 @@ function AccountForm({
                 )}
             </div>
             <div className="flex items-center gap-2">
-                <input
-                    type="checkbox"
+                <Checkbox
+                    label="Aktif"
                     id="is_active"
                     checked={data.is_active}
                     onChange={(e) => setData('is_active', e.target.checked)}
-                    className="h-4 w-4 rounded border-border"
                 />
-                <label htmlFor="is_active" className="text-sm text-text">
-                    Aktif
-                </label>
             </div>
         </div>
     );

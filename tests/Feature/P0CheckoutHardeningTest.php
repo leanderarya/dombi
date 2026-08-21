@@ -7,9 +7,7 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
-use App\Models\User;
+use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
@@ -22,9 +20,9 @@ class P0CheckoutHardeningTest extends TestCase
 
     private Product $product;
 
-    private ProductFamily $family;
+    private ProductCategory $family;
 
-    private ProductVariant $variant;
+    private Product $variant;
 
     private Outlet $outlet;
 
@@ -32,7 +30,7 @@ class P0CheckoutHardeningTest extends TestCase
     {
         parent::setUp();
 
-        $this->family = ProductFamily::create([
+        $this->family = ProductCategory::create([
             'name' => 'Domilk Premium',
             'brand' => 'Domilk',
             'is_active' => true,
@@ -40,17 +38,13 @@ class P0CheckoutHardeningTest extends TestCase
 
         $this->product = Product::create([
             'name' => 'Domilk Premium',
-            'slug' => 'domilk-premium-p0-'.uniqid(),
-            'unit' => 'liter',
-            'price' => 18000,
             'selling_price' => 25000,
             'center_price' => 18000,
             'is_active' => true,
         ]);
 
-        $this->variant = ProductVariant::create([
-            'product_family_id' => $this->family->id,
-            'product_id' => $this->product->id,
+        $this->variant = Product::create([
+            'product_category_id' => $this->family->id,
             'name' => 'Coffee 1L',
             'flavor' => 'Coffee',
             'size' => '1L',
@@ -64,7 +58,7 @@ class P0CheckoutHardeningTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,
             'product_id' => $this->product->id,
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'current_stock' => 50,
             'reserved_stock' => 0,
             'minimum_stock' => 5,
@@ -78,7 +72,7 @@ class P0CheckoutHardeningTest extends TestCase
         // Setup checkout session
         $this->session([
             'checkout.cart' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 2],
+                ['product_id' => $this->variant->id, 'quantity' => 2],
             ],
             'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
             'checkout.customer' => [
@@ -99,7 +93,7 @@ class P0CheckoutHardeningTest extends TestCase
         // Setup session again for second submission
         $this->session([
             'checkout.cart' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 2],
+                ['product_id' => $this->variant->id, 'quantity' => 2],
             ],
             'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
             'checkout.customer' => [
@@ -130,13 +124,13 @@ class P0CheckoutHardeningTest extends TestCase
     {
         // Add item first
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 1,
         ])->assertOk();
 
         // Try to set quantity to 1000
         $this->postJson('/customer/cart/quantity', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 1000,
         ])->assertUnprocessable();
     }
@@ -144,12 +138,12 @@ class P0CheckoutHardeningTest extends TestCase
     public function test_set_quantity_accepts_qty_999(): void
     {
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 1,
         ])->assertOk();
 
         $this->postJson('/customer/cart/quantity', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 999,
         ])->assertOk();
     }
@@ -157,7 +151,7 @@ class P0CheckoutHardeningTest extends TestCase
     public function test_add_item_rejects_qty_above_999(): void
     {
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 1000,
         ])->assertUnprocessable();
     }
@@ -166,7 +160,7 @@ class P0CheckoutHardeningTest extends TestCase
     {
         $response = $this->post('/customer/checkout', [
             'items' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 1000],
+                ['product_id' => $this->variant->id, 'quantity' => 1000],
             ],
             'fulfillment_type' => 'pickup',
         ]);
@@ -254,10 +248,13 @@ class P0CheckoutHardeningTest extends TestCase
         ]);
 
         // Old /track/{token}/cancel route removed.
-        // Guest cancel returns session error for completed orders.
-        $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
+        // Guest cancel is disabled — should return 404 (route absent) or 403, never leak exception
+        $response = $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
             'reason' => 'Tidak Jadi Membeli',
-        ])->assertSessionHasErrors('status');
+        ]);
+        $this->assertTrue(in_array($response->status(), [403, 404], true), 'Expected 403 or 404, got '.$response->status());
+        // Ensure no raw exception message leaked in body when 500 would occur
+        $response->assertDontSee('Exception', false);
     }
 
     private function createOrder(array $overrides = []): Order
@@ -289,7 +286,7 @@ class P0CheckoutHardeningTest extends TestCase
             'product_id' => $this->product->id,
             'product_name' => $this->product->name,
             'quantity' => 2,
-            'price' => $this->product->price,
+            'price' => $this->product->selling_price,
             'subtotal' => 50000,
         ]);
 

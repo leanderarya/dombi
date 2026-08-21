@@ -179,9 +179,7 @@ class GuestCheckoutRegisteredPhoneTest extends TestCase
     {
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-'.uniqid(),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
@@ -199,6 +197,7 @@ class GuestCheckoutRegisteredPhoneTest extends TestCase
     private function seedCheckoutDraft(array $session): self
     {
         $session['checkout.fulfillment']['selected_outlet_id'] = $this->outlet->id;
+
         return $this->withSession($session);
     }
 }

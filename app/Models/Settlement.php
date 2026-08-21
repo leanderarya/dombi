@@ -20,6 +20,12 @@ class Settlement extends Model
         'sales_amount',
         'delivery_fee_amount',
         'amount_due',
+        'total_online_share',
+        'total_delivery_cost',
+        'total_refund',
+        'total_offline_sales',
+        'net_amount',
+        'direction',
         'due_date',
         'status',
         'paid_amount',
@@ -40,6 +46,11 @@ class Settlement extends Model
             'sales_amount' => 'decimal:2',
             'delivery_fee_amount' => 'decimal:2',
             'amount_due' => 'decimal:2',
+            'total_online_share' => 'decimal:2',
+            'total_delivery_cost' => 'decimal:2',
+            'total_refund' => 'decimal:2',
+            'total_offline_sales' => 'decimal:2',
+            'net_amount' => 'decimal:2',
             'paid_amount' => 'decimal:2',
             'adjustment_amount' => 'decimal:2',
             'overpaid_amount' => 'decimal:2',
@@ -60,6 +71,11 @@ class Settlement extends Model
     const STATUS_PARTIAL = 'partial';
 
     const STATUS_PAID = 'paid';
+
+    // Direction constants
+    const DIRECTION_OWNER_PAYS = 'owner_pays_outlet';
+
+    const DIRECTION_OUTLET_PAYS = 'outlet_pays_owner';
 
     public function outlet(): BelongsTo
     {
@@ -98,9 +114,26 @@ class Settlement extends Model
         return (float) $this->overpaid_amount > 0;
     }
 
+    public function isOwnerPaysOutlet(): bool
+    {
+        return $this->direction === self::DIRECTION_OWNER_PAYS;
+    }
+
+    public function isOutletPaysOwner(): bool
+    {
+        return $this->direction === self::DIRECTION_OUTLET_PAYS;
+    }
+
+    public function getAbsoluteNetAmountAttribute(): float
+    {
+        return abs((float) $this->net_amount);
+    }
+
     public function getOutstandingAmountAttribute(): float
     {
-        return max(0, (float) $this->amount_due - (float) $this->paid_amount - (float) $this->adjustment_amount);
+        $absNet = abs((float) $this->net_amount);
+
+        return max(0, $absNet - (float) $this->paid_amount - (float) $this->adjustment_amount);
     }
 
     public function getDaysOverdueAttribute(): int
@@ -133,26 +166,41 @@ class Settlement extends Model
 
     /**
      * Recalculate status based on due date and credited amount.
+     * Handles both positive net (Owner pays outlet) and negative net (outlet pays Owner).
      */
     public function recalculateStatus(): void
     {
-        $totalCredited = (float) $this->paid_amount + (float) $this->adjustment_amount;
-        $amountDue = (float) $this->amount_due;
+        $netAmount = (float) $this->net_amount;
 
-        if ($totalCredited >= $amountDue) {
+        // If net is zero, no payment needed — mark as paid
+        if (abs($netAmount) < 0.01) {
             $this->status = self::STATUS_PAID;
-            $this->overpaid_amount = max(0, $totalCredited - $amountDue);
+            $this->paid_at = $this->paid_at ?? now();
+            $this->save();
+
+            return;
+        }
+
+        // Determine direction
+        $this->direction = $netAmount >= 0
+            ? self::DIRECTION_OWNER_PAYS
+            : self::DIRECTION_OUTLET_PAYS;
+
+        $absNet = abs($netAmount);
+        $totalCredited = (float) $this->paid_amount + (float) $this->adjustment_amount;
+
+        if ($totalCredited >= $absNet) {
+            $this->status = self::STATUS_PAID;
+            $this->overpaid_amount = max(0, $totalCredited - $absNet);
             if (! $this->paid_at) {
                 $this->paid_at = now();
             }
         } else {
             $this->overpaid_amount = 0;
             if ($totalCredited > 0) {
-                if ($this->due_date->isPast()) {
-                    $this->status = self::STATUS_OVERDUE;
-                } else {
-                    $this->status = self::STATUS_PARTIAL;
-                }
+                $this->status = $this->due_date->isPast()
+                    ? self::STATUS_OVERDUE
+                    : self::STATUS_PARTIAL;
             } elseif ($this->due_date->isToday()) {
                 $this->status = self::STATUS_DUE_TODAY;
             } elseif ($this->due_date->isPast()) {

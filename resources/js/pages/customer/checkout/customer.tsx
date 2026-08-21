@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import {
     AlertCircle,
     ChevronRight,
@@ -6,18 +6,19 @@ import {
     MapPin,
     Navigation,
     Phone,
-    Truck,
     User,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import PickupOutletSelector from '@/components/customer/pickup-outlet-selector';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
 import PhoneInput from '@/components/ui/phone-input';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import { getDeliveryAddressPresentation } from '@/lib/checkout-address-presentation';
 import { applyLocationToForm } from '@/lib/checkout-utils';
 import { useCustomerLocation } from '@/lib/customer-location';
+import type { CustomerLocation } from '@/lib/customer-location';
 import { formatCurrency, formatDistance } from '@/lib/format';
 import { haversineDistance } from '@/lib/geo';
 
@@ -92,8 +93,6 @@ function findNearest(
 export default function CheckoutCustomer({
     draft,
     authUser,
-    recipientDefaults,
-    savedRecipients = [],
     previewOutlet,
     pickupRecommendations,
     deliveryQuote,
@@ -116,6 +115,7 @@ export default function CheckoutCustomer({
         ),
     );
     const autoApplied = useRef(false);
+    const userChoseLocation = useRef(false);
 
     const form = useForm<CustomerForm>({
         customer_name: draft?.customer?.customer_name ?? authUser?.name ?? '',
@@ -142,9 +142,56 @@ export default function CheckoutCustomer({
             null,
     });
 
+    const applyLocation = useCallback(
+        (loc: CustomerLocation) => {
+            userChoseLocation.current = true;
+            const nextData = applyLocationToForm(
+                form.data,
+                loc,
+            ) as CustomerForm;
+            form.setData({
+                ...nextData,
+                address_id: loc.address_id ?? null,
+            });
+            router.reload({
+                only: ['draft', 'deliveryQuote', 'deliveryTiers'],
+            });
+        },
+        [form],
+    );
+
+    const applySavedAddress = useCallback(
+        (addr: SavedAddress) => {
+            userChoseLocation.current = true;
+            form.setData({
+                ...form.data,
+                address_id: addr.id,
+                address_line: addr.address_line ?? '',
+                address_detail: addr.address_detail ?? '',
+                province: addr.province ?? '',
+                city: addr.city ?? '',
+                district: addr.district ?? '',
+                village: addr.village ?? '',
+                postal_code: addr.postal_code ?? '',
+                latitude: addr.latitude,
+                longitude: addr.longitude,
+                landmark: addr.landmark ?? '',
+                delivery_notes: addr.delivery_notes ?? '',
+            });
+            router.reload({
+                only: ['draft', 'deliveryQuote', 'deliveryTiers'],
+            });
+        },
+        [form],
+    );
+
     // Single auto-select effect with priority chain
     useEffect(() => {
         if (!isDelivery || autoApplied.current) {
+            return;
+        }
+
+        if (userChoseLocation.current) {
             return;
         }
 
@@ -201,6 +248,8 @@ export default function CheckoutCustomer({
         }
     }, [
         isDelivery,
+        applyLocation,
+        applySavedAddress,
         draft?.location,
         suggestedAddressId,
         savedAddresses,
@@ -208,8 +257,12 @@ export default function CheckoutCustomer({
     ]);
 
     // Debounced phone lookup
+    const customerName = form.data.customer_name;
+    const phoneNumber = form.data.phone_number;
+    const setFormData = form.setData;
+
     useEffect(() => {
-        const phone = form.data.phone_number.trim();
+        const phone = phoneNumber.trim();
 
         if (phone.length < 9) {
             return;
@@ -228,12 +281,8 @@ export default function CheckoutCustomer({
 
             const data = await res.json();
 
-            if (
-                data.found &&
-                data.customer?.name &&
-                !form.data.customer_name?.trim()
-            ) {
-                form.setData('customer_name', data.customer.name);
+            if (data.found && data.customer?.name && !customerName.trim()) {
+                setFormData('customer_name', data.customer.name);
             }
         }, 500);
 
@@ -241,7 +290,7 @@ export default function CheckoutCustomer({
             window.clearTimeout(timeout);
             controller.abort();
         };
-    }, [form.data.phone_number]);
+    }, [customerName, phoneNumber, setFormData]);
 
     const hasKnownLocation =
         isDelivery && !!form.data.latitude && !!form.data.longitude;
@@ -271,43 +320,16 @@ export default function CheckoutCustomer({
         : null;
 
     const submit = () => {
-        if (!showRecipient) {
-            form.setData('recipient_name', '');
-            form.setData('recipient_phone', '');
-            form.setData('save_recipient', false);
-        } else {
-            form.setData('save_recipient', saveRecipient);
+        if (form.processing) {
+            return;
         }
 
+        const finalRecipient = !showRecipient
+            ? { recipient_name: '', recipient_phone: '', save_recipient: false }
+            : { save_recipient: saveRecipient };
+
+        form.setData((current) => ({ ...current, ...finalRecipient }));
         form.post('/customer/checkout/customer');
-    };
-
-    const applyLocation = (loc: Record<string, any>) => {
-        form.setData(applyLocationToForm(form.data, loc) as any);
-
-        if (loc.address_id) {
-            form.setData('address_id', loc.address_id);
-        } else {
-            form.setData('address_id', null);
-        }
-    };
-
-    const applySavedAddress = (addr: SavedAddress) => {
-        form.setData({
-            ...form.data,
-            address_id: addr.id,
-            address_line: addr.address_line ?? '',
-            address_detail: addr.address_detail ?? '',
-            province: addr.province ?? '',
-            city: addr.city ?? '',
-            district: addr.district ?? '',
-            village: addr.village ?? '',
-            postal_code: addr.postal_code ?? '',
-            latitude: addr.latitude,
-            longitude: addr.longitude,
-            landmark: addr.landmark ?? '',
-            delivery_notes: addr.delivery_notes ?? '',
-        });
     };
 
     const displayAddress =
@@ -315,6 +337,12 @@ export default function CheckoutCustomer({
         [form.data.village, form.data.district, form.data.city]
             .filter(Boolean)
             .join(', ');
+    const addressPresentation = getDeliveryAddressPresentation({
+        hasKnownLocation,
+        selectedAddressLabel,
+        displayAddress,
+        addressDetail: form.data.address_detail,
+    });
 
     return (
         <CustomerMobileLayout
@@ -342,244 +370,300 @@ export default function CheckoutCustomer({
                 backHref="/customer/checkout"
             />
 
-            {/* Customer Info + Recipient — single card */}
-            <div className="mt-4 divide-y divide-border/50 rounded-xl border border-border bg-white">
-                <div className="p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                        <User className="h-3.5 w-3.5 text-text-subtle" />
-                        <span className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
-                            Pemesan
-                        </span>
-                    </div>
-                    <div className="space-y-3">
-                        <CompactField
-                            label="Nama Lengkap"
-                            value={form.data.customer_name}
-                            onChange={(v) => form.setData('customer_name', v)}
-                            error={form.errors.customer_name}
-                            placeholder="Nama kamu"
-                        />
-                        <PhoneInput
-                            label="Nomor WhatsApp"
-                            value={form.data.phone_number}
-                            onChange={(v) => form.setData('phone_number', v)}
-                            error={form.errors.phone_number}
-                            hint={
-                                isLoggedIn && authUser?.phone
-                                    ? 'Dari akun kamu'
-                                    : undefined
-                            }
-                            required
-                        />
-                        {!isLoggedIn &&
-                            form.errors.phone_number?.includes(
-                                'sudah terdaftar',
-                            ) && <LoginPrompt />}
-                    </div>
-                    {isDelivery && !showRecipient && (
-                        <button
-                            type="button"
-                            onClick={() => setShowRecipient(true)}
-                            className="mt-3 flex min-h-9 w-full items-center gap-1.5 text-[11px] font-semibold text-primary active:opacity-80"
-                        >
-                            <ChevronRight className="h-3 w-3" />
-                            Kirim ke orang lain?
-                        </button>
-                    )}
-                </div>
-
-                {/* Recipient inline */}
-                {isDelivery && showRecipient && (
-                    <div className="p-4">
-                        <div className="mb-3 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Phone className="h-3.5 w-3.5 text-text-subtle" />
+            <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-6">
+                <div className="min-w-0">
+                    {/* Customer Info + Recipient — single card */}
+                    <div className="mt-4 divide-y divide-border/50 rounded-xl border border-border bg-white">
+                        <div className="p-4">
+                            <div className="mb-3 flex items-center gap-2">
+                                <User className="h-3.5 w-3.5 text-text-subtle" />
                                 <span className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
-                                    Penerima
+                                    Pemesan
                                 </span>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setShowRecipient(false);
-                                    form.setData('recipient_name', '');
-                                    form.setData('recipient_phone', '');
-                                    setSaveRecipient(false);
-                                }}
-                                className="text-[11px] font-semibold text-text-subtle active:opacity-80"
-                            >
-                                Hapus
-                            </button>
-                        </div>
-                        <div className="space-y-3">
-                            <CompactField
-                                label="Nama Penerima"
-                                value={form.data.recipient_name}
-                                onChange={(v) =>
-                                    form.setData('recipient_name', v)
-                                }
-                                error={form.errors.recipient_name}
-                                placeholder="Nama penerima"
-                            />
-                            <PhoneInput
-                                label="Nomor WhatsApp Penerima"
-                                value={form.data.recipient_phone}
-                                onChange={(v) =>
-                                    form.setData('recipient_phone', v)
-                                }
-                                error={form.errors.recipient_phone}
-                            />
-                        </div>
-                        {hasRecipient && (
-                            <label className="mt-3 flex items-center gap-2 text-[11px] text-text-muted active:opacity-80">
-                                <input
-                                    type="checkbox"
-                                    checked={saveRecipient}
-                                    onChange={(e) =>
-                                        setSaveRecipient(e.target.checked)
+                            <div className="space-y-3">
+                                <CompactField
+                                    label="Nama Lengkap"
+                                    value={form.data.customer_name}
+                                    onChange={(v) =>
+                                        form.setData('customer_name', v)
                                     }
-                                    className="h-3.5 w-3.5 rounded border-border"
+                                    error={form.errors.customer_name}
+                                    placeholder="Nama kamu"
                                 />
-                                Simpan penerima ini
-                            </label>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* Pickup outlet */}
-            {!isDelivery && (
-                <PickupOutletSelector
-                    items={draft?.items ?? []}
-                    initialRecommendations={pickupRecommendations}
-                    selectedOutletId={form.data.selected_outlet_id}
-                    onSelect={(id) => form.setData('selected_outlet_id', id)}
-                    error={form.errors.selected_outlet_id}
-                />
-            )}
-
-            {/* Delivery location — compact card */}
-            {isDelivery && (
-                <div className="mt-4 overflow-hidden rounded-xl border border-border bg-white">
-                    {/* Address row */}
-                    <button
-                        type="button"
-                        onClick={() => setLocationSheetOpen(true)}
-                        className="flex w-full items-center gap-3 p-4 text-left transition-colors active:bg-surface-muted"
-                    >
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
-                            <MapPin className="h-4 w-4 text-emerald-600" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            {hasKnownLocation ? (
-                                <>
-                                    <div className="flex items-center gap-1.5">
-                                        {selectedAddressLabel && (
-                                            <span className="text-[11px] font-bold text-emerald-700">
-                                                {selectedAddressLabel}
-                                            </span>
-                                        )}
-                                        <span className="line-clamp-1 text-xs text-text">
-                                            {displayAddress}
-                                        </span>
-                                    </div>
-                                    {form.data.address_detail && (
-                                        <div className="mt-0.5 truncate text-[11px] text-text-subtle">
-                                            {form.data.address_detail}
-                                        </div>
-                                    )}
-                                </>
-                            ) : (
-                                <span className="text-xs font-medium text-primary">
-                                    Pilih Lokasi Pengiriman
-                                </span>
+                                <PhoneInput
+                                    label="Nomor WhatsApp"
+                                    value={form.data.phone_number}
+                                    onChange={(v) =>
+                                        form.setData('phone_number', v)
+                                    }
+                                    error={form.errors.phone_number}
+                                    hint={
+                                        isLoggedIn && authUser?.phone
+                                            ? 'Dari akun kamu'
+                                            : undefined
+                                    }
+                                    required
+                                />
+                                {!isLoggedIn &&
+                                    form.errors.phone_number?.includes(
+                                        'sudah terdaftar',
+                                    ) && <LoginPrompt />}
+                            </div>
+                            {isDelivery && !showRecipient && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowRecipient(true)}
+                                    className="mt-3 flex min-h-9 w-full items-center gap-1.5 text-[11px] font-semibold text-primary active:opacity-80"
+                                >
+                                    <ChevronRight className="h-3 w-3" />
+                                    Kirim ke orang lain?
+                                </button>
                             )}
                         </div>
-                        <Navigation className="h-4 w-4 shrink-0 text-text-subtle" />
-                    </button>
 
-                    {/* Delivery quote — inline */}
-                    {hasKnownLocation && deliveryQuote && (
-                        <div className="border-t border-border/50 px-4 py-3">
-                            {deliveryQuote.is_serviceable ? (
-                                <div className="flex items-center justify-between">
-                                    <div className="min-w-0">
-                                        <div className="text-[11px] text-text-muted">
-                                            {deliveryQuote.outlet?.name}
-                                        </div>
-                                        <div className="mt-0.5 text-[10px] text-text-subtle">
-                                            {formatDistance(
-                                                Number(
-                                                    deliveryQuote.distance_km ??
-                                                        0,
-                                                ),
-                                            )}
-                                        </div>
+                        {/* Recipient inline */}
+                        {isDelivery && showRecipient && (
+                            <div className="p-4">
+                                <div className="mb-3 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="h-3.5 w-3.5 text-text-subtle" />
+                                        <span className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                            Penerima
+                                        </span>
                                     </div>
-                                    <div className="shrink-0 text-right">
-                                        <div className="text-[10px] text-text-subtle">
-                                            Ongkir
-                                        </div>
-                                        <div className="text-sm font-bold text-text tabular-nums">
-                                            {formatCurrency(
-                                                Number(
-                                                    deliveryQuote.delivery_fee ??
-                                                        0,
-                                                ),
-                                            )}
-                                        </div>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowRecipient(false);
+                                            form.setData('recipient_name', '');
+                                            form.setData('recipient_phone', '');
+                                            setSaveRecipient(false);
+                                        }}
+                                        className="text-[11px] font-semibold text-text-subtle active:opacity-80"
+                                    >
+                                        Hapus
+                                    </button>
                                 </div>
-                            ) : (
-                                <div className="space-y-2">
-                                    <div className="flex items-start gap-2">
-                                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
-                                        <div>
-                                            <p className="text-[11px] font-medium text-amber-700">
-                                                Delivery belum tersedia di
-                                                lokasi Anda
-                                            </p>
-                                            {deliveryQuote?.outlet?.name && (
-                                                <p className="mt-0.5 text-[10px] text-text-subtle">
-                                                    Outlet terdekat:{' '}
-                                                    {deliveryQuote.outlet.name}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                localStorage.setItem(
-                                                    'dombi_fulfillment_type',
-                                                    'pickup',
-                                                );
-                                                window.location.href =
-                                                    '/customer/checkout';
-                                            }}
-                                            className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-[11px] font-bold text-white active:opacity-80"
-                                        >
-                                            Gunakan Pickup
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setLocationSheetOpen(true)
+                                <div className="space-y-3">
+                                    <CompactField
+                                        label="Nama Penerima"
+                                        value={form.data.recipient_name}
+                                        onChange={(v) =>
+                                            form.setData('recipient_name', v)
+                                        }
+                                        error={form.errors.recipient_name}
+                                        placeholder="Nama penerima"
+                                    />
+                                    <PhoneInput
+                                        label="Nomor WhatsApp Penerima"
+                                        value={form.data.recipient_phone}
+                                        onChange={(v) =>
+                                            form.setData('recipient_phone', v)
+                                        }
+                                        error={form.errors.recipient_phone}
+                                    />
+                                </div>
+                                {hasRecipient && (
+                                    <label className="mt-3 flex items-center gap-2 text-[11px] text-text-muted active:opacity-80">
+                                        <input
+                                            type="checkbox"
+                                            checked={saveRecipient}
+                                            onChange={(e) =>
+                                                setSaveRecipient(
+                                                    e.target.checked,
+                                                )
                                             }
-                                            className="flex-1 rounded-lg border border-border px-3 py-2 text-[11px] font-semibold text-text active:opacity-80"
-                                        >
-                                            Ubah Lokasi
-                                        </button>
-                                    </div>
+                                            className="h-3.5 w-3.5 rounded border-border"
+                                        />
+                                        Simpan penerima ini
+                                    </label>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Pickup outlet */}
+                    {!isDelivery && (
+                        <PickupOutletSelector
+                            items={draft?.items ?? []}
+                            initialRecommendations={pickupRecommendations}
+                            selectedOutletId={form.data.selected_outlet_id}
+                            onSelect={(id) =>
+                                form.setData('selected_outlet_id', id)
+                            }
+                            error={form.errors.selected_outlet_id}
+                        />
+                    )}
+
+                    {/* Delivery location — compact card */}
+                    {isDelivery && (
+                        <div className="mt-4 overflow-hidden rounded-xl border border-border bg-white">
+                            <div className="px-4 pt-4">
+                                <h2 className="text-sm font-semibold text-text">
+                                    Alamat Pengiriman
+                                </h2>
+                                <p className="mt-0.5 text-[11px] text-text-muted">
+                                    Wajib diisi untuk menghitung ongkir
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setLocationSheetOpen(true)}
+                                className={`mx-4 mt-3 mb-4 flex min-h-16 w-[calc(100%-2rem)] items-center gap-3 rounded-xl border p-4 text-left transition-colors active:opacity-80 ${addressPresentation.state === 'empty' ? 'border-primary/30 bg-primary/5' : 'border-border bg-white active:bg-surface-muted'}`}
+                            >
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
+                                    <MapPin className="h-4 w-4 text-emerald-600" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    {addressPresentation.state === 'empty' ? (
+                                        <>
+                                            <div className="text-sm font-bold text-primary">
+                                                {
+                                                    addressPresentation.actionLabel
+                                                }
+                                            </div>
+                                            <div className="mt-0.5 text-[11px] text-text-muted">
+                                                {addressPresentation.prompt}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="flex items-center gap-1.5">
+                                                {addressPresentation.selectedAddressLabel && (
+                                                    <span className="text-[11px] font-bold text-emerald-700">
+                                                        {
+                                                            addressPresentation.selectedAddressLabel
+                                                        }
+                                                    </span>
+                                                )}
+                                                <span className="line-clamp-1 text-xs text-text">
+                                                    {
+                                                        addressPresentation.displayAddress
+                                                    }
+                                                </span>
+                                            </div>
+                                            {addressPresentation.addressDetail && (
+                                                <div className="mt-0.5 truncate text-[11px] text-text-subtle">
+                                                    {
+                                                        addressPresentation.addressDetail
+                                                    }
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                                <div className="flex shrink-0 items-center gap-1 text-[11px] font-semibold text-primary">
+                                    <span>
+                                        {addressPresentation.actionLabel}
+                                    </span>
+                                    <Navigation className="h-4 w-4" />
+                                </div>
+                            </button>
+
+                            {/* Delivery quote — inline */}
+                            {hasKnownLocation && deliveryQuote && (
+                                <div className="border-t border-border/50 px-4 py-3">
+                                    {deliveryQuote.is_serviceable ? (
+                                        <div className="flex items-center justify-between">
+                                            <div className="min-w-0">
+                                                <div className="text-[11px] text-text-muted">
+                                                    {deliveryQuote.outlet?.name}
+                                                </div>
+                                                <div className="mt-0.5 text-[10px] text-text-subtle">
+                                                    {formatDistance(
+                                                        Number(
+                                                            deliveryQuote.distance_km ??
+                                                                0,
+                                                        ),
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="shrink-0 text-right">
+                                                <div className="text-[10px] text-text-subtle">
+                                                    Ongkir
+                                                </div>
+                                                <div className="text-sm font-bold text-text tabular-nums">
+                                                    {formatCurrency(
+                                                        Number(
+                                                            deliveryQuote.delivery_fee ??
+                                                                0,
+                                                        ),
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <div className="flex items-start gap-2">
+                                                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+                                                <div>
+                                                    <p className="text-[11px] font-medium text-amber-700">
+                                                        Delivery belum tersedia
+                                                        di lokasi Anda
+                                                    </p>
+                                                    {deliveryQuote?.outlet
+                                                        ?.name && (
+                                                        <p className="mt-0.5 text-[10px] text-text-subtle">
+                                                            Outlet terdekat:{' '}
+                                                            {
+                                                                deliveryQuote
+                                                                    .outlet.name
+                                                            }
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        localStorage.setItem(
+                                                            'dombi_fulfillment_type',
+                                                            'pickup',
+                                                        );
+                                                        window.location.href =
+                                                            '/customer/checkout';
+                                                    }}
+                                                    className="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-[11px] font-bold text-white active:opacity-80"
+                                                >
+                                                    Gunakan Pickup
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setLocationSheetOpen(
+                                                            true,
+                                                        )
+                                                    }
+                                                    className="flex-1 rounded-lg border border-border px-3 py-2 text-[11px] font-semibold text-text active:opacity-80"
+                                                >
+                                                    Ubah Lokasi
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
                     )}
-                </div>
-            )}
 
-            <div className="h-24" />
+                    <div className="h-24 lg:hidden" />
+                </div>
+                <aside className="hidden lg:block">
+                    <div className="sticky top-0 rounded-xl border border-border bg-white p-4">
+                        <button
+                            type="button"
+                            onClick={submit}
+                            disabled={!canContinue || form.processing}
+                            className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                        >
+                            {form.processing ? 'Memproses...' : buttonLabel}
+                        </button>
+                    </div>
+                </aside>
+            </div>
             <LocationSheet
                 open={locationSheetOpen}
                 onClose={() => setLocationSheetOpen(false)}
@@ -661,7 +745,7 @@ function CompactField({
                 onChange={(e) => onChange(e.target.value)}
                 inputMode={inputMode}
                 readOnly={readOnly}
-                className={`mt-1 min-h-10 w-full rounded-lg border border-border px-3 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20 ${readOnly ? 'bg-surface text-text-muted' : 'bg-white'}`}
+                className={`mt-1 min-h-10 w-full rounded-lg border px-3 text-xs text-text placeholder:text-text-subtle focus:ring-1 ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-border focus:border-primary focus:ring-primary/20'} ${readOnly ? 'bg-surface text-text-muted' : 'bg-white'}`}
                 placeholder={placeholder}
             />
             {hint && !error && (

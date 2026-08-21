@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use App\Models\Order;
-use Illuminate\Support\Facades\DB;
 use App\Models\Outlet;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SettlementReconciliationService
 {
@@ -35,6 +35,15 @@ class SettlementReconciliationService
 
         // Adjustments = total adjustment_amount (returns + exchanges)
         $adjustments = (float) (clone $settlementsQuery)->sum('adjustment_amount');
+
+        // Net settlement components
+        $totalOnlineShare = (float) (clone $settlementsQuery)->sum('total_online_share');
+        $totalDeliveryCost = (float) (clone $settlementsQuery)->sum('total_delivery_cost');
+        $totalRefund = (float) (clone $settlementsQuery)->sum('total_refund');
+        $totalOfflineSales = (float) (clone $settlementsQuery)->sum('total_offline_sales');
+
+        // Net amount across all weekly settlements
+        $netAmount = (float) (clone $settlementsQuery)->sum('net_amount');
 
         // Verified payments (all-time for this outlet)
         $verifiedPayments = (float) SettlementPayment::query()
@@ -99,6 +108,13 @@ class SettlementReconciliationService
             'rejected_payments' => $rejectedPayments,
             'adjustments' => $adjustments,
             'outstanding' => $outstanding,
+            'net_amount' => $netAmount,
+            'breakdown' => [
+                'online_outlet_share' => $totalOnlineShare,
+                'delivery_cost' => $totalDeliveryCost,
+                'refund' => $totalRefund,
+                'offline_sales' => $totalOfflineSales,
+            ],
             'last_payment' => $lastPayment ? [
                 'date' => $lastPayment->payment_date->toDateString(),
                 'amount' => (float) $lastPayment->amount,

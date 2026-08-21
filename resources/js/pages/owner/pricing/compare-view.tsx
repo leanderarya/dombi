@@ -5,13 +5,9 @@ import { SkeletonList } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 import { marginColor } from '@/lib/pricing-utils';
+import { fetchCompareData, runCompareRequest } from './compare-request';
+import type { CompareData } from './compare-request';
 import type { OutletData, OutletPriceRow } from './types';
-
-interface CompareData {
-    outlet_id: number;
-    outlet_name: string;
-    prices: OutletPriceRow[];
-}
 
 interface Props {
     outletIds: number[];
@@ -20,27 +16,39 @@ interface Props {
 }
 
 export default function CompareView({ outletIds, outlets, onClose }: Props) {
-    const [data, setData] = useState<CompareData[]>([]);
-    const [loading, setLoading] = useState(true);
+    const requestKey = outletIds.join(',');
+    const [result, setResult] = useState<{
+        requestKey: string;
+        data: CompareData[];
+    } | null>(null);
 
     useEffect(() => {
-        setLoading(true);
-        const params = new URLSearchParams();
-        outletIds.forEach((id) => params.append('outlet_ids[]', String(id)));
+        const controller = new AbortController();
+        const requestedOutletIds = requestKey
+            .split(',')
+            .filter(Boolean)
+            .map(Number);
 
-        fetch(`/owner/pricing/outlets/compare?${params.toString()}`, {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        })
-            .then((r) => r.json())
-            .then((json) => {
-                setData(json.data ?? []);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    }, [outletIds]);
+        void runCompareRequest({
+            outletIds: requestedOutletIds,
+            signal: controller.signal,
+            request: fetchCompareData,
+            onData: (data) => setResult({ requestKey, data }),
+            onError: () =>
+                setResult((current) => ({
+                    requestKey,
+                    data: current?.data ?? [],
+                })),
+        });
+
+        return () => controller.abort();
+    }, [requestKey]);
+
+    const loading = result?.requestKey !== requestKey;
+    const data = useMemo(
+        () => (result?.requestKey === requestKey ? result.data : []),
+        [requestKey, result],
+    );
 
     const matrix = useMemo(() => {
         const allVariantNames = new Set<string>();
@@ -48,10 +56,12 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
 
         for (const d of data) {
             const map = new Map<string, OutletPriceRow>();
+
             for (const p of d.prices) {
                 allVariantNames.add(p.name);
                 map.set(p.name, p);
             }
+
             byOutlet.set(d.outlet_id, map);
         }
 
@@ -62,7 +72,7 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
 
     if (loading) {
         return (
-            <div className="rounded-lg border border-border bg-white p-4">
+            <div className="rounded-lg border border-border bg-surface p-4">
                 <SkeletonList count={5} />
             </div>
         );
@@ -74,7 +84,7 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
 
     return (
         <div
-            className="rounded-lg border border-border bg-white p-4"
+            className="rounded-2xl border border-border bg-surface p-5"
             aria-label="Perbandingan harga antar outlet"
         >
             <div className="mb-4 flex items-center justify-between">
@@ -85,6 +95,7 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
                     type="button"
                     variant="ghost"
                     size="sm"
+                    className="min-h-11"
                     onClick={onClose}
                 >
                     <X className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
@@ -95,12 +106,12 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="border-b border-border text-left text-xs font-medium text-text-muted">
-                            <th className="sticky left-0 bg-white pr-4 pb-2">
+                        <tr className="border-b border-border bg-primary/5 text-left text-xs font-medium">
+                            <th className="sticky left-0 bg-primary/5 pr-4 pb-2 text-primary">
                                 Variant
                             </th>
                             {outletIds.map((id) => (
-                                <th key={id} className="pr-4 pb-2">
+                                <th key={id} className="pr-4 pb-2 text-primary">
                                     {outlets.find((o) => o.id === id)?.name ??
                                         '-'}
                                 </th>
@@ -113,7 +124,7 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
                                 key={variantName}
                                 className="border-b border-border/50"
                             >
-                                <td className="sticky left-0 bg-white py-2 pr-4 font-medium text-text">
+                                <td className="sticky left-0 bg-primary/5 py-2 pr-4 font-medium text-text">
                                     {variantName}
                                 </td>
                                 {outletIds.map((outletId) => {

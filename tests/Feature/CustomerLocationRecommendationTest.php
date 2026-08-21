@@ -2,12 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\WithTestOutlet;
@@ -45,16 +43,15 @@ class CustomerLocationRecommendationTest extends TestCase
 
     public function test_pickup_outlet_recommendation_prioritizes_stock_over_shorter_distance(): void
     {
-        $product = $this->createProduct();
-        $variant = ProductVariant::where('product_id', $product->id)->first();
+        [$product, $variant] = $this->createProduct();
 
-        $nearEmpty = $this->createOutlet('Outlet Tembalang', -7.0530000, 110.4360000, 0, $product->id);
-        $recommended = $this->createOutlet('Outlet Banyumanik', -7.0610000, 110.4310000, 10, $product->id);
-        $alternative = $this->createOutlet('Outlet Pedurungan', -7.0000000, 110.4700000, 20, $product->id);
+        $nearEmpty = $this->createOutlet('Outlet Tembalang', -7.0530000, 110.4360000, 0, $variant->id);
+        $recommended = $this->createOutlet('Outlet Banyumanik', -7.0610000, 110.4310000, 10, $variant->id);
+        $alternative = $this->createOutlet('Outlet Pedurungan', -7.0000000, 110.4700000, 20, $variant->id);
 
         $this->withSession([
             'checkout.cart' => [
-                ['product_variant_id' => $variant->id, 'quantity' => 2],
+                ['product_id' => $variant->id, 'quantity' => 2],
             ],
         ])->getJson('/customer/checkout/pickup-outlets?latitude=-7.0523456&longitude=110.4345678')
             ->assertOk()
@@ -71,20 +68,17 @@ class CustomerLocationRecommendationTest extends TestCase
         $response->assertOk();
     }
 
-    private function createProduct(): Product
+    private function createProduct(): array
     {
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml',
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
-        ProductVariant::create([
-            'product_family_id' => $family->id,
-            'product_id' => $product->id,
+        $family = ProductCategory::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Original 500ml',
             'flavor' => 'Original',
             'size' => '500ml',
@@ -93,7 +87,7 @@ class CustomerLocationRecommendationTest extends TestCase
             'is_active' => true,
         ]);
 
-        return $product;
+        return [$product, $variant];
     }
 
     private function createOutlet(string $name, float $latitude, float $longitude, int $stock, int $productId): Outlet
@@ -108,11 +102,10 @@ class CustomerLocationRecommendationTest extends TestCase
             'status' => 'active',
         ]);
 
-        $variant = ProductVariant::where('product_id', $productId)->first();
+        $variant = $productId ? Product::find($productId) : null;
         OutletInventory::create([
             'outlet_id' => $outlet->id,
-            'product_id' => $productId,
-            'product_variant_id' => $variant?->id,
+            'product_id' => $variant?->id ?? $productId,
             'current_stock' => $stock,
             'reserved_stock' => 0,
             'minimum_stock' => 0,

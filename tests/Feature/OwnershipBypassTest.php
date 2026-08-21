@@ -210,6 +210,17 @@ class OwnershipBypassTest extends TestCase
         $this->assertDatabaseMissing('customer_addresses', ['id' => $address->id]);
     }
 
+    public function test_customer_can_delete_own_address_via_json(): void
+    {
+        $user = $this->createCustomerUser();
+        $address = $this->createAddressForCustomer($user->customer);
+
+        $response = $this->actingAs($user)->deleteJson("/customer/addresses/{$address->id}");
+
+        $response->assertNoContent();
+        $this->assertDatabaseMissing('customer_addresses', ['id' => $address->id]);
+    }
+
     public function test_customer_cannot_delete_other_customer_address(): void
     {
         $user = $this->createCustomerUser();

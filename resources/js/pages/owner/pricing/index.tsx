@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { Button } from '@/components/ui/button';
+import { getInitialOwnerTab } from '../tab-state';
 import { OutletTab } from './outlet-tab';
 import { PusatTab } from './pusat-tab';
 import { RiwayatTab } from './riwayat-tab';
@@ -24,7 +24,8 @@ type TabKey = (typeof TABS)[number]['key'];
 
 interface Props {
     tab?: string;
-    pusatVariants?: PusatVariant[];
+    pusatVariants?: PusatVariant[]; // backward compat
+    pusatProducts?: PusatVariant[];
     pusatKpis?: PusatKpis;
     outlets?: OutletData[];
     selectedOutlet?: { id: number; name: string };
@@ -35,18 +36,13 @@ interface Props {
 }
 
 export default function PricingIndex(props: Props) {
-    const [activeTab, setActiveTab] = useState<TabKey>(
-        (props.tab as TabKey) ?? 'pusat',
+    const [activeTab, setActiveTab] = useState<TabKey>(() =>
+        getInitialOwnerTab(
+            TABS.map((tab) => tab.key),
+            'pusat',
+            props.tab,
+        ),
     );
-
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const tab = params.get('tab');
-
-        if (tab && TABS.some((t) => t.key === tab)) {
-            setActiveTab(tab as TabKey);
-        }
-    }, []);
 
     const handleTabChange = (tab: TabKey) => {
         setActiveTab(tab);
@@ -70,23 +66,27 @@ export default function PricingIndex(props: Props) {
                 aria-label="Tab navigasi harga"
             >
                 {TABS.map((tab) => (
-                    <Button
+                    <button
                         key={tab.key}
                         type="button"
                         role="tab"
                         aria-selected={activeTab === tab.key}
-                        variant={activeTab === tab.key ? 'secondary' : 'ghost'}
-                        size="sm"
                         onClick={() => handleTabChange(tab.key)}
+                        className={`rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                            activeTab === tab.key
+                                ? 'bg-white text-text shadow-sm'
+                                : 'text-text-muted hover:text-text'
+                        }`}
                     >
                         {tab.label}
-                    </Button>
+                    </button>
                 ))}
             </div>
 
             {activeTab === 'pusat' && (
                 <PusatTab
                     variants={props.pusatVariants}
+                    products={props.pusatProducts ?? props.pusatVariants}
                     kpis={props.pusatKpis}
                 />
             )}

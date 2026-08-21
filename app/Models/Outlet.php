@@ -19,6 +19,7 @@ class Outlet extends Model
         'pic_name', 'pic_phone', 'pic_position',
         'operational_notes', 'delivery_radius_km', 'prep_estimate_minutes',
         'status', 'confirmation_timeout_minutes',
+        'bank_name', 'bank_account_number', 'bank_account_holder',
     ];
 
     protected function casts(): array
@@ -94,15 +95,15 @@ class Outlet extends Model
         $local = now('Asia/Jakarta');
         $today = (int) $local->format('w');
         $hours = $this->operatingHours()->where('day_of_week', $today)->first();
-        if ($hours && !$hours->is_closed) {
+        if ($hours && ! $hours->is_closed) {
             return substr($hours->open_time, 0, 5);
         }
 
         for ($i = 1; $i <= 7; $i++) {
             $day = ($today + $i) % 7;
             $next = $this->operatingHours()->where('day_of_week', $day)->first();
-            if ($next && !$next->is_closed) {
-                return now('Asia/Jakarta')->addDays($i)->locale('id')->isoFormat('dddd') . ' ' . substr($next->open_time, 0, 5);
+            if ($next && ! $next->is_closed) {
+                return now('Asia/Jakarta')->addDays($i)->locale('id')->isoFormat('dddd').' '.substr($next->open_time, 0, 5);
             }
         }
 
@@ -138,7 +139,12 @@ class Outlet extends Model
 
     public function variantPrices(): HasMany
     {
-        return $this->hasMany(OutletVariantPrice::class);
+        return $this->hasMany(OutletProductPrice::class);
+    }
+
+    public function productPrices(): HasMany
+    {
+        return $this->hasMany(OutletProductPrice::class);
     }
 
     public function holidays(): HasMany

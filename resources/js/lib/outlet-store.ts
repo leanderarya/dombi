@@ -111,6 +111,22 @@ class OutletStore {
 
 const store = new OutletStore();
 
+export function getStoredOutletId(): number | null {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+
+        if (!raw) {
+            return null;
+        }
+
+        const id = JSON.parse(raw);
+
+        return typeof id === 'number' ? id : null;
+    } catch {
+        return null;
+    }
+}
+
 export function useOutletStore() {
     const snapshot = useSyncExternalStore(
         (listener) => store.subscribe(listener),

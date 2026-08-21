@@ -14,7 +14,7 @@ export default function OutletPageShell({
 }: Props) {
     return (
         <div
-            className={`mt-4 ${noGap ? '' : 'space-y-4'} ${hasStickyBar ? 'pb-[calc(6rem+env(safe-area-inset-bottom,0))]' : 'pb-[calc(2rem+env(safe-area-inset-bottom,0))]'}`}
+            className={`mt-4 ${noGap ? '' : 'space-y-5'} ${hasStickyBar ? 'pb-[calc(6rem+env(safe-area-inset-bottom,0))]' : 'pb-[calc(2rem+env(safe-area-inset-bottom,0))]'}`}
         >
             {children}
         </div>

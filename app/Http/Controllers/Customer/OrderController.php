@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Customer;
 
-use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
 use App\Http\Requests\Customer\UpdateRefundDestinationRequest;
+use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\OrderReport;
 use App\Models\PaymentTransaction;
@@ -36,25 +36,16 @@ class OrderController extends Controller
 
         if ($customer) {
             $activeOrders = $customer->orders()
-                ->whereIn('status', Order::ACTIVE_STATUSES)
-                ->where(function ($q) {
-                    $q->whereNull('payment_status')
-                        ->orWhere('payment_status', 'pending')
-                        ->orWhere('payment_status', 'paid')
-                        ->orWhere(function ($q2) {
-                            $q2->whereIn('payment_status', ['failed', 'expired'])
-                                ->where('status', Order::STATUS_PENDING_CONFIRMATION);
-                        });
-                })
-                ->where(function ($q) {
-                    $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)
-                        ->orWhereNull('confirmation_expires_at')
-                        ->orWhere('confirmation_expires_at', '>', now());
-                })
-                ->with(['outlet', 'items.variant.family'])
+                ->visibleAsCustomerActive()
+                ->with(['outlet', 'items.product.category'])
                 ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount'])
                 ->orderByDesc('ordered_at')
                 ->get()
+                ->map(function (Order $order) {
+                    $order->setAttribute('cancellation_reasons', OrderStatusService::cancellationReasons());
+
+                    return $order;
+                })
                 ->map(function (Order $order) use ($refundPayloads) {
                     $queue = $refundPayloads->queueState($order);
                     if ($queue) {
@@ -64,14 +55,20 @@ class OrderController extends Controller
                             'status_label' => $refundPayloads->statusLabel($order),
                         ]);
                     }
+
                     return $order;
                 });
 
             $historyQuery = $customer->orders()
-                ->whereIn('status', Order::HISTORY_STATUSES)
+                ->visibleAsCustomerHistory()
                 ->with(['outlet', 'items'])
-                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount'])
-                ->orderByDesc('ordered_at');
+                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount']);
+
+            if ($request->string('filter')->isNotEmpty()) {
+                $historyQuery->whereIn('status', $this->historyFilterStatuses($request->string('filter')->toString()));
+            }
+
+            $historyQuery->orderByDesc('ordered_at');
 
             $historyOrders = $historyQuery
                 ->paginate(10)
@@ -86,6 +83,7 @@ class OrderController extends Controller
                         'status_label' => $refundPayloads->statusLabel($order),
                     ]);
                 }
+
                 return $order;
             });
         }
@@ -120,7 +118,8 @@ class OrderController extends Controller
             ->where('customer_id', $customer->id)
             ->exists();
 
-        $order->load(['outlet', 'items.product', 'items.variant.family', 'statusHistories.actor', 'delivery.courier', 'refundStatusHistories']);
+        $order->load(['outlet', 'items.product.category', 'statusHistories.actor', 'delivery.courier', 'refundStatusHistories']);
+        $order->setRelation('delivery', $this->customerDeliveryPayload($order->delivery));
 
         $refund = $payloads->forCustomer($order);
 
@@ -148,8 +147,11 @@ class OrderController extends Controller
             abort(403, 'Token tidak valid.');
         }
 
+        $order->load(['outlet', 'items.product', 'items.product.category', 'statusHistories.actor', 'delivery.courier']);
+        $order->setRelation('delivery', $this->customerDeliveryPayload($order->delivery));
+
         return Inertia::render('customer/orders/show', [
-            'order' => $order->load(['outlet', 'items.product', 'items.variant.family', 'statusHistories.actor', 'delivery.courier']),
+            'order' => $order,
             'cancellationReasons' => OrderStatusService::cancellationReasons(),
             'isConfirmation' => true,
         ]);
@@ -418,6 +420,16 @@ class OrderController extends Controller
 
     private function restoreCartAndRedirect(Order $order, OrderService $orderService): RedirectResponse
     {
+        $outlet = $order->outlet;
+
+        if ($outlet && ! $outlet->isOpen()) {
+            $errorRedirect = auth()->check()
+                ? redirect()->route('customer.orders.show', $order)
+                : redirect()->route('track', ['token' => $order->recovery_token]);
+
+            return $errorRedirect->with('error', 'Toko sedang tutup. Silakan kembali saat jam operasional.');
+        }
+
         $result = $orderService->restoreCartFromOrder($order->load('items'));
 
         if (empty($result['items'])) {
@@ -430,6 +442,12 @@ class OrderController extends Controller
 
         // Store restored items in session cart for checkout
         session()->put('checkout.cart', $result['items']);
+
+        // Restore the order's outlet so checkout quotes from the right store
+        if ($outlet) {
+            session()->put('checkout.fulfillment.selected_outlet_id', $outlet->id);
+            session()->put('checkout.selected_outlet_id', $outlet->id);
+        }
 
         session()->forget([
             'checkout.location',
@@ -472,5 +490,50 @@ class OrderController extends Controller
         } else {
             abort(403, 'Unauthorized');
         }
+    }
+
+    /**
+     * Shape the delivery payload for customers: identity only, never contact
+     * info (phone) or location data. Operates on clones so the loaded
+     * Delivery/User models are never mutated.
+     */
+    private function customerDeliveryPayload(?Delivery $delivery): ?Delivery
+    {
+        if (! $delivery) {
+            return null;
+        }
+
+        $redacted = $delivery->replicate();
+        $courier = $delivery->courier;
+
+        $redacted->setRelation('courier', $courier
+            ? $courier->replicate()->setVisible(['name', 'vehicle_plate'])
+            : null);
+        $redacted->setVisible([
+            'courier',
+            'external_courier_name',
+            'external_plate_number',
+            'failed_reason',
+            'status',
+        ]);
+
+        return $redacted;
+    }
+
+    /**
+     * Map a history filter chip (all/completed/cancelled/failed) to statuses.
+     */
+    private function historyFilterStatuses(string $filter): array
+    {
+        return match ($filter) {
+            'completed' => ['completed'],
+            'cancelled' => [
+                'cancelled_by_customer',
+                'cancelled_by_outlet',
+                'rejected_by_outlet',
+            ],
+            'failed' => ['failed_delivery', 'expired'],
+            default => [],
+        };
     }
 }

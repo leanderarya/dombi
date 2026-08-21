@@ -9,7 +9,7 @@ class PricingAuditLog extends Model
 {
     protected $fillable = [
         'outlet_id',
-        'product_variant_id',
+        'product_id',
         'old_price',
         'new_price',
         'action',
@@ -29,9 +29,9 @@ class PricingAuditLog extends Model
         return $this->belongsTo(Outlet::class);
     }
 
-    public function productVariant(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class);
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
     public function changedBy(): BelongsTo

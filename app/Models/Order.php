@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatus;
+use App\Enums\RefundRejectionReason;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use App\Enums\PaymentStatus;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
@@ -70,6 +73,13 @@ class Order extends Model
         self::STATUS_EXPIRED,
     ];
 
+    public const ACTIVE_REFUND_PAYMENT_STATUSES = [
+        PaymentStatus::RefundPending->value,
+        PaymentStatus::RefundInProgress->value,
+        PaymentStatus::RefundRejected->value,
+        PaymentStatus::RefundFailed->value,
+    ];
+
     public const FULFILLMENT_PICKUP = 'pickup';
 
     public const FULFILLMENT_DELIVERY_DOMBI = 'delivery_dombi';
@@ -82,7 +92,9 @@ class Order extends Model
     ];
 
     public const REFUND_DESTINATION_MISSING = 'missing';
+
     public const REFUND_DESTINATION_VALID = 'valid';
+
     public const REFUND_DESTINATION_INVALID = 'invalid';
 
     protected $fillable = [
@@ -117,10 +129,10 @@ class Order extends Model
                 $order->recovery_token = static::generateRecoveryToken();
             }
             if (empty($order->guest_token)) {
-                $order->guest_token = \Illuminate\Support\Str::random(32);
+                $order->guest_token = Str::random(32);
             }
             if (empty($order->confirmation_expires_at) && $order->status === self::STATUS_PENDING_CONFIRMATION) {
-                $outlet = $order->outlet_id ? \App\Models\Outlet::find($order->outlet_id) : null;
+                $outlet = $order->outlet_id ? Outlet::find($order->outlet_id) : null;
                 $timeout = $outlet?->confirmation_timeout_minutes ?? config('order.confirmation_timeout_minutes', 15);
                 $order->confirmation_expires_at = now()->addMinutes($timeout);
             }
@@ -168,12 +180,12 @@ class Order extends Model
         return PaymentStatus::from($this->payment_status ?? 'pending');
     }
 
-    public function scopePaymentStatus(\Illuminate\Database\Eloquent\Builder $query, PaymentStatus $status): \Illuminate\Database\Eloquent\Builder
+    public function scopePaymentStatus(Builder $query, PaymentStatus $status): Builder
     {
         return $query->where('payment_status', $status->value);
     }
 
-    public function scopeRefundable(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeRefundable(Builder $query): Builder
     {
         return $query->whereIn('payment_status', [
             PaymentStatus::RefundPending->value,
@@ -182,6 +194,62 @@ class Order extends Model
             PaymentStatus::RefundRejected->value,
             PaymentStatus::RefundFailed->value,
         ]);
+    }
+
+    public function scopeVisibleAsCustomerActive(Builder $query): Builder
+    {
+        return $query->where(function ($visibility) {
+            $visibility->where(function ($operational) {
+                $operational->whereIn('status', self::ACTIVE_STATUSES)
+                    ->where(function ($payment) {
+                        $payment->whereNull('payment_status')
+                            ->orWhere('payment_status', PaymentStatus::Pending->value)
+                            ->orWhere('payment_status', PaymentStatus::Paid->value)
+                            ->orWhere(function ($retryable) {
+                                $retryable->whereIn('payment_status', [
+                                    PaymentStatus::Failed->value,
+                                    PaymentStatus::Expired->value,
+                                ])->where('status', self::STATUS_PENDING_CONFIRMATION);
+                            });
+                    })
+                    ->where(function ($confirmation) {
+                        $confirmation->where('status', '!=', self::STATUS_PENDING_CONFIRMATION)
+                            ->orWhereNull('confirmation_expires_at')
+                            ->orWhere('confirmation_expires_at', '>', now());
+                    });
+            })->orWhereIn('payment_status', [
+                PaymentStatus::RefundPending->value,
+                PaymentStatus::RefundInProgress->value,
+                PaymentStatus::RefundFailed->value,
+            ])->orWhere(function (Builder $q) {
+                $q->where('payment_status', PaymentStatus::RefundRejected->value)
+                    ->whereIn('refund_rejected_reason', [
+                        RefundRejectionReason::InvalidDestination->value,
+                        RefundRejectionReason::IncompleteDestination->value,
+                    ]);
+            });
+        });
+    }
+
+    public function scopeVisibleAsCustomerHistory(Builder $query): Builder
+    {
+        return $query->whereIn('status', self::HISTORY_STATUSES)
+            ->where(function ($payment) {
+                $payment->whereNull('payment_status')
+                    ->orWhere(function ($q) {
+                        $q->whereNotIn('payment_status', [
+                            PaymentStatus::RefundPending->value,
+                            PaymentStatus::RefundInProgress->value,
+                            PaymentStatus::RefundFailed->value,
+                        ])->where(function ($sub) {
+                            $sub->where('payment_status', '!=', PaymentStatus::RefundRejected->value)
+                                ->orWhereNotIn('refund_rejected_reason', [
+                                    RefundRejectionReason::InvalidDestination->value,
+                                    RefundRejectionReason::IncompleteDestination->value,
+                                ]);
+                        });
+                    });
+            });
     }
 
     private static function generateRecoveryToken(): string

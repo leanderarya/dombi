@@ -4,8 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Order;
 use App\Models\PaymentTransaction;
-use App\Models\Outlet;
-use App\Services\RefundService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;

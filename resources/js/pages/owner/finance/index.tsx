@@ -1,11 +1,13 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerSegmentedTabs from '@/components/owner/owner-segmented-tabs';
 import { SkeletonPage } from '@/components/ui/skeleton';
+import { getInitialOwnerTab } from '../tab-state';
 import PembayaranTab from './pembayaran-tab';
+import RefundTab from './refund-tab';
 import RekeningTab from './rekening-tab';
 import TagihanTab from './tagihan-tab';
-import RefundTab from './refund-tab';
 
 const TABS = [
     {
@@ -28,21 +30,20 @@ const TABS = [
         label: 'Refund',
         description: 'Proses refund customer dan guest',
     },
-];
+] as const;
+
+type TabKey = (typeof TABS)[number]['key'];
 
 export default function FinanceIndex(props: any) {
-    const [activeTab, setActiveTab] = useState('tagihan');
+    const [activeTab, setActiveTab] = useState<TabKey>(() =>
+        getInitialOwnerTab(
+            TABS.map((tab) => tab.key),
+            'tagihan',
+            props.tab,
+        ),
+    );
 
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const tab = params.get('tab');
-
-        if (tab && TABS.some((t) => t.key === tab)) {
-            setActiveTab(tab);
-        }
-    }, []);
-
-    const handleTabChange = (tab: string) => {
+    const handleTabChange = (tab: TabKey) => {
         setActiveTab(tab);
         router.get(
             '/owner/finance',
@@ -67,29 +68,12 @@ export default function FinanceIndex(props: any) {
             title="Keuangan"
             subtitle="Pantau kewajiban seluruh outlet"
         >
-            <div
-                className="mb-5 inline-flex rounded-lg bg-surface-muted p-1"
-                role="tablist"
-                aria-label="Navigasi tab keuangan"
-            >
-                {TABS.map((tab) => (
-                    <button
-                        key={tab.key}
-                        type="button"
-                        role="tab"
-                        aria-selected={activeTab === tab.key}
-                        aria-describedby={`${tab.key}-desc`}
-                        onClick={() => handleTabChange(tab.key)}
-                        className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
-                            activeTab === tab.key
-                                ? 'bg-white text-text shadow-sm'
-                                : 'text-text-muted hover:text-text'
-                        }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+            <OwnerSegmentedTabs
+                tabs={TABS.map((t) => ({ key: t.key, label: t.label }))}
+                activeTab={activeTab}
+                onChange={(key) => handleTabChange(key as TabKey)}
+                className="mb-5"
+            />
             <p
                 id={`${TABS.find((t) => t.key === activeTab)?.key}-desc`}
                 className="mb-4 text-xs text-text-muted"

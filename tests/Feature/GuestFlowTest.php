@@ -34,29 +34,30 @@ class GuestFlowTest extends TestCase
             'reason' => 'Salah Pesan',
         ]);
 
-        $response->assertRedirect();
-
+        $this->assertTrue(in_array($response->status(), [403, 404], true));
         $order->refresh();
-        $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $order->status);
+        $this->assertSame(Order::STATUS_PENDING_CONFIRMATION, $order->status);
     }
 
     public function test_guest_cannot_cancel_completed_order(): void
     {
         $order = $this->createOrder(['status' => Order::STATUS_COMPLETED]);
 
-        $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
+        $response = $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
             'reason' => 'Salah Pesan',
-        ])->assertSessionHasErrors('status');
+        ]);
+        $this->assertTrue(in_array($response->status(), [403, 404], true));
     }
 
     public function test_guest_cancel_does_not_require_auth(): void
     {
         $order = $this->createOrder(['status' => Order::STATUS_PENDING_CONFIRMATION]);
 
-        // No actingAs() — pure guest
-        $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
+        // No actingAs() — pure guest, but guest cancel now disabled
+        $response = $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
             'reason' => 'Salah Pesan',
-        ])->assertRedirect();
+        ]);
+        $this->assertTrue(in_array($response->status(), [403, 404], true));
     }
 
     public function test_invalid_token_returns_not_found(): void
@@ -109,13 +110,14 @@ class GuestFlowTest extends TestCase
         ]);
         $customer->update(['user_id' => $user->id]);
 
-        // Guest cancel
+        // Guest cancel is now disabled — should NOT cancel
         $guestOrder = $this->createOrder(['status' => Order::STATUS_PENDING_CONFIRMATION]);
-        $this->post("/guest/orders/{$guestOrder->id}/cancel/{$guestOrder->guest_token}", [
+        $guestResponse = $this->post("/guest/orders/{$guestOrder->id}/cancel/{$guestOrder->guest_token}", [
             'reason' => 'Salah Pesan',
-        ])->assertRedirect();
+        ]);
+        $this->assertTrue(in_array($guestResponse->status(), [403, 404], true));
 
-        // Customer cancel
+        // Customer cancel still works
         $customerOrder = $this->createOrder([
             'status' => Order::STATUS_PENDING_CONFIRMATION,
             'customer_id' => $customer->id,
@@ -126,10 +128,9 @@ class GuestFlowTest extends TestCase
             ])
             ->assertRedirect();
 
-        // Both should be cancelled
         $guestOrder->refresh();
         $customerOrder->refresh();
-        $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $guestOrder->status);
+        $this->assertSame(Order::STATUS_PENDING_CONFIRMATION, $guestOrder->status);
         $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $customerOrder->status);
     }
 
@@ -152,9 +153,7 @@ class GuestFlowTest extends TestCase
         $customer = Customer::create(['name' => 'Guest', 'phone' => '628123456789'.rand(1000, 9999)]);
         $product = Product::create([
             'name' => 'Test Product',
-            'slug' => 'test-'.uniqid(),
-            'unit' => 'pcs',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
@@ -168,6 +167,7 @@ class GuestFlowTest extends TestCase
             'delivery_fee' => 0,
             'payment_method' => 'qris',
             'payment_status' => 'paid',
+            'paid_at' => now(),
             'payment_fee' => 0,
             'total' => 50000,
             'customer_name' => 'Guest',
@@ -180,7 +180,7 @@ class GuestFlowTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 2,
-            'price' => $product->price,
+            'price' => $product->selling_price,
             'subtotal' => 50000,
         ]);
 

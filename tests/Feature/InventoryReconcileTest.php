@@ -5,8 +5,7 @@ namespace Tests\Feature;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -92,7 +91,7 @@ class InventoryReconcileTest extends TestCase
         // Adjustment movement created
         $this->assertDatabaseHas('stock_movements', [
             'outlet_id' => $ctx['outlet']->id,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'stock_adjustment',
             'notes' => 'Outlet inventory reconciliation correction',
         ]);
@@ -115,7 +114,7 @@ class InventoryReconcileTest extends TestCase
         $this->assertSame(50, (int) $ctx['variant']->fresh()->center_stock);
 
         $this->assertDatabaseHas('stock_movements', [
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'stock_adjustment',
             'notes' => 'Center stock reconciliation correction',
         ]);
@@ -170,7 +169,7 @@ class InventoryReconcileTest extends TestCase
         // Simulate return: outlet -5, center +5
         StockMovement::create([
             'outlet_id' => $ctx['outlet']->id,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'return_out',
             'quantity' => -5,
             'before_stock' => 20,
@@ -181,7 +180,7 @@ class InventoryReconcileTest extends TestCase
 
         StockMovement::create([
             'outlet_id' => $ctx['outlet']->id,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'return_in',
             'quantity' => 5,
             'before_stock' => 100,
@@ -211,7 +210,7 @@ class InventoryReconcileTest extends TestCase
         // Center baseline for exchange variant: need to create one
         StockMovement::create([
             'outlet_id' => null,
-            'product_variant_id' => $exchangeVariant->id,
+            'product_id' => $exchangeVariant->id,
             'type' => 'return_in',
             'quantity' => 8,
             'before_stock' => 0,
@@ -222,14 +221,14 @@ class InventoryReconcileTest extends TestCase
         // Return: outlet -5, center +5
         StockMovement::create([
             'outlet_id' => $ctx['outlet']->id,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'return_out', 'quantity' => -5,
             'before_stock' => 20, 'after_stock' => 15,
             'before_reserved' => 0, 'after_reserved' => 0,
         ]);
         StockMovement::create([
             'outlet_id' => $ctx['outlet']->id,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'return_in', 'quantity' => 5,
             'before_stock' => 50, 'after_stock' => 55,
             'before_reserved' => 0, 'after_reserved' => 0,
@@ -238,14 +237,14 @@ class InventoryReconcileTest extends TestCase
         // Exchange: center -8, outlet +8
         StockMovement::create([
             'outlet_id' => $ctx['outlet']->id,
-            'product_variant_id' => $exchangeVariant->id,
+            'product_id' => $exchangeVariant->id,
             'type' => 'exchange_out', 'quantity' => -8,
             'before_stock' => 8, 'after_stock' => 0,
             'before_reserved' => 0, 'after_reserved' => 0,
         ]);
         StockMovement::create([
             'outlet_id' => $ctx['outlet']->id,
-            'product_variant_id' => $exchangeVariant->id,
+            'product_id' => $exchangeVariant->id,
             'type' => 'exchange_in', 'quantity' => 8,
             'before_stock' => 10, 'after_stock' => 18,
             'before_reserved' => 0, 'after_reserved' => 0,
@@ -272,14 +271,14 @@ class InventoryReconcileTest extends TestCase
         // Distribution: center -15, outlet +15
         StockMovement::create([
             'outlet_id' => $ctx['outlet']->id,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'distribution_out', 'quantity' => -15,
             'before_stock' => 100, 'after_stock' => 85,
             'before_reserved' => 0, 'after_reserved' => 0,
         ]);
         StockMovement::create([
             'outlet_id' => $ctx['outlet']->id,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'restock_in', 'quantity' => 15,
             'before_stock' => 10, 'after_stock' => 25,
             'before_reserved' => 0, 'after_reserved' => 0,
@@ -311,7 +310,7 @@ class InventoryReconcileTest extends TestCase
         $inventory2 = OutletInventory::create([
             'outlet_id' => $outlet2->id,
             'product_id' => $ctx['variant']->product_id,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'current_stock' => 30,
             'reserved_stock' => 0,
             'minimum_stock' => 2,
@@ -320,7 +319,7 @@ class InventoryReconcileTest extends TestCase
         // Movement for outlet 2
         StockMovement::create([
             'outlet_id' => $outlet2->id,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'restock_in', 'quantity' => 30,
             'before_stock' => 0, 'after_stock' => 30,
             'before_reserved' => 0, 'after_reserved' => 0,
@@ -365,16 +364,14 @@ class InventoryReconcileTest extends TestCase
 
         $product = Product::create([
             'name' => 'Test Product',
-            'slug' => uniqid('reconcile-'),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create(['name' => 'Test Family', 'brand' => 'Test']);
+        $family = ProductCategory::create(['name' => 'Test Family', 'brand' => 'Test']);
 
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Original 500ml',
             'flavor' => 'Original',
@@ -388,7 +385,7 @@ class InventoryReconcileTest extends TestCase
         $inventory = OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => $outletStock,
             'reserved_stock' => 0,
             'minimum_stock' => 2,
@@ -398,7 +395,7 @@ class InventoryReconcileTest extends TestCase
         if ($outletStock > 0) {
             StockMovement::create([
                 'outlet_id' => $outlet->id,
-                'product_variant_id' => $variant->id,
+                'product_id' => $variant->id,
                 'type' => 'initial_stock',
                 'quantity' => $outletStock,
                 'before_stock' => 0,
@@ -413,7 +410,7 @@ class InventoryReconcileTest extends TestCase
         if ($centerStock > 0) {
             StockMovement::create([
                 'outlet_id' => null,
-                'product_variant_id' => $variant->id,
+                'product_id' => $variant->id,
                 'type' => 'return_in',
                 'quantity' => $centerStock,
                 'before_stock' => 0,
@@ -427,14 +424,12 @@ class InventoryReconcileTest extends TestCase
         // Exchange variant
         $exchangeProduct = Product::create([
             'name' => 'Exchange Product',
-            'slug' => uniqid('exchange-'),
-            'unit' => 'botol',
-            'price' => 30000,
+            'selling_price' => 30000,
             'is_active' => true,
         ]);
 
-        $exchangeVariant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $exchangeVariant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $exchangeProduct->id,
             'name' => 'Exchange 250ml',
             'flavor' => 'Coffee',
@@ -448,7 +443,7 @@ class InventoryReconcileTest extends TestCase
         $exchangeInventory = OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $exchangeProduct->id,
-            'product_variant_id' => $exchangeVariant->id,
+            'product_id' => $exchangeVariant->id,
             'current_stock' => 10,
             'reserved_stock' => 0,
             'minimum_stock' => 2,
@@ -456,7 +451,7 @@ class InventoryReconcileTest extends TestCase
 
         StockMovement::create([
             'outlet_id' => $outlet->id,
-            'product_variant_id' => $exchangeVariant->id,
+            'product_id' => $exchangeVariant->id,
             'type' => 'initial_stock',
             'quantity' => 10,
             'before_stock' => 0,
@@ -473,7 +468,7 @@ class InventoryReconcileTest extends TestCase
     {
         StockMovement::create([
             'outlet_id' => $ctx['outlet']->id,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'distribution_out',
             'quantity' => -$qty,
             'before_stock' => $qty + 50,
@@ -487,7 +482,7 @@ class InventoryReconcileTest extends TestCase
     {
         StockMovement::create([
             'outlet_id' => $ctx['outlet']->id,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'restock_in',
             'quantity' => $qty,
             'before_stock' => 0,
@@ -501,7 +496,7 @@ class InventoryReconcileTest extends TestCase
     {
         StockMovement::create([
             'outlet_id' => null,
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'return_in',
             'quantity' => $qty,
             'before_stock' => 0,

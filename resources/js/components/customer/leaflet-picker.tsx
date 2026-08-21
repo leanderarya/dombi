@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 // Default center: Semarang, Indonesia
 const DEFAULT_LAT = -7.0051;
@@ -29,6 +29,8 @@ export default function LeafletPicker({
     const lng = longitude ? Number(longitude) : null;
     const hasCoords =
         lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng);
+    const initialCoordinatesRef = useRef({ hasCoords, lat, lng });
+    const notifyChange = useEffectEvent(onChange);
 
     useEffect(() => {
         let cancelled = false;
@@ -52,8 +54,9 @@ export default function LeafletPicker({
                     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
             });
 
-            const center: [number, number] = hasCoords
-                ? [lat!, lng!]
+            const initialCoordinates = initialCoordinatesRef.current;
+            const center: [number, number] = initialCoordinates.hasCoords
+                ? [initialCoordinates.lat!, initialCoordinates.lng!]
                 : [DEFAULT_LAT, DEFAULT_LNG];
 
             const map = L.map(mapRef.current, {
@@ -69,14 +72,14 @@ export default function LeafletPicker({
 
             L.control.zoom({ position: 'topright' }).addTo(map);
 
-            const marker = hasCoords
+            const marker = initialCoordinates.hasCoords
                 ? L.marker(center, { draggable: true }).addTo(map)
                 : null;
 
             if (marker) {
                 marker.on('dragend', () => {
                     const pos = marker.getLatLng();
-                    onChange(pos.lat, pos.lng);
+                    notifyChange(pos.lat, pos.lng);
                 });
             }
 
@@ -87,12 +90,12 @@ export default function LeafletPicker({
                     }).addTo(map);
                     markerRef.current.on('dragend', () => {
                         const pos = markerRef.current.getLatLng();
-                        onChange(pos.lat, pos.lng);
+                        notifyChange(pos.lat, pos.lng);
                     });
                 }
 
                 markerRef.current.setLatLng(e.latlng);
-                onChange(e.latlng.lat, e.latlng.lng);
+                notifyChange(e.latlng.lat, e.latlng.lng);
             });
 
             mapInstanceRef.current = map;
@@ -136,12 +139,12 @@ export default function LeafletPicker({
                 }).addTo(mapInstanceRef.current);
                 markerRef.current.on('dragend', () => {
                     const pos = markerRef.current.getLatLng();
-                    onChange(pos.lat, pos.lng);
+                    notifyChange(pos.lat, pos.lng);
                 });
                 mapInstanceRef.current.setView([lat!, lng!], DEFAULT_ZOOM);
             });
         }
-    }, [lat, lng]);
+    }, [hasCoords, lat, lng]);
 
     return (
         <div className="relative overflow-hidden rounded-lg border border-border">

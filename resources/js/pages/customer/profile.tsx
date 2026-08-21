@@ -1,39 +1,28 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { HelpCircle, Info, LogOut, MapPin, Package, Bell } from 'lucide-react';
 import { useState } from 'react';
-import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import LoginDialog from '@/components/customer/login-dialog';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
-
-export default function Profile({ defaultAddress }: any) {
-    const { auth, appVersion } = usePage<any>().props;
-    const user = auth?.user;
-    const isLoggedIn = !!auth?.user;
-    const [loginDialogOpen, setLoginDialogOpen] = useState(false);
-
-    const initials =
-        user?.name
-            ?.split(' ')
-            .map((n: string) => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2) ?? 'U';
+import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 
 function PushToggle() {
     const { pushState, requestEnable } = usePushSubscription();
 
-    if (pushState === 'active') return null;
-    if (pushState === 'unsupported') return null;
+    if (pushState === 'active' || pushState === 'unsupported') {
+        return null;
+    }
 
-    const label = {
-        loading: 'Aktifkan Notifikasi',
-        denied: 'Notifikasi Dimatikan',
-    }[pushState] ?? 'Notifikasi';
+    const label =
+        {
+            loading: 'Aktifkan Notifikasi',
+            denied: 'Notifikasi Dimatikan',
+        }[pushState] ?? 'Notifikasi';
 
-    const desc = {
-        loading: 'Dapatkan info pesanan real-time',
-        denied: 'Buka Settings → Notifikasi → Allow',
-    }[pushState] ?? '';
+    const desc =
+        {
+            loading: 'Dapatkan info pesanan real-time',
+            denied: 'Buka Settings → Notifikasi → Allow',
+        }[pushState] ?? '';
 
     return (
         <button
@@ -53,6 +42,20 @@ function PushToggle() {
         </button>
     );
 }
+
+export default function Profile({ defaultAddress }: any) {
+    const { auth, appVersion } = usePage<any>().props;
+    const user = auth?.user;
+    const isLoggedIn = !!auth?.user;
+    const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+
+    const initials =
+        user?.name
+            ?.split(' ')
+            .map((n: string) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2) ?? 'U';
 
     return (
         <CustomerMobileLayout hideTopBar hideCartBar>

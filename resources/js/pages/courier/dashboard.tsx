@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { AlertCircle, ArrowRight, MapPin, Package } from 'lucide-react';
 import { useState } from 'react';
+import PushBanner from '@/components/shared/push-banner';
 import EmptyState from '@/components/ui/empty-state';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
@@ -37,12 +38,6 @@ interface Props {
         completedToday: number;
         failedToday: number;
     };
-    performance: {
-        successRate: number;
-        avgDeliveryTime: number | null;
-        capacityStatus: string;
-        activeDeliveries: number;
-    };
     tasks: {
         waitingPickup: TaskItem[];
         inTransit: TaskItem[];
@@ -51,12 +46,7 @@ interface Props {
     };
 }
 
-export default function CourierDashboard({
-    courier,
-    stats,
-    performance,
-    tasks,
-}: Props) {
+export default function CourierDashboard({ courier, stats, tasks }: Props) {
     usePolling(15000);
 
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -77,12 +67,16 @@ export default function CourierDashboard({
         <CourierLayout>
             <Head title="Tugas Saya" />
 
+            <div className="mb-4">
+                <PushBanner variant="home" />
+            </div>
+
             {/* Availability Card — large touch targets for outdoor */}
             <SectionCard>
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <div
-                            className={`h-3.5 w-3.5 rounded-full ${courier.is_online ? 'bg-emerald-500' : 'bg-text-subtle'}`}
+                            className={`h-3.5 w-3.5 rounded-full ${courier.is_online ? 'bg-primary' : 'bg-text-subtle'}`}
                         />
                         <div className="text-base font-bold text-text">
                             {courier.is_online ? 'Online' : 'Offline'}

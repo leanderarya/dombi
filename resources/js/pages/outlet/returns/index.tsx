@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
+import { SkeletonList } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
 
@@ -28,6 +30,7 @@ export default function OutletReturnsIndex({
 }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
     const [showCreate, setShowCreate] = useState(false);
+    const { loading } = useInertiaLoading();
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
@@ -49,57 +52,68 @@ export default function OutletReturnsIndex({
             }
         >
             <Head title="Return" />
-            <OutletPageShell hasStickyBar>
-                {/* Action Bar */}
-                <div className="flex justify-end">
-                    <Button
-                        size="lg"
-                        onClick={() => setShowCreate(true)}
-                        icon={Plus}
-                    >
-                        Ajukan Return
-                    </Button>
-                </div>
-
-                {/* List */}
-                <div className="space-y-2">
-                    {returns.data.length === 0 ? (
-                        <EmptyState
-                            title="Belum ada pengajuan return"
-                            description="Ajukan return untuk produk tidak terjual atau rusak."
-                            action={{
-                                label: 'Ajukan Return',
-                                onClick: () => setShowCreate(true),
-                            }}
-                        />
-                    ) : (
-                        returns.data.map((ret: any) => (
-                            <Link
-                                key={ret.id}
-                                href={`/outlet/returns/${ret.id}`}
-                                className="block rounded-xl border border-border bg-white p-4 active:opacity-80"
+            <OutletPageShell>
+                {loading ? (
+                    <SkeletonList count={5} />
+                ) : (
+                    <>
+                        {/* Action Bar */}
+                        <div className="flex justify-end">
+                            <Button
+                                size="lg"
+                                onClick={() => setShowCreate(true)}
+                                icon={Plus}
+                                className="min-h-11"
                             >
-                                <div className="flex items-start justify-between">
-                                    <div className="text-sm font-semibold text-text">
-                                        Return #{ret.id}
-                                    </div>
-                                    <StatusBadge status={ret.status} />
-                                </div>
-                                <div className="mt-2 flex items-center justify-between text-xs text-text-muted">
-                                    <span>{ret.items?.length ?? 0} item</span>
-                                    <span className="font-semibold text-text tabular-nums">
-                                        {formatCurrency(ret.total_value)}
-                                    </span>
-                                </div>
-                                <div className="mt-1 text-[11px] text-text-subtle">
-                                    {formatDate(ret.created_at)}
-                                </div>
-                            </Link>
-                        ))
-                    )}
-                </div>
+                                Ajukan Return
+                            </Button>
+                        </div>
 
-                <Pagination links={returns.links} />
+                        {/* List */}
+                        <div className="space-y-2">
+                            {returns.data.length === 0 ? (
+                                <EmptyState
+                                    title="Belum ada pengajuan return"
+                                    description="Ajukan return untuk produk tidak terjual atau rusak."
+                                    action={{
+                                        label: 'Ajukan Return',
+                                        onClick: () => setShowCreate(true),
+                                    }}
+                                />
+                            ) : (
+                                returns.data.map((ret: any) => (
+                                    <Link
+                                        key={ret.id}
+                                        href={`/outlet/returns/${ret.id}`}
+                                        className="block rounded-xl border border-border bg-white p-4 active:opacity-80"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div className="text-sm font-semibold text-text">
+                                                Return #{ret.id}
+                                            </div>
+                                            <StatusBadge status={ret.status} />
+                                        </div>
+                                        <div className="mt-2 flex items-center justify-between text-xs text-text-muted">
+                                            <span>
+                                                {ret.items?.length ?? 0} item
+                                            </span>
+                                            <span className="font-semibold text-text tabular-nums">
+                                                {formatCurrency(
+                                                    ret.total_value,
+                                                )}
+                                            </span>
+                                        </div>
+                                        <div className="mt-1 text-[11px] text-text-subtle">
+                                            {formatDate(ret.created_at)}
+                                        </div>
+                                    </Link>
+                                ))
+                            )}
+                        </div>
+
+                        <Pagination links={returns.links} />
+                    </>
+                )}
             </OutletPageShell>
 
             {/* Create Return Dialog */}

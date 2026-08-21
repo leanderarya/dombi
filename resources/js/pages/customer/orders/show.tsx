@@ -1,34 +1,31 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import {
-    AlertCircle,
-    AlertTriangle,
-    CheckCircle2,
-    Clock,
-    Package,
-    Phone,
-    RotateCcw,
-    XCircle,
-} from 'lucide-react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { AlertCircle, AlertTriangle, Phone, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import OrderHeader from '@/components/customer/order/order-header';
 import OrderInfoCard from '@/components/customer/order/order-info-card';
 import RefundStatusCard from '@/components/customer/order/refund-status-card';
 import StatusGuidanceCard from '@/components/customer/order/status-guidance-card';
+import TerminalStatusCards from '@/components/customer/order/terminal-status-cards';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import Dialog from '@/components/ui/dialog';
-import StatusBadge from '@/components/ui/status-badge';
-import { waLinkWithMessage } from '@/lib/wa';
 import {
     useOrderCancel,
     useOrderPay,
     useOrderReport,
 } from '@/hooks/use-order-actions';
-import { formatCurrency } from '@/lib/format';
 import { useOrderRecovery } from '@/lib/order-recovery';
+import {
+    getBadgeProps,
+    getPaymentIssue,
+    isCancellable,
+    isTerminal,
+    normalizeOrder,
+} from '@/lib/order-status';
 import { usePolling } from '@/lib/use-polling';
+import { whatsAppDefaultMessage, waLinkWithText } from '@/lib/whatsapp-message';
 
 /* ─── Constants ────────────────────────────────────────────── */
 
@@ -47,67 +44,6 @@ const REPORT_STATUS_LABELS: Record<string, { label: string; variant: string }> =
         rejected: { label: 'Tidak Dapat Diproses', variant: 'danger' },
     };
 
-const CANCELLABLE_STATUSES = ['pending_confirmation'];
-
-const STATUS_GUIDANCE: Record<
-    string,
-    {
-        description: string;
-        nextStep?: string;
-        cta?: { label: string; href?: string; action?: string };
-    }
-> = {
-    pending_confirmation: {
-        description: 'Menunggu outlet mengkonfirmasi pesanan Anda',
-        nextStep: 'Biasanya dikonfirmasi dalam beberapa menit',
-    },
-    pending_confirmation_unpaid: {
-        description: 'Menunggu Pembayaran',
-        nextStep: 'Selesaikan pembayaran untuk melanjutkan pesanan',
-    },
-    confirmed: {
-        description: 'Pesanan sudah dikonfirmasi oleh outlet',
-        nextStep: 'Outlet sedang menyiapkan pesanan Anda',
-    },
-    preparing: {
-        description: 'Pesanan sedang disiapkan',
-        nextStep: 'Pesanan akan segera siap',
-    },
-    ready_for_pickup: {
-        description: 'Pesanan sudah siap diambil!',
-        nextStep: 'Silakan ambil di outlet sebelum jam tutup',
-        cta: { label: 'Navigasi ke Outlet', action: 'navigate' },
-    },
-    ready_for_pickup_delivery: {
-        description: 'Pesanan sudah siap, menunggu kurir',
-        nextStep: 'Kurir akan segera menjemput dan mengantar ke alamat Anda',
-    },
-    completed: {
-        description: 'Pesanan telah selesai',
-        nextStep: 'Terima kasih sudah pesan di Dombi!',
-    },
-    rejected_by_outlet: {
-        description: 'Outlet tidak dapat memproses pesanan',
-        nextStep: 'Silakan coba pesan dari outlet lain',
-    },
-    cancelled_by_customer: { description: 'Pesanan telah Anda batalkan' },
-    cancelled_by_outlet: {
-        description: 'Pesanan dibatalkan oleh outlet',
-        nextStep: 'Silakan coba pesan lagi',
-    },
-    failed_delivery: {
-        description: 'Pengiriman gagal',
-        nextStep: 'Silakan hubungi kami untuk bantuan',
-        cta: { label: 'Hubungi WhatsApp', action: 'wa_outlet' },
-    },
-    expired: {
-        description: 'Pesanan kadaluarsa',
-        nextStep: 'Outlet tidak konfirmasi dalam batas waktu',
-    },
-};
-
-const MAPS_LINK = 'https://www.google.com/maps/dir/?api=1&destination=';
-
 /* ─── Main ─────────────────────────────────────────────────── */
 
 export default function OrderShow({
@@ -119,21 +55,18 @@ export default function OrderShow({
     canReport = false,
     refund = null,
 }: any) {
-    usePolling(15000);
+    const isTerminalOrder = isTerminal(order.status);
+    const isCancellableOrder = isCancellable(order.status);
+    const paymentIssue = getPaymentIssue(order.payment_status);
+    const norm = normalizeOrder(order);
+
+    // Poll selagi pesanan aktif (belum terminal) supaya status segar.
+    // Berhenti saat isTerminalOrder — status akhir tak berubah.
+    // enabled=false memicu cleanup efek poll (clearInterval) di dalam hook.
+    usePolling(15000, [], !isTerminalOrder);
     const { addOrder } = useOrderRecovery();
 
-    const isTerminal = [
-        'completed',
-        'cancelled_by_customer',
-        'cancelled_by_outlet',
-        'rejected_by_outlet',
-        'failed_delivery',
-        'expired',
-    ].includes(order.status);
     const isPickup = order.fulfillment_type === 'pickup';
-    const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
-    const hasPaymentIssue =
-        order.payment_status === 'failed' || order.payment_status === 'expired';
     const trackingUrl =
         order.tracking_url ??
         (order.recovery_token
@@ -189,22 +122,18 @@ export default function OrderShow({
                 orderedAt={order.ordered_at}
                 trackingUrl={trackingUrl}
                 isConfirmation={isConfirmation}
+                status={order.status}
             />
 
-            <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
-                {hasPaymentIssue && (
+            <main className="mx-auto max-w-lg space-y-5 px-4 pt-4 pb-24">
+                {paymentIssue && (
                     <PaymentIssueBanner
-                        isFailed={order.payment_status === 'failed'}
+                        isFailed={paymentIssue.isFailed}
                         onPay={pay}
                         loading={payLoading}
                     />
                 )}
 
-                <StatusBadgeSection
-                    order={order}
-                    hasPaymentIssue={hasPaymentIssue}
-                    isPickup={isPickup}
-                />
                 <StatusGuidanceCard
                     status={order.status}
                     paymentStatus={order.payment_status}
@@ -216,41 +145,45 @@ export default function OrderShow({
                     outletName={order.outlet?.name}
                     customerName={order.customer_name}
                     orderCode={order.order_code}
+                    {...getBadgeProps({
+                        status: order.status,
+                        paymentStatus: order.payment_status,
+                        isPickup,
+                    })}
                 />
 
                 {refund && <RefundStatusCard refund={refund} />}
 
+                <TerminalStatusCards
+                    order={norm}
+                    reorderHref={`/customer/orders/${order.id}/restore-cart`}
+                />
+
                 {isPickup && order.status === 'ready_for_pickup' && (
                     <OrderQRCard orderCode={order.order_code} />
                 )}
-                {order.status === 'completed' && (
-                    <div className="rounded-lg bg-success/10 p-4 text-center">
-                        <p className="text-sm font-medium text-success">
-                            Pesanan selesai. Terima kasih telah berbelanja.
-                        </p>
-                        <Link
-                            href={`/customer/orders/${order.id}/restore-cart`}
-                            className="mt-3 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-6 text-xs font-bold text-white active:opacity-80"
-                        >
-                            <RotateCcw className="h-3.5 w-3.5" />
-                            Beli Lagi
-                        </Link>
-                    </div>
-                )}
+                <OrderTimeline
+                    currentStatus={order.status}
+                    histories={order.status_histories}
+                    fulfillmentType={order.fulfillment_type}
+                    defaultCollapsed
+                />
 
-                <div className="mt-4">
-                    <OrderTimeline
-                        currentStatus={order.status}
-                        histories={order.status_histories}
-                        fulfillmentType={order.fulfillment_type}
-                        defaultCollapsed
-                    />
-                </div>
+                {order.status === 'completed' && (
+                    <Link
+                        href={`/customer/orders/${order.id}/restore-cart`}
+                        className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-6 text-xs font-bold text-white active:opacity-80"
+                    >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Beli Lagi
+                    </Link>
+                )}
 
                 <OrderInfoCard
                     items={order.items}
                     subtotal={order.subtotal}
                     deliveryFee={order.delivery_fee ?? 0}
+                    paymentFee={order.payment_fee ?? 0}
                     total={order.total}
                     isPickup={isPickup}
                     paymentMethod={order.payment_method}
@@ -263,26 +196,21 @@ export default function OrderShow({
                     fulfillmentType={order.fulfillment_type}
                     customerName={order.customer_name}
                     orderCode={order.order_code}
+                    status={order.status}
                 />
 
-                <StatusBanner order={order} />
-
-                <div className="mt-4">
-                    {isCancellable ? (
-                        <CancelButton
-                            onClick={() => setCancelDialogOpen(true)}
-                        />
-                    ) : !isTerminal ? (
-                        <NonCancellableNotice
-                            phone={order.outlet?.phone}
-                            outletName={order.outlet?.name}
-                            customerName={order.customer_name}
-                            orderCode={order.order_code}
-                        />
-                    ) : order.status !== 'completed' ? (
-                        <ReorderLink orderId={order.id} />
-                    ) : null}
-                </div>
+                {isCancellableOrder ? (
+                    <CancelButton onClick={() => setCancelDialogOpen(true)} />
+                ) : !isTerminalOrder ? (
+                    <NonCancellableNotice
+                        phone={order.outlet?.phone}
+                        outletName={order.outlet?.name}
+                        customerName={order.customer_name}
+                        orderCode={order.order_code}
+                        status={order.status}
+                        fulfillmentType={order.fulfillment_type}
+                    />
+                ) : null}
 
                 {hasRecentReport && activeReport && (
                     <ReportStatusCard report={activeReport} />
@@ -338,7 +266,7 @@ function PaymentIssueBanner({
     loading: boolean;
 }) {
     return (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
             <div className="flex items-start gap-3">
                 <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
                 <div>
@@ -366,120 +294,6 @@ function PaymentIssueBanner({
     );
 }
 
-function StatusBadgeSection({
-    order,
-    hasPaymentIssue,
-    isPickup,
-}: {
-    order: any;
-    hasPaymentIssue: boolean;
-    isPickup: boolean;
-}) {
-    return (
-        <div className="flex items-center justify-center">
-            {order.status === 'ready_for_pickup' && !isPickup ? (
-                <StatusBadge variant="info">Menunggu Kurir</StatusBadge>
-            ) : (
-                <StatusBadge
-                    status={
-                        hasPaymentIssue
-                            ? 'payment_failed'
-                            : order.status === 'pending_confirmation' &&
-                                order.payment_status !== 'paid'
-                              ? 'pending_payment'
-                              : order.status
-                    }
-                />
-            )}
-        </div>
-    );
-}
-
-function StatusBanner({ order }: { order: any }) {
-    if (status === 'rejected_by_outlet' && reason) {
-        return (
-            <ReasonBanner
-                icon={<XCircle className="h-4 w-4 text-red-500" />}
-                title="Pesanan Ditolak Outlet"
-                reason={reason}
-                note={note}
-            />
-        );
-    }
-
-    if (status === 'cancelled_by_customer' && reason) {
-        return (
-            <ReasonBanner
-                icon={<XCircle className="h-4 w-4 text-red-500" />}
-                title="Pesanan Dibatalkan"
-                reason={reason}
-                note={note}
-            />
-        );
-    }
-
-    if (status === 'cancelled_by_outlet' && reason) {
-        return (
-            <ReasonBanner
-                icon={<XCircle className="h-4 w-4 text-red-500" />}
-                title="Dibatalkan Outlet"
-                reason={reason}
-                note={note}
-            />
-        );
-    }
-
-    if (status === 'expired') {
-        return (
-            <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4">
-                <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-text-muted" />
-                    <div className="text-[13px] text-text">
-                        Pesanan Kadaluarsa
-                    </div>
-                </div>
-                <div className="mt-2 text-sm text-text-muted">
-                    Outlet tidak memberikan konfirmasi dalam batas waktu.
-                </div>
-                <Link
-                    href={`/customer/orders/${order.id}/restore-cart`}
-                    className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
-                >
-                    <RotateCcw className="h-4 w-4" />
-                    Pesan Ulang
-                </Link>
-            </div>
-        );
-    }
-
-    return null;
-}
-
-function ReasonBanner({
-    icon,
-    title,
-    reason,
-    note,
-}: {
-    icon: React.ReactNode;
-    title: string;
-    reason: string;
-    note?: string;
-}) {
-    return (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-            <div className="flex items-center gap-2">
-                {icon}
-                <div className="text-[13px] text-red-600">{title}</div>
-            </div>
-            <div className="mt-2 text-sm font-semibold text-red-800">
-                {reason}
-            </div>
-            {note && <div className="mt-1 text-xs text-red-700">{note}</div>}
-        </div>
-    );
-}
-
 function CancelButton({ onClick }: { onClick: () => void }) {
     return (
         <>
@@ -502,37 +316,42 @@ function NonCancellableNotice({
     outletName,
     customerName,
     orderCode,
+    status,
+    fulfillmentType,
 }: {
     phone?: string;
     outletName?: string;
     customerName?: string;
     orderCode?: string;
+    status?: string;
+    fulfillmentType?: string;
 }) {
+    const href = phone
+        ? waLinkWithText(
+              phone,
+              whatsAppDefaultMessage({
+                  order_code: orderCode ?? '',
+                  status: status ?? '',
+                  fulfillment_type: fulfillmentType ?? '',
+                  customer_name: customerName,
+                  outlet_name: outletName,
+              }),
+          )
+        : null;
+
     return (
         <div className="flex items-center justify-between gap-2 rounded-lg bg-surface-muted px-3 py-2">
             <span className="text-[11px] text-text-muted">
                 Pesanan diproses, tidak dapat dibatalkan
             </span>
-            {phone && (
+            {href && (
                 <a
-                    href={waLinkWithMessage(phone, {
-                        order_code: orderCode ?? '',
-                        customer_name: customerName,
-                        outlet_name: outletName,
-                    })}
+                    href={href}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => {
                         e.preventDefault();
-                        window.open(
-                            waLinkWithMessage(phone, {
-                                order_code: orderCode ?? '',
-                                customer_name: customerName,
-                                outlet_name: outletName,
-                            }),
-                            '_blank',
-                            'noopener,noreferrer',
-                        );
+                        window.open(href, '_blank', 'noopener,noreferrer');
                     }}
                     className="flex items-center gap-1 text-[11px] font-semibold text-primary active:opacity-80"
                 >
@@ -541,18 +360,6 @@ function NonCancellableNotice({
                 </a>
             )}
         </div>
-    );
-}
-
-function ReorderLink({ orderId }: { orderId: number }) {
-    return (
-        <Link
-            href={`/customer/orders/${orderId}/restore-cart`}
-            className="flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary text-xs font-bold text-white active:opacity-80"
-        >
-            <RotateCcw className="h-3.5 w-3.5" />
-            Pesan Lagi
-        </Link>
     );
 }
 
@@ -573,7 +380,7 @@ function ReportStatusCard({ report }: { report: any }) {
                 : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200';
 
     return (
-        <div className="mt-4 rounded-xl border border-border bg-white p-4">
+        <div className="rounded-xl border border-border bg-white p-4">
             <div className="flex items-center justify-between">
                 <span className="text-[13px] text-text-subtle">
                     Laporan Anda
@@ -642,7 +449,7 @@ function CancelDialog({
                 Pesanan yang dibatalkan tidak dapat dipulihkan.
             </p>
             {isPickup && isConfirmation && (
-                <div className="mt-4">
+                <div>
                     <label className="text-xs font-medium text-text-subtle">
                         4 digit terakhir nomor HP
                     </label>

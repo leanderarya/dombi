@@ -1,14 +1,14 @@
 import { Search } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import OwnerModalShell from '@/components/owner/owner-modal-shell';
 import { formatCurrency } from '@/lib/format';
-
-interface AvailableProduct {
-    variant_id: number;
-    name: string;
-    family_name: string;
-    selling_price: number;
-}
+import {
+    fetchAvailableProducts,
+    postOutletProducts,
+    runAddOutletProductsRequest,
+    runAvailableProductsRequest,
+} from './owner-product-requests';
+import type { AvailableProduct } from './owner-product-requests';
 
 interface Props {
     open: boolean;
@@ -23,6 +23,24 @@ export default function TambahProdukModal({
     outletId,
     onSuccess,
 }: Props) {
+    if (!open) {
+        return null;
+    }
+
+    return (
+        <TambahProdukModalContent
+            onClose={onClose}
+            outletId={outletId}
+            onSuccess={onSuccess}
+        />
+    );
+}
+
+function TambahProdukModalContent({
+    onClose,
+    outletId,
+    onSuccess,
+}: Omit<Props, 'open'>) {
     const [products, setProducts] = useState<AvailableProduct[]>([]);
     const [selected, setSelected] = useState<Set<number>>(new Set());
     const [search, setSearch] = useState('');
@@ -30,25 +48,29 @@ export default function TambahProdukModal({
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const submitControllerRef = useRef<AbortController | null>(null);
+
+    const closeModal = () => {
+        submitControllerRef.current?.abort();
+        onClose();
+    };
 
     useEffect(() => {
-        if (!open) {
-            return;
-        }
+        const controller = new AbortController();
 
-        setLoading(true);
-        setSelected(new Set());
-        setSearch('');
-        setInitialStock('0');
+        void runAvailableProductsRequest({
+            outletId,
+            signal: controller.signal,
+            request: fetchAvailableProducts,
+            onProducts: setProducts,
+            onSettled: () => setLoading(false),
+        });
 
-        fetch(`/owner/outlets/${outletId}/products/available`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        })
-            .then((res) => (res.ok ? res.json() : []))
-            .then(setProducts)
-            .catch(() => setProducts([]))
-            .finally(() => setLoading(false));
-    }, [open, outletId]);
+        return () => {
+            controller.abort();
+            submitControllerRef.current?.abort();
+        };
+    }, [outletId]);
 
     const toggle = (id: number) => {
         setSelected((prev) => {
@@ -69,44 +91,41 @@ export default function TambahProdukModal({
         setSelected(new Set(filteredIds));
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
         if (selected.size === 0) {
             return;
         }
 
+        submitControllerRef.current?.abort();
+        const controller = new AbortController();
+        submitControllerRef.current = controller;
         setSaving(true);
         setError(null);
+        const csrfToken =
+            document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content') ?? '';
 
-        try {
-            const res = await fetch(`/owner/outlets/${outletId}/products`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document
-                            .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') ?? '',
-                },
-                body: JSON.stringify({
-                    variant_ids: Array.from(selected),
-                    initial_stock: parseInt(initialStock) || 0,
-                }),
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
+        void runAddOutletProductsRequest({
+            outletId,
+            variantIds: Array.from(selected),
+            initialStock: parseInt(initialStock) || 0,
+            csrfToken,
+            signal: controller.signal,
+            request: postOutletProducts,
+            onSuccess: () => {
                 onSuccess();
-                onClose();
-            } else {
-                setError(data.error ?? 'Gagal menambahkan produk.');
-            }
-        } catch {
-            setError('Gagal menambahkan produk.');
-        } finally {
-            setSaving(false);
-        }
+                closeModal();
+            },
+            onError: setError,
+            onSettled: () => {
+                if (submitControllerRef.current === controller) {
+                    submitControllerRef.current = null;
+                }
+
+                setSaving(false);
+            },
+        });
     };
 
     const filtered = products.filter((p) => {
@@ -124,8 +143,8 @@ export default function TambahProdukModal({
 
     return (
         <OwnerModalShell
-            open={open}
-            onClose={onClose}
+            open
+            onClose={closeModal}
             title="Tambah Produk Outlet"
             maxWidth="max-w-lg"
         >
@@ -220,7 +239,7 @@ export default function TambahProdukModal({
                 <div className="flex gap-3">
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={closeModal}
                         className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
                     >
                         Batal

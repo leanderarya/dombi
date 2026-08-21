@@ -1,10 +1,10 @@
 import { Link, router, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
 import {
     Bike,
     Car,
     Clock,
     Copy,
+    MapPin,
     Package,
     Phone,
     Share2,
@@ -12,6 +12,7 @@ import {
     User,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
@@ -25,17 +26,30 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import { copyToClipboard } from '@/lib/clipboard';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { copyToClipboard } from '@/lib/clipboard';
+import { buildCourierOutletAssignmentUrl } from './assignment-url';
 
 export default function CourierShow({
     courier,
     recentDeliveries,
     inviteUrl,
+    outlets,
+    assignedOutlets,
+    legacyClassification,
 }: any) {
-    const toggleForm = useForm({ is_active: !courier.is_active });
+    const toggleForm = useForm({ is_active: !courier?.is_active });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const assignmentForm = useForm({
+        outlet_ids: (assignedOutlets ?? []).map((id: number) => String(id)),
+    });
+    const classificationForm = useForm({
+        courier_source: legacyClassification?.source ?? 'pusat',
+        outlet_id: legacyClassification?.outletId
+            ? String(legacyClassification.outletId)
+            : '',
+    });
 
     if (!courier) {
         return (
@@ -45,12 +59,12 @@ export default function CourierShow({
                 backHref="/owner/couriers"
             >
                 <div className="grid gap-4 lg:grid-cols-2">
-                    <div className="space-y-3 rounded-lg border border-border p-4">
+                    <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                         <Skeleton className="h-4 w-24" />
                         <Skeleton className="h-12 w-full" />
                         <Skeleton className="h-6 w-3/4" />
                     </div>
-                    <div className="space-y-3 rounded-lg border border-border p-4">
+                    <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                         <Skeleton className="h-4 w-24" />
                         <Skeleton className="h-20 w-full" />
                     </div>
@@ -63,7 +77,8 @@ export default function CourierShow({
         toggleForm.put(`/owner/couriers/${courier.id}`, {
             preserveScroll: true,
             onSuccess: () => toast.success('Status kurir diperbarui'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -74,8 +89,42 @@ export default function CourierShow({
                 setShowDeleteConfirm(false);
                 toast.success('Kurir dihapus');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
+    };
+
+    const toggleOutlet = (outletId: number, checked: boolean) => {
+        const current = new Set(assignmentForm.data.outlet_ids);
+
+        if (checked) {
+            current.add(String(outletId));
+        } else {
+            current.delete(String(outletId));
+        }
+
+        assignmentForm.setData('outlet_ids', Array.from(current));
+    };
+
+    const handleSaveAssignments = () => {
+        assignmentForm.put(buildCourierOutletAssignmentUrl(courier), {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Plot outlet diperbarui'),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
+        });
+    };
+
+    const handleSaveClassification = () => {
+        classificationForm.post(
+            `/owner/couriers/${courier.courier_profile?.id}/classify`,
+            {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Klasifikasi kurir diperbarui'),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
+            },
+        );
     };
 
     const vehicleIcon = courier.vehicle_type === 'car' ? Car : Bike;
@@ -93,6 +142,7 @@ export default function CourierShow({
                         size="sm"
                         onClick={handleToggleActive}
                         className={cn(
+                            'min-h-11',
                             courier.is_active
                                 ? 'border-red-200 text-red-600 hover:bg-red-50'
                                 : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50',
@@ -103,6 +153,7 @@ export default function CourierShow({
                     <Button
                         variant="destructive"
                         size="sm"
+                        className="min-h-11"
                         onClick={() => setShowDeleteConfirm(true)}
                     >
                         Hapus
@@ -115,11 +166,17 @@ export default function CourierShow({
                 <div className="space-y-4 lg:col-span-2">
                     {/* Info Kurir */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Informasi Kurir"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Informasi Kurir
+                        <div className="mb-3 flex items-center gap-2">
+                            <Truck
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Informasi Kurir
+                            </h3>
                         </div>
                         <div className="flex items-start gap-3">
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-muted text-lg font-bold text-text-muted">
@@ -135,7 +192,9 @@ export default function CourierShow({
                                             className="h-3.5 w-3.5"
                                             aria-hidden="true"
                                         />
-                                        <span>{courier.phone ?? '-'}</span>
+                                        <span className="tabular-nums">
+                                            {courier.phone ?? '-'}
+                                        </span>
                                     </div>
                                     {courier.vehicle_type && (
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
@@ -147,7 +206,7 @@ export default function CourierShow({
                                                 {courier.vehicle_type}
                                             </span>
                                             {courier.vehicle_plate && (
-                                                <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[11px] font-semibold">
+                                                <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[11px] font-semibold tabular-nums">
                                                     {courier.vehicle_plate}
                                                 </span>
                                             )}
@@ -169,7 +228,7 @@ export default function CourierShow({
                         </div>
 
                         {courier.courier_profile && (
-                            <div className="shadow-card-muted mt-3 rounded-xl bg-surface p-3">
+                            <div className="mt-3 rounded-2xl border border-border bg-surface-muted/50 p-3">
                                 <div className="flex items-center gap-1.5 text-xs font-medium text-text-subtle">
                                     <User
                                         className="h-3 w-3"
@@ -217,8 +276,11 @@ export default function CourierShow({
                                         <Button
                                             variant="outline"
                                             size="sm"
+                                            className="min-h-11"
                                             onClick={async () => {
-                                                await copyToClipboard(inviteUrl);
+                                                await copyToClipboard(
+                                                    inviteUrl,
+                                                );
                                             }}
                                         >
                                             <Copy
@@ -229,11 +291,14 @@ export default function CourierShow({
                                         </Button>
                                         <Button
                                             size="sm"
+                                            className="min-h-11"
                                             onClick={async () => {
                                                 const text = `Undangan kurir Dombi: ${inviteUrl}`;
 
                                                 if (navigator.share) {
-                                                    await navigator.share({ text });
+                                                    await navigator.share({
+                                                        text,
+                                                    });
                                                 } else {
                                                     await copyToClipboard(text);
                                                 }
@@ -253,22 +318,30 @@ export default function CourierShow({
 
                     {/* Pengiriman Terbaru */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Pengiriman Terbaru"
                     >
-                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
-                            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                            Pengiriman Terbaru
+                        <div className="mb-3 flex items-center gap-2">
+                            <Clock
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Pengiriman Terbaru
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Pengiriman terbaru dari kurir ini
+                        </p>
                         {recentDeliveries.length === 0 ? (
                             <div className="py-6 text-center text-xs text-text-muted">
                                 Belum ada pengiriman
                             </div>
                         ) : (
-                            <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
+                            <div className="overflow-x-auto rounded-2xl border border-border bg-surface">
                                 <table className="w-full min-w-[400px]">
                                     <thead>
-                                        <tr className="bg-surface-muted">
+                                        <tr className="bg-surface-muted/50">
                                             <th className="px-4 py-2 text-left text-xs font-medium text-text-muted">
                                                 Kode
                                             </th>
@@ -287,7 +360,7 @@ export default function CourierShow({
                                         {recentDeliveries.map((d: any) => (
                                             <tr
                                                 key={d.id}
-                                                className="hover:bg-mint-wash border-t border-border transition-colors"
+                                                className="border-t border-border transition-colors hover:bg-emerald-50/40"
                                             >
                                                 <td className="px-4 py-2 font-bold text-text tabular-nums">
                                                     {d.order?.order_code ?? '-'}
@@ -326,31 +399,40 @@ export default function CourierShow({
                 <div className="space-y-4">
                     {/* Statistik */}
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Statistik"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Statistik
+                        <div className="mb-3 flex items-center gap-2">
+                            <Package
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Statistik
+                            </h3>
                         </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Ringkasan pengiriman kurir
+                        </p>
                         <div className="grid grid-cols-3 gap-3">
-                            <div className="shadow-card-muted rounded-xl bg-surface p-3 text-center">
-                                <div className="text-2xl font-bold text-text tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3 text-center">
+                                <div className="font-heading text-2xl font-bold text-text tabular-nums">
                                     {courier.total_deliveries_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-muted">
                                     Total
                                 </div>
                             </div>
-                            <div className="shadow-card-muted rounded-xl bg-surface p-3 text-center">
-                                <div className="text-2xl font-bold text-blue-600 tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3 text-center">
+                                <div className="font-heading text-2xl font-bold text-primary tabular-nums">
                                     {courier.active_deliveries_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-muted">
                                     Aktif
                                 </div>
                             </div>
-                            <div className="shadow-card-muted rounded-xl bg-surface p-3 text-center">
-                                <div className="text-2xl font-bold text-emerald-600 tabular-nums">
+                            <div className="rounded-xl border border-border bg-surface-muted/50 p-3 text-center">
+                                <div className="font-heading text-2xl font-bold text-emerald-600 tabular-nums">
                                     {courier.today_deliveries_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-muted">
@@ -363,7 +445,7 @@ export default function CourierShow({
                         <div className="mt-4 space-y-2">
                             <Link
                                 href={`/owner/deliveries?courier_id=${courier.id}`}
-                                className="hover:bg-mint-wash flex h-9 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-surface p-3 text-sm font-semibold text-text transition-colors hover:border-primary hover:bg-emerald-50/40"
                             >
                                 <Truck
                                     className="h-4 w-4 text-text-subtle"
@@ -373,7 +455,7 @@ export default function CourierShow({
                             </Link>
                             <Link
                                 href={`/owner/orders?courier_id=${courier.id}`}
-                                className="hover:bg-mint-wash flex h-9 w-full items-center gap-2 rounded-xl bg-surface px-3 text-sm font-semibold text-text shadow-card transition-colors"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-surface p-3 text-sm font-semibold text-text transition-colors hover:border-primary hover:bg-emerald-50/40"
                             >
                                 <Package
                                     className="h-4 w-4 text-text-subtle"
@@ -382,6 +464,174 @@ export default function CourierShow({
                                 Lihat Pesanan
                             </Link>
                         </div>
+                    </div>
+
+                    {/* Outlet Assignment */}
+                    {legacyClassification?.isLegacy && (
+                        <div
+                            className="rounded-2xl border border-amber-200 bg-amber-50 p-5"
+                            aria-label="Klasifikasi Kurir Legacy"
+                        >
+                            <div className="mb-1 text-xs font-semibold text-amber-900">
+                                Klasifikasi Kurir Legacy
+                            </div>
+                            <p className="text-xs text-amber-800">
+                                Profil lama belum punya sumber kurir.
+                                Klasifikasikan dulu sebelum plotting outlet.
+                            </p>
+                            <div className="mt-3 space-y-3">
+                                <div className="space-y-2 text-sm text-text">
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            name="courier_source"
+                                            value="pusat"
+                                            checked={
+                                                classificationForm.data
+                                                    .courier_source === 'pusat'
+                                            }
+                                            onChange={(e) =>
+                                                classificationForm.setData(
+                                                    'courier_source',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="h-4 w-4 border-border text-primary"
+                                        />
+                                        Kurir pusat
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            name="courier_source"
+                                            value="outlet"
+                                            checked={
+                                                classificationForm.data
+                                                    .courier_source === 'outlet'
+                                            }
+                                            onChange={(e) =>
+                                                classificationForm.setData(
+                                                    'courier_source',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="h-4 w-4 border-border text-primary"
+                                        />
+                                        Kurir milik outlet
+                                    </label>
+                                </div>
+                                {classificationForm.data.courier_source ===
+                                    'outlet' && (
+                                    <div>
+                                        <label className="mb-1 block text-xs font-medium text-text-muted">
+                                            Outlet pemilik
+                                        </label>
+                                        <select
+                                            value={
+                                                classificationForm.data
+                                                    .outlet_id
+                                            }
+                                            onChange={(e) =>
+                                                classificationForm.setData(
+                                                    'outlet_id',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-text"
+                                        >
+                                            <option value="">
+                                                Pilih outlet
+                                            </option>
+                                            {(outlets ?? []).map((o: any) => (
+                                                <option key={o.id} value={o.id}>
+                                                    {o.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {classificationForm.errors
+                                            .outlet_id && (
+                                            <p className="mt-1 text-xs text-red-600">
+                                                {
+                                                    classificationForm.errors
+                                                        .outlet_id
+                                                }
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                                <Button
+                                    size="sm"
+                                    className="mt-3 min-h-11 w-full"
+                                    disabled={classificationForm.processing}
+                                    onClick={handleSaveClassification}
+                                >
+                                    {classificationForm.processing
+                                        ? 'Menyimpan...'
+                                        : 'Simpan Klasifikasi'}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    <div
+                        className="rounded-2xl border border-border bg-surface p-5"
+                        aria-label="Plot Outlet"
+                    >
+                        <div className="mb-3 flex items-center gap-2">
+                            <MapPin
+                                aria-hidden="true"
+                                className="h-4 w-4 text-primary"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Plot Outlet
+                            </h3>
+                        </div>
+                        <p className="mb-3 text-xs text-text-muted">
+                            Tentukan outlet yang menjadi tanggung jawab kurir
+                        </p>
+
+                        <div className="space-y-2">
+                            {(outlets ?? []).length === 0 ? (
+                                <div className="text-xs text-text-muted">
+                                    Tidak ada outlet aktif.
+                                </div>
+                            ) : (
+                                outlets.map((o: any) => (
+                                    <label
+                                        key={o.id}
+                                        className="flex items-center gap-2 text-sm text-text"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={assignmentForm.data.outlet_ids.includes(
+                                                String(o.id),
+                                            )}
+                                            onChange={(e) =>
+                                                toggleOutlet(
+                                                    o.id,
+                                                    e.target.checked,
+                                                )
+                                            }
+                                            className="h-4 w-4 rounded border-border text-primary"
+                                        />
+                                        {o.name}
+                                    </label>
+                                ))
+                            )}
+                        </div>
+                        <Button
+                            size="sm"
+                            className="mt-4 min-h-11 w-full"
+                            disabled={
+                                assignmentForm.processing ||
+                                legacyClassification?.isLegacy
+                            }
+                            onClick={handleSaveAssignments}
+                        >
+                            {assignmentForm.processing
+                                ? 'Menyimpan...'
+                                : 'Simpan Plot Outlet'}
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -402,11 +652,16 @@ export default function CourierShow({
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            className="min-h-11"
                             onClick={() => setShowDeleteConfirm(false)}
                         >
                             Batal
                         </Button>
-                        <Button variant="destructive" onClick={handleDelete}>
+                        <Button
+                            variant="destructive"
+                            className="min-h-11"
+                            onClick={handleDelete}
+                        >
                             Hapus Permanen
                         </Button>
                     </DialogFooter>

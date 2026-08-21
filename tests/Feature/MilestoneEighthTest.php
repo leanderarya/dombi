@@ -7,8 +7,7 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -27,6 +26,34 @@ class MilestoneEighthTest extends TestCase
         $this->assertSame('Dombi', $manifest['short_name']);
         $this->assertSame('standalone', $manifest['display']);
         $this->assertNotEmpty($manifest['icons']);
+
+        $this->assertSame('/customer/', $manifest['id']);
+        $this->assertSame('/customer/home', $manifest['start_url']);
+        $this->assertSame('/customer/', $manifest['scope']);
+    }
+
+    public function test_internal_pwa_manifest_uses_internal_launch_context(): void
+    {
+        $this->assertFileExists(public_path('internal-manifest.json'));
+
+        $manifest = json_decode(file_get_contents(public_path('internal-manifest.json')), true);
+
+        $this->assertSame('/internal', $manifest['id']);
+        $this->assertSame('/login', $manifest['start_url']);
+        $this->assertSame('/', $manifest['scope']);
+        $this->assertSame('standalone', $manifest['display']);
+        $this->assertNotEmpty($manifest['icons']);
+    }
+
+    public function test_pwa_root_templates_use_their_own_manifests(): void
+    {
+        $customerBlade = file_get_contents(resource_path('views/customer-app.blade.php'));
+        $internalBlade = file_get_contents(resource_path('views/internal-app.blade.php'));
+
+        $this->assertStringContainsString('<link rel="manifest" href="/manifest.json">', $customerBlade);
+        $this->assertStringNotContainsString('/internal-manifest.json', $customerBlade);
+        $this->assertStringContainsString('<link rel="manifest" href="/internal-manifest.json">', $internalBlade);
+        $this->assertStringNotContainsString('<link rel="manifest" href="/manifest.json">', $internalBlade);
     }
 
     public function test_service_worker_file_exists(): void
@@ -136,11 +163,9 @@ class MilestoneEighthTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
-        $product = Product::create(['name' => 'Susu', 'slug' => 'susu-recon', 'unit' => 'botol', 'price' => 25000, 'is_active' => true]);
-        $family = ProductFamily::create(['name' => 'Susu', 'brand' => 'Dombi']);
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
-            'product_id' => $product->id,
+        $family = ProductCategory::create(['name' => 'Susu', 'brand' => 'Dombi']);
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Original',
             'flavor' => 'Original',
             'size' => '500ml',
@@ -148,7 +173,7 @@ class MilestoneEighthTest extends TestCase
             'selling_price' => 25000,
             'is_active' => true,
         ]);
-        $inventory = OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'product_variant_id' => $variant->id, 'current_stock' => 10, 'reserved_stock' => 0, 'minimum_stock' => 2]);
+        $inventory = OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $variant->id, 'current_stock' => 10, 'reserved_stock' => 0, 'minimum_stock' => 2]);
 
         $this->actingAs($owner)
             ->put(route('owner.inventories.update', $inventory), [
@@ -161,7 +186,7 @@ class MilestoneEighthTest extends TestCase
         $this->assertDatabaseHas('outlet_inventories', ['id' => $inventory->id, 'current_stock' => 15]);
         $this->assertDatabaseHas('stock_movements', [
             'outlet_id' => $outlet->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'type' => 'stock_adjustment',
             'notes' => 'Stok fisik dihitung ulang',
         ]);
@@ -171,11 +196,9 @@ class MilestoneEighthTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
-        $product = Product::create(['name' => 'Susu', 'slug' => 'susu-recon2', 'unit' => 'botol', 'price' => 25000, 'is_active' => true]);
-        $family = ProductFamily::create(['name' => 'Susu', 'brand' => 'Dombi']);
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
-            'product_id' => $product->id,
+        $family = ProductCategory::create(['name' => 'Susu', 'brand' => 'Dombi']);
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Original',
             'flavor' => 'Original',
             'size' => '500ml',
@@ -183,7 +206,7 @@ class MilestoneEighthTest extends TestCase
             'selling_price' => 25000,
             'is_active' => true,
         ]);
-        $inventory = OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'product_variant_id' => $variant->id, 'current_stock' => 10, 'reserved_stock' => 5, 'minimum_stock' => 2]);
+        $inventory = OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $variant->id, 'current_stock' => 10, 'reserved_stock' => 5, 'minimum_stock' => 2]);
 
         $this->actingAs($owner)
             ->put(route('owner.inventories.update', $inventory), [

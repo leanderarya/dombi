@@ -97,7 +97,7 @@ class GuestCheckoutAuthTest extends TestCase
             ])
             ->post('/customer/checkout/payment', [
                 'payment_method' => 'qris',
-            'payment_status' => 'paid',
+                'payment_status' => 'paid',
             ]);
 
         $order = Order::latest()->firstOrFail();
@@ -124,7 +124,7 @@ class GuestCheckoutAuthTest extends TestCase
                 ],
             ])->post('/customer/checkout/payment', [
                 'payment_method' => 'qris',
-            'payment_status' => 'paid',
+                'payment_status' => 'paid',
             ]);
 
             $this->assertFalse(auth()->check(), "Guest should not be authenticated after checkout $i");
@@ -238,9 +238,7 @@ class GuestCheckoutAuthTest extends TestCase
     {
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-'.uniqid(),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
@@ -258,6 +256,7 @@ class GuestCheckoutAuthTest extends TestCase
     private function seedCheckoutDraft(array $session): self
     {
         $session['checkout.fulfillment']['selected_outlet_id'] = $this->outlet->id;
+
         return $this->withSession($session);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Outlet;
 
+use App\Enums\PaymentStatus;
 use App\Services\OrderStatusService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -55,8 +56,8 @@ class UpdateOrderStatusRequest extends FormRequest
                 }
 
                 if ($order && ! in_array($order->payment_status, [
-                    \App\Enums\PaymentStatus::Paid->value,
-                    \App\Enums\PaymentStatus::Settled->value,
+                    PaymentStatus::Paid->value,
+                    PaymentStatus::Settled->value,
                 ], true)) {
                     $this->validator->errors()->add('payment_status', 'Pesanan belum dibayar dan tidak dapat diproses outlet.');
                 }

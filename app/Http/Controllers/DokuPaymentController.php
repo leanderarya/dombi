@@ -23,6 +23,7 @@ class DokuPaymentController extends Controller
         // DOKU sends GET requests for endpoint verification — return OK without processing
         if ($request->isMethod('GET')) {
             Log::debug('DOKU webhook: GET verification request, returning OK');
+
             return response()->json(['message' => 'OK']);
         }
 
