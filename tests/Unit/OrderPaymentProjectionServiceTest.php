@@ -35,7 +35,7 @@ class OrderPaymentProjectionServiceTest extends TestCase
                     'merchant_request_id' => fake()->unique()->uuid(),
                     'amount_snapshot' => $status === 'paid_mismatch' ? 49000 : 50000,
                     'currency_snapshot' => 'IDR',
-                    'creation_state' => 'created',
+                    'creation_state' => in_array($status, ['failed', 'expired'], true) ? 'failed' : 'created',
                     'settlement_status' => $status === 'paid_mismatch' ? 'paid' : $status,
                     'verification_status' => in_array($status, ['paid', 'paid_mismatch'], true) ? 'verified' : 'needs_review',
                 ];
@@ -44,6 +44,32 @@ class OrderPaymentProjectionServiceTest extends TestCase
 
             $this->assertSame($expected, app(OrderPaymentProjectionService::class)->recompute($order));
         }
+    }
+
+    public function test_initiated_and_created_attempts_are_pending_even_with_terminal_or_null_settlement(): void
+    {
+        foreach (['initiated', 'created'] as $creationState) {
+            $order = Order::factory()->create();
+            PaymentAttempt::create([
+                'order_id' => $order->id, 'attempt_key' => fake()->uuid(), 'invoice_number' => fake()->uuid(),
+                'merchant_request_id' => fake()->uuid(), 'amount_snapshot' => 50000, 'currency_snapshot' => 'IDR',
+                'creation_state' => $creationState, 'settlement_status' => 'failed', 'verification_status' => 'needs_review',
+            ]);
+
+            $this->assertSame('pending', app(OrderPaymentProjectionService::class)->recompute($order));
+        }
+    }
+
+    public function test_verified_paid_attempt_remains_paid_after_later_failed_and_expired_attempts(): void
+    {
+        $order = Order::factory()->create(['total' => 50000]);
+        $this->createAttempt($order, 'paid', 'verified');
+        $this->assertSame('paid', app(OrderPaymentProjectionService::class)->recompute($order));
+
+        $this->createAttempt($order, 'failed');
+        $this->createAttempt($order, 'expired');
+
+        $this->assertSame('paid', app(OrderPaymentProjectionService::class)->recompute($order));
     }
 
     public function test_paid_mismatch_remains_paid_but_cannot_fulfil(): void
@@ -59,5 +85,14 @@ class OrderPaymentProjectionServiceTest extends TestCase
 
         $this->assertSame('paid', $order->fresh()->payment_status);
         $this->assertFalse($order->fresh()->paymentIsFulfilmentEligible());
+    }
+
+    private function createAttempt(Order $order, string $settlementStatus, string $verificationStatus = 'needs_review'): void
+    {
+        PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => fake()->uuid(), 'invoice_number' => fake()->uuid(),
+            'merchant_request_id' => fake()->uuid(), 'amount_snapshot' => 50000, 'currency_snapshot' => 'IDR',
+            'creation_state' => in_array($settlementStatus, ['failed', 'expired'], true) ? 'failed' : 'created', 'settlement_status' => $settlementStatus, 'verification_status' => $verificationStatus,
+        ]);
     }
 }
