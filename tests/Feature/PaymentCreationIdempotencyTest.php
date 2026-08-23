@@ -40,9 +40,9 @@ class PaymentCreationIdempotencyTest extends TestCase
         $this->assertDatabaseCount('payment_attempts', 1);
     }
 
-    public function test_initiated_attempt_is_not_duplicated(): void
+    public function test_fresh_initiated_attempt_is_claimed_and_created(): void
     {
-        Http::fake();
+        Http::fake(['*' => Http::response(['response' => ['payment' => ['url' => 'https://pay.test/init']]], 200)]);
         $order = Order::factory()->create();
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id,
@@ -54,10 +54,66 @@ class PaymentCreationIdempotencyTest extends TestCase
             'creation_state' => PaymentAttemptCreationState::Initiated,
         ]);
 
+        $this->assertSame('https://pay.test/init', app(DokuService::class)->createPayment($attempt));
+        $this->assertDatabaseHas('payment_attempts', ['id' => $attempt->id, 'creation_state' => 'created']);
+    }
+
+    public function test_unknown_attempt_is_reused_without_provider_call(): void
+    {
+        Http::fake();
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'attempt-unknown',
+            'invoice_number' => 'INV-UNKNOWN',
+            'merchant_request_id' => 'REQ-UNKNOWN',
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'creation_state' => PaymentAttemptCreationState::Unknown,
+        ]);
+
         $this->expectException(DokuPaymentException::class);
         app(DokuService::class)->createPayment($attempt);
-
         Http::assertNothingSent();
-        $this->assertDatabaseCount('payment_attempts', 1);
+    }
+
+    public function test_claimed_initiated_attempt_blocks_second_creator(): void
+    {
+        Http::fake();
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'attempt-claimed',
+            'invoice_number' => 'INV-CLAIMED',
+            'merchant_request_id' => 'REQ-CLAIMED',
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'creation_state' => PaymentAttemptCreationState::Initiated,
+            'metadata' => ['creation_lease' => ['token' => 'other', 'expires_at' => now()->addMinute()->toIso8601String()]],
+        ]);
+
+        $this->expectException(DokuPaymentException::class);
+        app(DokuService::class)->createPayment($attempt);
+        Http::assertNothingSent();
+    }
+
+    public function test_created_attempt_is_reused_after_double_click(): void
+    {
+        Http::fake(['*' => Http::response(['response' => ['payment' => ['url' => 'https://pay.test/once']]], 200)]);
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'attempt-double',
+            'invoice_number' => 'INV-DOUBLE',
+            'merchant_request_id' => 'REQ-DOUBLE',
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'creation_state' => PaymentAttemptCreationState::Initiated,
+        ]);
+
+        app(DokuService::class)->createPayment($attempt);
+        app(DokuService::class)->createPayment($attempt->fresh());
+
+        Http::assertSentCount(1);
     }
 }
