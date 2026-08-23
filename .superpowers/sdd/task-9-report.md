@@ -2,16 +2,16 @@
 
 ## Findings Fixed
 
-- DOKU status 404 now preserves unresolved creation state (`pending` remains `pending`, `unknown` remains `unknown`), records `last_reconciliation_status=404`, `last_reconciliation_error=invoice_not_found`, raw evidence, and schedules bounded retry using normal backoff.
-- 404 no longer applies terminal FAILED canonical transition.
-- Deleted `PaymentAttempt` is a no-op `TransitionResult(false)` after preflight refresh, after service claim/failure exceptions, and after final refresh.
-- Existing bounded command, job eligibility, canonical normalized-event integration, scheduler, and production-driver race coverage retained.
+- Reconciliation claim transaction now re-checks locked attempt eligibility after concurrent webhook/transition: creation state must be `pending|unknown` and settlement state, when present, must be `pending|unknown`.
+- Finalized attempts return no-op before any DOKU status request.
+- Added regression asserting finalized settlement skips DOKU request and returns unchanged result.
+- Existing 404 preservation, deleted-attempt no-op, bounded dispatch, job guards, canonical transition integration, scheduler, and production-driver race coverage retained.
 
 ## Verification
 
-- `php artisan test tests/Feature/DokuReconciliationTest.php`: 20 passed, 1 skipped, 45 assertions.
-- `composer run lint:check -- --dirty`: run below; must pass before commit.
+- `php artisan test tests/Feature/DokuReconciliationTest.php`: 21 passed, 1 skipped, 47 assertions.
+- `composer run lint:check -- --dirty`: passed.
 
 ## Scope
 
-Task 9 files only, with required existing DOKU reconciliation implementation correction in `app/Services/DokuService.php`.
+Task 9 files only, with required DOKU reconciliation implementation correction in `app/Services/DokuService.php`.
