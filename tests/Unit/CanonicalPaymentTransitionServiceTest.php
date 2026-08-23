@@ -16,6 +16,19 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_terminal_order_success_is_paid_but_creates_refund_without_claiming(): void
+    {
+        [$order, $attempt] = $this->attempt(['status' => Order::STATUS_CANCELLED_BY_CUSTOMER]);
+
+        $result = app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []
+        ));
+
+        $this->assertFalse($result->fulfilmentWinner);
+        $this->assertNull($attempt->fresh()->fulfilment_claimed_at);
+        $this->assertSame(1, RefundObligation::where('payment_attempt_id', $attempt->id)->count());
+    }
+
     public function test_success_matching_amount_is_verified_and_paid(): void
     {
         [$order, $attempt] = $this->attempt();
@@ -125,7 +138,7 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $service->apply($attempt->fresh(), $success);
 
         $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
-        $this->assertSame(0, RefundObligation::where('payment_attempt_id', $attempt->id)->count());
+        $this->assertSame(1, RefundObligation::where('payment_attempt_id', $attempt->id)->count());
     }
 
     public function test_only_one_paid_attempt_claims_fulfilment(): void

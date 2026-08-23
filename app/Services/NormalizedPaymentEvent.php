@@ -15,4 +15,9 @@ final readonly class NormalizedPaymentEvent
         public CarbonInterface $receivedAt,
         public array $rawEvidence,
     ) {}
+
+    public function withGatewayReference(?string $reference): self
+    {
+        return new self($this->source, $this->gatewayStatus, $this->amount, $this->currency, $reference, $this->receivedAt, $this->rawEvidence);
+    }
 }
