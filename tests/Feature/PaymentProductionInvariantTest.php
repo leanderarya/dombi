@@ -250,6 +250,28 @@ class PaymentProductionInvariantTest extends TestCase
         $this->assertSame('pending', $order->fresh()->payment_status);
     }
 
+    public function test_paid_transaction_cannot_regress_on_failed_status_sync(): void
+    {
+        $order = Order::factory()->paid()->create();
+        $order->update(['doku_order_id' => $order->order_code]);
+        PaymentTransaction::create([
+            'order_id' => $order->id, 'doku_order_id' => $order->order_code,
+            'payment_method' => 'qris', 'amount' => $order->total, 'status' => 'paid',
+        ]);
+        PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'sync-'.$order->id,
+            'invoice_number' => $order->order_code, 'merchant_request_id' => 'sync-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Paid,
+            'verification_status' => PaymentAttemptVerificationStatus::Verified,
+        ]);
+        Http::fake(['*/checkout/v1/payment/*' => Http::response(['transaction' => ['status' => 'FAILED']])]);
+
+        app(DokuService::class)->syncStatusFromDoku($order);
+
+        $this->assertSame('paid', PaymentTransaction::where('order_id', $order->id)->sole()->status);
+    }
+
     public function test_paid_order_cannot_regress_on_late_failure(): void
     {
         $order = Order::factory()->create(['payment_status' => 'paid']);
