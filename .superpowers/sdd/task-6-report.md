@@ -4,14 +4,12 @@
 
 `php artisan test tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
-PASS — 27 tests, 61 assertions, 5.5 seconds.
+PASS — 27 tests, 61 assertions, 5.6 seconds.
 
 `vendor/bin/pint --test app/Services/CanonicalPaymentTransitionService.php app/Services/OrderPaymentProjectionService.php app/Services/DokuService.php app/Services/NormalizedPaymentEvent.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
 PASS.
 
-## Payment creation transaction fix
+## Reservation P0 fix
 
-- Reservation transaction commits before DOKU HTTP call; no database locks remain held across network I/O.
-- Response persistence runs in separate short idempotent transaction using `firstOrCreate` for transaction identity.
-- Duplicate-create reservation and persisted payment URL reuse remain intact.
+Short reservation transaction now locks order first, then re-reads and locks active canonical attempt under that order lock before reserving. Transaction commits before HTTP, so waiting concurrent creators recheck reservation state without network calls under lock.
