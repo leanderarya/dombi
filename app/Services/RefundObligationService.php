@@ -19,8 +19,11 @@ class RefundObligationService
             throw new DomainException('Refund obligation requires a persisted payment attempt belonging to an order.');
         }
 
-        if ((float) $attempt->amount_snapshot <= 0) {
+        if (! preg_match('/^\d+(?:\.\d{1,2})?$/', (string) $attempt->amount_snapshot) || $this->toMinorUnits((string) $attempt->amount_snapshot) <= 0) {
             throw new DomainException('Refund amount must be positive.');
+        }
+        if (! is_string($attempt->currency_snapshot) || ! preg_match('/^[A-Z]{3}$/', $attempt->currency_snapshot)) {
+            throw new DomainException('Refund currency must be three uppercase letters.');
         }
 
         try {
@@ -37,6 +40,13 @@ class RefundObligationService
                 ->where('reason', $reason)
                 ->firstOrFail();
         }
+    }
+
+    private function toMinorUnits(string $amount): int
+    {
+        [$whole, $fraction] = array_pad(explode('.', $amount, 2), 2, '');
+
+        return ((int) $whole * 100) + (int) str_pad($fraction, 2, '0');
     }
 
     private function isDuplicateKeyException(QueryException $exception): bool

@@ -47,7 +47,8 @@ return new class extends Migration
                 DB::statement('CREATE TRIGGER IF NOT EXISTS refund_obligations_amount_positive_insert BEFORE INSERT ON refund_obligations FOR EACH ROW WHEN NEW.amount <= 0 BEGIN SELECT RAISE(ABORT, \'Refund obligation amount must be positive\'); END'),
                 DB::statement('CREATE TRIGGER IF NOT EXISTS refund_obligations_amount_positive_update BEFORE UPDATE OF amount ON refund_obligations FOR EACH ROW WHEN NEW.amount <= 0 BEGIN SELECT RAISE(ABORT, \'Refund obligation amount must be positive\'); END'),
             ],
-            'mysql', 'pgsql' => DB::statement('ALTER TABLE refund_obligations ADD CONSTRAINT refund_obligations_amount_positive CHECK (amount > 0)'),
+            'mysql' => DB::table('information_schema.check_constraints')->where('constraint_name', 'refund_obligations_amount_positive')->doesntExist() ? DB::statement('ALTER TABLE refund_obligations ADD CONSTRAINT refund_obligations_amount_positive CHECK (amount > 0)') : null,
+            'pgsql' => DB::statement("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'refund_obligations_amount_positive') THEN ALTER TABLE refund_obligations ADD CONSTRAINT refund_obligations_amount_positive CHECK (amount > 0); END IF; END $$"),
             default => null,
         };
 

@@ -12,15 +12,16 @@ Review findings fixed.
 - Existing-attempt mapping chooses a locked candidate whose amount covers refund amount; synthesis requires order total to equal refund amount.
 - Migration creation, trigger setup, and indexes are guarded for interrupted reruns.
 - `orders.total` and every selected historical refund column are validated before processing; absent sources stop safely.
-- Existing and synthesized attempt currency must be valid; missing values record `missing_currency` instead of defaulting to IDR.
-- Rollback guards optional tables.
+- Amount comparisons use canonical two-decimal minor units; service rejects non-positive/non-canonical amounts.
+- Existing and synthesized currency must be exactly three uppercase letters; missing values record `missing_currency` without IDR fallback.
+- Constraint/trigger setup and rollback are rerun-safe; rollback removes only exact-run obligations and unreferenced synthesized attempts.
 - Duplicate detection matches narrow SQLSTATE/driver duplicate codes; FK/schema errors propagate or become tagged mapping exceptions where applicable.
 - Backfill uses duplicate-only handling for synthesized attempts, exception rows, and obligations; reruns remain idempotent.
 - Synthesized attempts lock the order row, use unique legacy keys, and safely recover from concurrent insertion races.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (16 tests, 33 assertions; 17.060s)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (16 tests, 33 assertions; 17.818s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 
