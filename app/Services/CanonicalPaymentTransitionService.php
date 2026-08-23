@@ -60,7 +60,7 @@ class CanonicalPaymentTransitionService
                 }
             }
 
-            if ($event->gatewayReference !== null && $event->gatewayReference === $lockedAttempt->invoice_number) {
+            if ($event->gatewayReference !== null && $event->gatewayReference !== $lockedAttempt->invoice_number) {
                 $lockedAttempt->gateway_transaction_id = $event->gatewayReference;
             } elseif ($event->gatewayReference !== null) {
                 $lockedAttempt->metadata = array_merge($lockedAttempt->metadata ?? [], ['last_gateway_reference_evidence' => $event->gatewayReference]);
@@ -93,9 +93,7 @@ class CanonicalPaymentTransitionService
 
     private function normalizeReference(PaymentAttempt $attempt, NormalizedPaymentEvent $event): ?string
     {
-        return $event->gatewayReference
-            ?? data_get($event->rawEvidence, 'order.invoice_number')
-            ?? $attempt->invoice_number;
+        return $event->gatewayReference;
     }
 
     private function validateInvoice(PaymentAttempt $attempt, string $invoice): void

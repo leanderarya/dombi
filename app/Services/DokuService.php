@@ -205,7 +205,7 @@ class DokuService
                 'amount_snapshot' => $transaction?->amount ?? $order->total,
                 'currency_snapshot' => $payload['order']['currency'] ?? 'IDR',
                 'verification_status' => PaymentAttemptVerificationStatus::NeedsReview,
-                'metadata' => ['legacy_webhook_needs_review' => $transaction === null],
+                'metadata' => ['legacy_webhook_needs_review' => true],
             ]);
         }
 

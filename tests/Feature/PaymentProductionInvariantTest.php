@@ -51,7 +51,30 @@ class PaymentProductionInvariantTest extends TestCase
         $service->handleWebhook($payload);
 
         $this->assertDatabaseCount('payment_transactions', 1);
-        $this->assertSame('paid', $order->fresh()->payment_status);
+        $this->assertSame('pending', $order->fresh()->payment_status);
+        $this->assertNotNull(PaymentAttempt::where('order_id', $order->id)->sole());
+    }
+
+    public function test_legacy_synthesized_attempt_never_fulfils_from_webhook_success(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        PaymentTransaction::create([
+            'order_id' => $order->id,
+            'doku_order_id' => $order->order_code,
+            'payment_method' => 'qris',
+            'amount' => $order->total,
+            'status' => 'pending',
+        ]);
+
+        app(DokuService::class)->handleWebhook([
+            'order' => ['invoice_number' => $order->order_code],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total, 'id' => 'provider-1'],
+        ]);
+
+        $attempt = PaymentAttempt::where('order_id', $order->id)->sole();
+        $this->assertTrue($attempt->metadata['legacy_webhook_needs_review']);
+        $this->assertSame(PaymentAttemptVerificationStatus::NeedsReview, $attempt->verification_status);
+        $this->assertNull($attempt->fulfilment_claimed_at);
     }
 
     public function test_success_with_amount_mismatch_does_not_settle_order(): void
@@ -161,7 +184,7 @@ class PaymentProductionInvariantTest extends TestCase
         $service->handleWebhook($payload);
         $service->handleWebhook($payload);
 
-        $this->assertSame('paid', $order->fresh()->payment_status);
+        $this->assertSame('pending', $order->fresh()->payment_status);
         $this->assertSame(1, RefundObligation::where('payment_attempt_id', PaymentAttempt::where('order_id', $order->id)->sole()->id)->count());
         $this->assertSame(1, RefundObligation::where('payment_attempt_id', PaymentAttempt::where('order_id', $order->id)->sole()->id)
             ->where('reason', 'duplicate_paid_attempt')->count());
