@@ -18,9 +18,10 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 
 ## Tests
 - `php artisan test tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentRetryTest.php`
-- Focused creation/retry suite: 12 tests passed, 24 assertions.
-- Legacy payment suite: 68 tests passed, 114 assertions.
-- Legacy payment fixtures now create canonical attempts; obsolete synthesized-attempt expectations removed.
+- Focused creation/retry suite: 12 tests passed, 23 assertions.
+- Complete legacy payment/recovery suite: 63 tests passed, 108 assertions, including webhook-only recovery coverage.
+- Definitively failed/expired reconciliation now prepares a fresh attempt before provider creation; historical attempts remain persisted.
+- Expired initiated leases are reconciled against invoice/request identity before any lease reclaim; unresolved attempts remain blocked.
 - Pint: passed for all Task 8 PHP files.
 
 ## Legacy suite
