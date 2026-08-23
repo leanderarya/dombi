@@ -154,6 +154,10 @@ class DokuService
         $claimToken = bin2hex(random_bytes(16));
         $claimed = DB::transaction(function () use ($attempt, $claimToken): bool {
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            if (! in_array($locked->creation_state?->value, ['pending', 'unknown'], true)
+                || ($locked->settlement_status !== null && ! in_array($locked->settlement_status?->value, ['pending', 'unknown'], true))) {
+                return false;
+            }
             $metadata = $locked->metadata ?? [];
             $count = (int) ($metadata['reconciliation_attempts'] ?? 0);
             $next = data_get($metadata, 'next_reconciliation_at');

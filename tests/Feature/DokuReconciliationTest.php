@@ -289,6 +289,18 @@ class DokuReconciliationTest extends TestCase
         Bus::assertDispatchedTimes(ReconcileDokuPayment::class, 2);
     }
 
+    public function test_reconciliation_claim_skips_finalized_settlement_without_doku_request(): void
+    {
+        $attempt = $this->makeAttempt('pending');
+        $attempt->update(['settlement_status' => 'paid']);
+        Http::fake();
+
+        $result = $this->reconciliation->reconcile($attempt);
+
+        $this->assertFalse($result->changed);
+        Http::assertNothingSent();
+    }
+
     public function test_reconciliation_deleted_attempt_returns_unchanged_result(): void
     {
         $attempt = $this->makeAttempt('pending');
