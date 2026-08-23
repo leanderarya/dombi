@@ -279,6 +279,9 @@ class OrderController extends Controller
                 if ($attempt->creation_state?->value === 'unknown') {
                     return back()->with('error', 'Pembayaran sedang dipastikan. Silakan tunggu hasil rekonsiliasi.');
                 }
+                if ($attempt->creation_state?->value === 'failed') {
+                    $attempt = $doku->preparePaymentAttempt($order);
+                }
                 if ($order->payment_status === 'paid') {
                     return redirect()->route('customer.orders.confirm', ['orderCode' => $order->order_code]);
                 }

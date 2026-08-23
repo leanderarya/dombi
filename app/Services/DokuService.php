@@ -46,6 +46,15 @@ class DokuService
         if ($attempt->creation_state?->value === 'unknown') {
             throw new DokuPaymentException('Payment attempt requires reconciliation before retry.');
         }
+        $lease = data_get($attempt->metadata ?? [], 'creation_lease');
+        if ($lease && data_get($lease, 'expires_at') <= now()->toIso8601String()) {
+            $attempt->update(['creation_state' => 'unknown']);
+            $attempt = $this->reconcilePaymentAttempt($attempt);
+            if (in_array($attempt->creation_state?->value, ['initiated', 'unknown'], true)) {
+                throw new DokuPaymentException('Payment attempt requires reconciliation before retry.');
+            }
+            throw new DokuPaymentException('Payment attempt lease expired; prepare a fresh attempt.');
+        }
         $claimToken = bin2hex(random_bytes(16));
         $claimed = DB::transaction(function () use ($attempt, $claimToken): bool {
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
