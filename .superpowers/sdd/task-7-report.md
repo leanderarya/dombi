@@ -1,15 +1,14 @@
 # Task 7 Report
 
-Implemented durable DOKU webhook ingress separation.
+Implemented durable DOKU webhook ingress separation and review fixes.
 
-- Added `DokuWebhookIngressService::receive()` and `WebhookReceipt`.
-- Transport validation now occurs before processing; exact raw body and SHA-256 digest persist.
-- Added durable unique `request_id` deduplication; cache is not correctness dependency.
-- Added retryable persistence/status for processing failures.
-- Controller delegates notify ingress and acknowledges only after persistence.
-- Added focused feature coverage for invalid transport, raw evidence, deduplication, and retry status.
+- Missing `Request-Id` rejects before persistence.
+- Stored body digest is validated for every duplicate; conflicts return `409`.
+- Processed duplicates return idempotent success; retryable/error records reprocess; signature-invalid records reject.
+- Exact raw-body signature, timestamp freshness, durable persistence, and retry status are covered.
+- Focused tests cover cache-independent deduplication, retry reprocessing, missing ID, digest conflict, stale timestamp, and exact-body digest.
 
 Verification:
 
-- `php artisan test tests/Feature/DokuWebhookIngressTest.php tests/Unit/WebhookSecurityTest.php` — 6 passed.
-- `composer run lint --if-present` unavailable: Composer does not support `--if-present` option.
+- `php artisan test tests/Feature/DokuWebhookIngressTest.php tests/Unit/WebhookSecurityTest.php` — 12 passed.
+- `php artisan pint --test` unavailable: Pint command is not defined.

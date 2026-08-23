@@ -62,4 +62,59 @@ class DokuWebhookIngressTest extends TestCase
         $response->assertStatus(500);
         $this->assertSame('retryable', PaymentWebhookLog::query()->where('request_id', 'REQ-RETRY')->value('status'));
     }
+
+    public function test_missing_request_id_is_rejected_without_persistence(): void
+    {
+        $body = '{"order":{"invoice_number":"INV-MISSING-ID"}}';
+        $headers = $this->signed('', $body);
+        unset($headers['HTTP_Request-Id']);
+
+        $this->call('POST', route('doku.notify'), [], [], [], $headers, $body)->assertStatus(400);
+        $this->assertDatabaseMissing('payment_webhook_logs', ['invoice_number' => 'INV-MISSING-ID']);
+    }
+
+    public function test_same_request_id_with_different_body_is_rejected(): void
+    {
+        $firstBody = '{"order":{"invoice_number":"INV-A"},"transaction":{"status":"PENDING"}}';
+        $secondBody = '{"order":{"invoice_number":"INV-B"},"transaction":{"status":"PENDING"}}';
+        $this->call('POST', route('doku.notify'), [], [], [], $this->signed('REQ-CONFLICT', $firstBody), $firstBody)->assertOk();
+
+        $this->call('POST', route('doku.notify'), [], [], [], $this->signed('REQ-CONFLICT', $secondBody), $secondBody)->assertStatus(409);
+        $this->assertSame(1, PaymentWebhookLog::query()->where('request_id', 'REQ-CONFLICT')->count());
+    }
+
+    public function test_retryable_duplicate_is_reprocessed(): void
+    {
+        $body = '{"transaction":{"status":"SUCCESS"}}';
+        $headers = $this->signed('REQ-REPROCESS', $body);
+        $this->call('POST', route('doku.notify'), [], [], [], $headers, $body)->assertStatus(500);
+        $this->call('POST', route('doku.notify'), [], [], [], $headers, $body)->assertStatus(500);
+        $this->assertSame(1, PaymentWebhookLog::query()->where('request_id', 'REQ-REPROCESS')->count());
+        $this->assertSame('retryable', PaymentWebhookLog::query()->where('request_id', 'REQ-REPROCESS')->value('status'));
+    }
+
+    public function test_signature_invalid_duplicate_is_rejected(): void
+    {
+        $body = '{"order":{"invoice_number":"INV-BAD"}}';
+        $headers = $this->signed('REQ-BAD-DUP', $body, 'wrong-client');
+        $this->call('POST', route('doku.notify'), [], [], [], $headers, $body)->assertUnauthorized();
+        $this->call('POST', route('doku.notify'), [], [], [], $headers, $body)->assertUnauthorized();
+    }
+
+    public function test_stale_timestamp_is_rejected(): void
+    {
+        $body = '{"order":{"invoice_number":"INV-STALE"}}';
+        $headers = $this->signed('REQ-STALE', $body, null, now('UTC')->subMinutes(10)->format('Y-m-d\\TH:i:s\\Z'));
+
+        $this->call('POST', route('doku.notify'), [], [], [], $headers, $body)->assertUnauthorized();
+    }
+
+    public function test_signature_digest_covers_exact_raw_body(): void
+    {
+        $signedBody = '{"order":{"invoice_number":"INV-RAW"}}';
+        $sentBody = '{"order": {"invoice_number":"INV-RAW"}}';
+        $headers = $this->signed('REQ-RAW', $signedBody);
+
+        $this->call('POST', route('doku.notify'), [], [], [], $headers, $sentBody)->assertUnauthorized();
+    }
 }

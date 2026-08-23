@@ -17,12 +17,29 @@ final class DokuWebhookIngressService
         $payload = json_decode($rawBody, true) ?? [];
         $headers = array_change_key_case($headers, CASE_LOWER);
         $header = static fn (string $name): ?string => isset($headers[strtolower($name)]) ? (string) (is_array($headers[strtolower($name)]) ? ($headers[strtolower($name)][0] ?? '') : $headers[strtolower($name)]) : null;
-        $requestId = $header('Request-Id') ?? '';
+        $requestId = trim($header('Request-Id') ?? '');
+        if ($requestId === '') {
+            return new WebhookReceipt(new PaymentWebhookLog, 400, 'Request-Id required');
+        }
         $digest = base64_encode(hash('sha256', $rawBody, true));
         $invoice = data_get($payload, 'order.invoice_number');
 
+        $existing = PaymentWebhookLog::query()->where('request_id', $requestId)->first();
+        if ($existing) {
+            if (! hash_equals((string) $existing->body_digest, $digest)) {
+                return new WebhookReceipt($existing, 409, 'Request-Id body conflict');
+            }
+            if ($existing->status === 'processed') {
+                return new WebhookReceipt($existing, 200, 'OK');
+            }
+            if ($existing->status === 'signature_invalid') {
+                return new WebhookReceipt($existing, 401, 'Invalid signature');
+            }
+            $log = $existing;
+        }
+
         try {
-            $log = DB::transaction(fn () => PaymentWebhookLog::create([
+            $log ??= DB::transaction(fn () => PaymentWebhookLog::create([
                 'request_id' => $requestId,
                 'source' => 'notify',
                 'invoice_number' => $invoice,
@@ -34,7 +51,15 @@ final class DokuWebhookIngressService
             ]));
         } catch (UniqueConstraintViolationException) {
             $log = PaymentWebhookLog::query()->where('request_id', $requestId)->firstOrFail();
-            return new WebhookReceipt($log, 200, 'OK');
+            if (! hash_equals((string) $log->body_digest, $digest)) {
+                return new WebhookReceipt($log, 409, 'Request-Id body conflict');
+            }
+            if ($log->status === 'processed') {
+                return new WebhookReceipt($log, 200, 'OK');
+            }
+            if ($log->status === 'signature_invalid') {
+                return new WebhookReceipt($log, 401, 'Invalid signature');
+            }
         }
 
         $valid = $this->doku->verifySignature(
