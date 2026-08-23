@@ -11,7 +11,7 @@ Review findings fixed.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (6 tests, 18 assertions)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (10 tests, 25 assertions; 5.056s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 
