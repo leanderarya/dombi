@@ -28,12 +28,19 @@ class DispatchPaymentOutboxEvent implements ShouldQueue
         }
 
         try {
-            if ($event->claimConsumer()) {
-                ($deliver ?? static fn (PaymentOutboxEvent $event): mixed => Event::dispatch($event->event_type, [$event->payload]))($event);
-                $event->completeConsumer();
+            $consumerToken = $event->claimConsumer();
+            if (! $consumerToken) {
+                return;
+            }
+            ($deliver ?? static fn (PaymentOutboxEvent $event): mixed => Event::dispatch($event->event_type, [$event->payload]))($event);
+            if (! $event->completeConsumer($consumerToken)) {
+                return;
             }
             $event->markDelivered($token);
         } catch (\Throwable $exception) {
+            if (isset($consumerToken)) {
+                $event->failConsumer($consumerToken, $exception->getMessage());
+            }
             $event->markFailed($token, $exception->getMessage());
         }
     }

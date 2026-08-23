@@ -87,7 +87,7 @@ class PaymentOutboxTest extends TestCase
         $job->handle(function (): void {
             throw new \RuntimeException('worker crashed after consumer claim');
         });
-        $outbox->update(['claim_expires_at' => now()->subSecond(), 'next_attempt_at' => now()->subSecond(), 'consumer_claimed_at' => now()->subMinutes(6)]);
+        $outbox->update(['claim_expires_at' => now()->subSecond(), 'next_attempt_at' => now()->subSecond(), 'consumer_claimed_at' => now()->subMinutes(6), 'consumer_next_attempt_at' => now()->subSecond()]);
         (new DispatchPaymentOutboxEvent($outbox->id))->handle(function () use (&$effects): void {
             $effects++;
         });
@@ -95,6 +95,33 @@ class PaymentOutboxTest extends TestCase
         $this->assertSame(1, $effects);
         $this->assertSame('delivered', $outbox->fresh()->status);
         $this->assertSame('completed', $outbox->fresh()->consumer_status);
+    }
+
+    public function test_consumer_failure_resets_pending_with_backoff_and_keeps_outbox_pending(): void
+    {
+        $outbox = PaymentOutboxEvent::create(['event_key' => 'consumer-failure', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);
+        (new DispatchPaymentOutboxEvent($outbox->id))->handle(static function (): void {
+            throw new \RuntimeException('consumer unavailable');
+        });
+
+        $fresh = $outbox->fresh();
+        $this->assertSame('pending', $fresh->status);
+        $this->assertSame('pending', $fresh->consumer_status);
+        $this->assertSame('consumer unavailable', $fresh->consumer_last_error);
+        $this->assertNotNull($fresh->consumer_next_attempt_at);
+        $this->assertNull($fresh->consumer_claim_token);
+    }
+
+    public function test_stale_consumer_token_cannot_complete_reclaimed_claim(): void
+    {
+        $outbox = PaymentOutboxEvent::create(['event_key' => 'consumer-token', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);
+        $first = $outbox->claimConsumer();
+        $outbox->update(['consumer_claimed_at' => now()->subMinutes(6)]);
+        $second = $outbox->claimConsumer();
+
+        $this->assertNotSame($first, $second);
+        $this->assertFalse($outbox->fresh()->completeConsumer($first));
+        $this->assertTrue($outbox->fresh()->completeConsumer($second));
     }
 
     public function test_failed_dispatch_remains_retryable(): void

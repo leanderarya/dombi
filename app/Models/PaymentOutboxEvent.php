@@ -10,7 +10,7 @@ class PaymentOutboxEvent extends Model
 {
     protected $fillable = [
         'event_key', 'event_type', 'aggregate_type', 'aggregate_id', 'payload',
-        'status', 'attempts', 'next_attempt_at', 'last_error', 'delivered_at', 'claim_token', 'claim_expires_at', 'consumer_status', 'consumer_claimed_at', 'consumer_completed_at',
+        'status', 'attempts', 'next_attempt_at', 'last_error', 'delivered_at', 'claim_token', 'claim_expires_at', 'consumer_status', 'consumer_claim_token', 'consumer_claimed_at', 'consumer_next_attempt_at', 'consumer_last_error', 'consumer_completed_at',
     ];
 
     protected function casts(): array
@@ -21,6 +21,7 @@ class PaymentOutboxEvent extends Model
             'delivered_at' => 'datetime',
             'claim_expires_at' => 'datetime',
             'consumer_claimed_at' => 'datetime',
+            'consumer_next_attempt_at' => 'datetime',
             'consumer_completed_at' => 'datetime',
         ];
     }
@@ -44,17 +45,26 @@ class PaymentOutboxEvent extends Model
         return $claimed === 1 ? $token : null;
     }
 
-    public function claimConsumer(): bool
+    public function claimConsumer(?string $token = null): ?string
     {
-        return static::query()->whereKey($this->id)->where(function (Builder $query): void {
+        $token ??= (string) Str::uuid();
+        $claimed = static::query()->whereKey($this->id)->where(function (Builder $query): void {
             $query->where('consumer_status', 'pending')
+                ->where(fn (Builder $query) => $query->whereNull('consumer_next_attempt_at')->orWhere('consumer_next_attempt_at', '<=', now()))
                 ->orWhere(fn (Builder $query) => $query->where('consumer_status', 'processing')->where('consumer_claimed_at', '<=', now()->subMinutes(5)));
-        })->update(['consumer_status' => 'processing', 'consumer_claimed_at' => now()]) === 1;
+        })->update(['consumer_status' => 'processing', 'consumer_claim_token' => $token, 'consumer_claimed_at' => now()]);
+
+        return $claimed === 1 ? $token : null;
     }
 
-    public function completeConsumer(): void
+    public function completeConsumer(string $token): bool
     {
-        $this->update(['consumer_status' => 'completed', 'consumer_completed_at' => now()]);
+        return static::query()->whereKey($this->id)->where('consumer_status', 'processing')->where('consumer_claim_token', $token)->update(['consumer_status' => 'completed', 'consumer_completed_at' => now(), 'consumer_claim_token' => null]) === 1;
+    }
+
+    public function failConsumer(string $token, string $error): bool
+    {
+        return static::query()->whereKey($this->id)->where('consumer_status', 'processing')->where('consumer_claim_token', $token)->update(['consumer_status' => 'pending', 'consumer_claim_token' => null, 'consumer_next_attempt_at' => now()->addMinutes(min(60, 2 ** min($this->attempts, 6))), 'consumer_last_error' => $error]) === 1;
     }
 
     public function markDelivered(string $token): bool
