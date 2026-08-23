@@ -220,7 +220,8 @@ class DokuService
             if (data_get($locked->metadata ?? [], 'reconciliation_lease.token') !== $claimToken) {
                 return false;
             }
-            $locked->update(['creation_state' => $creationState, 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
+            $locked->update(['creation_state' => $creationState, 'settlement_status' => $creationState === 'pending' ? 'pending' : $locked->settlement_status, 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
+            app(OrderPaymentProjectionService::class)->recompute($locked->order);
 
             return true;
         });
@@ -262,6 +263,9 @@ class DokuService
             })->latest('id')->first();
             if ($active) {
                 return $active;
+            }
+            if (PaymentAttempt::query()->where('order_id', $order->id)->count() >= config('order.max_payment_attempts', 3)) {
+                return PaymentAttempt::query()->where('order_id', $order->id)->latest('id')->firstOrFail();
             }
             $identity = strtoupper('DMB-'.$order->id.'-'.bin2hex(random_bytes(6)));
 
