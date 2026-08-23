@@ -79,6 +79,22 @@ class PaymentRetryTest extends TestCase
         $this->assertSame('pending', $fresh->settlement_status?->value);
     }
 
+    public function test_unrecognized_success_status_clears_lease_and_records_recovery_state(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'unknown-status', 'invoice_number' => 'unknown-status', 'merchant_request_id' => 'unknown-status-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Unknown]);
+        Http::fake(['*/checkout/v1/payment/unknown-status' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'PROCESSING']], 200)]);
+
+        app(DokuService::class)->reconcilePaymentAttempt($attempt);
+
+        $metadata = $attempt->fresh()->metadata;
+        $this->assertSame('unknown', $attempt->fresh()->creation_state?->value);
+        $this->assertSame('PROCESSING', $metadata['last_reconciliation_status']);
+        $this->assertSame('unrecognized_provider_status', $metadata['last_reconciliation_error']);
+        $this->assertNotNull($metadata['next_reconciliation_at']);
+        $this->assertNull($metadata['reconciliation_lease']);
+    }
+
     public function test_reconciliation_lease_blocks_concurrent_provider_request(): void
     {
         Http::fake();

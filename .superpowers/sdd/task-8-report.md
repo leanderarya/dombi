@@ -18,7 +18,10 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 
 ## Tests
 - Reconciliation SUCCESS test: passed; canonical transition settles attempt and projects order.
-- `php artisan test`: 1338 tests passed, 4668 assertions.
+- `php artisan test`: 1339 tests passed, 4673 assertions.
+- Unrecognized successful provider statuses persist unknown evidence/error/backoff and clear the current reconciliation lease transactionally.
+- Unknown-status lease recovery regression: passed.
+- `composer run lint:check`: passed (`pint --parallel --test`).
 - Reconciliation SUCCESS transition, evidence, settlement/projection, paid_at, late-refund effects, and lease clearing share one token-fenced transaction.
 - Stale reconciliation SUCCESS race regression: passed.
 - `composer run lint:check`: passed (`pint --parallel --test`).

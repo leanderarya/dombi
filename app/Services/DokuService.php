@@ -206,6 +206,8 @@ class DokuService
             $this->persistReconciliationResult($attempt, $claimToken, 'failed', $status, $data);
         } elseif ($status === 'PENDING') {
             $this->persistReconciliationResult($attempt, $claimToken, 'created', $status, $data);
+        } else {
+            $this->recordReconciliationFailure($attempt, $claimToken, $status, 'unrecognized_provider_status', $data);
         }
 
         return $attempt->fresh();
@@ -224,9 +226,9 @@ class DokuService
         });
     }
 
-    private function recordReconciliationFailure(PaymentAttempt $attempt, string $claimToken, ?int $status, string $error): PaymentAttempt
+    private function recordReconciliationFailure(PaymentAttempt $attempt, string $claimToken, int|string|null $status, string $error, ?array $rawResponse = null): PaymentAttempt
     {
-        return DB::transaction(function () use ($attempt, $claimToken, $status, $error): PaymentAttempt {
+        return DB::transaction(function () use ($attempt, $claimToken, $status, $error, $rawResponse): PaymentAttempt {
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             $metadata = $locked->metadata ?? [];
             if (data_get($metadata, 'reconciliation_lease.token') !== $claimToken) {
@@ -236,6 +238,7 @@ class DokuService
             $delay = min(2 ** ($count - 1), 16);
             $locked->update([
                 'creation_state' => 'unknown',
+                'raw_response' => $rawResponse,
                 'metadata' => array_merge($metadata, [
                     'reconciliation_attempts' => $count,
                     'last_reconciliation_status' => $status,
