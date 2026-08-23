@@ -185,7 +185,6 @@ class DokuService
                 ?? Order::where('order_code', $invoiceNumber)->first()
                 ?? Order::where('doku_order_id', $invoiceNumber)->first();
             $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->first();
-            $attempt = $attempt ? PaymentAttempt::whereKey($attempt->id)->lockForUpdate()->first() : null;
             $resolvedOrderId = $order?->id;
             if ($attempt && $resolvedOrderId !== null && $attempt->order_id !== $resolvedOrderId) {
                 PaymentWebhookLog::create([
@@ -198,6 +197,9 @@ class DokuService
             }
             $order = $attempt
                 ? Order::query()->whereKey($attempt->order_id)->lockForUpdate()->first()
+                : null;
+            $attempt = $attempt
+                ? PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->first()
                 : null;
 
             if ($order === null || $attempt === null) {
