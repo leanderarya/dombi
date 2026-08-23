@@ -19,6 +19,10 @@ class ReconcileDokuPayments extends Command
                 $q->whereNull('metadata->next_reconciliation_at')
                     ->orWhere('metadata->next_reconciliation_at', '<=', now());
             })
+            ->where(function ($q) {
+                $q->whereNull('metadata->reconciliation_attempts')
+                    ->orWhere('metadata->reconciliation_attempts', '<', 5);
+            })
             ->get();
 
         if ($attempts->isEmpty()) {

@@ -8,9 +8,11 @@ use App\Models\PaymentAttempt;
 use App\Services\DokuReconciliationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schedule;
 use Tests\TestCase;
 
 class DokuReconciliationTest extends TestCase
@@ -33,6 +35,7 @@ class DokuReconciliationTest extends TestCase
     private function makeAttempt(string $creationState, array $metadata = []): PaymentAttempt
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
+
         return PaymentAttempt::create([
             'order_id' => $order->id,
             'attempt_key' => 'recon-'.$order->id,
@@ -106,8 +109,10 @@ class DokuReconciliationTest extends TestCase
         $this->assertFalse($result->changed);
     }
 
-    public function test_doku_5xx_retries_with_backoff(): void
+    public function test_doku_5xx_retries_with_two_minute_backoff_after_first_claim(): void
     {
+        $now = now()->startOfSecond();
+        $this->travelTo($now);
         $attempt = $this->makeAttempt('pending');
         Http::fake([
             '*/checkout/v1/payment/*' => Http::response(null, 500),
@@ -117,12 +122,16 @@ class DokuReconciliationTest extends TestCase
 
         $attempt->refresh();
         $metadata = $attempt->metadata ?? [];
-        $this->assertNotNull($metadata['next_reconciliation_at'] ?? null);
+        $this->assertSame($now->copy()->addMinutes(2)->toIso8601String(), $metadata['next_reconciliation_at']);
+        $this->assertSame(1, $metadata['reconciliation_attempts']);
         $this->assertSame('unknown', $attempt->creation_state?->value);
+        $this->travelBack();
     }
 
-    public function test_timeout_sets_backoff(): void
+    public function test_timeout_sets_two_minute_backoff_after_first_claim(): void
     {
+        $now = now()->startOfSecond();
+        $this->travelTo($now);
         $attempt = $this->makeAttempt('pending');
         Http::fake([
             '*/checkout/v1/payment/*' => function () {
@@ -134,8 +143,10 @@ class DokuReconciliationTest extends TestCase
 
         $attempt->refresh();
         $metadata = $attempt->metadata ?? [];
-        $this->assertNotNull($metadata['next_reconciliation_at'] ?? null);
+        $this->assertSame($now->copy()->addMinutes(2)->toIso8601String(), $metadata['next_reconciliation_at']);
+        $this->assertSame(1, $metadata['reconciliation_attempts']);
         $this->assertSame('unknown', $attempt->creation_state?->value);
+        $this->travelBack();
     }
 
     public function test_404_terminates_attempt_as_failed(): void
@@ -180,6 +191,8 @@ class DokuReconciliationTest extends TestCase
     {
         $pending = $this->makeAttempt('pending');
         $unknown = $this->makeAttempt('unknown');
+        $this->makeAttempt('pending', ['reconciliation_attempts' => 5]);
+        $this->makeAttempt('unknown', ['reconciliation_attempts' => 6]);
         $this->makeAttempt('initiated');
         $this->makeAttempt('created');
         $this->makeAttempt('failed');
@@ -192,6 +205,16 @@ class DokuReconciliationTest extends TestCase
         Bus::assertDispatched(ReconcileDokuPayment::class, fn ($job) => $job->attemptId === $pending->id);
         Bus::assertDispatched(ReconcileDokuPayment::class, fn ($job) => $job->attemptId === $unknown->id);
         Bus::assertDispatchedTimes(ReconcileDokuPayment::class, 2);
+    }
+
+    public function test_scheduler_registers_bounded_single_server_reconciliation(): void
+    {
+        $event = collect(Schedule::events())->first(fn ($event) => str_contains($event->command ?? '', 'payments:reconcile-doku'));
+
+        $this->assertNotNull($event);
+        $this->assertTrue($event->withoutOverlapping);
+        $this->assertTrue($event->onOneServer);
+        $this->assertSame('* * * * *', $event->expression);
     }
 
     public function test_job_reconciles_single_attempt(): void
@@ -226,6 +249,47 @@ class DokuReconciliationTest extends TestCase
 
         $again = $this->reconciliation->reconcile($attempt->fresh());
         $this->assertFalse($again->changed);
+    }
+
+    public function test_production_driver_reconciliation_lease_contention_makes_one_status_request(): void
+    {
+        if (env('RUN_PRODUCTION_DRIVER_TESTS') !== true || ! in_array(config('database.default'), ['mysql', 'pgsql'], true) || ! function_exists('pcntl_fork')) {
+            $this->markTestSkipped('CI-gated: set RUN_PRODUCTION_DRIVER_TESTS=true with MySQL/PostgreSQL and pcntl.');
+        }
+
+        $attempt = $this->makeAttempt('pending');
+        $requests = tempnam(sys_get_temp_dir(), 'doku-reconcile-');
+        Http::fake([
+            '*/checkout/v1/payment/*' => function () use ($attempt, $requests) {
+                file_put_contents($requests, "request\n", FILE_APPEND | LOCK_EX);
+                usleep(100_000);
+
+                return Http::response([
+                    'order' => ['invoice_number' => $attempt->invoice_number, 'currency' => 'IDR'],
+                    'transaction' => ['status' => 'SUCCESS', 'amount' => (int) $attempt->amount_snapshot],
+                ], 200);
+            },
+        ]);
+
+        $children = [];
+        for ($worker = 0; $worker < 2; $worker++) {
+            $pid = pcntl_fork();
+            $this->assertNotSame(-1, $pid);
+            if ($pid === 0) {
+                DB::disconnect();
+                DB::reconnect();
+                app(DokuReconciliationService::class)->reconcile($attempt->fresh());
+                exit(0);
+            }
+            $children[] = $pid;
+        }
+        foreach ($children as $pid) {
+            pcntl_waitpid($pid, $status);
+        }
+
+        $this->assertCount(1, file($requests, FILE_IGNORE_NEW_LINES));
+        $this->assertSame('paid', $attempt->fresh()->settlement_status?->value);
+        unlink($requests);
     }
 
     public function test_command_skips_attempts_with_future_next_reconciliation_at(): void
