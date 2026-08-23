@@ -15,8 +15,8 @@ class CanonicalPaymentTransitionService
     public function apply(PaymentAttempt $attempt, NormalizedPaymentEvent $event): TransitionResult
     {
         return DB::transaction(function () use ($attempt, $event): TransitionResult {
+            $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
             $lockedAttempt = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
-            $order = Order::query()->whereKey($lockedAttempt->order_id)->lockForUpdate()->firstOrFail();
             $this->validate($lockedAttempt, $event);
 
             $status = strtolower($event->gatewayStatus);
@@ -34,7 +34,8 @@ class CanonicalPaymentTransitionService
                     $lockedAttempt->verification_status = PaymentAttemptVerificationStatus::Verified;
                     $changed = true;
                 }
-                if ($needsReview && $lockedAttempt->verification_status !== PaymentAttemptVerificationStatus::NeedsReview) {
+                if ($needsReview && $lockedAttempt->verification_status !== PaymentAttemptVerificationStatus::Verified
+                    && $lockedAttempt->verification_status !== PaymentAttemptVerificationStatus::NeedsReview) {
                     $lockedAttempt->verification_status = PaymentAttemptVerificationStatus::NeedsReview;
                     $changed = true;
                 }
@@ -58,10 +59,13 @@ class CanonicalPaymentTransitionService
             $lockedAttempt->gateway_currency = strtoupper($event->currency);
             $lockedAttempt->gateway_status = $event->gatewayStatus;
             $lockedAttempt->raw_response = $event->rawEvidence;
-            if ($changed || $event->gatewayReference !== null) {
-                $lockedAttempt->status_version++;
-                $lockedAttempt->save();
-            }
+            $lockedAttempt->metadata = array_merge($lockedAttempt->metadata ?? [], [
+                'last_event_received_at' => $event->receivedAt->toIso8601String(),
+                'last_event_source' => $event->source,
+                'last_event_anomaly' => $needsReview,
+            ]);
+            $lockedAttempt->status_version++;
+            $lockedAttempt->save();
 
             $winner = false;
             if ($lockedAttempt->settlement_status === PaymentAttemptSettlementStatus::Paid
@@ -80,8 +84,8 @@ class CanonicalPaymentTransitionService
         if (strtoupper($event->currency) !== strtoupper($attempt->currency_snapshot)) {
             throw new \InvalidArgumentException('Payment currency does not match attempt.');
         }
-        if ($event->gatewayReference !== null && $attempt->invoice_number !== $event->gatewayReference
-            && $attempt->gateway_transaction_id !== null && $attempt->gateway_transaction_id !== $event->gatewayReference) {
+        if ($event->gatewayReference === null || ($attempt->invoice_number !== $event->gatewayReference
+            && $attempt->gateway_transaction_id !== $event->gatewayReference)) {
             throw new \InvalidArgumentException('Payment gateway reference does not match attempt.');
         }
     }
