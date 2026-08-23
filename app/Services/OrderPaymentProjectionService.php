@@ -24,7 +24,7 @@ class OrderPaymentProjectionService
                 $attempt->settlement_status?->value,
                 ['pending', 'unknown'],
                 true
-            ) || in_array($attempt->creation_state?->value, ['initiated', 'created'], true));
+            ) || in_array($attempt->creation_state?->value, ['initiated', 'pending', 'created', 'unknown'], true));
 
             $status = $paid
                 ? PaymentStatus::Paid
