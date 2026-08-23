@@ -4,12 +4,12 @@
 
 `php artisan test tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
-PASS — 28 tests, 62 assertions, 5.4 seconds.
+PASS — 28 tests, 62 assertions, 5.7 seconds.
 
 `vendor/bin/pint --test app/Services/CanonicalPaymentTransitionService.php app/Services/OrderPaymentProjectionService.php app/Services/DokuService.php app/Services/NormalizedPaymentEvent.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
 PASS.
 
-## Reconciliation fix
+## Lock-order/unknown-invoice fix
 
-DOKU status sync now preserves legacy PaymentTransaction paid/settled status against later failed, expired, or pending responses while canonical attempt monotonicity remains authoritative. Added paid-then-failed-sync regression.
+Webhook paths now resolve canonical attempt first, lock attempt then its order, and guard null order/attempt before dereferencing or processing. Unknown invoice evidence remains durable and cannot settle.
