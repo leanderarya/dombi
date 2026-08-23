@@ -9,7 +9,7 @@ use App\Http\Requests\Customer\UpdateRefundDestinationRequest;
 use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\OrderReport;
-use App\Models\PaymentTransaction;
+use App\Models\PaymentAttempt;
 use App\Services\DokuService;
 use App\Services\OrderService;
 use App\Services\OrderStatusService;
@@ -238,7 +238,7 @@ class OrderController extends Controller
         }
 
         // Guard: max payment retry attempts
-        $paymentAttempts = PaymentTransaction::where('order_id', $order->id)->count();
+        $paymentAttempts = PaymentAttempt::where('order_id', $order->id)->count();
         $maxPaymentAttempts = config('order.max_payment_attempts', 3);
 
         if ($paymentAttempts >= $maxPaymentAttempts) {
@@ -259,8 +259,6 @@ class OrderController extends Controller
                     ]);
                 }
 
-                // Still failed — clean up old transaction, allow retry
-                $order->paymentTransactions()->where('status', 'failed')->delete();
                 $order->update(['payment_status' => null, 'doku_order_id' => null]);
                 $order->refresh();
             } catch (\Exception $e) {
@@ -274,28 +272,18 @@ class OrderController extends Controller
         try {
             $doku = app(DokuService::class);
 
-            // Check for existing pending transaction
-            $pendingTx = $order->paymentTransactions()
-                ->where('status', 'pending')
-                ->first();
-
-            if ($pendingTx && $order->doku_order_id) {
-                // Already has a pending payment — sync status
-                $doku->syncStatusFromDoku($order);
+            $attempt = $doku->preparePaymentAttempt($order);
+            if (in_array($attempt->creation_state?->value, ['created', 'unknown'], true)) {
+                $doku->syncStatusFromDoku($order->refresh());
                 $order->refresh();
-
                 if ($order->payment_status === 'paid') {
-                    return redirect()->route('customer.orders.confirm', [
-                        'orderCode' => $order->order_code,
-                    ]);
+                    return redirect()->route('customer.orders.confirm', ['orderCode' => $order->order_code]);
+                }
+                if ($attempt->creation_state?->value === 'unknown') {
+                    return back()->with('error', 'Pembayaran sedang dipastikan. Silakan tunggu hasil rekonsiliasi.');
                 }
             }
-
-            // Clean up old transactions before creating new one (prevents duplicate doku_order_id)
-            $order->paymentTransactions()->delete();
-            $order->update(['doku_order_id' => null, 'payment_status' => null]);
-
-            $paymentUrl = $doku->createPayment($order);
+            $paymentUrl = $doku->createPayment($attempt);
 
             return redirect()->away($paymentUrl);
         } catch (\Exception $e) {

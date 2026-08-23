@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
 use App\Models\PaymentWebhookLog;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -35,127 +36,78 @@ class DokuService
      * Create a DOKU Checkout payment for an order.
      * Returns the DOKU hosted payment page URL.
      */
-    public function createPayment(Order $order): string
+    public function createPayment(PaymentAttempt|Order $attempt): string
     {
-        DB::beginTransaction();
-        try {
-            return $this->createPaymentInTransaction($order);
-        } catch (\Throwable $exception) {
-            DB::rollBack();
-            throw $exception;
+        if ($attempt instanceof Order) {
+            $order = $attempt;
+            $attempt = PaymentAttempt::query()->where('order_id', $order->id)->where('invoice_number', $order->order_code)->first()
+                ?? PaymentAttempt::create([
+                    'order_id' => $order->id,
+                    'attempt_key' => 'legacy-'.$order->id.'-'.bin2hex(random_bytes(4)),
+                    'invoice_number' => $order->order_code,
+                    'merchant_request_id' => 'legacy-request-'.$order->id.'-'.bin2hex(random_bytes(4)),
+                    'amount_snapshot' => $order->total,
+                    'currency_snapshot' => 'IDR',
+                    'payment_method' => $order->payment_method ?? 'qris',
+                    'creation_state' => 'initiated',
+                ]);
         }
-    }
-
-    private function createPaymentInTransaction(Order $order): string
-    {
-        $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
-        $invoiceNumber = $order->order_code;
-        $existingAttempt = PaymentAttempt::query()->where('order_id', $order->id)->where('invoice_number', $invoiceNumber)->first();
-        if (data_get($existingAttempt?->metadata ?? [], 'payment_url')) {
-            DB::commit();
-
-            return $existingAttempt->metadata['payment_url'];
+        $attempt = PaymentAttempt::query()->whereKey($attempt->id)->with('order')->firstOrFail();
+        $url = data_get($attempt->metadata ?? [], 'payment_url');
+        if ($url && in_array($attempt->creation_state?->value, ['created', 'pending'], true)) {
+            return $url;
         }
-        $requestId = 'DMB-'.$order->id.'-'.time().'-'.bin2hex(random_bytes(4));
-        $amount = (int) $order->total;
-        $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
+        if (in_array($attempt->creation_state?->value, ['initiated', 'unknown'], true)) {
+            throw new DokuPaymentException('Payment attempt requires reconciliation before retry.');
+        }
 
-        $body = [
-            'order' => [
-                'invoice_number' => $invoiceNumber,
-                'amount' => $amount,
-                'currency' => 'IDR',
-                'callback_url' => route('doku.redirect', ['invoice_number' => $order->order_code]),
-                'callback_url_result' => config('doku.callback_url') ?: route('doku.notify'),
-                'auto_redirect' => true,
-                'payment_due_date' => config('doku.payment_timeout', 30),
-                'line_items' => $this->buildLineItems($order),
-            ],
-            'payment' => array_merge(
-                ['payment_method_types' => [$this->mapPaymentMethod($order->payment_method)]],
-                $this->channelInfo($order->payment_method) ?? []
-            ),
-            'customer' => $this->buildCustomerInfo($order),
-        ];
-
+        $order = $attempt->order;
+        $body = ['order' => ['invoice_number' => $attempt->invoice_number, 'amount' => (int) $attempt->amount_snapshot, 'currency' => 'IDR', 'callback_url' => route('doku.redirect', ['invoice_number' => $attempt->invoice_number]), 'callback_url_result' => config('doku.callback_url') ?: route('doku.notify'), 'auto_redirect' => true, 'payment_due_date' => config('doku.payment_timeout', 30), 'line_items' => $this->buildLineItems($order)], 'payment' => array_merge(['payment_method_types' => [$this->mapPaymentMethod($attempt->payment_method)]], $this->channelInfo($attempt->payment_method) ?? []), 'customer' => $this->buildCustomerInfo($order)];
         $bodyJson = json_encode($body);
         $endpoint = '/checkout/v1/payment';
+        $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
+        $headers = $this->generateHeaders($attempt->merchant_request_id, $timestamp, $endpoint, $bodyJson);
 
-        Log::debug('DOKU request body', ['body' => $bodyJson]);
-
-        $headers = $this->generateHeaders($requestId, $timestamp, $endpoint, $bodyJson);
-
-        if ($existingAttempt) {
-            $history = data_get($existingAttempt->metadata ?? [], 'merchant_request_history', []);
-            $history[] = $existingAttempt->merchant_request_id;
-            $existingAttempt->merchant_request_id = $requestId;
-            $existingAttempt->metadata = array_merge($existingAttempt->metadata ?? [], ['merchant_request_history' => $history]);
-            $existingAttempt->save();
+        try {
+            $response = Http::withHeaders($headers)->timeout(30)->withBody($bodyJson, 'application/json')->post($this->baseUrl.$endpoint);
+        } catch (ConnectionException $exception) {
+            $attempt->update(['creation_state' => 'unknown', 'metadata' => array_merge($attempt->metadata ?? [], ['creation_error' => $exception->getMessage()])]);
+            throw $exception;
         }
-
-        $attempt = $existingAttempt ?? PaymentAttempt::create([
-            'order_id' => $order->id,
-            'attempt_key' => $invoiceNumber,
-            'invoice_number' => $invoiceNumber,
-            'merchant_request_id' => $requestId,
-            'amount_snapshot' => $amount,
-            'currency_snapshot' => 'IDR',
-            'payment_method' => $order->payment_method ?? 'qris',
-        ]);
-
-        Log::debug('DOKU request headers', ['headers' => $headers]);
-        DB::commit();
-
-        $response = Http::withHeaders($headers)
-            ->timeout(30)
-            ->withBody($bodyJson, 'application/json')
-            ->post($this->baseUrl.$endpoint);
-
         if (! $response->successful()) {
-            Log::error('DOKU createPayment failed', [
-                'order_id' => $order->id,
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-            throw new DokuPaymentException(
-                message: 'DOKU payment creation failed',
-                responseCode: $response->status(),
-                errors: $response->json('error_messages', []),
-                original: $response
-            );
+            $attempt->update(['creation_state' => 'failed', 'raw_response' => $response->json()]);
+            throw new DokuPaymentException('DOKU payment creation failed', $response->status(), $response->json('error_messages', []), $response);
         }
-
         $data = $response->json();
         $paymentUrl = $data['response']['payment']['url'] ?? $data['payment']['url'] ?? null;
-        $sessionId = $data['response']['order']['session_id'] ?? null;
-        $tokenId = $data['response']['payment']['token_id'] ?? null;
-
         if (! $paymentUrl) {
-            Log::error('DOKU response missing payment URL', ['response' => $data]);
+            $attempt->update(['creation_state' => 'unknown', 'raw_response' => $data]);
             throw new DokuPaymentException('Invalid DOKU response structure');
         }
-
-        DB::transaction(function () use ($attempt, $paymentUrl, $order, $invoiceNumber, $sessionId, $tokenId, $data): void {
-            $attempt->update(['metadata' => array_merge($attempt->metadata ?? [], ['payment_url' => $paymentUrl])]);
-
-            PaymentTransaction::firstOrCreate(['doku_order_id' => $invoiceNumber], [
-                'order_id' => $order->id,
-                'doku_order_id' => $invoiceNumber,
-                'payment_method' => $order->payment_method ?? 'qris',
-                'amount' => (int) $order->total,
-                'status' => 'pending',
-                'session_id' => $sessionId,
-                'token_id' => $tokenId,
-                'raw_response' => $data,
-            ]);
-
-            $order->update([
-                'doku_order_id' => $invoiceNumber,
-                'payment_status' => 'pending',
-            ]);
+        $sessionId = $data['response']['order']['session_id'] ?? null;
+        $tokenId = $data['response']['payment']['token_id'] ?? null;
+        DB::transaction(function () use ($attempt, $paymentUrl, $order, $data, $sessionId, $tokenId): void {
+            $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            $locked->update(['creation_state' => 'created', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data, 'metadata' => array_merge($locked->metadata ?? [], ['payment_url' => $paymentUrl])]);
+            PaymentTransaction::firstOrCreate(['doku_order_id' => $locked->invoice_number], ['order_id' => $order->id, 'doku_order_id' => $locked->invoice_number, 'payment_method' => $order->payment_method ?? 'qris', 'amount' => (int) $order->total, 'status' => 'pending', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data]);
+            $order->update(['doku_order_id' => $locked->invoice_number, 'payment_status' => 'pending']);
         });
 
         return $paymentUrl;
+    }
+
+    public function preparePaymentAttempt(Order $order): PaymentAttempt
+    {
+        return DB::transaction(function () use ($order): PaymentAttempt {
+            $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            $active = PaymentAttempt::query()->where('order_id', $order->id)->whereIn('creation_state', ['initiated', 'created', 'unknown'])->latest('id')->first();
+            if ($active) {
+                return $active;
+            }
+            $identity = strtoupper('DMB-'.$order->id.'-'.bin2hex(random_bytes(6)));
+
+            return PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => $identity, 'invoice_number' => $identity, 'merchant_request_id' => $identity.'-REQ', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'payment_method' => $order->payment_method ?? 'qris', 'creation_state' => 'initiated']);
+        });
     }
 
     /**
@@ -185,6 +137,19 @@ class DokuService
                 ?? Order::where('order_code', $invoiceNumber)->first()
                 ?? Order::where('doku_order_id', $invoiceNumber)->first();
             $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->first();
+            if (! $attempt && $transaction && $order) {
+                $attempt = PaymentAttempt::firstOrCreate([
+                    'order_id' => $order->id,
+                    'invoice_number' => $invoiceNumber,
+                ], [
+                    'attempt_key' => 'legacy-webhook-'.$transaction->id,
+                    'merchant_request_id' => 'legacy-webhook-request-'.$transaction->id,
+                    'amount_snapshot' => $transaction->amount,
+                    'currency_snapshot' => 'IDR',
+                    'payment_method' => $transaction->payment_method,
+                    'creation_state' => 'unknown',
+                ]);
+            }
             $resolvedOrderId = $order?->id;
             if ($attempt && $resolvedOrderId !== null && $attempt->order_id !== $resolvedOrderId) {
                 PaymentWebhookLog::create([

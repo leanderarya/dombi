@@ -641,7 +641,8 @@ class CheckoutController extends Controller
         // Create DOKU payment immediately — customer pays before outlet confirms.
         // If outlet rejects after payment, refund handled via DOKU.
         try {
-            $paymentUrl = app(DokuService::class)->createPayment($order);
+            $doku = app(DokuService::class);
+            $paymentUrl = $doku->createPayment($doku->preparePaymentAttempt($order));
 
             // Clear cart session ONLY after payment URL is successfully created
             $request->session()->forget([
