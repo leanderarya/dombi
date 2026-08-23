@@ -17,12 +17,12 @@ class CanonicalPaymentTransitionService
         return DB::transaction(function () use ($attempt, $event): TransitionResult {
             $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
             $lockedAttempt = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
-            $event = $event->withGatewayReference($this->normalizeReference($lockedAttempt, $event));
-            $this->validate($lockedAttempt, $event);
             $lastReceivedAt = data_get($lockedAttempt->metadata, 'last_event_received_at');
             if ($lastReceivedAt !== null && $event->receivedAt->lessThanOrEqualTo($lastReceivedAt)) {
                 return new TransitionResult(false, $lockedAttempt->fulfilment_claimed_at !== null);
             }
+            $event = $event->withGatewayReference($this->normalizeReference($lockedAttempt, $event));
+            $this->validate($lockedAttempt, $event);
 
             $status = strtolower($event->gatewayStatus);
             $oldSettlement = $lockedAttempt->settlement_status;
