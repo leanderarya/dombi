@@ -1,27 +1,19 @@
 # Task 9: DOKU Reconciliation Scheduler
 
-## Summary
+## Findings Fixed
 
-Added scheduled DOKU payment reconciliation using canonical transition, backoff, terminal stopping, and 404/5xx/timeout classification.
+- Command now excludes attempts with `metadata.reconciliation_attempts >= 5`.
+- First retry backoff corrected to exactly 2 minutes after post-claim count becomes 1; subsequent delays remain exponential, capped at 16 minutes.
+- Frozen-time tests assert exact `next_reconciliation_at` and post-claim count for both 5xx and timeout paths.
+- Added scheduler assertions for every-minute cadence, `withoutOverlapping()`, and `onOneServer()`.
+- Added command cap-filter coverage for attempts at counts 5 and 6.
+- Added explicit `RUN_PRODUCTION_DRIVER_TESTS=true` CI-gated production-driver contention test requiring MySQL/PostgreSQL and `pcntl`; it asserts one status request and paid transition after concurrent lease contention.
 
-## Files Created
+## Verification
 
-- `app/Services/DokuReconciliationService.php` — `reconcile(PaymentAttempt): TransitionResult` wrapper delegating to `DokuService::reconcilePaymentAttempt`; skips non-pending/unknown attempts, respects `next_reconciliation_at` and `reconciliation_attempts >= 5` cap.
-- `app/Console/Commands/ReconcileDokuPayments.php` — `payments:reconcile-doku` artisan command; queries pending/unknown attempts with past/null `next_reconciliation_at`, dispatches `ReconcileDokuPayment` job per attempt.
-- `app/Jobs/ReconcileDokuPayment.php` — queued job (single try); resolves `PaymentAttempt` by ID, calls `DokuReconciliationService::reconcile`.
+- `php artisan test tests/Feature/DokuReconciliationTest.php`: 15 passing, 1 explicitly skipped production-driver test in local environment.
+- `composer run lint:check -- --dirty`: passed.
 
-## Files Modified
+## Scope
 
-- `routes/console.php` — schedules `payments:reconcile-doku` every minute with `withoutOverlapping()` and `onOneServer()`.
-
-## Test Results
-
-- **14 tests, 24 assertions, all passing** in `tests/Feature/DokuReconciliationTest.php`
-- Coverage: pending/unknown selection, SUCCESS resolution, 5xx backoff, timeout backoff, 404 termination, max attempts cap, future `next_reconciliation_at` skip, command dispatch filtering, job integration, concurrent webhook idempotency.
-
-## Design Decisions
-
-- **No duplicate transition logic**: `DokuReconciliationService` delegates to existing `DokuService::reconcilePaymentAttempt` (Task 8). The service only adds selection filtering and `TransitionResult` wrapping.
-- **Backoff managed by existing service**: `DokuService::reconcilePaymentAttempt` already sets `next_reconciliation_at` with exponential backoff (2^n min, max 16). The command queries only attempts with past/null `next_reconciliation_at`.
-- **Terminal stopping**: 5 max attempts or 404 from DOKU both terminate via existing logic. Service returns `TransitionResult(false)` for already-terminal attempts.
-- **Job is single-try**: Scheduler re-dispatches; no Laravel retry layer needed since backoff is data-driven via `next_reconciliation_at`.
+Task 9 files only, plus required correction in `app/Services/DokuService.php` for documented backoff calculation.

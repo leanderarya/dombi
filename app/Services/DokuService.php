@@ -283,7 +283,7 @@ class DokuService
                 return $locked->fresh();
             }
             $count = min((int) ($metadata['reconciliation_attempts'] ?? 0), 5);
-            $delay = min(2 ** ($count - 1), 16);
+            $delay = min(2 ** $count, 16);
             $locked->update([
                 'creation_state' => 'unknown',
                 'raw_response' => $rawResponse,
