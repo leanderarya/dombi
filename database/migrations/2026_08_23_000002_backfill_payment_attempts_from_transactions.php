@@ -51,10 +51,19 @@ return new class extends Migration
             }
         });
 
-        Schema::table('payment_attempts', function (Blueprint $table): void {
-            $table->unique('legacy_payment_transaction_id');
-            $table->foreign('legacy_payment_transaction_id')->references('id')->on('payment_transactions')->nullOnDelete();
-        });
+        $indexes = collect(Schema::getIndexes('payment_attempts'))->pluck('name');
+        if (! $indexes->contains('payment_attempts_legacy_payment_transaction_id_unique')) {
+            Schema::table('payment_attempts', function (Blueprint $table): void {
+                $table->unique('legacy_payment_transaction_id');
+            });
+        }
+
+        $foreignKeys = collect(Schema::getForeignKeys('payment_attempts'))->pluck('name');
+        if (! $foreignKeys->contains('payment_attempts_legacy_payment_transaction_id_foreign')) {
+            Schema::table('payment_attempts', function (Blueprint $table): void {
+                $table->foreign('legacy_payment_transaction_id')->references('id')->on('payment_transactions')->nullOnDelete();
+            });
+        }
     }
 
     public function down(): void

@@ -1,13 +1,13 @@
 # Task 3 Report
 
 ## Final review fixes
-- Backfill verifies referenced order exists before creating attempts; orphan transactions are reported as unmappable and do not abort later rows.
-- Per-row insert failures are caught, reported, and batch processing continues; exception report remains durable at `storage/app/payment-attempt-backfill-exceptions.txt`.
-- Migration preflights duplicate and orphan legacy links before schema mutation.
-- Migration guards existing columns and remains safe to retry after partial schema application; existing preflight failures occur before mutation.
+- Per-row attempt creation and historical timestamp update now run inside one transaction; failed rows leave no linked partial attempt and can be repaired on rerun.
+- Batch processing continues after row failures.
+- Invoice precedence is explicit: `doku_order_id` is canonical invoice identity; `order_code` is fallback only; differing order code is retained as `metadata.legacy_order_code`.
+- Migration preflight validates duplicate/orphan links before schema mutation and guards columns, unique index, and foreign key creation for partial retries.
 
 ## Verification
-- `php artisan test tests/Feature/PaymentAttemptBackfillTest.php` — PASS, 6 tests, 33 assertions.
+- `php artisan test tests/Feature/PaymentAttemptBackfillTest.php` — PASS, 6 tests, 37 assertions.
 - `composer run lint:check` — PASS.
 - `git diff --check` — PASS.
 
