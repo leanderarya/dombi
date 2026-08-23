@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\PaymentAttempt;
 use App\Services\DokuReconciliationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -19,8 +20,14 @@ class ReconcileDokuPayment implements ShouldQueue
 
     public function handle(DokuReconciliationService $reconciliation): void
     {
-        $attempt = \App\Models\PaymentAttempt::find($this->attemptId);
-        if (! $attempt) {
+        $attempt = PaymentAttempt::find($this->attemptId);
+        if (! $attempt || ! in_array($attempt->creation_state?->value, ['pending', 'unknown'], true)) {
+            return;
+        }
+
+        $metadata = $attempt->metadata ?? [];
+        if ((int) ($metadata['reconciliation_attempts'] ?? 0) >= 5
+            || (($next = data_get($metadata, 'next_reconciliation_at')) && now()->lt($next))) {
             return;
         }
 

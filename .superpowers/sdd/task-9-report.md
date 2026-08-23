@@ -2,18 +2,18 @@
 
 ## Findings Fixed
 
-- Command now excludes attempts with `metadata.reconciliation_attempts >= 5`.
-- First retry backoff corrected to exactly 2 minutes after post-claim count becomes 1; subsequent delays remain exponential, capped at 16 minutes.
-- Frozen-time tests assert exact `next_reconciliation_at` and post-claim count for both 5xx and timeout paths.
-- Added scheduler assertions for every-minute cadence, `withoutOverlapping()`, and `onOneServer()`.
-- Added command cap-filter coverage for attempts at counts 5 and 6.
-- Added explicit `RUN_PRODUCTION_DRIVER_TESTS=true` CI-gated production-driver contention test requiring MySQL/PostgreSQL and `pcntl`; it asserts one status request and paid transition after concurrent lease contention.
+- Added bounded command dispatch with `--limit` override and `doku.reconciliation_batch_limit` default (100), ordered by attempt ID.
+- Added command test proving only configured batch size dispatches.
+- Job now checks attempt existence, pending/unknown creation state, retry cap, and due `next_reconciliation_at` before calling service.
+- Added job eligibility guard test.
+- Added integration assertion that successful reconciliation creates `NormalizedPaymentEvent` with `source=doku-reconciliation` and routes through `CanonicalPaymentTransitionService`, matching webhook architecture.
+- Expanded production-driver test to race reconciliation against real webhook ingress, gated by `RUN_PRODUCTION_DRIVER_TESTS=true`; asserts one DOKU status request and one paid transition. Local environments skip only when gate, production DB driver, or `pcntl` is unavailable.
 
 ## Verification
 
-- `php artisan test tests/Feature/DokuReconciliationTest.php`: 15 passing, 1 explicitly skipped production-driver test in local environment.
+- `php artisan test tests/Feature/DokuReconciliationTest.php`: 18 passing, 1 explicit local skip.
 - `composer run lint:check -- --dirty`: passed.
 
 ## Scope
 
-Task 9 files only, plus required correction in `app/Services/DokuService.php` for documented backoff calculation.
+Task 9 files only, plus existing Task 8 `DokuService.php` backoff correction remains in prior commit.

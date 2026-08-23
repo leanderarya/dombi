@@ -8,12 +8,19 @@ use Illuminate\Console\Command;
 
 class ReconcileDokuPayments extends Command
 {
-    protected $signature = 'payments:reconcile-doku';
+    protected $signature = 'payments:reconcile-doku {--limit= : Maximum attempts to dispatch}';
 
     protected $description = 'Reconcile unresolved DOKU payment attempts';
 
     public function handle(): int
     {
+        $limit = (int) ($this->option('limit') ?: config('doku.reconciliation_batch_limit', 100));
+        if ($limit < 1) {
+            $this->error('Reconciliation batch limit must be positive.');
+
+            return self::INVALID;
+        }
+
         $attempts = PaymentAttempt::whereIn('creation_state', ['pending', 'unknown'])
             ->where(function ($q) {
                 $q->whereNull('metadata->next_reconciliation_at')
@@ -23,6 +30,8 @@ class ReconcileDokuPayments extends Command
                 $q->whereNull('metadata->reconciliation_attempts')
                     ->orWhere('metadata->reconciliation_attempts', '<', 5);
             })
+            ->orderBy('id')
+            ->limit($limit)
             ->get();
 
         if ($attempts->isEmpty()) {
