@@ -36,8 +36,13 @@ class DokuService
      */
     public function createPayment(Order $order): string
     {
-        $requestId = 'DMB-'.$order->id.'-'.time().'-'.bin2hex(random_bytes(4));
+        $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
         $invoiceNumber = $order->order_code;
+        $existingAttempt = PaymentAttempt::query()->where('order_id', $order->id)->where('invoice_number', $invoiceNumber)->lockForUpdate()->first();
+        if ($existingAttempt?->metadata['payment_url']) {
+            return $existingAttempt->metadata['payment_url'];
+        }
+        $requestId = 'DMB-'.$order->id.'-'.time().'-'.bin2hex(random_bytes(4));
         $amount = (int) $order->total;
         $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
 
@@ -65,6 +70,16 @@ class DokuService
         Log::debug('DOKU request body', ['body' => $bodyJson]);
 
         $headers = $this->generateHeaders($requestId, $timestamp, $endpoint, $bodyJson);
+
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => $invoiceNumber,
+            'invoice_number' => $invoiceNumber,
+            'merchant_request_id' => $requestId,
+            'amount_snapshot' => $amount,
+            'currency_snapshot' => 'IDR',
+            'payment_method' => $order->payment_method ?? 'qris',
+        ]);
 
         Log::debug('DOKU request headers', ['headers' => $headers]);
 
@@ -98,21 +113,7 @@ class DokuService
         }
 
         // Log transaction
-        $existingAttempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->first();
-        if ($existingAttempt) {
-            return $existingAttempt->metadata['payment_url'] ?? $paymentUrl;
-        }
-
-        PaymentAttempt::create([
-            'order_id' => $order->id,
-            'attempt_key' => $invoiceNumber,
-            'invoice_number' => $invoiceNumber,
-            'merchant_request_id' => $requestId,
-            'amount_snapshot' => $amount,
-            'currency_snapshot' => 'IDR',
-            'payment_method' => $order->payment_method ?? 'qris',
-            'metadata' => ['payment_url' => $paymentUrl],
-        ]);
+        $attempt->update(['metadata' => ['payment_url' => $paymentUrl]]);
 
         PaymentTransaction::create([
             'order_id' => $order->id,
