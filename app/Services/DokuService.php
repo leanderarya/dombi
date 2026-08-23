@@ -48,7 +48,18 @@ class DokuService
         }
         $lease = data_get($attempt->metadata ?? [], 'creation_lease');
         if ($lease && data_get($lease, 'expires_at') <= now()->toIso8601String()) {
-            $attempt->update(['creation_state' => 'unknown']);
+            $expired = DB::transaction(function () use ($attempt, $lease): bool {
+                $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+                if (data_get($locked->metadata ?? [], 'creation_lease.token') !== data_get($lease, 'token')) {
+                    return false;
+                }
+                $locked->update(['creation_state' => 'unknown', 'metadata' => array_merge($locked->metadata ?? [], ['creation_lease' => null])]);
+
+                return true;
+            });
+            if (! $expired) {
+                throw new DokuPaymentException('Payment attempt creation lease changed; reconciliation required.');
+            }
             $attempt = $this->reconcilePaymentAttempt($attempt);
             if (in_array($attempt->creation_state?->value, ['initiated', 'unknown'], true)) {
                 throw new DokuPaymentException('Payment attempt requires reconciliation before retry.');
@@ -83,18 +94,18 @@ class DokuService
         try {
             $response = Http::withHeaders($headers)->timeout(30)->withBody($bodyJson, 'application/json')->post($this->baseUrl.$endpoint);
         } catch (ConnectionException $exception) {
-            $attempt->update(['creation_state' => 'unknown', 'metadata' => array_merge($attempt->metadata ?? [], ['creation_error' => $exception->getMessage()])]);
+            $this->persistCreationOutcome($attempt, $claimToken, 'unknown', null, ['creation_error' => $exception->getMessage()]);
             throw $exception;
         }
         if (! $response->successful()) {
             $ambiguous = $response->status() === 408 || $response->status() >= 500;
-            $attempt->update(['creation_state' => $ambiguous ? 'unknown' : 'failed', 'raw_response' => $response->json()]);
+            $this->persistCreationOutcome($attempt, $claimToken, $ambiguous ? 'unknown' : 'failed', $response->json(), []);
             throw new DokuPaymentException('DOKU payment creation failed', $response->status(), $response->json('error_messages', []), $response);
         }
         $data = $response->json();
         $paymentUrl = $data['response']['payment']['url'] ?? $data['payment']['url'] ?? null;
         if (! $paymentUrl) {
-            $attempt->update(['creation_state' => 'unknown', 'raw_response' => $data]);
+            $this->persistCreationOutcome($attempt, $claimToken, 'unknown', $data, []);
             throw new DokuPaymentException('Invalid DOKU response structure');
         }
         $sessionId = $data['response']['order']['session_id'] ?? null;
@@ -117,6 +128,19 @@ class DokuService
         }
 
         return $paymentUrl;
+    }
+
+    private function persistCreationOutcome(PaymentAttempt $attempt, string $claimToken, string $state, ?array $rawResponse, array $metadata): bool
+    {
+        return DB::transaction(function () use ($attempt, $claimToken, $state, $rawResponse, $metadata): bool {
+            $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            if (data_get($locked->metadata ?? [], 'creation_lease.token') !== $claimToken) {
+                return false;
+            }
+            $locked->update(['creation_state' => $state, 'raw_response' => $rawResponse, 'metadata' => array_merge($locked->metadata ?? [], $metadata, ['creation_lease' => null])]);
+
+            return true;
+        });
     }
 
     public function reconcilePaymentAttempt(PaymentAttempt $attempt): PaymentAttempt

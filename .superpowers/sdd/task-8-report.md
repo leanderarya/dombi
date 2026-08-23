@@ -18,7 +18,11 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 
 ## Tests
 - Reconciliation SUCCESS test: passed; canonical transition settles attempt and projects order.
-- `php artisan test`: 1336 tests passed, 4662 assertions.
+- `php artisan test`: 1337 tests passed, 4664 assertions.
+- All DOKU creation outcomes persist through token-fenced short transactions; stale creators cannot alter state/evidence or clear current leases.
+- Expired creation lease transition is row-locked and token-checked.
+- Stale creator success/failure regressions: passed.
+- `composer run lint:check`: passed (`pint --parallel --test`).
 - Every reconciliation response persists through a token-checked attempt transaction; stale workers cannot alter state, evidence, backoff, or clear another lease.
 - Stale-worker reconciliation regression: passed.
 - `composer run lint:check`: passed (`pint --parallel --test`).
