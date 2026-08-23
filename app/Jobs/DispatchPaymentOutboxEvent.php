@@ -14,7 +14,7 @@ class DispatchPaymentOutboxEvent implements ShouldQueue
 
     public int $tries = 1;
 
-    public function __construct(public int $eventId, public ?string $claimToken = null) {}
+    public function __construct(public int $eventId, public ?string $claimToken = null, public $heartbeat = null) {}
 
     public function handle(?callable $deliver = null): void
     {
@@ -42,6 +42,9 @@ class DispatchPaymentOutboxEvent implements ShouldQueue
             }
             $event->refresh();
             if (! $event->renewConsumerClaim($consumerToken)) {
+                return;
+            }
+            if ($this->heartbeat !== null && ! ($this->heartbeat)($event, $consumerToken)) {
                 return;
             }
             ($deliver ?? static fn (PaymentOutboxEvent $event): mixed => Event::dispatch($event->event_type, [$event->payload]))($event);
