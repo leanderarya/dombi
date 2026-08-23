@@ -1,7 +1,10 @@
 <?php
 
+use App\Models\Order;
+use App\Models\RefundObligation;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -43,6 +46,21 @@ return new class extends Migration
                 throw $exception;
             }
         }
+    }
+
+    private function encryptedDestinationValues(object $refund): array
+    {
+        $order = Order::findOrFail($refund->id);
+        $model = new RefundObligation;
+        $values = [];
+        foreach (['bank_name', 'account_number', 'account_holder', 'ewallet_provider', 'ewallet_number', 'ewallet_holder'] as $field) {
+            $source = 'refund_'.$field;
+            $raw = $refund->{$source};
+            $model->{$field} = $raw === null ? null : Crypt::decryptString($raw);
+            $values[$field] = $model->getRawOriginal($field);
+        }
+
+        return $values;
     }
 
     private function toMinorUnits(mixed $amount): int
@@ -189,6 +207,7 @@ return new class extends Migration
                     default => 'pending',
                 };
 
+                $destinationValues = $this->encryptedDestinationValues($refund);
                 $obligation = [
                     'payment_attempt_id' => $attempt->id,
                     'amount' => $refund->refund_amount,
@@ -196,12 +215,12 @@ return new class extends Migration
                     'reason' => $refund->refund_reason ?: 'historical_refund',
                     'status' => $status,
                     'destination_type' => $refund->refund_destination_type,
-                    'bank_name' => $refund->refund_bank_name,
-                    'account_number' => $refund->refund_account_number,
-                    'account_holder' => $refund->refund_account_holder,
-                    'ewallet_provider' => $refund->refund_ewallet_provider,
-                    'ewallet_number' => $refund->refund_ewallet_number,
-                    'ewallet_holder' => $refund->refund_ewallet_holder,
+                    'bank_name' => $destinationValues['bank_name'],
+                    'account_number' => $destinationValues['account_number'],
+                    'account_holder' => $destinationValues['account_holder'],
+                    'ewallet_provider' => $destinationValues['ewallet_provider'],
+                    'ewallet_number' => $destinationValues['ewallet_number'],
+                    'ewallet_holder' => $destinationValues['ewallet_holder'],
                     'destination_submitted_at' => $refund->refund_destination_submitted_at,
                     'transfer_reference' => $refund->refund_transfer_reference,
                     'transfer_note' => $refund->refund_transfer_note,

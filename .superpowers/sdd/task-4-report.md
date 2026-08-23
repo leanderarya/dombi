@@ -22,13 +22,13 @@ Review findings fixed.
 - Duplicate detection matches narrow SQLSTATE/driver duplicate codes; FK/schema errors propagate or become tagged mapping exceptions where applicable.
 - Existing-table migration reruns inspect and repair required uniqueness and payment-attempt foreign-key constraints; invalid existing data raises explicit repair errors.
 - Deterministic duplicate-key recovery is covered by canonical-row injection; repository does not provide portable parallel DB harness.
-- Bank/account/e-wallet destination fields use encrypted casts matching `Order`; ciphertext is stored at rest and values round-trip through model access.
+- Bank/account/e-wallet destination fields use encrypted casts matching `Order`; backfill decrypts legacy Order ciphertext then re-encrypts through `RefundObligation` casts before raw insert, preserving nulls and round-trip reads.
 - Backfill uses duplicate-only handling for synthesized attempts, exception rows, and obligations; reruns remain idempotent.
 - Synthesized attempts lock the order row, use unique legacy keys, and safely recover from concurrent insertion races.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (20 tests, 41 assertions; 21.794s)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (20 tests, 41 assertions; 19.845s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 
