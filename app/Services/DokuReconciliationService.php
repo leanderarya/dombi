@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Models\PaymentAttempt;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Facades\Http;
 
 class DokuReconciliationService
 {
@@ -13,7 +11,7 @@ class DokuReconciliationService
     public function reconcile(PaymentAttempt $attempt): TransitionResult
     {
         $attempt = $attempt->fresh();
-        if (! in_array($attempt->creation_state?->value, ['pending', 'unknown'], true)) {
+        if (! $attempt || ! in_array($attempt->creation_state?->value, ['pending', 'unknown'], true)) {
             return new TransitionResult(false);
         }
 

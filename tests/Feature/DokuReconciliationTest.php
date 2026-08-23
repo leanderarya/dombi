@@ -267,6 +267,28 @@ class DokuReconciliationTest extends TestCase
         app(DokuReconciliationService::class)->reconcile($attempt);
     }
 
+    public function test_command_clamps_oversized_limit_to_configured_maximum(): void
+    {
+        config(['doku.reconciliation_batch_limit' => 2]);
+        collect(range(1, 3))->each(fn () => $this->makeAttempt('pending'));
+        Bus::fake();
+
+        $exit = Artisan::call('payments:reconcile-doku', ['--limit' => 99]);
+
+        $this->assertSame(0, $exit);
+        Bus::assertDispatchedTimes(ReconcileDokuPayment::class, 2);
+    }
+
+    public function test_reconciliation_deleted_attempt_returns_unchanged_result(): void
+    {
+        $attempt = $this->makeAttempt('pending');
+        $attempt->delete();
+
+        $result = $this->reconciliation->reconcile($attempt);
+
+        $this->assertFalse($result->changed);
+    }
+
     public function test_job_reconciles_single_attempt(): void
     {
         $attempt = $this->makeAttempt('pending');
@@ -352,7 +374,10 @@ class DokuReconciliationTest extends TestCase
             $children[] = $pid;
         }
         foreach ($children as $pid) {
-            pcntl_waitpid($pid, $status);
+            $waited = pcntl_waitpid($pid, $status);
+            $this->assertSame($pid, $waited);
+            $this->assertTrue(pcntl_wifexited($status));
+            $this->assertSame(0, pcntl_wexitstatus($status));
         }
 
         $this->assertCount(1, file($requests, FILE_IGNORE_NEW_LINES));
