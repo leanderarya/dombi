@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('refund_obligations', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('payment_attempt_id')->constrained('payment_attempts')->cascadeOnDelete();
-            $table->decimal('amount', 12, 2);
+            $table->decimal('amount', 12, 2)->unsigned();
             $table->char('currency', 3);
             $table->string('reason');
             $table->enum('status', ['pending', 'in_progress', 'completed', 'rejected', 'failed', 'needs_review'])->default('pending');
@@ -35,9 +35,14 @@ return new class extends Migration
             $table->index(['status', 'created_at']);
         });
 
-        if (in_array(DB::getDriverName(), ['sqlite', 'mysql', 'pgsql'], true)) {
-            DB::statement('ALTER TABLE refund_obligations ADD CONSTRAINT refund_obligations_amount_positive CHECK (amount > 0)');
-        }
+        match (DB::getDriverName()) {
+            'sqlite' => [
+                DB::statement('CREATE TRIGGER refund_obligations_amount_positive_insert BEFORE INSERT ON refund_obligations FOR EACH ROW WHEN NEW.amount <= 0 BEGIN SELECT RAISE(ABORT, \'Refund obligation amount must be positive\'); END'),
+                DB::statement('CREATE TRIGGER refund_obligations_amount_positive_update BEFORE UPDATE OF amount ON refund_obligations FOR EACH ROW WHEN NEW.amount <= 0 BEGIN SELECT RAISE(ABORT, \'Refund obligation amount must be positive\'); END'),
+            ],
+            'mysql', 'pgsql' => DB::statement('ALTER TABLE refund_obligations ADD CONSTRAINT refund_obligations_amount_positive CHECK (amount > 0)'),
+            default => null,
+        };
 
         Schema::create('refund_obligation_backfill_exceptions', function (Blueprint $table): void {
             $table->id();
