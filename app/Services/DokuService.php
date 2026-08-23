@@ -196,9 +196,6 @@ class DokuService
                     rawEvidence: $data,
                 ));
                 $locked->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
-                if ($order->fresh()->payment_status === 'paid' && $order->paid_at === null) {
-                    $order->update(['paid_at' => now()]);
-                }
 
                 return true;
             });

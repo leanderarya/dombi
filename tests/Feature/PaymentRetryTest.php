@@ -67,6 +67,18 @@ class PaymentRetryTest extends TestCase
         $this->assertNotNull($order->fresh()->paid_at);
     }
 
+    public function test_repeated_success_reconciliation_preserves_paid_at(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending', 'paid_at' => now()->subHour()]);
+        $paidAt = $order->paid_at;
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'duplicate-paid-at', 'invoice_number' => 'duplicate-paid-at', 'merchant_request_id' => 'duplicate-paid-at-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown']);
+        Http::fake(['*/checkout/v1/payment/duplicate-paid-at' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total]], 200)]);
+
+        app(DokuService::class)->reconcilePaymentAttempt($attempt);
+
+        $this->assertEquals($paidAt->toISOString(), $order->fresh()->paid_at->toISOString());
+    }
+
     public function test_stale_reconciliation_success_cannot_settle_or_clear_current_lease(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
