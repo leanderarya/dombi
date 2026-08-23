@@ -13,7 +13,7 @@ return new class extends Migration
         $duplicates = DB::table('payment_attempts')
             ->select('order_id', 'invoice_number', DB::raw('COUNT(*) AS duplicate_count'))
             ->groupBy('order_id', 'invoice_number')
-            ->having('duplicate_count', '>', 1)
+            ->havingRaw('COUNT(*) > ?', [1])
             ->get();
 
         if ($duplicates->isNotEmpty()) {
