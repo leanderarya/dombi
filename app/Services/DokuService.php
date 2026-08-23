@@ -204,6 +204,7 @@ class DokuService
             }
         } elseif (in_array($status, ['FAILED', 'REJECTED', 'DENIED', 'CANCELLED', 'EXPIRED'], true)) {
             $persisted = DB::transaction(function () use ($attempt, $claimToken, $status, $data): bool {
+                Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
                 $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
                 if (data_get($locked->metadata ?? [], 'reconciliation_lease.token') !== $claimToken) {
                     return false;
