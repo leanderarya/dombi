@@ -112,6 +112,59 @@ class RefundObligationTest extends TestCase
         $this->assertSame('race', $existing->reason);
     }
 
+    public function test_historical_refund_backfill_maps_existing_attempt_and_reruns_idempotently(): void
+    {
+        $order = Order::factory()->create([
+            'payment_status' => 'refunded', 'refund_amount' => 5000, 'refund_reason' => 'customer_cancellation',
+        ]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'historical-existing', 'invoice_number' => 'invoice-existing',
+            'merchant_request_id' => 'request-existing', 'amount_snapshot' => 10000, 'currency_snapshot' => 'IDR',
+        ]);
+
+        $this->runRefundBackfill();
+        $this->runRefundBackfill();
+
+        $this->assertDatabaseHas('refund_obligations', [
+            'payment_attempt_id' => $attempt->id, 'amount' => 5000, 'reason' => 'customer_cancellation', 'status' => 'completed',
+        ]);
+        $this->assertDatabaseCount('refund_obligations', 1);
+    }
+
+    public function test_historical_refund_backfill_synthesizes_missing_attempt(): void
+    {
+        $order = Order::factory()->create([
+            'total' => 8000, 'payment_status' => 'refund_pending', 'refund_amount' => 8000,
+        ]);
+
+        $this->runRefundBackfill();
+
+        $attempt = PaymentAttempt::query()->where('attempt_key', 'legacy-refund-'.$order->id)->sole();
+        $this->assertDatabaseHas('refund_obligations', ['payment_attempt_id' => $attempt->id, 'amount' => 8000]);
+    }
+
+    public function test_historical_refund_backfill_reports_unmappable_refund_and_recovers_on_rerun(): void
+    {
+        $order = Order::factory()->create([
+            'total' => 0, 'payment_status' => 'refund_pending', 'refund_amount' => 1000,
+        ]);
+
+        $this->runRefundBackfill();
+        $this->assertDatabaseHas('refund_obligation_backfill_exceptions', ['order_id' => $order->id]);
+
+        $order->update(['total' => 1000]);
+        $this->runRefundBackfill();
+
+        $this->assertDatabaseHas('refund_obligations', ['amount' => 1000]);
+        $this->assertDatabaseCount('refund_obligations', 1);
+    }
+
+    private function runRefundBackfill(): void
+    {
+        $migration = require database_path('migrations/2026_08_23_000004_backfill_refund_obligations.php');
+        $migration->up();
+    }
+
     public function test_invalid_transitions_are_rejected_and_needs_review_is_supported(): void
     {
         $attempt = PaymentAttempt::create([
