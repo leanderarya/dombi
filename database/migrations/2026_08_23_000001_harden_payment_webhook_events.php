@@ -16,11 +16,14 @@ return new class extends Migration
             ->havingRaw('COUNT(*) > 1')
             ->pluck('request_id');
         foreach ($duplicates as $requestId) {
-            DB::table('payment_webhook_logs')
+            $ids = DB::table('payment_webhook_logs')
                 ->where('request_id', $requestId)
                 ->orderByDesc('id')
-                ->skip(1)
-                ->delete();
+                ->pluck('id');
+            $deleteIds = $ids->slice(1)->values()->all();
+            if ($deleteIds !== []) {
+                DB::table('payment_webhook_logs')->whereIn('id', $deleteIds)->delete();
+            }
         }
 
         Schema::table('payment_webhook_logs', function (Blueprint $table): void {
