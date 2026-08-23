@@ -14,5 +14,7 @@ Verification:
 - `composer run lint:check` — passed.
 - Duplicate cleanup uses explicit retained/deleted IDs for portable migrations.
 - Added `claimed_at` lease with five-minute stale recovery under row lock; failed workers become retryable.
-- SQLite tests deterministically verify durable claim; production-driver concurrency test is explicitly skipped unless MySQL/PostgreSQL is configured because SQLite lacks production-style parallel row locking.
-- `php artisan test tests/Feature/DokuWebhookIngressTest.php tests/Unit/WebhookSecurityTest.php` — 16 passed (including documented driver skip behavior).
+- SQLite tests deterministically verify durable claim; production-driver test forks two real workers when MySQL/PostgreSQL and `pcntl` are available, otherwise skips with explicit reason.
+- Parallel test asserts one durable request row and at most one successful/processing claim response.
+- `php artisan test tests/Feature/DokuWebhookIngressTest.php tests/Unit/WebhookSecurityTest.php` — 16 passed.
+- `composer run lint:check` — passed.
