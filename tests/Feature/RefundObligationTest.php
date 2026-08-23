@@ -150,8 +150,37 @@ class RefundObligationTest extends TestCase
 
         $this->runRefundBackfill();
 
-        $this->assertDatabaseHas('refund_obligation_backfill_exceptions', ['order_id' => $order->id, 'reason' => 'refund_exceeds_attempt_amount', 'backfill_run_key' => '2026_08_23_000004_refund_obligations']);
+        $this->assertDatabaseHas('refund_obligation_backfill_exceptions', ['order_id' => $order->id, 'reason' => 'refund_amount_mismatch_order_total', 'backfill_run_key' => '2026_08_23_000004_refund_obligations']);
         $this->assertDatabaseMissing('refund_obligations', ['amount' => 9000]);
+    }
+
+    public function test_historical_backfill_chooses_older_sufficient_attempt(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'refund_pending', 'refund_amount' => 5000]);
+        $older = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'older-sufficient', 'invoice_number' => 'older-invoice',
+            'merchant_request_id' => 'older-request', 'amount_snapshot' => 8000, 'currency_snapshot' => 'IDR',
+        ]);
+        PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'newer-insufficient', 'invoice_number' => 'newer-invoice',
+            'merchant_request_id' => 'newer-request', 'amount_snapshot' => 3000, 'currency_snapshot' => 'IDR',
+        ]);
+
+        $this->runRefundBackfill();
+
+        $this->assertDatabaseHas('refund_obligations', ['payment_attempt_id' => $older->id, 'amount' => 5000]);
+    }
+
+    public function test_historical_backfill_reports_missing_synthesized_currency(): void
+    {
+        Schema::table('orders', function ($table): void {
+            $table->char('currency', 3)->nullable();
+        });
+        $order = Order::factory()->create(['total' => 8000, 'payment_status' => 'refund_pending', 'refund_amount' => 8000, 'currency' => null]);
+
+        $this->runRefundBackfill();
+
+        $this->assertDatabaseHas('refund_obligation_backfill_exceptions', ['order_id' => $order->id, 'reason' => 'missing_currency']);
     }
 
     public function test_historical_refund_backfill_synthesizes_missing_attempt(): void

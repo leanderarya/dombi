@@ -9,14 +9,15 @@ Review findings fixed.
 - Refund obligation creation requires a persisted payment attempt whose order exists.
 - Each historical refund is processed in its own transaction; order and relevant existing attempt rows lock before synthesis/obligation creation.
 - Backfill owns exception-table creation, checks required tables/columns, validates `refunded_by`, and tags every synthesized attempt, obligation, and exception with `2026_08_23_000004_refund_obligations`; scoped `down()` removes exact-key rows only.
-- Backfill rejects refund amounts above originating attempt amounts; synthesis requires order total to equal refund amount.
+- Existing-attempt mapping chooses a locked candidate whose amount covers refund amount; synthesis requires order total to equal refund amount.
+- Synthesized currency uses available order currency (`currency`/`currency_code`) and reports `missing_currency` when unavailable.
 - Duplicate detection matches narrow SQLSTATE/driver duplicate codes; FK/schema errors propagate or become tagged mapping exceptions where applicable.
 - Backfill uses duplicate-only handling for synthesized attempts, exception rows, and obligations; reruns remain idempotent.
 - Synthesized attempts lock the order row, use unique legacy keys, and safely recover from concurrent insertion races.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (13 tests, 30 assertions; 4.853s)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (15 tests, 32 assertions; 10.080s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 

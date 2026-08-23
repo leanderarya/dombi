@@ -79,9 +79,15 @@ return new class extends Migration
 
         foreach ($refunds as $refund) {
             DB::transaction(function () use ($refund): void {
-                $order = DB::table('orders')->where('id', $refund->id)->lockForUpdate()->first(['id', 'total']);
+                $orderColumns = ['id', 'total'];
+                $orderCurrencyColumn = collect(['currency', 'currency_code'])->first(fn (string $column): bool => Schema::hasColumn('orders', $column));
+                if ($orderCurrencyColumn) {
+                    $orderColumns[] = $orderCurrencyColumn;
+                }
+                $order = DB::table('orders')->where('id', $refund->id)->lockForUpdate()->first($orderColumns);
                 $attempt = DB::table('payment_attempts')
                     ->where('order_id', $refund->id)
+                    ->where('amount_snapshot', '>=', $refund->refund_amount)
                     ->where('amount_snapshot', '>', 0)
                     ->orderByDesc('id')
                     ->lockForUpdate()
@@ -93,13 +99,19 @@ return new class extends Migration
 
                         return;
                     } elseif ($order && (float) $order->total > 0) {
+                        $currency = $orderCurrencyColumn ? $order->{$orderCurrencyColumn} : 'IDR';
+                        if (! $currency) {
+                            $this->recordException($refund, 'missing_currency');
+
+                            return;
+                        }
                         $values = [
                             'order_id' => $order->id,
                             'attempt_key' => 'legacy-refund-'.$order->id,
                             'invoice_number' => 'legacy-refund-invoice-'.$order->id,
                             'merchant_request_id' => 'legacy-refund-request-'.$order->id,
                             'amount_snapshot' => $order->total,
-                            'currency_snapshot' => 'IDR',
+                            'currency_snapshot' => $orderCurrencyColumn ? $order->{$orderCurrencyColumn} : 'IDR',
                             'creation_state' => 'unknown',
                             'settlement_status' => 'unknown',
                             'verification_status' => 'needs_review',
