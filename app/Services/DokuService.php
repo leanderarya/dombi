@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PaymentAttemptVerificationStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Exceptions\DokuPaymentException;
@@ -36,10 +37,23 @@ class DokuService
      */
     public function createPayment(Order $order): string
     {
+        DB::beginTransaction();
+        try {
+            return $this->createPaymentInTransaction($order);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            throw $exception;
+        }
+    }
+
+    private function createPaymentInTransaction(Order $order): string
+    {
         $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
         $invoiceNumber = $order->order_code;
         $existingAttempt = PaymentAttempt::query()->where('order_id', $order->id)->where('invoice_number', $invoiceNumber)->lockForUpdate()->first();
         if ($existingAttempt?->metadata['payment_url']) {
+            DB::commit();
+
             return $existingAttempt->metadata['payment_url'];
         }
         $requestId = 'DMB-'.$order->id.'-'.time().'-'.bin2hex(random_bytes(4));
@@ -132,6 +146,8 @@ class DokuService
             'payment_status' => 'pending',
         ]);
 
+        DB::commit();
+
         return $paymentUrl;
     }
 
@@ -167,15 +183,6 @@ class DokuService
             return;
         }
 
-        // Idempotency: skip if already in terminal state
-        if ($order->payment_status_enum->isTerminal()) {
-            Log::info('DOKU webhook: order already in terminal state, skipping', [
-                'order_id' => $order->id,
-            ]);
-
-            return;
-        }
-
         // Update transaction if found
         if ($transaction) {
             $transaction->update([
@@ -189,14 +196,16 @@ class DokuService
             ]);
         }
 
-        if (! $order->paymentAttempts()->where('invoice_number', $invoiceNumber)->exists() && $transaction) {
+        if (! $order->paymentAttempts()->where('invoice_number', $invoiceNumber)->exists()) {
             PaymentAttempt::create([
                 'order_id' => $order->id,
                 'attempt_key' => $invoiceNumber,
                 'invoice_number' => $invoiceNumber,
                 'merchant_request_id' => 'legacy-'.$invoiceNumber,
-                'amount_snapshot' => $transaction->amount,
-                'currency_snapshot' => 'IDR',
+                'amount_snapshot' => $transaction?->amount ?? $order->total,
+                'currency_snapshot' => $payload['order']['currency'] ?? 'IDR',
+                'verification_status' => PaymentAttemptVerificationStatus::NeedsReview,
+                'metadata' => ['legacy_webhook_needs_review' => $transaction === null],
             ]);
         }
 
