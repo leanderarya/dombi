@@ -18,8 +18,13 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 
 ## Tests
 - `php artisan test tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentRetryTest.php`
-- Result: 10 tests passed, 20 assertions in focused creation/retry suite.
-- Relevant legacy payment suite updated for canonical attempt identities and fixtures.
+- Focused creation/retry suite: 12 tests passed, 24 assertions.
+- Legacy payment suite: 68 tests passed, 114 assertions.
+- Legacy payment fixtures now create canonical attempts; obsolete synthesized-attempt expectations removed.
+- Pint: passed for all Task 8 PHP files.
+
+## Legacy suite
+`DokuPaymentTest`, `DokuPaymentAtomicTest`, `PaymentScenarioTest`, `PaymentFailureFlowTest`, `PaymentReliabilityTest`, `PaymentAuthorizationMutationTest`, `PaymentFeeIntegrationTest`, `DokuMarkPaidCommandTest`, plus Task 8 creation/retry tests.
 - `vendor/bin/pint --test app/Http/Controllers/Customer/CheckoutController.php app/Http/Controllers/Customer/OrderController.php app/Services/DokuService.php tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentRetryTest.php`
 - Result: passed.
 

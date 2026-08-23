@@ -459,12 +459,16 @@ class DokuService
         app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
             source: 'legacy-entry-point',
             gatewayStatus: 'SUCCESS',
-            amount: $authoritativeAmount,
+            amount: $authoritativeAmount ?? $attempt->amount_snapshot,
             currency: $attempt->currency_snapshot,
             gatewayReference: $attempt->invoice_number,
             receivedAt: now(),
             rawEvidence: ['legacy_entry_point' => true],
         ));
+
+        if (in_array($order->status, [Order::STATUS_CANCELLED_BY_CUSTOMER, Order::STATUS_CANCELLED_BY_OUTLET, Order::STATUS_REJECTED_BY_OUTLET, Order::STATUS_EXPIRED], true)) {
+            $order->refresh()->update(['payment_status' => 'refund_pending', 'refund_amount' => $attempt->amount_snapshot]);
+        }
     }
 
     private function legacyMarkOrderPaid(Order $order): void
@@ -529,12 +533,16 @@ class DokuService
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
                 source: 'doku',
                 gatewayStatus: $evidence['transaction']['status'] ?? $status,
-                amount: $evidence['transaction']['amount'] ?? null,
+                amount: $evidence['transaction']['amount'] ?? $attempt->amount_snapshot,
                 currency: $evidence['order']['currency'] ?? 'IDR',
                 gatewayReference: $evidence['transaction']['original_request_id'] ?? $evidence['transaction']['id'] ?? $invoiceNumber,
                 receivedAt: now(),
                 rawEvidence: $evidence,
             ));
+
+            if (in_array($order->status, [Order::STATUS_CANCELLED_BY_CUSTOMER, Order::STATUS_CANCELLED_BY_OUTLET, Order::STATUS_REJECTED_BY_OUTLET, Order::STATUS_EXPIRED], true)) {
+                $order->refresh()->update(['payment_status' => 'refund_pending', 'refund_amount' => $attempt->amount_snapshot]);
+            }
 
             return;
         }
