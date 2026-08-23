@@ -85,6 +85,14 @@ class DokuService
 
         $headers = $this->generateHeaders($requestId, $timestamp, $endpoint, $bodyJson);
 
+        if ($existingAttempt) {
+            $history = data_get($existingAttempt->metadata ?? [], 'merchant_request_history', []);
+            $history[] = $existingAttempt->merchant_request_id;
+            $existingAttempt->merchant_request_id = $requestId;
+            $existingAttempt->metadata = array_merge($existingAttempt->metadata ?? [], ['merchant_request_history' => $history]);
+            $existingAttempt->save();
+        }
+
         $attempt = $existingAttempt ?? PaymentAttempt::create([
             'order_id' => $order->id,
             'attempt_key' => $invoiceNumber,
