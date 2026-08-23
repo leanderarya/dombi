@@ -55,6 +55,16 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $this->assertSame(PaymentAttemptVerificationStatus::NeedsReview, $attempt->fresh()->verification_status);
     }
 
+    public function test_missing_later_amount_preserves_existing_gateway_amount(): void
+    {
+        [, $attempt] = $this->attempt();
+        $service = app(CanonicalPaymentTransitionService::class);
+        $service->apply($attempt, new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'provider-1', now(), []));
+        $service->apply($attempt->fresh(), new NormalizedPaymentEvent('doku', 'SUCCESS', null, 'IDR', 'provider-1', now()->addMinute(), []));
+
+        $this->assertSame('50000.00', $attempt->fresh()->gateway_amount);
+    }
+
     public function test_success_without_gateway_amount_is_paid_but_needs_review_and_cannot_fulfil(): void
     {
         [, $attempt] = $this->attempt();

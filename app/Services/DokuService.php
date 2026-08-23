@@ -183,13 +183,8 @@ class DokuService
             return;
         }
 
-        // Update transaction if found
-        if ($transaction) {
-            $transaction->update([
-                'status' => $status,
-                'raw_response' => $payload,
-            ]);
-        } else {
+        // Preserve transaction evidence until canonical transition validates the event.
+        if (! $transaction) {
             Log::warning('DOKU webhook: no PaymentTransaction record, processing order directly', [
                 'order_id' => $order->id,
                 'invoice_number' => $invoiceNumber,
@@ -210,6 +205,9 @@ class DokuService
         }
 
         $this->processPaymentStatusChange($order, $status, $payload);
+        if ($transaction) {
+            $transaction->update(['status' => $status, 'raw_response' => $payload]);
+        }
 
         Log::info('DOKU webhook processed', [
             'order_id' => $order->id,
