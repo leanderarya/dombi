@@ -8,6 +8,7 @@ use App\Enums\PaymentAttemptVerificationStatus;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
@@ -55,7 +56,9 @@ class PaymentAttemptSchemaTest extends TestCase
         $this->assertSame(PaymentAttemptCreationState::Created, $attempt->creation_state);
         $this->assertSame(PaymentAttemptSettlementStatus::Pending, $attempt->settlement_status);
         $this->assertSame(PaymentAttemptVerificationStatus::NeedsReview, $attempt->verification_status);
-        $this->assertFalse(method_exists($attempt, 'refundObligations'));
+        $relation = new \ReflectionMethod($attempt, 'refundObligations');
+        $this->assertSame(HasMany::class, $relation->getReturnType()->getName());
+        $this->assertStringContainsString('RefundObligation', file_get_contents((new \ReflectionClass($attempt))->getFileName()));
     }
 
     public function test_attempt_invoice_and_request_identities_are_unique(): void
@@ -119,6 +122,57 @@ class PaymentAttemptSchemaTest extends TestCase
 
         $this->expectException(\LogicException::class);
         $attempt->save();
+    }
+
+    public function test_invalid_order_foreign_key_is_rejected(): void
+    {
+        $this->expectException(QueryException::class);
+        PaymentAttempt::create([
+            'order_id' => 999999,
+            'attempt_key' => 'attempt-invalid-order',
+            'invoice_number' => 'invoice-invalid-order',
+            'merchant_request_id' => 'request-invalid-order',
+            'amount_snapshot' => 12500,
+            'currency_snapshot' => 'IDR',
+        ]);
+    }
+
+    public function test_invalid_claim_actor_foreign_key_is_rejected(): void
+    {
+        $this->expectException(QueryException::class);
+        PaymentAttempt::create([
+            'order_id' => Order::factory()->create()->id,
+            'attempt_key' => 'attempt-invalid-user',
+            'invoice_number' => 'invoice-invalid-user',
+            'merchant_request_id' => 'request-invalid-user',
+            'amount_snapshot' => 12500,
+            'currency_snapshot' => 'IDR',
+            'fulfilment_claimed_by' => 999999,
+        ]);
+    }
+
+    public function test_duplicate_session_tokens_are_allowed(): void
+    {
+        $order = Order::factory()->create();
+        $attributes = [
+            'order_id' => $order->id,
+            'session_token' => 'shared-session',
+            'amount_snapshot' => 12500,
+            'currency_snapshot' => 'IDR',
+        ];
+
+        PaymentAttempt::create($attributes + [
+            'attempt_key' => 'attempt-session-1',
+            'invoice_number' => 'invoice-session-1',
+            'merchant_request_id' => 'request-session-1',
+        ]);
+        PaymentAttempt::create($attributes + [
+            'attempt_key' => 'attempt-session-2',
+            'invoice_number' => 'invoice-session-2',
+            'merchant_request_id' => 'request-session-2',
+        ]);
+
+        $this->assertDatabaseCount('payment_attempts', 2);
     }
 
     public function test_payment_attempt_foreign_keys_enforce_order_and_claim_actor(): void

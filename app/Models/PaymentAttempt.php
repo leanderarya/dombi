@@ -7,6 +7,7 @@ use App\Enums\PaymentAttemptSettlementStatus;
 use App\Enums\PaymentAttemptVerificationStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use LogicException;
 
 class PaymentAttempt extends Model
@@ -45,5 +46,10 @@ class PaymentAttempt extends Model
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function refundObligations(): HasMany
+    {
+        return $this->hasMany(RefundObligation::class);
     }
 }
