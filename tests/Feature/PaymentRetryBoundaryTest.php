@@ -26,6 +26,19 @@ class PaymentRetryBoundaryTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_failed_creation_with_pending_settlement_is_pollable_attempt(): void
+    {
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'ambiguous-poll', 'invoice_number' => 'ambiguous-poll', 'merchant_request_id' => 'ambiguous-poll-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'failed', 'settlement_status' => 'pending']);
+
+        $resolved = PaymentAttempt::where('order_id', $order->id)->where(function ($query): void {
+            $query->whereIn('creation_state', ['initiated', 'pending', 'created', 'unknown'])
+                ->orWhereIn('settlement_status', ['pending', 'unknown']);
+        })->latest('id')->first();
+
+        $this->assertSame($attempt->id, $resolved?->id);
+    }
+
     public function test_at_cap_active_order_reuses_existing_attempt(): void
     {
         $order = Order::factory()->create();
