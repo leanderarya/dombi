@@ -29,7 +29,7 @@ return new class extends Migration
             $table->string('reconciliation_status')->nullable();
             $table->timestamp('reconciled_at')->nullable();
             $table->timestamp('fulfilment_claimed_at')->nullable();
-            $table->unsignedBigInteger('fulfilment_claimed_by')->nullable();
+            $table->foreignId('fulfilment_claimed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->json('metadata')->nullable();
             $table->timestamps();
 
