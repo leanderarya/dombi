@@ -29,6 +29,19 @@ class PaymentRetryTest extends TestCase
         $this->assertDatabaseCount('payment_attempts', 2);
     }
 
+    public function test_successful_reconciliation_settles_attempt_and_order(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'reconcile-success', 'invoice_number' => 'reconcile-success-invoice', 'merchant_request_id' => 'reconcile-success-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Unknown]);
+        Http::fake(['*/checkout/v1/payment/reconcile-success-invoice' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total]], 200)]);
+
+        app(DokuService::class)->reconcilePaymentAttempt($attempt);
+
+        $this->assertDatabaseHas('payment_attempts', ['id' => $attempt->id, 'creation_state' => 'created', 'settlement_status' => 'paid']);
+        $this->assertSame('paid', $order->fresh()->payment_status);
+        $this->assertNotNull($order->fresh()->paid_at);
+    }
+
     public function test_ambiguous_5xx_marks_attempt_unknown(): void
     {
         Http::fake(['*' => Http::response('', 504)]);

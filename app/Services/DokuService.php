@@ -131,9 +131,24 @@ class DokuService
         }
         $data = $response->json();
         $status = strtoupper(data_get($data, 'transaction.status', ''));
-        if (in_array($status, ['FAILED', 'REJECTED', 'DENIED', 'CANCELLED', 'EXPIRED'], true)) {
+        if ($status === 'SUCCESS') {
+            app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+                source: 'doku-reconciliation',
+                gatewayStatus: 'SUCCESS',
+                amount: data_get($data, 'transaction.amount'),
+                currency: data_get($data, 'order.currency', 'IDR'),
+                gatewayReference: data_get($data, 'transaction.original_request_id') ?? data_get($data, 'transaction.id') ?? $attempt->invoice_number,
+                receivedAt: now(),
+                rawEvidence: $data,
+            ));
+            $attempt->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now()]);
+            $order = $attempt->order->fresh();
+            if ($order->payment_status === 'paid' && $order->paid_at === null) {
+                $order->update(['paid_at' => now()]);
+            }
+        } elseif (in_array($status, ['FAILED', 'REJECTED', 'DENIED', 'CANCELLED', 'EXPIRED'], true)) {
             $attempt->update(['creation_state' => 'failed', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now()]);
-        } elseif (in_array($status, ['SUCCESS', 'PENDING'], true)) {
+        } elseif ($status === 'PENDING') {
             $attempt->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now()]);
         }
 
@@ -471,7 +486,7 @@ class DokuService
         app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
             source: 'legacy-entry-point',
             gatewayStatus: 'SUCCESS',
-            amount: $authoritativeAmount ?? $attempt->amount_snapshot,
+            amount: $authoritativeAmount,
             currency: $attempt->currency_snapshot,
             gatewayReference: $attempt->invoice_number,
             receivedAt: now(),
