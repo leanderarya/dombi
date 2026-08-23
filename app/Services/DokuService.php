@@ -463,21 +463,8 @@ class DokuService
             return;
         }
 
-        $to = PaymentStatus::from($status);
+        Log::warning('DOKU event ignored without canonical payment attempt', ['order_id' => $order->id, 'status' => $status]);
 
-        if ($to === PaymentStatus::Paid) {
-            $this->markOrderPaid($order);
-
-            return;
-        }
-
-        if (in_array($status, ['failed', 'expired'], true)
-            && $order->payment_status === 'pending') {
-            $retryWindowMinutes = config('order.payment_retry_window_minutes', 15);
-            app(PaymentStatusService::class)->transition($order, $to, [
-                'confirmation_expires_at' => now()->addMinutes($retryWindowMinutes),
-            ]);
-        }
     }
 
     /**

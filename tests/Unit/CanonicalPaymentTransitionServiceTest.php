@@ -21,7 +21,7 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         [$order, $attempt] = $this->attempt();
 
         $result = app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
-            source: 'doku', gatewayStatus: 'SUCCESS', amount: 50000, currency: 'IDR', gatewayReference: 'gw-1', receivedAt: now(), rawEvidence: []
+            source: 'doku', gatewayStatus: 'SUCCESS', amount: 50000, currency: 'IDR', gatewayReference: 'invoice-first', receivedAt: now(), rawEvidence: []
         ));
 
         $attempt = $attempt->fresh();
@@ -31,12 +31,56 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $this->assertSame('paid', $order->fresh()->payment_status);
     }
 
+    public function test_unknown_status_persists_evidence_without_state_change(): void
+    {
+        [, $attempt] = $this->attempt();
+
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'doku', 'UNKNOWN', null, 'IDR', 'invoice-first', now(), ['event' => 'unknown']
+        ));
+
+        $attempt = $attempt->fresh();
+        $this->assertSame(PaymentAttemptSettlementStatus::Unknown, $attempt->settlement_status);
+        $this->assertSame(['event' => 'unknown'], $attempt->raw_response);
+    }
+
+    public function test_gateway_reference_must_match_invoice_or_stored_reference(): void
+    {
+        [, $attempt] = $this->attempt();
+
+        $this->expectException(\InvalidArgumentException::class);
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'doku', 'SUCCESS', 50000, 'IDR', 'wrong-reference', now(), []
+        ));
+    }
+
+    public function test_currency_must_match_attempt(): void
+    {
+        [, $attempt] = $this->attempt();
+
+        $this->expectException(\InvalidArgumentException::class);
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'doku', 'SUCCESS', 50000, 'USD', 'invoice-first', now(), []
+        ));
+    }
+
+    public function test_verified_attempt_stays_verified_on_later_anomalous_success(): void
+    {
+        [, $attempt] = $this->attempt();
+        $service = app(CanonicalPaymentTransitionService::class);
+        $service->apply($attempt, new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []));
+        $service->apply($attempt->fresh(), new NormalizedPaymentEvent('doku', 'SUCCESS', 49000, 'IDR', 'invoice-first', now(), ['anomaly' => true]));
+
+        $this->assertSame(PaymentAttemptVerificationStatus::Verified, $attempt->fresh()->verification_status);
+        $this->assertSame(['anomaly' => true], $attempt->fresh()->raw_response);
+    }
+
     public function test_success_amount_mismatch_is_paid_but_needs_review(): void
     {
         [$order, $attempt] = $this->attempt();
 
         app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
-            'doku', 'SUCCESS', 49000, 'IDR', 'gw-2', now(), []
+            'doku', 'SUCCESS', 49000, 'IDR', 'invoice-first', now(), []
         ));
 
         $attempt = $attempt->fresh();
@@ -49,9 +93,9 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
     {
         [$order, $attempt] = $this->attempt(['status' => Order::STATUS_CANCELLED_BY_CUSTOMER]);
         $service = app(CanonicalPaymentTransitionService::class);
-        $success = new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'gw-3', now(), []);
+        $success = new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []);
         $service->apply($attempt, $success);
-        $service->apply($attempt->fresh(), new NormalizedPaymentEvent('doku', 'FAILED', 50000, 'IDR', 'gw-3', now()->addMinute(), []));
+        $service->apply($attempt->fresh(), new NormalizedPaymentEvent('doku', 'FAILED', 50000, 'IDR', 'invoice-first', now()->addMinute(), []));
         $service->apply($attempt->fresh(), $success);
 
         $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
@@ -68,10 +112,10 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
             'verification_status' => PaymentAttemptVerificationStatus::NeedsReview,
         ]);
         $service = app(CanonicalPaymentTransitionService::class);
-        $event = new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'gw-4', now(), []);
+        $event = new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []);
 
         $firstResult = $service->apply($first, $event);
-        $secondResult = $service->apply($second, $event);
+        $secondResult = $service->apply($second, new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-second', now(), []));
 
         $this->assertTrue($firstResult->fulfilmentWinner);
         $this->assertFalse($secondResult->fulfilmentWinner);
