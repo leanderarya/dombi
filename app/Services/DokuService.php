@@ -386,7 +386,8 @@ class DokuService
 
         return DB::transaction(function () use ($order, $status, $dokuStatus): string {
             $transaction = PaymentTransaction::where('doku_order_id', $order->doku_order_id)->first();
-            if ($transaction && $transaction->status !== $status) {
+            if ($transaction && $transaction->status !== $status
+                && ! (in_array($transaction->status, ['paid', 'settled'], true) && in_array($status, ['failed', 'expired', 'pending'], true))) {
                 $transaction->update([
                     'status' => $status,
                     'raw_response' => $dokuStatus,
