@@ -47,6 +47,9 @@ return new class extends Migration
 
     private function toMinorUnits(mixed $amount): int
     {
+        if (! is_string($amount) && ! is_int($amount) && ! is_float($amount)) {
+            return 0;
+        }
         $value = (string) $amount;
         [$whole, $fraction] = array_pad(explode('.', $value, 2), 2, '');
         $fraction = str_pad(substr($fraction, 0, 2), 2, '0');
@@ -88,8 +91,6 @@ return new class extends Migration
 
         $refunds = DB::table('orders')
             ->whereIn('payment_status', ['refund_pending', 'refund_in_progress', 'refunded', 'refund_rejected', 'refund_failed'])
-            ->whereNotNull('refund_amount')
-            ->where('refund_amount', '>', 0)
             ->get(['id', 'payment_status', 'refund_amount', 'refund_reason', 'refund_destination_type', 'refund_bank_name', 'refund_account_number', 'refund_account_holder', 'refund_ewallet_provider', 'refund_ewallet_number', 'refund_ewallet_holder', 'refund_destination_submitted_at', 'refund_transfer_reference', 'refund_transfer_note', 'refund_proof_image', 'refunded_by', 'refunded_at']);
 
         foreach ($refunds as $refund) {
@@ -100,13 +101,19 @@ return new class extends Migration
                     $orderColumns[] = $orderCurrencyColumn;
                 }
                 $order = DB::table('orders')->where('id', $refund->id)->lockForUpdate()->first($orderColumns);
-                $attempt = DB::table('payment_attempts')
+                $attempts = DB::table('payment_attempts')
                     ->where('order_id', $refund->id)
-                    ->where('amount_snapshot', '>=', number_format((float) $refund->refund_amount, 2, '.', ''))
-                    ->where('amount_snapshot', '>', 0)
                     ->orderByDesc('id')
                     ->lockForUpdate()
-                    ->first();
+                    ->get();
+                $refundAmount = $this->toMinorUnits($refund->refund_amount);
+                $refundAmountValid = is_string($refund->refund_amount) && preg_match('/^\d+(?:\.\d{1,2})?$/', $refund->refund_amount) && $refundAmount > 0;
+                if (! $refundAmountValid) {
+                    $this->recordException($refund, 'invalid_refund_amount');
+
+                    return;
+                }
+                $attempt = $attempts->first(fn ($candidate): bool => $this->toMinorUnits($candidate->amount_snapshot) >= $refundAmount && $this->toMinorUnits($candidate->amount_snapshot) > 0);
 
                 if (! $attempt) {
                     if ($order && $this->toMinorUnits($order->total) > 0 && $this->toMinorUnits($order->total) !== $this->toMinorUnits($refund->refund_amount)) {

@@ -12,7 +12,8 @@ Review findings fixed.
 - Existing-attempt mapping chooses a locked candidate whose amount covers refund amount; synthesis requires order total to equal refund amount.
 - Migration creation, trigger setup, and indexes are guarded for interrupted reruns.
 - `orders.total` and every selected historical refund column are validated before processing; absent sources stop safely.
-- Amount comparisons use canonical two-decimal minor units; service rejects non-positive/non-canonical amounts.
+- Refund-status rows are all loaded; invalid, zero, negative, and over-precision amounts produce tagged `invalid_refund_amount` exceptions.
+- Candidate attempts are locked first, then selected using exact two-decimal minor-unit comparisons; service rejects non-positive/non-canonical amounts.
 - Existing and synthesized currency must be exactly three uppercase letters; missing values record `missing_currency` without IDR fallback.
 - Constraint/trigger setup and rollback are rerun-safe; rollback removes only exact-run obligations and unreferenced synthesized attempts.
 - Duplicate detection matches narrow SQLSTATE/driver duplicate codes; FK/schema errors propagate or become tagged mapping exceptions where applicable.
@@ -21,7 +22,7 @@ Review findings fixed.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (16 tests, 33 assertions; 17.818s)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (18 tests, 36 assertions; 18.849s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 

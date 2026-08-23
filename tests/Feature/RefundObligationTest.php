@@ -140,6 +140,32 @@ class RefundObligationTest extends TestCase
         $this->assertDatabaseCount('refund_obligations', 1);
     }
 
+    public function test_invalid_refund_amounts_are_reported_for_refund_status_rows(): void
+    {
+        foreach ([null, 0, -1, '1.234'] as $amount) {
+            $order = Order::factory()->create(['payment_status' => 'refund_pending', 'refund_amount' => $amount]);
+            DB::table('orders')->where('id', $order->id)->update(['refund_amount' => $amount]);
+        }
+
+        $this->runRefundBackfill();
+
+        $this->assertDatabaseCount('refund_obligation_backfill_exceptions', 4);
+        $this->assertDatabaseHas('refund_obligation_backfill_exceptions', ['reason' => 'invalid_refund_amount']);
+    }
+
+    public function test_large_decimal_amounts_use_exact_candidate_comparison(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'refund_pending', 'refund_amount' => '9999999999.99']);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'large-amount', 'invoice_number' => 'large-invoice',
+            'merchant_request_id' => 'large-request', 'amount_snapshot' => '9999999999.99', 'currency_snapshot' => 'USD',
+        ]);
+
+        $this->runRefundBackfill();
+
+        $this->assertDatabaseHas('refund_obligations', ['payment_attempt_id' => $attempt->id, 'amount' => '9999999999.99']);
+    }
+
     public function test_historical_refund_amount_mismatch_is_reported_without_obligation(): void
     {
         $order = Order::factory()->create(['payment_status' => 'refund_pending', 'refund_amount' => 9000]);
