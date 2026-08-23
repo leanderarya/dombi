@@ -79,6 +79,21 @@ class PaymentRetryTest extends TestCase
         $this->assertSame('pending', $fresh->settlement_status?->value);
     }
 
+    public function test_pending_reconciliation_persists_pending_creation_and_settlement(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'pending-reconcile', 'invoice_number' => 'pending-reconcile', 'merchant_request_id' => 'pending-reconcile-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Unknown]);
+        Http::fake(['*/checkout/v1/payment/pending-reconcile' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'PENDING']], 200)]);
+
+        app(DokuService::class)->reconcilePaymentAttempt($attempt);
+
+        $fresh = $attempt->fresh();
+        $this->assertSame('pending', $fresh->creation_state?->value);
+        $this->assertSame('pending', $fresh->settlement_status?->value);
+        $this->assertSame('pending', $order->fresh()->payment_status);
+        $this->assertNull(data_get($fresh->metadata, 'reconciliation_lease'));
+    }
+
     public function test_unrecognized_success_status_clears_lease_and_records_recovery_state(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);

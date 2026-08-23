@@ -205,7 +205,7 @@ class DokuService
         } elseif (in_array($status, ['FAILED', 'REJECTED', 'DENIED', 'CANCELLED', 'EXPIRED'], true)) {
             $this->persistReconciliationResult($attempt, $claimToken, 'failed', $status, $data);
         } elseif ($status === 'PENDING') {
-            $this->persistReconciliationResult($attempt, $claimToken, 'created', $status, $data);
+            $this->persistReconciliationResult($attempt, $claimToken, 'pending', $status, $data);
         } else {
             $this->recordReconciliationFailure($attempt, $claimToken, $status, 'unrecognized_provider_status', $data);
         }
