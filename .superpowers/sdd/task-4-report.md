@@ -14,7 +14,7 @@ Review findings fixed.
 - `orders.total` and every selected historical refund column are validated before processing; absent sources stop safely.
 - Refund-status rows are all loaded; invalid, zero, negative, and over-precision amounts produce tagged `invalid_refund_amount` exceptions.
 - Candidate attempts are locked first, then selected using exact two-decimal minor-unit comparisons; service rejects non-positive/non-canonical amounts.
-- Existing and synthesized currency must be exactly three uppercase letters; missing values record `missing_currency` without IDR fallback.
+- Existing and synthesized currency must be exactly three uppercase letters; missing/invalid values record `missing_currency` without creating an orphan attempt or defaulting to IDR.
 - Constraint/trigger setup and rollback are rerun-safe; rollback removes only exact-run obligations and unreferenced synthesized attempts.
 - Duplicate detection matches narrow SQLSTATE/driver duplicate codes; FK/schema errors propagate or become tagged mapping exceptions where applicable.
 - Backfill uses duplicate-only handling for synthesized attempts, exception rows, and obligations; reruns remain idempotent.
@@ -22,7 +22,7 @@ Review findings fixed.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (18 tests, 36 assertions; 19.611s)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (19 tests, 38 assertions; 24.724s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 
