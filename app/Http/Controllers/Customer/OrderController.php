@@ -241,7 +241,8 @@ class OrderController extends Controller
         if (in_array($order->payment_status, ['failed', 'expired'], true)) {
             try {
                 $doku = app(DokuService::class);
-                $doku->syncStatusFromDoku($doku->preparePaymentAttempt($order));
+                $priorAttempt = PaymentAttempt::where('order_id', $order->id)->whereIn('creation_state', ['failed', 'unknown'])->latest('id')->first();
+                $doku->syncStatusFromDoku($priorAttempt ?: $doku->preparePaymentAttempt($order));
                 $order->refresh();
 
                 // If paid after sync, redirect to confirm
@@ -263,9 +264,15 @@ class OrderController extends Controller
 
         try {
             $doku = app(DokuService::class);
-
-            $attempt = $doku->preparePaymentAttempt($order);
+            $activeAttempt = PaymentAttempt::where('order_id', $order->id)->where(function ($query): void {
+                $query->whereIn('creation_state', ['initiated', 'pending', 'created', 'unknown'])
+                    ->orWhereIn('settlement_status', ['pending', 'unknown']);
+            })->latest('id')->first();
             $paymentAttempts = PaymentAttempt::where('order_id', $order->id)->count();
+            if (! $activeAttempt && $paymentAttempts >= config('order.max_payment_attempts', 3)) {
+                return back()->with('error', 'Batas maksimum percobaan pembayaran tercapai.');
+            }
+            $attempt = $activeAttempt ?: $doku->preparePaymentAttempt($order);
             if ($paymentAttempts >= config('order.max_payment_attempts', 3) && ! in_array($attempt->creation_state?->value, ['initiated', 'pending', 'created', 'unknown'], true)) {
                 return back()->with('error', 'Batas maksimum percobaan pembayaran tercapai.');
             }
