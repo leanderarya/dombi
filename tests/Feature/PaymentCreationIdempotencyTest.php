@@ -40,6 +40,26 @@ class PaymentCreationIdempotencyTest extends TestCase
         $this->assertDatabaseCount('payment_attempts', 1);
     }
 
+    public function test_creation_uses_immutable_attempt_snapshots_after_order_changes(): void
+    {
+        $order = Order::factory()->create(['total' => 50000, 'payment_method' => 'qris']);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'snapshot', 'invoice_number' => 'INV-SNAPSHOT', 'merchant_request_id' => 'REQ-SNAPSHOT', 'amount_snapshot' => 50000, 'currency_snapshot' => 'IDR', 'payment_method' => 'qris', 'creation_state' => PaymentAttemptCreationState::Initiated, 'metadata' => ['line_items' => [['id' => 'original', 'name' => 'Original', 'quantity' => 1, 'price' => 50000]]]]);
+        $order->update(['total' => 90000, 'payment_method' => 'transfer']);
+        Http::fake(['*' => Http::response(['response' => ['payment' => ['url' => 'https://pay.test/snapshot']]], 200)]);
+
+        app(DokuService::class)->createPayment($attempt);
+
+        Http::assertSent(function ($request): bool {
+            $body = $request->data();
+
+            return $body['order']['amount'] === 50000
+                && $body['order']['currency'] === 'IDR'
+                && $body['order']['line_items'][0]['name'] === 'Original'
+                && $body['payment']['payment_method_types'][0] === 'QRIS';
+        });
+        $this->assertDatabaseHas('payment_transactions', ['doku_order_id' => 'INV-SNAPSHOT', 'amount' => 50000, 'payment_method' => 'qris']);
+    }
+
     public function test_fresh_initiated_attempt_is_claimed_and_created(): void
     {
         Http::fake(['*' => Http::response(['response' => ['payment' => ['url' => 'https://pay.test/init']]], 200)]);
