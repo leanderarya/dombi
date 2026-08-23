@@ -26,7 +26,7 @@ jobs:
       - run: cp .env.example .env
       - run: php artisan key:generate --force
       - run: until mysqladmin ping -h 127.0.0.1 -uroot -proot --silent; do sleep 2; done
-      - run: composer lint:check
+      - run: composer run lint:check
       - run: php artisan migrate:fresh --force
         env: &db
           DB_CONNECTION: mysql

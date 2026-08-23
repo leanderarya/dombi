@@ -158,6 +158,20 @@ class DokuWebhookIngressTest extends TestCase
         $this->assertContains(PaymentWebhookLog::where('request_id', 'REQ-PARALLEL')->value('status'), ['processed', 'retryable']);
     }
 
+    public function test_historical_unverified_row_requires_operator_recovery(): void
+    {
+        $log = PaymentWebhookLog::create([
+            'request_id' => 'REQ-HISTORICAL', 'source' => 'notify', 'status' => 'retryable',
+            'signature_valid' => false, 'payload' => ['legacy' => true],
+            'error' => 'historical_raw_body_unavailable_reprocess_required',
+        ]);
+        $body = '{"legacy":true}';
+
+        $this->call('POST', route('doku.notify'), [], [], [], $this->signed('REQ-HISTORICAL', $body), $body)->assertStatus(422);
+        $this->assertSame('retryable', $log->fresh()->status);
+        $this->assertNull($log->fresh()->body_digest);
+    }
+
     public function test_processing_claim_has_fencing_token_and_completion_requires_ownership(): void
     {
         $body = '{"transaction":{"status":"SUCCESS"}}';
