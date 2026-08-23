@@ -145,14 +145,17 @@ class DokuService
         try {
             $response = Http::withHeaders($this->generateHeaders($requestId, $timestamp, $endpoint, ''))->timeout(10)->get($this->baseUrl.$endpoint);
         } catch (ConnectionException $exception) {
-            return $this->recordReconciliationFailure($attempt, null, $exception->getMessage());
+            return $this->recordReconciliationFailure($attempt, $claimToken, null, $exception->getMessage());
         }
         if (! $response->successful()) {
-            return $this->recordReconciliationFailure($attempt, $response->status(), $response->body());
+            return $this->recordReconciliationFailure($attempt, $claimToken, $response->status(), $response->body());
         }
         $data = $response->json();
         $status = strtoupper(data_get($data, 'transaction.status', ''));
         if ($status === 'SUCCESS') {
+            if (! $this->persistReconciliationResult($attempt, $claimToken, 'created', $status, $data)) {
+                return $attempt->fresh();
+            }
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
                 source: 'doku-reconciliation',
                 gatewayStatus: 'SUCCESS',
@@ -168,19 +171,35 @@ class DokuService
                 $order->update(['paid_at' => now()]);
             }
         } elseif (in_array($status, ['FAILED', 'REJECTED', 'DENIED', 'CANCELLED', 'EXPIRED'], true)) {
-            $attempt->update(['creation_state' => 'failed', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($attempt->metadata ?? [], ['reconciliation_lease' => null])]);
+            $this->persistReconciliationResult($attempt, $claimToken, 'failed', $status, $data);
         } elseif ($status === 'PENDING') {
-            $attempt->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($attempt->metadata ?? [], ['reconciliation_lease' => null])]);
+            $this->persistReconciliationResult($attempt, $claimToken, 'created', $status, $data);
         }
 
         return $attempt->fresh();
     }
 
-    private function recordReconciliationFailure(PaymentAttempt $attempt, ?int $status, string $error): PaymentAttempt
+    private function persistReconciliationResult(PaymentAttempt $attempt, string $claimToken, string $creationState, string $status, array $data): bool
     {
-        return DB::transaction(function () use ($attempt, $status, $error): PaymentAttempt {
+        return DB::transaction(function () use ($attempt, $claimToken, $creationState, $status, $data): bool {
+            $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            if (data_get($locked->metadata ?? [], 'reconciliation_lease.token') !== $claimToken) {
+                return false;
+            }
+            $locked->update(['creation_state' => $creationState, 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
+
+            return true;
+        });
+    }
+
+    private function recordReconciliationFailure(PaymentAttempt $attempt, string $claimToken, ?int $status, string $error): PaymentAttempt
+    {
+        return DB::transaction(function () use ($attempt, $claimToken, $status, $error): PaymentAttempt {
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             $metadata = $locked->metadata ?? [];
+            if (data_get($metadata, 'reconciliation_lease.token') !== $claimToken) {
+                return $locked->fresh();
+            }
             $count = min((int) ($metadata['reconciliation_attempts'] ?? 0), 5);
             $delay = min(2 ** ($count - 1), 16);
             $locked->update([
