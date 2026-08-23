@@ -8,6 +8,7 @@ use App\Enums\RefundObligationStatus;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class CanonicalPaymentTransitionService
@@ -17,8 +18,8 @@ class CanonicalPaymentTransitionService
         return DB::transaction(function () use ($attempt, $event): TransitionResult {
             $lockedAttempt = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             $order = Order::query()->whereKey($lockedAttempt->order_id)->lockForUpdate()->firstOrFail();
-            $lastReceivedAt = data_get($lockedAttempt->metadata, 'last_event_received_at');
-            if ($lastReceivedAt !== null && $event->receivedAt->lessThanOrEqualTo($lastReceivedAt)) {
+            $lastReceivedAt = data_get($lockedAttempt->metadata ?? [], 'last_event_received_at');
+            if ($lastReceivedAt !== null && $event->receivedAt->lessThanOrEqualTo(Carbon::parse($lastReceivedAt)->utc())) {
                 return new TransitionResult(false, $lockedAttempt->fulfilment_claimed_at !== null);
             }
             $invoice = data_get($event->rawEvidence, 'order.invoice_number') ?? $lockedAttempt->invoice_number;
