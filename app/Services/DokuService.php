@@ -451,7 +451,7 @@ class DokuService
         app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
             source: 'legacy-entry-point',
             gatewayStatus: 'SUCCESS',
-            amount: $attempt->amount_snapshot,
+            amount: null,
             currency: $attempt->currency_snapshot,
             gatewayReference: $attempt->invoice_number,
             receivedAt: now(),
@@ -510,7 +510,7 @@ class DokuService
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
                 source: 'doku',
                 gatewayStatus: $evidence['transaction']['status'] ?? $status,
-                amount: $evidence['transaction']['amount'] ?? $attempt->amount_snapshot,
+                amount: $evidence['transaction']['amount'] ?? null,
                 currency: $evidence['order']['currency'] ?? 'IDR',
                 gatewayReference: $evidence['transaction']['original_request_id'] ?? $evidence['transaction']['id'] ?? $invoiceNumber,
                 receivedAt: now(),
