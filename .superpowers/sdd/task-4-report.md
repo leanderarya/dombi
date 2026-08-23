@@ -8,7 +8,7 @@ Review findings fixed.
 - Obligation creation classifies duplicate-key races by SQLSTATE/driver code and propagates FK/schema failures.
 - Backfill uses duplicate-only handling for synthesized attempts, exception rows, and obligations; reruns remain idempotent.
 - Synthesized attempts lock the order row, use unique legacy keys, and safely recover from concurrent insertion races.
-- Added duplicate recovery and database-boundary regression coverage.
+- Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
 - `php artisan test tests/Feature/RefundObligationTest.php` — PASS (6 tests, 18 assertions)
