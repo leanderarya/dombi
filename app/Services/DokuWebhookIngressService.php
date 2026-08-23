@@ -48,7 +48,16 @@ final class DokuWebhookIngressService
                 'body_digest' => $digest,
             ]));
         } catch (UniqueConstraintViolationException) {
-            $log = PaymentWebhookLog::query()->where('request_id', $requestId)->firstOrFail();
+            $log = null;
+            for ($attempt = 0; $attempt < 3 && $log === null; $attempt++) {
+                $log = PaymentWebhookLog::query()->where('request_id', $requestId)->first();
+                if ($log === null) {
+                    usleep(10_000 * ($attempt + 1));
+                }
+            }
+            if ($log === null) {
+                return new WebhookReceipt(new PaymentWebhookLog, 503, 'Webhook persistence unavailable');
+            }
             if (! hash_equals((string) $log->body_digest, $digest)) {
                 return new WebhookReceipt($log, 409, 'Request-Id body conflict');
             }
