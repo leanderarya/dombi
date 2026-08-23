@@ -54,6 +54,38 @@ return new class extends Migration
             return;
         }
 
+        $indexes = collect(Schema::getIndexes('refund_obligations'));
+        $hasUnique = $indexes->contains(fn (array $index): bool => $index['unique'] && $index['columns'] === ['payment_attempt_id', 'reason']);
+        if (! $hasUnique) {
+            try {
+                Schema::table('refund_obligations', function (Blueprint $table): void {
+                    $table->unique(['payment_attempt_id', 'reason'], 'refund_obligations_attempt_reason_unique');
+                });
+            } catch (QueryException $exception) {
+                throw new RuntimeException('Unable to repair refund obligation uniqueness; resolve duplicate payment_attempt_id/reason rows.', 0, $exception);
+            }
+        }
+
+        if (Schema::hasTable('payment_attempts')) {
+            $foreignKeys = collect(Schema::getForeignKeys('refund_obligations'));
+            $hasAttemptForeignKey = $foreignKeys->contains(fn (array $foreign): bool => $foreign['columns'] === ['payment_attempt_id'] && $foreign['foreign_table'] === 'payment_attempts');
+            if (! $hasAttemptForeignKey) {
+                $orphanCount = DB::table('refund_obligations')->whereNotExists(function ($query): void {
+                    $query->select(DB::raw(1))->from('payment_attempts')->whereColumn('payment_attempts.id', 'refund_obligations.payment_attempt_id');
+                })->count();
+                if ($orphanCount > 0) {
+                    throw new RuntimeException('Unable to repair refund obligation foreign key; orphan payment_attempt_id rows exist.');
+                }
+                try {
+                    Schema::table('refund_obligations', function (Blueprint $table): void {
+                        $table->foreign('payment_attempt_id')->references('id')->on('payment_attempts')->cascadeOnDelete();
+                    });
+                } catch (QueryException $exception) {
+                    throw new RuntimeException('Unable to repair refund obligation payment_attempt_id foreign key.', 0, $exception);
+                }
+            }
+        }
+
         match (DB::getDriverName()) {
             'sqlite' => [
                 DB::statement('CREATE TRIGGER IF NOT EXISTS refund_obligations_amount_positive_insert BEFORE INSERT ON refund_obligations FOR EACH ROW WHEN NEW.amount <= 0 BEGIN SELECT RAISE(ABORT, \'Refund obligation amount must be positive\'); END'),
