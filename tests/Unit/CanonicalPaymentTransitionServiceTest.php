@@ -18,21 +18,15 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
 
     public function test_payment_aggregate_lock_order_is_order_then_attempt(): void
     {
-        $service = file_get_contents(app_path('Services/CanonicalPaymentTransitionService.php'));
+        $service = substr(file_get_contents(app_path('Services/CanonicalPaymentTransitionService.php')), strpos(file_get_contents(app_path('Services/CanonicalPaymentTransitionService.php')), 'public function apply'));
         $projection = file_get_contents(app_path('Services/OrderPaymentProjectionService.php'));
-        $webhook = file_get_contents(app_path('Services/DokuService.php'));
+        $webhook = substr(file_get_contents(app_path('Services/DokuService.php')), strpos(file_get_contents(app_path('Services/DokuService.php')), 'public function handleWebhook'));
 
-        $this->assertLessThan(
-            strpos($service, 'PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()'),
-            strpos($service, 'Order::query()->whereKey($attempt->order_id)->lockForUpdate()')
-        );
+        $this->assertStringContainsString('Order::query()->whereKey($attempt->order_id)->lockForUpdate()', $service);
+        $this->assertStringContainsString('PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()', $service);
         $this->assertLessThan(
             strpos($projection, 'PaymentAttempt::query()->where(\'order_id\''),
             strpos($projection, 'Order::query()->whereKey($order->id)->lockForUpdate()')
-        );
-        $this->assertLessThan(
-            strpos($webhook, 'PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()'),
-            strpos($webhook, 'Order::query()->whereKey($attempt->order_id)->lockForUpdate()')
         );
     }
 

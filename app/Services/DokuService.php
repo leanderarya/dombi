@@ -167,20 +167,23 @@ class DokuService
 
     private function recordReconciliationFailure(PaymentAttempt $attempt, ?int $status, string $error): PaymentAttempt
     {
-        $metadata = $attempt->metadata ?? [];
-        $count = (int) ($metadata['reconciliation_attempts'] ?? 0) + 1;
-        $delay = min(2 ** ($count - 1), 16);
-        $attempt->update([
-            'creation_state' => 'unknown',
-            'metadata' => array_merge($metadata, [
-                'reconciliation_attempts' => $count,
-                'last_reconciliation_status' => $status,
-                'last_reconciliation_error' => $error,
-                'next_reconciliation_at' => now()->addMinutes($delay)->toIso8601String(),
-            ]),
-        ]);
+        return DB::transaction(function () use ($attempt, $status, $error): PaymentAttempt {
+            $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            $metadata = $locked->metadata ?? [];
+            $count = min((int) ($metadata['reconciliation_attempts'] ?? 0) + 1, 5);
+            $delay = min(2 ** ($count - 1), 16);
+            $locked->update([
+                'creation_state' => 'unknown',
+                'metadata' => array_merge($metadata, [
+                    'reconciliation_attempts' => $count,
+                    'last_reconciliation_status' => $status,
+                    'last_reconciliation_error' => $error,
+                    'next_reconciliation_at' => now()->addMinutes($delay)->toIso8601String(),
+                ]),
+            ]);
 
-        return $attempt->fresh();
+            return $locked->fresh();
+        });
     }
 
     public function preparePaymentAttempt(Order $order): PaymentAttempt
