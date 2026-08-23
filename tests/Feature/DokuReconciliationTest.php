@@ -10,6 +10,7 @@ use App\Services\DokuReconciliationService;
 use App\Services\DokuService;
 use App\Services\DokuWebhookIngressService;
 use App\Services\TransitionResult;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Artisan;
@@ -287,6 +288,24 @@ class DokuReconciliationTest extends TestCase
 
         $this->assertSame(0, $exit);
         Bus::assertDispatchedTimes(ReconcileDokuPayment::class, 2);
+    }
+
+    public function test_reconciliation_error_preserves_finalized_state_and_clears_lease(): void
+    {
+        $attempt = $this->makeAttempt('pending', [
+            'reconciliation_attempts' => 1,
+            'reconciliation_lease' => ['token' => 'claim', 'expires_at' => now()->addMinute()->toIso8601String()],
+        ]);
+        $attempt->update(['settlement_status' => 'paid']);
+
+        $doku = Mockery::mock(DokuService::class);
+        $doku->shouldReceive('reconcilePaymentAttempt')->andThrow(new ModelNotFoundException);
+        $service = new DokuReconciliationService($doku);
+
+        $result = $service->reconcile($attempt);
+
+        $this->assertFalse($result->changed);
+        $this->assertSame('paid', $attempt->fresh()->settlement_status?->value);
     }
 
     public function test_reconciliation_claim_skips_finalized_settlement_without_doku_request(): void
