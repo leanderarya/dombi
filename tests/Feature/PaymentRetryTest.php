@@ -6,6 +6,7 @@ use App\Enums\PaymentAttemptCreationState;
 use App\Exceptions\DokuPaymentException;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
+use App\Models\PaymentTransaction;
 use App\Services\DokuService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -65,7 +66,12 @@ class PaymentRetryTest extends TestCase
         $second->update(['creation_state' => PaymentAttemptCreationState::Failed]);
         $third = $service->preparePaymentAttempt($order);
 
+        PaymentTransaction::create(['order_id' => $order->id, 'doku_order_id' => $first->invoice_number, 'payment_method' => 'qris', 'amount' => $order->total, 'status' => 'failed']);
+        PaymentTransaction::create(['order_id' => $order->id, 'doku_order_id' => $second->invoice_number, 'payment_method' => 'qris', 'amount' => $order->total, 'status' => 'failed']);
         $this->assertCount(3, PaymentAttempt::where('order_id', $order->id)->get());
+        $this->assertSame(2, PaymentTransaction::where('order_id', $order->id)->count());
+        $this->assertDatabaseHas('payment_transactions', ['doku_order_id' => $first->invoice_number]);
+        $this->assertDatabaseHas('payment_transactions', ['doku_order_id' => $second->invoice_number]);
         $this->assertNotSame($first->invoice_number, $second->invoice_number);
         $this->assertNotSame($second->invoice_number, $third->invoice_number);
     }
