@@ -131,7 +131,21 @@ return new class extends Migration
 
                     return;
                 }
-                $attempt = $attempts->first(fn ($candidate): bool => $this->toMinorUnits($candidate->amount_snapshot) >= $refundAmount && $this->toMinorUnits($candidate->amount_snapshot) > 0);
+                $attempt = $attempts->first(function ($candidate) use ($refundAmount): bool {
+                    if (! is_string($candidate->amount_snapshot) || ! preg_match('/^\d+(?:\.\d{1,2})?$/', $candidate->amount_snapshot)) {
+                        return false;
+                    }
+
+                    $amount = $this->toMinorUnits($candidate->amount_snapshot);
+
+                    return $amount >= $refundAmount && $amount > 0;
+                });
+
+                if (! $attempt && $attempts->contains(fn ($candidate): bool => ! is_string($candidate->amount_snapshot) || ! preg_match('/^\d+(?:\.\d{1,2})?$/', $candidate->amount_snapshot))) {
+                    $this->recordException($refund, 'invalid_attempt_amount');
+
+                    return;
+                }
 
                 if (! $attempt) {
                     if ($order && $this->toMinorUnits($order->total) > 0 && $this->toMinorUnits($order->total) !== $this->toMinorUnits($refund->refund_amount)) {

@@ -185,6 +185,24 @@ class RefundObligationTest extends TestCase
         $this->assertDatabaseHas('refund_obligations', ['payment_attempt_id' => $attempt->id, 'amount' => '9999999999.99']);
     }
 
+    public function test_invalid_candidate_amount_is_reported_without_obligation(): void
+    {
+        Schema::table('payment_attempts', function ($table): void {
+            $table->decimal('amount_snapshot', 12, 3)->change();
+        });
+        $order = Order::factory()->create(['total' => 1000, 'payment_status' => 'refund_pending', 'refund_amount' => 1000]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'invalid-candidate', 'invoice_number' => 'invalid-candidate-invoice',
+            'merchant_request_id' => 'invalid-candidate-request', 'amount_snapshot' => '1.23', 'currency_snapshot' => 'IDR',
+        ]);
+        DB::table('payment_attempts')->where('id', $attempt->id)->update(['amount_snapshot' => '1.234']);
+
+        $this->runRefundBackfill();
+
+        $this->assertDatabaseHas('refund_obligation_backfill_exceptions', ['order_id' => $order->id, 'reason' => 'invalid_attempt_amount']);
+        $this->assertDatabaseMissing('refund_obligations', ['payment_attempt_id' => $attempt->id]);
+    }
+
     public function test_historical_refund_amount_mismatch_is_reported_without_obligation(): void
     {
         $order = Order::factory()->create(['payment_status' => 'refund_pending', 'refund_amount' => 9000]);
