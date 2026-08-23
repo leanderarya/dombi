@@ -28,6 +28,9 @@ class DispatchPaymentOutboxEvent implements ShouldQueue
         }
 
         try {
+            if (! $event->ownsClaim($token)) {
+                return;
+            }
             $consumerToken = $event->claimConsumer();
             if (! $consumerToken) {
                 return;

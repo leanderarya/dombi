@@ -242,7 +242,7 @@ class CanonicalPaymentTransitionService
                 try {
                     DispatchPaymentOutboxEvent::dispatch($event->id);
                 } catch (\Throwable $exception) {
-                    $event->update(['last_error' => $exception->getMessage(), 'next_attempt_at' => now()]);
+                    PaymentOutboxEvent::query()->whereKey($event->id)->where('status', 'pending')->whereNull('delivered_at')->update(['last_error' => $exception->getMessage(), 'next_attempt_at' => now()]);
                 }
             });
         }
