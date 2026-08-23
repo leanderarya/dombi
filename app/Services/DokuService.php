@@ -6,6 +6,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Exceptions\DokuPaymentException;
 use App\Models\Order;
+use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -97,6 +98,22 @@ class DokuService
         }
 
         // Log transaction
+        $existingAttempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->first();
+        if ($existingAttempt) {
+            return $existingAttempt->metadata['payment_url'] ?? $paymentUrl;
+        }
+
+        PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => $invoiceNumber,
+            'invoice_number' => $invoiceNumber,
+            'merchant_request_id' => $requestId,
+            'amount_snapshot' => $amount,
+            'currency_snapshot' => 'IDR',
+            'payment_method' => $order->payment_method ?? 'qris',
+            'metadata' => ['payment_url' => $paymentUrl],
+        ]);
+
         PaymentTransaction::create([
             'order_id' => $order->id,
             'doku_order_id' => $invoiceNumber,
@@ -168,6 +185,17 @@ class DokuService
             Log::warning('DOKU webhook: no PaymentTransaction record, processing order directly', [
                 'order_id' => $order->id,
                 'invoice_number' => $invoiceNumber,
+            ]);
+        }
+
+        if (! $order->paymentAttempts()->where('invoice_number', $invoiceNumber)->exists() && $transaction) {
+            PaymentAttempt::create([
+                'order_id' => $order->id,
+                'attempt_key' => $invoiceNumber,
+                'invoice_number' => $invoiceNumber,
+                'merchant_request_id' => 'legacy-'.$invoiceNumber,
+                'amount_snapshot' => $transaction->amount,
+                'currency_snapshot' => 'IDR',
             ]);
         }
 
@@ -472,7 +500,7 @@ class DokuService
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
                 source: 'doku',
                 gatewayStatus: $evidence['transaction']['status'] ?? $status,
-                amount: $evidence['transaction']['amount'] ?? null,
+                amount: $evidence['transaction']['amount'] ?? $attempt->amount_snapshot,
                 currency: $evidence['order']['currency'] ?? 'IDR',
                 gatewayReference: $evidence['transaction']['original_request_id'] ?? $evidence['transaction']['id'] ?? $invoiceNumber,
                 receivedAt: now(),
