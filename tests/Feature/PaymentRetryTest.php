@@ -67,6 +67,17 @@ class PaymentRetryTest extends TestCase
         $this->assertNotNull($order->fresh()->paid_at);
     }
 
+    public function test_duplicate_webhook_preserves_paid_at_without_service_mutation(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending', 'paid_at' => now()->subHour()]);
+        $paidAt = $order->paid_at;
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'webhook-paid-at', 'invoice_number' => 'webhook-paid-at', 'merchant_request_id' => 'webhook-paid-at-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'created']);
+
+        app(DokuService::class)->handleWebhook(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total]]);
+
+        $this->assertEquals($paidAt->toISOString(), $order->fresh()->paid_at->toISOString());
+    }
+
     public function test_repeated_success_reconciliation_preserves_paid_at(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending', 'paid_at' => now()->subHour()]);

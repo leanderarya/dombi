@@ -356,9 +356,6 @@ class DokuService
             }
 
             $this->processPaymentStatusChange($order, $status, $payload);
-            if ($status === 'paid' && $order->fresh()->payment_status === 'paid' && $order->paid_at === null) {
-                $order->update(['paid_at' => now()]);
-            }
             if ($transaction && ! ($transaction->status === 'paid' && $status !== 'paid')) {
                 $transaction->update(['status' => $status, 'raw_response' => $payload]);
             }
