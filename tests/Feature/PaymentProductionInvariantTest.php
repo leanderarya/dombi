@@ -141,15 +141,15 @@ class PaymentProductionInvariantTest extends TestCase
         ]);
 
         $service = app(DokuService::class);
-        $service->createPayment($order);
+        $service->createPayment($service->preparePaymentAttempt($order));
 
         try {
-            $service->createPayment($order->fresh());
+            $service->createPayment($service->preparePaymentAttempt($order->fresh()));
         } catch (\Throwable) {
             $this->fail('Duplicate retry creation must be idempotent, not fail with a database exception.');
         }
 
-        $this->assertSame(1, PaymentTransaction::where('doku_order_id', 'INV-RETRY')->count());
+        $this->assertSame(1, PaymentTransaction::where('order_id', $order->id)->count());
     }
 
     public function test_invoice_without_canonical_attempt_cannot_settle_order(): void
@@ -241,7 +241,7 @@ class PaymentProductionInvariantTest extends TestCase
             'currency_snapshot' => 'IDR',
         ]);
 
-        app(DokuService::class)->markOrderPaid($order);
+        app(DokuService::class)->markOrderPaid($attempt);
 
         $attempt = $attempt->fresh();
         $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->settlement_status);
@@ -258,16 +258,16 @@ class PaymentProductionInvariantTest extends TestCase
             'order_id' => $order->id, 'doku_order_id' => $order->order_code,
             'payment_method' => 'qris', 'amount' => $order->total, 'status' => 'paid',
         ]);
-        PaymentAttempt::create([
+        $attempt = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'sync-'.$order->id,
             'invoice_number' => $order->order_code, 'merchant_request_id' => 'sync-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
             'settlement_status' => PaymentAttemptSettlementStatus::Paid,
             'verification_status' => PaymentAttemptVerificationStatus::Verified,
         ]);
-        Http::fake(['*/checkout/v1/payment/*' => Http::response(['transaction' => ['status' => 'FAILED']])]);
+        Http::fake(['*/checkout/v1/payment/*' => Http::response(['order' => ['invoice_number' => $order->order_code], 'transaction' => ['status' => 'FAILED']])]);
 
-        app(DokuService::class)->syncStatusFromDoku($order);
+        app(DokuService::class)->syncStatusFromDoku($attempt);
 
         $this->assertSame('paid', PaymentTransaction::where('order_id', $order->id)->sole()->status);
     }

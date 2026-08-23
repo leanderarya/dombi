@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
+use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
 use App\Services\DokuService;
 use App\Services\NotificationService;
@@ -42,6 +43,11 @@ class DokuPaymentTest extends TestCase
             'customer_name' => 'Test Customer',
             'payment_status' => 'pending',
         ]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'create-'.$order->id,
+            'invoice_number' => 'INV-001', 'merchant_request_id' => 'create-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
 
         Http::fake([
             '*/checkout/v1/payment' => Http::response([
@@ -52,7 +58,7 @@ class DokuPaymentTest extends TestCase
             ], 200),
         ]);
 
-        $url = $this->doku->createPayment($order);
+        $url = $this->doku->createPayment($attempt);
 
         $this->assertEquals('https://sandbox.doku.com/pay/abc123', $url);
         $this->assertEquals('INV-001', $order->fresh()->doku_order_id);
