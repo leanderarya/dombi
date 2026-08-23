@@ -99,6 +99,12 @@ Schedule::call(function () {
 
 // ─── DOKU PAYMENT RECONCILIATION ──────────────────────
 
+Schedule::command('payments:dispatch-outbox')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/payment-outbox.log'));
+
 Schedule::command('payments:reconcile-doku')
     ->everyMinute()
     ->withoutOverlapping()

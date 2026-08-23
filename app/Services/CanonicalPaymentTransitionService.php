@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Enums\PaymentAttemptSettlementStatus;
 use App\Enums\PaymentAttemptVerificationStatus;
 use App\Enums\RefundObligationStatus;
+use App\Jobs\DispatchPaymentOutboxEvent;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
+use App\Models\PaymentOutboxEvent;
 use App\Models\RefundObligation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -100,6 +102,8 @@ class CanonicalPaymentTransitionService
             }
 
             app(OrderPaymentProjectionService::class)->recompute($order);
+
+            $this->recordOutboxEvents($lockedAttempt, $order, $status, $changed, $winner, $needsReview);
 
             return new TransitionResult($changed, $winner, $needsReview);
         });
@@ -209,5 +213,29 @@ class CanonicalPaymentTransitionService
             ['payment_attempt_id' => $attempt->id, 'reason' => $reason],
             ['amount' => $attempt->gateway_amount ?? $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'status' => RefundObligationStatus::Pending]
         );
+    }
+
+    private function recordOutboxEvents(PaymentAttempt $attempt, Order $order, string $status, bool $changed, bool $winner, bool $needsReview): void
+    {
+        $events = [];
+        if ($status === 'success' && $changed) {
+            $events[] = ['type' => 'payment.paid', 'key' => "payment.paid:{$attempt->id}:{$attempt->status_version}"];
+        }
+        if ($winner) {
+            $events[] = ['type' => 'fulfilment.claimed', 'key' => "fulfilment.claimed:{$attempt->id}"];
+        }
+        if ($status === 'success' && $this->isTerminalOrder($order)) {
+            $events[] = ['type' => 'payment.late_success', 'key' => "payment.late_success:{$attempt->id}:{$attempt->status_version}"];
+        }
+        if ($needsReview) {
+            $events[] = ['type' => 'payment.needs_review', 'key' => "payment.needs_review:{$attempt->id}:{$attempt->status_version}"];
+        }
+        foreach ($events as $definition) {
+            $event = PaymentOutboxEvent::firstOrCreate(
+                ['event_key' => $definition['key']],
+                ['event_type' => $definition['type'], 'aggregate_type' => 'payment_attempt', 'aggregate_id' => $attempt->id, 'payload' => ['order_id' => $order->id, 'payment_attempt_id' => $attempt->id]]
+            );
+            DB::afterCommit(fn () => DispatchPaymentOutboxEvent::dispatch($event->id));
+        }
     }
 }
