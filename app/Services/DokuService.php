@@ -136,7 +136,7 @@ class DokuService
         }
 
         DB::transaction(function () use ($attempt, $paymentUrl, $order, $invoiceNumber, $sessionId, $tokenId, $data): void {
-            $attempt->update(['metadata' => ['payment_url' => $paymentUrl]]);
+            $attempt->update(['metadata' => array_merge($attempt->metadata ?? [], ['payment_url' => $paymentUrl])]);
 
             PaymentTransaction::firstOrCreate(['doku_order_id' => $invoiceNumber], [
                 'order_id' => $order->id,
@@ -180,12 +180,12 @@ class DokuService
         $status = $this->mapStatus($paymentStatus);
 
         DB::transaction(function () use ($invoiceNumber, $status, $paymentStatus, $payload): void {
-            $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->lockForUpdate()->first();
             $transaction = PaymentTransaction::where('doku_order_id', $invoiceNumber)->first();
-            $order = $attempt?->order
-                ?? $transaction?->order
+            $order = $transaction?->order
                 ?? Order::where('order_code', $invoiceNumber)->first()
                 ?? Order::where('doku_order_id', $invoiceNumber)->first();
+            $order = $order?->newQuery()->whereKey($order->id)->lockForUpdate()->first();
+            $attempt = $order?->paymentAttempts()->where('invoice_number', $invoiceNumber)->lockForUpdate()->first();
 
             if (! $order || ! $attempt) {
                 PaymentWebhookLog::create([
