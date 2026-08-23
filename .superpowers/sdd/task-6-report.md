@@ -4,12 +4,15 @@
 
 `php artisan test tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
-PASS — 25 tests, 58 assertions, 4.9 seconds.
+PASS — 25 tests, 55 assertions, 4.9 seconds.
 
-`vendor/bin/pint --test app/Services/CanonicalPaymentTransitionService.php app/Services/OrderPaymentProjectionService.php app/Services/DokuService.php app/Services/NormalizedPaymentEvent.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php database/migrations/2026_08_23_000005_add_order_invoice_unique_to_payment_attempts.php`
+`vendor/bin/pint --test app/Services/CanonicalPaymentTransitionService.php app/Services/OrderPaymentProjectionService.php app/Services/DokuService.php app/Services/NormalizedPaymentEvent.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
 PASS.
 
-## Migration portability fix
+## Final fixes
 
-Payment-attempt duplicate preflight now uses portable `havingRaw('COUNT(*) > ?', [1])` instead of PostgreSQL-incompatible select-alias HAVING.
+- Canonical transition and projection use approved attempt-first then order lock order.
+- Amount comparison uses strict decimal parsing/minor units; malformed amounts do not verify.
+- Missing/unrecognized webhook invoices remain durable evidence-only and do not synthesize attempts or settle orders.
+- Task 6 invariants updated to assert canonical-attempt absence for unrecognized webhook identity.

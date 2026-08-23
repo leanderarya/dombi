@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\PaymentAttemptVerificationStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Exceptions\DokuPaymentException;
@@ -193,17 +192,15 @@ class DokuService
             }
 
             $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
-            PaymentAttempt::firstOrCreate(
-                ['order_id' => $order->id, 'invoice_number' => $invoiceNumber],
-                [
-                    'attempt_key' => 'legacy-'.$invoiceNumber,
-                    'merchant_request_id' => 'legacy-'.$invoiceNumber,
-                    'amount_snapshot' => $transaction?->amount ?? $order->total,
-                    'currency_snapshot' => $payload['order']['currency'] ?? 'IDR',
-                    'verification_status' => PaymentAttemptVerificationStatus::NeedsReview,
-                    'metadata' => ['legacy_webhook_needs_review' => true],
-                ]
-            );
+            if (! $order->paymentAttempts()->where('invoice_number', $invoiceNumber)->exists()) {
+                Log::warning('DOKU webhook retained as evidence without canonical attempt', [
+                    'order_id' => $order->id,
+                    'invoice_number' => $invoiceNumber,
+                    'payload' => $payload,
+                ]);
+
+                return;
+            }
 
             $this->processPaymentStatusChange($order, $status, $payload);
             if ($transaction) {

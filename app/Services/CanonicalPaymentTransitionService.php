@@ -15,8 +15,8 @@ class CanonicalPaymentTransitionService
     public function apply(PaymentAttempt $attempt, NormalizedPaymentEvent $event): TransitionResult
     {
         return DB::transaction(function () use ($attempt, $event): TransitionResult {
-            $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
             $lockedAttempt = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            $order = Order::query()->whereKey($lockedAttempt->order_id)->lockForUpdate()->firstOrFail();
             $lastReceivedAt = data_get($lockedAttempt->metadata, 'last_event_received_at');
             if ($lastReceivedAt !== null && $event->receivedAt->lessThanOrEqualTo($lastReceivedAt)) {
                 return new TransitionResult(false, $lockedAttempt->fulfilment_claimed_at !== null);
@@ -125,7 +125,28 @@ class CanonicalPaymentTransitionService
 
     private function amountMatches(PaymentAttempt $attempt, NormalizedPaymentEvent $event): bool
     {
-        return $event->amount !== null && number_format((float) $event->amount, 2, '.', '') === number_format((float) $attempt->amount_snapshot, 2, '.', '');
+        if ($event->amount === null) {
+            return false;
+        }
+
+        $actual = $this->minorUnits($event->amount);
+        $expected = $this->minorUnits($attempt->amount_snapshot);
+
+        return $actual !== null && $expected !== null && $actual === $expected;
+    }
+
+    private function minorUnits(int|float|string|null $amount): ?int
+    {
+        if ($amount === null || is_float($amount)) {
+            return null;
+        }
+        $value = (string) $amount;
+        if (! preg_match('/^\\d+(?:\\.\\d{1,2})?$/', $value)) {
+            return null;
+        }
+        [$whole, $fraction] = array_pad(explode('.', $value, 2), 2, '');
+
+        return ((int) $whole * 100) + (int) str_pad($fraction, 2, '0');
     }
 
     private function claimOrRefund(PaymentAttempt $attempt, Order $order): bool
