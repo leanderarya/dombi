@@ -48,9 +48,9 @@ class DokuService
 
     private function createPaymentInTransaction(Order $order): string
     {
+        $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
         $invoiceNumber = $order->order_code;
         $existingAttempt = PaymentAttempt::query()->where('order_id', $order->id)->where('invoice_number', $invoiceNumber)->lockForUpdate()->first();
-        $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
         if (data_get($existingAttempt?->metadata ?? [], 'payment_url')) {
             DB::commit();
 
