@@ -273,15 +273,18 @@ class OrderController extends Controller
             $doku = app(DokuService::class);
 
             $attempt = $doku->preparePaymentAttempt($order);
-            if (in_array($attempt->creation_state?->value, ['created', 'unknown'], true)) {
-                $doku->syncStatusFromDoku($order->refresh());
+            if ($attempt->creation_state?->value === 'unknown') {
+                $attempt = $doku->reconcilePaymentAttempt($attempt);
                 $order->refresh();
-                if ($order->payment_status === 'paid') {
-                    return redirect()->route('customer.orders.confirm', ['orderCode' => $order->order_code]);
-                }
                 if ($attempt->creation_state?->value === 'unknown') {
                     return back()->with('error', 'Pembayaran sedang dipastikan. Silakan tunggu hasil rekonsiliasi.');
                 }
+                if ($order->payment_status === 'paid') {
+                    return redirect()->route('customer.orders.confirm', ['orderCode' => $order->order_code]);
+                }
+            }
+            if ($attempt->creation_state?->value === 'created') {
+                return back()->with('error', 'Pembayaran sedang diproses. Silakan tunggu hasil rekonsiliasi.');
             }
             $paymentUrl = $doku->createPayment($attempt);
 

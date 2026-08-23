@@ -36,22 +36,8 @@ class DokuService
      * Create a DOKU Checkout payment for an order.
      * Returns the DOKU hosted payment page URL.
      */
-    public function createPayment(PaymentAttempt|Order $attempt): string
+    public function createPayment(PaymentAttempt $attempt): string
     {
-        if ($attempt instanceof Order) {
-            $order = $attempt;
-            $attempt = PaymentAttempt::query()->where('order_id', $order->id)->where('invoice_number', $order->order_code)->first()
-                ?? PaymentAttempt::create([
-                    'order_id' => $order->id,
-                    'attempt_key' => 'legacy-'.$order->id.'-'.bin2hex(random_bytes(4)),
-                    'invoice_number' => $order->order_code,
-                    'merchant_request_id' => 'legacy-request-'.$order->id.'-'.bin2hex(random_bytes(4)),
-                    'amount_snapshot' => $order->total,
-                    'currency_snapshot' => 'IDR',
-                    'payment_method' => $order->payment_method ?? 'qris',
-                    'creation_state' => 'initiated',
-                ]);
-        }
         $attempt = PaymentAttempt::query()->whereKey($attempt->id)->with('order')->firstOrFail();
         $url = data_get($attempt->metadata ?? [], 'payment_url');
         if ($url && in_array($attempt->creation_state?->value, ['created', 'pending'], true)) {
@@ -75,7 +61,7 @@ class DokuService
             return true;
         });
         if (! $claimed) {
-            throw new DokuPaymentException('Payment attempt creation is already claimed.');
+            throw new DokuPaymentException('Payment attempt creation is already in progress.');
         }
 
         $order = $attempt->order;
@@ -112,6 +98,27 @@ class DokuService
         });
 
         return $paymentUrl;
+    }
+
+    public function reconcilePaymentAttempt(PaymentAttempt $attempt): PaymentAttempt
+    {
+        $attempt = PaymentAttempt::query()->whereKey($attempt->id)->with('order')->firstOrFail();
+        $requestId = 'REC-'.$attempt->id.'-'.bin2hex(random_bytes(4));
+        $endpoint = '/checkout/v1/payment/'.$attempt->invoice_number;
+        $timestamp = now('UTC')->format('Y-m-d\\TH:i:s\\Z');
+        $response = Http::withHeaders($this->generateHeaders($requestId, $timestamp, $endpoint, ''))->timeout(10)->get($this->baseUrl.$endpoint);
+        if (! $response->successful()) {
+            return $attempt;
+        }
+        $data = $response->json();
+        $status = strtoupper(data_get($data, 'transaction.status', ''));
+        if (in_array($status, ['FAILED', 'REJECTED', 'DENIED', 'CANCELLED', 'EXPIRED'], true)) {
+            $attempt->update(['creation_state' => 'failed', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now()]);
+        } elseif (in_array($status, ['SUCCESS', 'PENDING'], true)) {
+            $attempt->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now()]);
+        }
+
+        return $attempt->fresh();
     }
 
     public function preparePaymentAttempt(Order $order): PaymentAttempt
