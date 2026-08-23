@@ -5,6 +5,8 @@ Canonical DOKU payment creation, retry, reconciliation, leases, immutable snapsh
 
 ## Verification
 - Focused Task 8 creation/retry/boundary tests: 28 passed, 72 assertions.
+- `markOrderPaid` requires exact canonical `PaymentAttempt`; status processing rejects missing/unmatched invoice identity.
+- `paid_at` is owned by canonical transition transaction; no stale post-transition mutation.
 - Polling resolves failed-creation attempts with pending/unknown settlement, allowing ambiguous payments to reconcile instead of reporting unavailable.
 - `composer run lint:check`: passed (`pint --parallel --test`).
 - Transient status-sync failures preserve payment_status/doku_order_id; only definitive failed/expired statuses clear retry routing fields.

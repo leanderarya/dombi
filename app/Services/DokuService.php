@@ -606,12 +606,10 @@ class DokuService
      * Uses atomic update to prevent race condition from concurrent webhook + redirect.
      * Handles late payments (after cancellation/expiry) by auto-refunding.
      */
-    public function markOrderPaid(Order $order, int|float|string|null $authoritativeAmount = null): void
+    public function markOrderPaid(PaymentAttempt $attempt, int|float|string|null $authoritativeAmount = null): void
     {
-        $attempt = $order->paymentAttempts()->where('invoice_number', $order->doku_order_id ?: $order->order_code)->first();
-        if (! $attempt) {
-            throw new \LogicException('Canonical payment attempt required before marking order paid.');
-        }
+        $attempt = PaymentAttempt::query()->whereKey($attempt->id)->firstOrFail();
+        $order = $attempt->order;
 
         app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
             source: 'legacy-entry-point',
@@ -662,9 +660,9 @@ class DokuService
         }
     }
 
-    public function markOrderPaidPublic(Order $order, int|float|string|null $authoritativeAmount = null): void
+    public function markOrderPaidPublic(PaymentAttempt $attempt, int|float|string|null $authoritativeAmount = null): void
     {
-        $this->markOrderPaid($order, $authoritativeAmount);
+        $this->markOrderPaid($attempt, $authoritativeAmount);
     }
 
     /**
@@ -684,8 +682,14 @@ class DokuService
 
     public function processPaymentStatusChange(Order $order, string $status, array $evidence = []): void
     {
-        $invoiceNumber = $evidence['order']['invoice_number'] ?? $order->doku_order_id ?: $order->order_code;
+        $invoiceNumber = $evidence['order']['invoice_number'] ?? null;
+        if (! $invoiceNumber) {
+            throw new \LogicException('Canonical payment invoice required before status processing.');
+        }
         $attempt = $order->paymentAttempts()->where('invoice_number', $invoiceNumber)->first();
+        if (! $attempt) {
+            throw new \LogicException('Payment invoice does not match canonical attempt.');
+        }
         if ($attempt) {
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
                 source: 'doku',
@@ -696,10 +700,6 @@ class DokuService
                 receivedAt: now(),
                 rawEvidence: $evidence,
             ));
-            if ($status === 'paid' && $order->fresh()->payment_status === 'paid' && $order->paid_at === null) {
-                $order->update(['paid_at' => now()]);
-            }
-
             if (in_array($order->status, [Order::STATUS_CANCELLED_BY_CUSTOMER, Order::STATUS_CANCELLED_BY_OUTLET, Order::STATUS_REJECTED_BY_OUTLET, Order::STATUS_EXPIRED], true)) {
                 $order->refresh()->update(['payment_status' => 'refund_pending', 'refund_amount' => $attempt->amount_snapshot]);
             }
