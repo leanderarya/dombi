@@ -74,7 +74,7 @@ class CanonicalPaymentTransitionService
 
             $winner = false;
             if ($lockedAttempt->settlement_status === PaymentAttemptSettlementStatus::Paid
-                && $lockedAttempt->verification_status === PaymentAttemptVerificationStatus::Verified) {
+                && ($lockedAttempt->verification_status === PaymentAttemptVerificationStatus::Verified || $this->isTerminalOrder($order))) {
                 $winner = $this->claimOrRefund($lockedAttempt, $order);
             }
 
@@ -96,10 +96,16 @@ class CanonicalPaymentTransitionService
         if (strtoupper($event->currency) !== strtoupper($attempt->currency_snapshot)) {
             throw new \InvalidArgumentException('Payment currency does not match attempt.');
         }
-        if ($event->gatewayReference === null || ($attempt->invoice_number !== $event->gatewayReference
-            && $attempt->gateway_transaction_id !== $event->gatewayReference)) {
-            throw new \InvalidArgumentException('Payment gateway reference does not match attempt.');
-        }
+    }
+
+    private function isTerminalOrder(Order $order): bool
+    {
+        return in_array($order->status, [
+            Order::STATUS_CANCELLED_BY_CUSTOMER,
+            Order::STATUS_CANCELLED_BY_OUTLET,
+            Order::STATUS_REJECTED_BY_OUTLET,
+            Order::STATUS_EXPIRED,
+        ], true);
     }
 
     private function amountMatches(PaymentAttempt $attempt, NormalizedPaymentEvent $event): bool

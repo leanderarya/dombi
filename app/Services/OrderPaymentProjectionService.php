@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\PaymentAttemptSettlementStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Order;
+use App\Models\PaymentAttempt;
 use Illuminate\Support\Facades\DB;
 
 class OrderPaymentProjectionService
@@ -14,8 +15,8 @@ class OrderPaymentProjectionService
     public function recompute(Order $order): string
     {
         return DB::transaction(function () use ($order): string {
+            $attempts = PaymentAttempt::query()->where('order_id', $order->id)->lockForUpdate()->get();
             $lockedOrder = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
-            $attempts = $lockedOrder->paymentAttempts()->lockForUpdate()->get();
             $paid = $attempts->contains(fn ($attempt): bool => $attempt->settlement_status === PaymentAttemptSettlementStatus::Paid
                 && $attempt->verification_status?->value === 'verified'
             );

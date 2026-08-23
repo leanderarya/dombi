@@ -57,14 +57,15 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $this->assertSame(['event' => 'unknown'], $attempt->raw_response);
     }
 
-    public function test_gateway_reference_must_match_invoice_or_stored_reference(): void
+    public function test_transaction_reference_is_evidence_not_identity_rejection(): void
     {
         [, $attempt] = $this->attempt();
 
-        $this->expectException(\InvalidArgumentException::class);
         app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
-            'doku', 'SUCCESS', 50000, 'IDR', 'wrong-reference', now(), []
+            'doku', 'SUCCESS', 50000, 'IDR', 'transaction-reference', now(), []
         ));
+
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
     }
 
     public function test_currency_must_match_attempt(): void
