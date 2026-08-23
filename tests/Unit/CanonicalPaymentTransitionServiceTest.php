@@ -55,6 +55,20 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $this->assertSame(PaymentAttemptVerificationStatus::NeedsReview, $attempt->fresh()->verification_status);
     }
 
+    public function test_success_without_gateway_amount_is_paid_but_needs_review_and_cannot_fulfil(): void
+    {
+        [, $attempt] = $this->attempt();
+
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'manual', 'paid', null, 'IDR', 'invoice-first', now(), []
+        ));
+
+        $fresh = $attempt->fresh();
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $fresh->settlement_status);
+        $this->assertSame(PaymentAttemptVerificationStatus::NeedsReview, $fresh->verification_status);
+        $this->assertNull($fresh->fulfilment_claimed_at);
+    }
+
     public function test_success_matching_amount_is_verified_and_paid(): void
     {
         [$order, $attempt] = $this->attempt();

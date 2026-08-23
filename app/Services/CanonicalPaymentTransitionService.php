@@ -27,6 +27,7 @@ class CanonicalPaymentTransitionService
             $this->validate($lockedAttempt, $event);
 
             $status = strtolower($event->gatewayStatus);
+            $status = $status === 'paid' ? 'success' : $status;
             $oldSettlement = $lockedAttempt->settlement_status;
             $changed = false;
             $needsReview = false;
