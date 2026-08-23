@@ -6,7 +6,6 @@ use App\Models\PaymentOutboxEvent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 
 class DispatchPaymentOutboxEvent implements ShouldQueue
@@ -15,34 +14,24 @@ class DispatchPaymentOutboxEvent implements ShouldQueue
 
     public int $tries = 1;
 
-    public function __construct(public int $eventId) {}
+    public function __construct(public int $eventId, public ?string $claimToken = null) {}
 
     public function handle(?callable $deliver = null): void
     {
-        $event = DB::transaction(function (): ?PaymentOutboxEvent {
-            $event = PaymentOutboxEvent::query()->whereKey($this->eventId)->lockForUpdate()->first();
-            if (! $event || $event->status === 'delivered' || $event->next_attempt_at?->isFuture()) {
-                return null;
-            }
-            $event->increment('attempts');
-            $event->refresh();
-
-            return $event;
-        });
-
+        $event = PaymentOutboxEvent::find($this->eventId);
         if (! $event) {
+            return;
+        }
+        $token = $this->claimToken ?? $event->claim();
+        if (! $token) {
             return;
         }
 
         try {
             ($deliver ?? static fn (PaymentOutboxEvent $event): mixed => Event::dispatch($event->event_type, [$event->payload]))($event);
-            $event->update(['status' => 'delivered', 'delivered_at' => now(), 'last_error' => null]);
+            $event->markDelivered($token);
         } catch (\Throwable $exception) {
-            $event->update([
-                'status' => 'pending',
-                'next_attempt_at' => now()->addMinutes(min(60, 2 ** min($event->attempts, 6))),
-                'last_error' => $exception->getMessage(),
-            ]);
+            $event->markFailed($token, $exception->getMessage());
         }
     }
 }

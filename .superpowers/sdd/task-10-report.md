@@ -1,25 +1,16 @@
 # Task 10 Report
 
-## Scope
+## Review fixes
 
-Implemented durable payment outbox for canonical payment transitions.
-
-## Changes
-
-- Added `payment_outbox_events` table with unique event keys, aggregate identity, payload, retry state, and delivery timestamps.
-- Added `PaymentOutboxEvent::pending()` scope.
-- Canonical transitions insert payment-paid, fulfilment-claimed, late-success, and needs-review events inside the existing transaction.
-- Outbox jobs dispatch only after commit.
-- Dispatcher retries failed delivery with exponential delay and preserves operator-visible error state.
-- Delivered rows are duplicate-safe through locked status and delivered state.
-- Added minute scheduler command for pending outbox events.
+- Added unique `refund.obligation_created` outbox events keyed by obligation ID.
+- Added atomic claim leases with UUID token and expiry; expired claims are reclaimable.
+- Delivery completion and failure are token-fenced, preventing stale workers from changing newer claims.
+- Scheduler claims rows transactionally before enqueue, with bounded limit and duplicate prevention.
+- Retry remains blocked until `next_attempt_at`, then becomes deliverable.
+- Queue dispatch occurs after canonical transaction commit; outbox row remains durable if enqueue fails.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentOutboxTest.php` — 2 tests, 2 passed, 10 assertions.
-- `composer run lint:check` — passed.
-- `graphify update .` — passed; graph updated.
-
-## Commit Scope
-
-Only Task 10 implementation files and focused test are staged. Existing unrelated working-tree files remain unstaged.
+- `php artisan test tests/Feature/PaymentOutboxTest.php` — 5 tests, 5 passed, 21 assertions.
+- `composer run lint:check` — pending final run.
+- `graphify update .` — required after code changes.
