@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\PaymentWebhookLog;
 use App\Services\DokuService;
+use App\Services\DokuWebhookIngressService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class DokuWebhookIngressTest extends TestCase
@@ -83,13 +85,48 @@ class DokuWebhookIngressTest extends TestCase
         $this->assertSame(1, PaymentWebhookLog::query()->where('request_id', 'REQ-CONFLICT')->count());
     }
 
-    public function test_production_driver_concurrency_requires_mysql_or_postgres(): void
+    public function test_production_driver_concurrency_allows_one_claim(): void
     {
         if (! in_array(config('database.default'), ['mysql', 'pgsql'], true)) {
-            $this->markTestSkipped('Concurrent row-lock verification requires MySQL or PostgreSQL; SQLite uses deterministic claim tests.');
+            $this->markTestSkipped('Real parallel claim test requires configured MySQL or PostgreSQL; SQLite uses deterministic claim tests.');
+        }
+        if (! function_exists('pcntl_fork')) {
+            $this->markTestSkipped('Real parallel claim test requires pcntl extension.');
         }
 
-        $this->assertTrue(true);
+        $body = '{"transaction":{"status":"SUCCESS"}}';
+        $headers = $this->signed('REQ-PARALLEL', $body);
+        $children = [];
+        $results = tempnam(sys_get_temp_dir(), 'doku-parallel-');
+        for ($worker = 0; $worker < 2; $worker++) {
+            $pid = pcntl_fork();
+            $this->assertNotSame(-1, $pid);
+            if ($pid === 0) {
+                DB::disconnect();
+                DB::reconnect();
+                $response = app(DokuWebhookIngressService::class)->receive($body, [
+                    'Request-Id' => $headers['HTTP_Request-Id'],
+                    'Request-Timestamp' => $headers['HTTP_Request-Timestamp'],
+                    'Client-Id' => $headers['HTTP_Client-Id'],
+                    'Signature' => $headers['HTTP_Signature'],
+                ]);
+                file_put_contents($results, $response->statusCode.'\\n', FILE_APPEND | LOCK_EX);
+                exit(0);
+            }
+            $children[] = $pid;
+        }
+        foreach ($children as $pid) {
+            pcntl_waitpid($pid, $status);
+        }
+        DB::disconnect();
+        DB::reconnect();
+
+        $statuses = array_map('intval', file($results, FILE_IGNORE_NEW_LINES));
+        unlink($results);
+        sort($statuses);
+        $this->assertLessThanOrEqual(1, count(array_filter($statuses, static fn (int $status): bool => in_array($status, [200, 202], true))));
+        $this->assertSame(1, PaymentWebhookLog::where('request_id', 'REQ-PARALLEL')->count());
+        $this->assertContains(PaymentWebhookLog::where('request_id', 'REQ-PARALLEL')->value('status'), ['processed', 'retryable']);
     }
 
     public function test_stale_processing_claim_is_recovered(): void
