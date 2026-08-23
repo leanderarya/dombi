@@ -24,8 +24,8 @@ Implemented canonical payment attempt schema, model, enums, Order relationship, 
 - Added immutable amount/currency snapshot enforcement in model updates.
 - Added gateway amount/currency and gateway identifiers.
 - Added status version, reconciliation fields, fulfilment claim fields, metadata, and reconciliation indexes.
-- Added `Order::paymentAttempts()` and `PaymentAttempt::order()` relationships.
-- Deferred refund-obligation relation until canonical `RefundObligation` exists; no relation points to `refund_status_histories`.
+- Added `Order::paymentAttempts()`, `PaymentAttempt::order()`, and typed `PaymentAttempt::refundObligations(): HasMany` targeting future `App\Models\RefundObligation`.
+- Deferred `RefundObligation` model, table, and service implementation; no relation points to `refund_status_histories`.
 - Defined `fulfilment_claimed_by` as nullable foreign key to `users`, with `nullOnDelete()`.
 - Confirmed session tokens are not globally unique.
 
@@ -39,9 +39,9 @@ Implemented canonical payment attempt schema, model, enums, Order relationship, 
 ## Verification
 
 - `vendor/bin/pint --test`: PASS
-- `php artisan test tests/Feature/PaymentAttemptSchemaTest.php`: PASS, 6 tests, 20 assertions
+- `php artisan test tests/Feature/PaymentAttemptSchemaTest.php`: PASS, 9 tests, 24 assertions
 - Initial `php artisan pint --test` command was unavailable because `pint` is not an Artisan command; repository binary `vendor/bin/pint` was used.
 
 ## Concerns
 
-- Canonical `RefundObligation` model/table remains deferred to its owning task; Task 2 exposes no refund-obligation relation.
+- Canonical `RefundObligation` model/table/service remains deferred to its owning task; Task 2 relation is intentionally typed against that future model only.
