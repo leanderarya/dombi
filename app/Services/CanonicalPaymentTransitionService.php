@@ -238,7 +238,13 @@ class CanonicalPaymentTransitionService
                 ['event_key' => $definition['key']],
                 ['event_type' => $definition['type'], 'aggregate_type' => 'payment_attempt', 'aggregate_id' => $attempt->id, 'payload' => ['order_id' => $order->id, 'payment_attempt_id' => $attempt->id]]
             );
-            DB::afterCommit(fn () => DispatchPaymentOutboxEvent::dispatch($event->id));
+            DB::afterCommit(function () use ($event): void {
+                try {
+                    DispatchPaymentOutboxEvent::dispatch($event->id);
+                } catch (\Throwable) {
+                    $event->refresh();
+                }
+            });
         }
     }
 }

@@ -10,10 +10,12 @@ use App\Models\PaymentAttempt;
 use App\Models\PaymentOutboxEvent;
 use App\Services\CanonicalPaymentTransitionService;
 use App\Services\NormalizedPaymentEvent;
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
+use Mockery;
 use Tests\TestCase;
 
 class PaymentOutboxTest extends TestCase
@@ -42,6 +44,22 @@ class PaymentOutboxTest extends TestCase
         $this->assertSame(1, $outbox->fresh()->attempts);
         Event::assertDispatched('payment.paid', 1);
         $this->assertSame('paid', $order->fresh()->payment_status);
+    }
+
+    public function test_enqueue_failure_after_commit_leaves_all_outbox_rows_pending(): void
+    {
+        $dispatcher = Mockery::mock(Dispatcher::class);
+        $dispatcher->shouldReceive('dispatch')->andThrow(new \RuntimeException('queue unavailable'));
+        $this->app->instance(Dispatcher::class, $dispatcher);
+        [$order, $attempt] = $this->attempt();
+
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []
+        ));
+
+        $this->assertGreaterThan(1, PaymentOutboxEvent::count());
+        $this->assertSame(0, PaymentOutboxEvent::where('status', 'delivered')->count());
+        $this->assertSame(PaymentOutboxEvent::count(), PaymentOutboxEvent::where('status', 'pending')->count());
     }
 
     public function test_refund_obligation_creation_emits_one_outbox_event(): void

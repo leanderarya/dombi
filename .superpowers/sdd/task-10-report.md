@@ -1,16 +1,11 @@
 # Task 10 Report
 
-## Review fixes
+## Review fix
 
-- Added unique `refund.obligation_created` outbox events keyed by obligation ID.
-- Added atomic claim leases with UUID token and expiry; expired claims are reclaimable.
-- Delivery completion and failure are token-fenced, preventing stale workers from changing newer claims.
-- Scheduler claims rows transactionally before enqueue, with bounded limit and duplicate prevention.
-- Retry remains blocked until `next_attempt_at`, then becomes deliverable.
-- Queue dispatch occurs after canonical transaction commit; outbox row remains durable if enqueue fails.
+After-commit outbox enqueue callbacks now isolate each dispatch failure. A failed queue enqueue no longer prevents later event callbacks; durable rows remain pending and scheduler retryable.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentOutboxTest.php` — 5 tests, 5 passed, 21 assertions.
-- `composer run lint:check` — pending final run.
-- `graphify update .` — required after code changes.
+- `php artisan test tests/Feature/PaymentOutboxTest.php` — 6 tests, 6 passed, 24 assertions.
+- `composer run lint:check` — passed.
+- `graphify update .` — passed; graph rebuilt with 7154 nodes, 18202 edges, 470 communities.
