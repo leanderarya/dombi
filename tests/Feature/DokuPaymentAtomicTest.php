@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Order;
 use App\Models\Outlet;
-use App\Models\PaymentAttempt;
 use App\Services\DokuService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -20,10 +19,9 @@ class DokuPaymentAtomicTest extends TestCase
             'payment_status' => 'pending',
             'outlet_id' => Outlet::factory()->create()->id,
         ]);
-        PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'atomic-'.$order->id, 'invoice_number' => $order->order_code, 'merchant_request_id' => 'atomic-request-'.$order->id, 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR']);
         $service = app(DokuService::class);
-        $service->markOrderPaidPublic($order, $order->total);
-        $service->markOrderPaidPublic($order, $order->total);
+        $service->markOrderPaidPublic($order);
+        $service->markOrderPaidPublic($order);
         $this->assertSame('paid', Order::find($order->id)->payment_status);
     }
 
@@ -35,7 +33,6 @@ class DokuPaymentAtomicTest extends TestCase
             'total' => 50000,
         ]);
 
-        PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'late-'.$order->id, 'invoice_number' => $order->order_code, 'merchant_request_id' => 'late-request-'.$order->id, 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR']);
         app(DokuService::class)->markOrderPaidPublic($order);
 
         $order->refresh();

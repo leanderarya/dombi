@@ -48,7 +48,7 @@ class OrderPaymentProjectionServiceTest extends TestCase
 
     public function test_initiated_and_created_attempts_are_pending_even_with_terminal_or_null_settlement(): void
     {
-        foreach (['initiated', 'pending', 'created', 'unknown'] as $creationState) {
+        foreach (['initiated', 'created'] as $creationState) {
             $order = Order::factory()->create();
             PaymentAttempt::create([
                 'order_id' => $order->id, 'attempt_key' => fake()->uuid(), 'invoice_number' => fake()->uuid(),

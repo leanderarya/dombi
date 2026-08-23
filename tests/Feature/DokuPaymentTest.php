@@ -2,9 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Enums\PaymentAttemptCreationState;
 use App\Models\Order;
-use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
 use App\Services\DokuService;
 use App\Services\NotificationService;
@@ -54,14 +52,14 @@ class DokuPaymentTest extends TestCase
             ], 200),
         ]);
 
-        $url = $this->doku->createPayment($this->doku->preparePaymentAttempt($order));
+        $url = $this->doku->createPayment($order);
 
         $this->assertEquals('https://sandbox.doku.com/pay/abc123', $url);
-        $this->assertSame($order->fresh()->doku_order_id, PaymentAttempt::where('order_id', $order->id)->value('invoice_number'));
+        $this->assertEquals('INV-001', $order->fresh()->doku_order_id);
         $this->assertEquals('pending', $order->fresh()->payment_status);
         $this->assertDatabaseHas('payment_transactions', [
             'order_id' => $order->id,
-            'doku_order_id' => PaymentAttempt::where('order_id', $order->id)->value('invoice_number'),
+            'doku_order_id' => 'INV-001',
             'status' => 'pending',
         ]);
     }
@@ -69,7 +67,6 @@ class DokuPaymentTest extends TestCase
     public function test_webhook_success_marks_paid(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
-        PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'attempt-webhook-1', 'invoice_number' => 'INV-001', 'merchant_request_id' => 'request-webhook-1', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Created, 'metadata' => ['legacy_webhook_needs_review' => false]]);
         PaymentTransaction::create([
             'order_id' => $order->id,
             'doku_order_id' => 'INV-001',
@@ -80,7 +77,7 @@ class DokuPaymentTest extends TestCase
 
         $payload = [
             'order' => ['invoice_number' => 'INV-001'],
-            'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
+            'transaction' => ['status' => 'SUCCESS'],
         ];
 
         $this->doku->handleWebhook($payload);
@@ -105,7 +102,6 @@ class DokuPaymentTest extends TestCase
     public function test_webhook_idempotent(): void
     {
         $order = Order::factory()->create(['payment_status' => 'paid']);
-        PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'attempt-webhook-paid', 'invoice_number' => 'INV-001', 'merchant_request_id' => 'request-webhook-paid', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Created, 'metadata' => ['legacy_webhook_needs_review' => false]]);
         PaymentTransaction::create([
             'order_id' => $order->id,
             'doku_order_id' => 'INV-001',
@@ -116,7 +112,7 @@ class DokuPaymentTest extends TestCase
 
         $payload = [
             'order' => ['invoice_number' => 'INV-001'],
-            'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
+            'transaction' => ['status' => 'SUCCESS'],
         ];
 
         $this->doku->handleWebhook($payload);
@@ -174,7 +170,6 @@ class DokuPaymentTest extends TestCase
             'doku_order_id' => 'INV-003',
             'payment_status' => 'pending',
         ]);
-        PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'attempt-redirect', 'invoice_number' => 'INV-003', 'merchant_request_id' => 'request-redirect', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Created, 'metadata' => ['legacy_webhook_needs_review' => false]]);
         PaymentTransaction::create([
             'order_id' => $order->id,
             'doku_order_id' => 'INV-003',
@@ -186,7 +181,7 @@ class DokuPaymentTest extends TestCase
         Http::fake([
             '*/checkout/v1/payment/INV-003' => Http::response([
                 'order' => ['invoice_number' => 'INV-003'],
-                'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
+                'transaction' => ['status' => 'SUCCESS'],
             ], 200),
         ]);
 

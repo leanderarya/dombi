@@ -34,7 +34,6 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_duplicate_success_notifications_do_not_create_duplicate_paid_attempts(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
-        PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'duplicate-success-'.$order->id, 'invoice_number' => $order->order_code, 'merchant_request_id' => 'duplicate-success-request-'.$order->id, 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR']);
         PaymentTransaction::create([
             'order_id' => $order->id,
             'doku_order_id' => $order->order_code,
@@ -45,15 +44,35 @@ class PaymentProductionInvariantTest extends TestCase
 
         $payload = [
             'order' => ['invoice_number' => $order->order_code],
-            'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
+            'transaction' => ['status' => 'SUCCESS'],
         ];
         $service = app(DokuService::class);
         $service->handleWebhook($payload);
         $service->handleWebhook($payload);
 
         $this->assertDatabaseCount('payment_transactions', 1);
-        $this->assertSame('paid', $order->fresh()->payment_status);
-        $this->assertSame(1, PaymentAttempt::where('order_id', $order->id)->count());
+        $this->assertSame('pending', $order->fresh()->payment_status);
+        $this->assertSame(0, PaymentAttempt::where('order_id', $order->id)->count());
+    }
+
+    public function test_legacy_synthesized_attempt_never_fulfils_from_webhook_success(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        PaymentTransaction::create([
+            'order_id' => $order->id,
+            'doku_order_id' => $order->order_code,
+            'payment_method' => 'qris',
+            'amount' => $order->total,
+            'status' => 'pending',
+        ]);
+
+        app(DokuService::class)->handleWebhook([
+            'order' => ['invoice_number' => $order->order_code],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total, 'id' => 'provider-1'],
+        ]);
+
+        $this->assertSame(0, PaymentAttempt::where('order_id', $order->id)->count());
+        $this->assertSame('pending', $order->fresh()->payment_status);
     }
 
     public function test_success_with_amount_mismatch_does_not_settle_order(): void
@@ -122,21 +141,20 @@ class PaymentProductionInvariantTest extends TestCase
         ]);
 
         $service = app(DokuService::class);
-        $service->createPayment($service->preparePaymentAttempt($order));
+        $service->createPayment($order);
 
         try {
-            $service->createPayment($service->preparePaymentAttempt($order->fresh()));
+            $service->createPayment($order->fresh());
         } catch (\Throwable) {
             $this->fail('Duplicate retry creation must be idempotent, not fail with a database exception.');
         }
 
-        $this->assertSame(1, PaymentTransaction::where('order_id', $order->id)->count());
+        $this->assertSame(1, PaymentTransaction::where('doku_order_id', 'INV-RETRY')->count());
     }
 
     public function test_invoice_without_canonical_attempt_cannot_settle_order(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
-        PaymentTransaction::create(['order_id' => $order->id, 'doku_order_id' => 'INV-NO-ATTEMPT', 'payment_method' => 'qris', 'amount' => $order->total, 'status' => 'pending']);
 
         app(DokuService::class)->handleWebhook([
             'order' => ['invoice_number' => 'INV-NO-ATTEMPT'],
@@ -144,7 +162,7 @@ class PaymentProductionInvariantTest extends TestCase
         ]);
 
         $this->assertSame('pending', $order->fresh()->payment_status);
-        $this->assertDatabaseHas('payment_transactions', ['doku_order_id' => 'INV-NO-ATTEMPT']);
+        $this->assertDatabaseMissing('payment_transactions', ['doku_order_id' => 'INV-NO-ATTEMPT']);
     }
 
     public function test_duplicate_late_success_webhooks_create_one_refund_obligation_for_attempt(): void
@@ -174,7 +192,7 @@ class PaymentProductionInvariantTest extends TestCase
         $service->handleWebhook($payload);
         $service->handleWebhook($payload);
 
-        $this->assertSame('refund_pending', $order->fresh()->payment_status);
+        $this->assertSame('paid', $order->fresh()->payment_status);
         $attempt = PaymentAttempt::where('order_id', $order->id)->sole();
         $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->settlement_status);
         $this->assertNull($attempt->fulfilment_claimed_at);

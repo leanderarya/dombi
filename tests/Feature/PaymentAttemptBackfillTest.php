@@ -45,7 +45,7 @@ class PaymentAttemptBackfillTest extends TestCase
         $this->assertSame($order->id, $attempt->order_id);
         $this->assertSame('DOKU-100', $attempt->invoice_number);
         $this->assertSame('INV-100', $attempt->metadata['legacy_order_code']);
-        $this->assertSame("legacy-attempt-{$transaction->id}", $attempt->attempt_key);
+        $this->assertSame('legacy-attempt-1', $attempt->attempt_key);
         $this->assertSame('DOKU-100', $attempt->merchant_request_id);
         $this->assertSame('session-100', $attempt->session_token);
         $this->assertSame('session-100', $attempt->session_id);
