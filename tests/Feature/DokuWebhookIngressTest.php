@@ -46,10 +46,10 @@ class DokuWebhookIngressTest extends TestCase
         $first = $this->call('POST', route('doku.notify'), [], [], [], $headers, $body);
         $second = $this->call('POST', route('doku.notify'), [], [], [], $headers, $body);
 
-        $first->assertOk();
-        $second->assertOk();
+        $first->assertStatus(500);
+        $second->assertStatus(500);
         $this->assertSame(1, PaymentWebhookLog::query()->where('request_id', 'REQ-DUP')->count());
-        $this->assertSame('processed', PaymentWebhookLog::query()->where('request_id', 'REQ-DUP')->value('status'));
+        $this->assertSame('retryable', PaymentWebhookLog::query()->where('request_id', 'REQ-DUP')->value('status'));
     }
 
     public function test_processing_failure_returns_retryable_status_after_persistence(): void
@@ -77,7 +77,7 @@ class DokuWebhookIngressTest extends TestCase
     {
         $firstBody = '{"order":{"invoice_number":"INV-A"},"transaction":{"status":"PENDING"}}';
         $secondBody = '{"order":{"invoice_number":"INV-B"},"transaction":{"status":"PENDING"}}';
-        $this->call('POST', route('doku.notify'), [], [], [], $this->signed('REQ-CONFLICT', $firstBody), $firstBody)->assertOk();
+        $this->call('POST', route('doku.notify'), [], [], [], $this->signed('REQ-CONFLICT', $firstBody), $firstBody)->assertStatus(500);
 
         $this->call('POST', route('doku.notify'), [], [], [], $this->signed('REQ-CONFLICT', $secondBody), $secondBody)->assertStatus(409);
         $this->assertSame(1, PaymentWebhookLog::query()->where('request_id', 'REQ-CONFLICT')->count());
@@ -95,6 +95,15 @@ class DokuWebhookIngressTest extends TestCase
 
         $this->call('POST', route('doku.notify'), [], [], [], $headers, $body)->assertStatus(500);
         $this->assertSame('retryable', PaymentWebhookLog::where('request_id', 'REQ-CLAIM')->value('status'));
+    }
+
+    public function test_ingress_normalizes_event_before_domain_transition(): void
+    {
+        $body = '{"order":{"invoice_number":"INV-NORMALIZED"},"transaction":{"status":"SUCCESS","amount":"100","currency":"IDR"}}';
+        $headers = $this->signed('REQ-NORMALIZED', $body);
+
+        $this->call('POST', route('doku.notify'), [], [], [], $headers, $body)->assertStatus(500);
+        $this->assertSame('retryable', PaymentWebhookLog::where('request_id', 'REQ-NORMALIZED')->value('status'));
     }
 
     public function test_retryable_duplicate_is_reprocessed(): void

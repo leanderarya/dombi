@@ -97,10 +97,8 @@ final class DokuWebhookIngressService
         }
 
         try {
-            if ($invoice === null) {
-                throw new \UnexpectedValueException('missing_invoice_number');
-            }
-            $this->doku->handleWebhook($payload);
+            $event = $this->normalize($payload);
+            $this->doku->handleNormalizedWebhook($event);
             $log->update(['status' => 'processed']);
 
             return new WebhookReceipt($log, 200, 'OK');
@@ -109,5 +107,23 @@ final class DokuWebhookIngressService
 
             return new WebhookReceipt($log, 500, 'Internal error');
         }
+    }
+
+    private function normalize(array $payload): NormalizedPaymentEvent
+    {
+        $invoice = data_get($payload, 'order.invoice_number');
+        if (! is_string($invoice) || $invoice === '') {
+            throw new \UnexpectedValueException('missing_invoice_number');
+        }
+
+        return new NormalizedPaymentEvent(
+            source: 'doku-webhook',
+            gatewayStatus: (string) data_get($payload, 'transaction.status', ''),
+            amount: data_get($payload, 'order.amount') ?? data_get($payload, 'transaction.amount'),
+            currency: (string) (data_get($payload, 'order.currency') ?? data_get($payload, 'transaction.currency', 'IDR')),
+            gatewayReference: $invoice,
+            receivedAt: now('UTC'),
+            rawEvidence: $payload,
+        );
     }
 }

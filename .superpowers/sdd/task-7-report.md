@@ -10,5 +10,7 @@ Implemented durable DOKU webhook ingress separation and review fixes.
 
 Verification:
 
-- `php artisan test tests/Feature/DokuWebhookIngressTest.php tests/Unit/WebhookSecurityTest.php` — 13 passed.
-- `composer run lint:check` initially found formatting issues; `vendor/bin/pint` fixed them and focused lint passed.
+- `php artisan test tests/Feature/DokuWebhookIngressTest.php tests/Unit/WebhookSecurityTest.php` — 14 passed.
+- `composer run lint:check` — passed.
+- Duplicate cleanup uses explicit retained/deleted IDs for portable migrations.
+- SQLite tests deterministically verify durable claim; SQLite does not provide production-style parallel row locking.
