@@ -43,7 +43,8 @@ class PaymentAttemptBackfillTest extends TestCase
 
         $attempt = PaymentAttempt::query()->sole();
         $this->assertSame($order->id, $attempt->order_id);
-        $this->assertSame('INV-100', $attempt->invoice_number);
+        $this->assertSame('DOKU-100', $attempt->invoice_number);
+        $this->assertSame('INV-100', $attempt->metadata['legacy_order_code']);
         $this->assertSame('legacy-attempt-1', $attempt->attempt_key);
         $this->assertSame('DOKU-100', $attempt->merchant_request_id);
         $this->assertSame('session-100', $attempt->session_token);
@@ -154,6 +155,10 @@ class PaymentAttemptBackfillTest extends TestCase
             ->expectsOutputToContain("Payment transaction {$failed->id} failed")
             ->assertExitCode(0);
         $this->assertDatabaseHas('payment_attempts', ['legacy_payment_transaction_id' => $valid->id]);
+        $this->assertDatabaseMissing('payment_attempts', ['legacy_payment_transaction_id' => $failed->id]);
+        PaymentAttempt::query()->where('invoice_number', 'DOKU-conflict')->delete();
+        $this->artisan('payments:backfill-attempts')->assertExitCode(0);
+        $this->assertDatabaseHas('payment_attempts', ['legacy_payment_transaction_id' => $failed->id]);
     }
 
     public function test_empty_provider_identity_is_not_unmappable_when_order_exists(): void
