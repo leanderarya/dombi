@@ -68,6 +68,8 @@ class PaymentProductionInvariantTest extends TestCase
         ]);
 
         $this->assertSame('pending', $order->fresh()->payment_status);
+        $this->assertSame('pending', PaymentTransaction::where('order_id', $order->id)->sole()->status);
+        $this->assertDatabaseCount('refund_status_histories', 0);
     }
 
     public function test_order_payment_status_projects_from_successful_attempt_state(): void
@@ -146,7 +148,10 @@ class PaymentProductionInvariantTest extends TestCase
         $service->handleWebhook($payload);
 
         $this->assertSame('refund_pending', $order->fresh()->payment_status);
-        $this->assertSame(1, RefundStatusHistory::where('order_id', $order->id)->where('event', 'refund_requested')->count());
+        $this->assertSame(1, RefundStatusHistory::where('order_id', $order->id)
+            ->where('event', 'refund_requested')
+            ->whereJsonContains('metadata->source_entry_point', 'late_payment')
+            ->count(), 'Future canonical obligation identity must be (payment_attempt_id, reason); current schema proxy uses order history metadata.');
         $this->assertSame(1, PaymentTransaction::where('order_id', $order->id)->where('status', 'paid')->count());
     }
 
@@ -166,7 +171,10 @@ class PaymentProductionInvariantTest extends TestCase
 
         $this->assertNotNull($first);
         $this->assertNull($second);
-        $this->assertSame(1, RefundStatusHistory::where('order_id', $order->id)->where('event', 'refund_requested')->count());
+        $this->assertSame(1, RefundStatusHistory::where('order_id', $order->id)
+            ->where('event', 'refund_requested')
+            ->where('reason_code', 'late_payment')
+            ->count(), 'Current observable proxy for future canonical obligation identity: (payment_attempt_id, reason).');
     }
 
     public function test_paid_order_cannot_regress_on_late_failure(): void
