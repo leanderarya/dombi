@@ -18,7 +18,10 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 
 ## Tests
 - Reconciliation SUCCESS test: passed; canonical transition settles attempt and projects order.
-- `php artisan test`: 1335 tests passed, 4659 assertions.
+- `php artisan test`: 1336 tests passed, 4662 assertions.
+- Every reconciliation response persists through a token-checked attempt transaction; stale workers cannot alter state, evidence, backoff, or clear another lease.
+- Stale-worker reconciliation regression: passed.
+- `composer run lint:check`: passed (`pint --parallel --test`).
 - Reconciliation retry slot is claimed under attempt row lock before HTTP; lease released/updated after response and concurrent workers cannot exceed cap.
 - Concurrent reconciliation lease regression: passed.
 - `composer run lint:check`: passed (`pint --parallel --test`).
