@@ -56,7 +56,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('refund_obligation_backfill_exceptions');
         Schema::dropIfExists('refund_obligations');
     }
 };
