@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
-use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -20,7 +19,6 @@ class DokuMarkPaidCommandTest extends TestCase
             'payment_status' => 'pending',
             'total' => 50000,
         ]);
-        PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'command-'.$order->id, 'invoice_number' => $order->order_code, 'merchant_request_id' => 'command-request-'.$order->id, 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR']);
         PaymentTransaction::create([
             'order_id' => $order->id,
             'doku_order_id' => $order->order_code,

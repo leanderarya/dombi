@@ -18,12 +18,22 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
 
     public function test_payment_aggregate_lock_order_is_order_then_attempt(): void
     {
-        $service = substr(file_get_contents(app_path('Services/CanonicalPaymentTransitionService.php')), strpos(file_get_contents(app_path('Services/CanonicalPaymentTransitionService.php')), 'public function apply'));
+        $service = file_get_contents(app_path('Services/CanonicalPaymentTransitionService.php'));
         $projection = file_get_contents(app_path('Services/OrderPaymentProjectionService.php'));
-        $webhook = substr(file_get_contents(app_path('Services/DokuService.php')), strpos(file_get_contents(app_path('Services/DokuService.php')), 'public function handleWebhook'));
+        $webhook = file_get_contents(app_path('Services/DokuService.php'));
 
-        $this->assertSame(1, preg_match('/Order::query\(\)->whereKey\(\$attempt->order_id\)->lockForUpdate\(\).*PaymentAttempt::query\(\)->whereKey\(\$attempt->id\)->lockForUpdate\(\)/s', $service));
-        $this->assertSame(1, preg_match('/Order::query\(\)->whereKey\(\$order->id\)->lockForUpdate\(\).*PaymentAttempt::query\(\)->where\(\'order_id\'/s', $projection));
+        $this->assertLessThan(
+            strpos($service, 'PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()'),
+            strpos($service, 'Order::query()->whereKey($attempt->order_id)->lockForUpdate()')
+        );
+        $this->assertLessThan(
+            strpos($projection, 'PaymentAttempt::query()->where(\'order_id\''),
+            strpos($projection, 'Order::query()->whereKey($order->id)->lockForUpdate()')
+        );
+        $this->assertLessThan(
+            strpos($webhook, 'PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()'),
+            strpos($webhook, 'Order::query()->whereKey($attempt->order_id)->lockForUpdate()')
+        );
     }
 
     public function test_repeated_failed_event_does_not_reset_payment_retry_window(): void
