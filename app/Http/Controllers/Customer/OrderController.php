@@ -266,7 +266,7 @@ class OrderController extends Controller
 
             $attempt = $doku->preparePaymentAttempt($order);
             $paymentAttempts = PaymentAttempt::where('order_id', $order->id)->count();
-            if ($paymentAttempts > config('order.max_payment_attempts', 3) && ! in_array($attempt->creation_state?->value, ['initiated', 'pending', 'created', 'unknown'], true)) {
+            if ($paymentAttempts >= config('order.max_payment_attempts', 3) && ! in_array($attempt->creation_state?->value, ['initiated', 'pending', 'created', 'unknown'], true)) {
                 return back()->with('error', 'Batas maksimum percobaan pembayaran tercapai.');
             }
             if ($attempt->creation_state?->value === 'unknown') {
