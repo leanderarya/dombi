@@ -171,7 +171,7 @@ class DokuService
             ]);
         }
 
-        $this->processPaymentStatusChange($order, $status);
+        $this->processPaymentStatusChange($order, $status, $payload);
 
         Log::info('DOKU webhook processed', [
             'order_id' => $order->id,
@@ -446,8 +446,23 @@ class DokuService
      * Process payment status change — shared by webhook and status sync.
      * Handles: paid, failed, expired transitions.
      */
-    public function processPaymentStatusChange(Order $order, string $status): void
+    public function processPaymentStatusChange(Order $order, string $status, array $evidence = []): void
     {
+        $attempt = $order->paymentAttempts()->where('invoice_number', $order->doku_order_id ?: $order->order_code)->first();
+        if ($attempt) {
+            app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+                source: 'doku',
+                gatewayStatus: $evidence['transaction']['status'] ?? $status,
+                amount: $evidence['transaction']['amount'] ?? null,
+                currency: $evidence['order']['currency'] ?? 'IDR',
+                gatewayReference: $evidence['transaction']['original_request_id'] ?? $evidence['transaction']['id'] ?? null,
+                receivedAt: now(),
+                rawEvidence: $evidence,
+            ));
+
+            return;
+        }
+
         $to = PaymentStatus::from($status);
 
         if ($to === PaymentStatus::Paid) {
