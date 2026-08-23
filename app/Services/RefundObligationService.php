@@ -38,7 +38,7 @@ class RefundObligationService
         $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
         $driverCode = (string) ($exception->errorInfo[1] ?? '');
 
-        return in_array($sqlState, ['23000', '23505', '2627', '2601'], true)
+        return $sqlState === '23505'
             || in_array($driverCode, ['1062', '1555', '2067', '2627', '2601'], true);
     }
 

@@ -112,6 +112,16 @@ class RefundObligationTest extends TestCase
         $this->assertSame('race', $existing->reason);
     }
 
+    public function test_non_duplicate_database_errors_propagate_from_creation(): void
+    {
+        $attempt = new PaymentAttempt([
+            'id' => 999999, 'amount_snapshot' => 12500, 'currency_snapshot' => 'IDR',
+        ]);
+
+        $this->expectException(QueryException::class);
+        app(RefundObligationService::class)->createForAttempt($attempt, 'foreign-key-error');
+    }
+
     public function test_historical_refund_backfill_maps_existing_attempt_and_reruns_idempotently(): void
     {
         $order = Order::factory()->create([
@@ -163,6 +173,18 @@ class RefundObligationTest extends TestCase
     {
         $migration = require database_path('migrations/2026_08_23_000004_backfill_refund_obligations.php');
         $migration->up();
+    }
+
+    public function test_backfill_down_removes_only_backfill_records(): void
+    {
+        $order = Order::factory()->create(['total' => 8000, 'payment_status' => 'refund_pending', 'refund_amount' => 8000]);
+        $this->runRefundBackfill();
+        $attemptId = PaymentAttempt::query()->where('attempt_key', 'legacy-refund-'.$order->id)->value('id');
+        $migration = require database_path('migrations/2026_08_23_000004_backfill_refund_obligations.php');
+        $migration->down();
+
+        $this->assertDatabaseMissing('refund_obligations', ['payment_attempt_id' => $attemptId]);
+        $this->assertDatabaseMissing('payment_attempts', ['attempt_key' => 'legacy-refund-'.$order->id]);
     }
 
     public function test_invalid_transitions_are_rejected_and_needs_review_is_supported(): void
