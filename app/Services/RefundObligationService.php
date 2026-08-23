@@ -6,6 +6,7 @@ use App\Enums\RefundObligationStatus;
 use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
 use DomainException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 class RefundObligationService
@@ -16,10 +17,20 @@ class RefundObligationService
             throw new DomainException('Refund amount must be positive.');
         }
 
-        return RefundObligation::firstOrCreate(
-            ['payment_attempt_id' => $attempt->id, 'reason' => $reason],
-            ['amount' => $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'status' => RefundObligationStatus::Pending]
-        );
+        try {
+            return RefundObligation::firstOrCreate(
+                ['payment_attempt_id' => $attempt->id, 'reason' => $reason],
+                ['amount' => $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'status' => RefundObligationStatus::Pending]
+            );
+        } catch (QueryException $exception) {
+            if (! str_contains($exception->getMessage(), 'unique')) {
+                throw $exception;
+            }
+
+            return RefundObligation::where('payment_attempt_id', $attempt->id)
+                ->where('reason', $reason)
+                ->firstOrFail();
+        }
     }
 
     public function transition(RefundObligation $obligation, RefundObligationStatus $to, array $metadata = []): bool
@@ -33,13 +44,9 @@ class RefundObligationService
             RefundObligationStatus::Completed->value => [],
         ];
 
-        if (! in_array($to, $allowed[$obligation->status->value] ?? [], true)) {
-            return false;
-        }
-
-        return DB::transaction(function () use ($obligation, $to, $metadata): bool {
+        return DB::transaction(function () use ($obligation, $to, $metadata, $allowed): bool {
             $locked = RefundObligation::lockForUpdate()->findOrFail($obligation->id);
-            if (! in_array($to, [RefundObligationStatus::Pending, RefundObligationStatus::InProgress, RefundObligationStatus::Completed, RefundObligationStatus::Rejected, RefundObligationStatus::Failed, RefundObligationStatus::NeedsReview], true)) {
+            if (! in_array($to, $allowed[$locked->status->value] ?? [], true)) {
                 return false;
             }
             $locked->update(['status' => $to, 'metadata' => array_merge($locked->metadata ?? [], $metadata), 'processed_at' => $to === RefundObligationStatus::Completed ? now() : $locked->processed_at]);

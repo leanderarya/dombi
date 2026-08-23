@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -33,10 +34,24 @@ return new class extends Migration
             $table->unique(['payment_attempt_id', 'reason']);
             $table->index(['status', 'created_at']);
         });
+
+        if (in_array(DB::getDriverName(), ['sqlite', 'mysql', 'pgsql'], true)) {
+            DB::statement('ALTER TABLE refund_obligations ADD CONSTRAINT refund_obligations_amount_positive CHECK (amount > 0)');
+        }
+
+        Schema::create('refund_obligation_backfill_exceptions', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('order_id')->nullable();
+            $table->string('reason');
+            $table->json('payload')->nullable();
+            $table->timestamps();
+            $table->unique(['order_id', 'reason']);
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('refund_obligation_backfill_exceptions');
         Schema::dropIfExists('refund_obligations');
     }
 };

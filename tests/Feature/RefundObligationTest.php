@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Enums\RefundObligationStatus;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
+use App\Models\RefundObligation;
 use App\Services\RefundObligationService;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -44,6 +46,29 @@ class RefundObligationTest extends TestCase
         $this->assertTrue($first->is($second));
         $this->expectException(\DomainException::class);
         $service->createForAttempt($attempt->forceFill(['amount_snapshot' => 0]), 'invalid');
+    }
+
+    public function test_rejected_and_failed_obligations_can_be_recovered(): void
+    {
+        $attempt = PaymentAttempt::create([
+            'order_id' => Order::factory()->create()->id,
+            'attempt_key' => 'attempt-recovery', 'invoice_number' => 'invoice-recovery', 'merchant_request_id' => 'request-recovery',
+            'amount_snapshot' => 12500, 'currency_snapshot' => 'IDR',
+        ]);
+        $service = app(RefundObligationService::class);
+        $rejected = $service->createForAttempt($attempt, 'rejected');
+        $this->assertTrue($service->transition($rejected, RefundObligationStatus::Rejected));
+        $this->assertTrue($service->transition($rejected->fresh(), RefundObligationStatus::Pending));
+        $failed = $service->createForAttempt($attempt, 'failed');
+        $this->assertTrue($service->transition($failed, RefundObligationStatus::InProgress));
+        $this->assertTrue($service->transition($failed->fresh(), RefundObligationStatus::Failed));
+        $this->assertTrue($service->transition($failed->fresh(), RefundObligationStatus::Pending));
+    }
+
+    public function test_foreign_key_and_database_positive_amount_are_enforced(): void
+    {
+        $this->expectException(QueryException::class);
+        RefundObligation::create(['payment_attempt_id' => 999999, 'amount' => 1, 'currency' => 'IDR', 'reason' => 'fk']);
     }
 
     public function test_invalid_transitions_are_rejected_and_needs_review_is_supported(): void

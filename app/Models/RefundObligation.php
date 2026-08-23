@@ -3,11 +3,21 @@
 namespace App\Models;
 
 use App\Enums\RefundObligationStatus;
+use DomainException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RefundObligation extends Model
 {
+    protected static function booted(): void
+    {
+        static::saving(function (RefundObligation $obligation): void {
+            if ((float) $obligation->amount <= 0) {
+                throw new DomainException('Refund amount must be positive.');
+            }
+        });
+    }
+
     protected $fillable = [
         'payment_attempt_id', 'amount', 'currency', 'reason', 'status',
         'destination_type', 'bank_name', 'account_number', 'account_holder',

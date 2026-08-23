@@ -16,7 +16,7 @@ return new class extends Migration
             ->whereIn('payment_status', ['refund_pending', 'refund_in_progress', 'refunded', 'refund_rejected', 'refund_failed'])
             ->whereNotNull('refund_amount')
             ->where('refund_amount', '>', 0)
-            ->get(['id', 'payment_status', 'refund_amount', 'refund_destination_type', 'refund_bank_name', 'refund_account_number', 'refund_account_holder', 'refund_ewallet_provider', 'refund_ewallet_number', 'refund_ewallet_holder', 'refund_destination_submitted_at', 'refund_transfer_reference', 'refund_transfer_note', 'refund_proof_image', 'refunded_by', 'refunded_at']);
+            ->get(['id', 'payment_status', 'refund_amount', 'refund_reason', 'refund_destination_type', 'refund_bank_name', 'refund_account_number', 'refund_account_holder', 'refund_ewallet_provider', 'refund_ewallet_number', 'refund_ewallet_holder', 'refund_destination_submitted_at', 'refund_transfer_reference', 'refund_transfer_note', 'refund_proof_image', 'refunded_by', 'refunded_at']);
 
         foreach ($refunds as $refund) {
             $attempt = DB::table('payment_attempts')
@@ -26,7 +26,34 @@ return new class extends Migration
                 ->first();
 
             if (! $attempt) {
-                logger()->warning('Refund obligation backfill skipped unmappable order.', ['order_id' => $refund->id]);
+                $order = DB::table('orders')->where('id', $refund->id)->first(['id', 'total']);
+                if ($order && (float) $order->total > 0) {
+                    $attemptId = DB::table('payment_attempts')->insertGetId([
+                        'order_id' => $order->id,
+                        'attempt_key' => 'legacy-refund-'.$order->id,
+                        'invoice_number' => 'legacy-refund-invoice-'.$order->id,
+                        'merchant_request_id' => 'legacy-refund-request-'.$order->id,
+                        'amount_snapshot' => $order->total,
+                        'currency_snapshot' => 'IDR',
+                        'creation_state' => 'unknown',
+                        'settlement_status' => 'unknown',
+                        'verification_status' => 'needs_review',
+                        'metadata' => json_encode(['synthesized_for_refund_backfill' => true]),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $attempt = DB::table('payment_attempts')->where('id', $attemptId)->first();
+                }
+            }
+
+            if (! $attempt) {
+                DB::table('refund_obligation_backfill_exceptions')->insertOrIgnore([
+                    'order_id' => $refund->id,
+                    'reason' => 'missing_defensible_payment_attempt',
+                    'payload' => json_encode((array) $refund),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
                 continue;
             }
