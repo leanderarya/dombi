@@ -2,12 +2,27 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
+        $duplicates = DB::table('payment_webhook_logs')
+            ->select('request_id')
+            ->whereNotNull('request_id')
+            ->groupBy('request_id')
+            ->havingRaw('COUNT(*) > 1')
+            ->pluck('request_id');
+        foreach ($duplicates as $requestId) {
+            DB::table('payment_webhook_logs')
+                ->where('request_id', $requestId)
+                ->orderByDesc('id')
+                ->skip(1)
+                ->delete();
+        }
+
         Schema::table('payment_webhook_logs', function (Blueprint $table): void {
             $table->text('raw_body')->nullable()->after('payload');
             $table->string('body_digest', 64)->nullable()->after('raw_body');
