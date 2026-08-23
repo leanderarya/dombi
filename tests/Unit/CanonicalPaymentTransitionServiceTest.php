@@ -22,12 +22,8 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $projection = file_get_contents(app_path('Services/OrderPaymentProjectionService.php'));
         $webhook = substr(file_get_contents(app_path('Services/DokuService.php')), strpos(file_get_contents(app_path('Services/DokuService.php')), 'public function handleWebhook'));
 
-        $this->assertStringContainsString('Order::query()->whereKey($attempt->order_id)->lockForUpdate()', $service);
-        $this->assertStringContainsString('PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()', $service);
-        $this->assertLessThan(
-            strpos($projection, 'PaymentAttempt::query()->where(\'order_id\''),
-            strpos($projection, 'Order::query()->whereKey($order->id)->lockForUpdate()')
-        );
+        $this->assertSame(1, preg_match('/Order::query\(\)->whereKey\(\$attempt->order_id\)->lockForUpdate\(\).*PaymentAttempt::query\(\)->whereKey\(\$attempt->id\)->lockForUpdate\(\)/s', $service));
+        $this->assertSame(1, preg_match('/Order::query\(\)->whereKey\(\$order->id\)->lockForUpdate\(\).*PaymentAttempt::query\(\)->where\(\'order_id\'/s', $projection));
     }
 
     public function test_repeated_failed_event_does_not_reset_payment_retry_window(): void
