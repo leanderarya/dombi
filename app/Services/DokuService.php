@@ -85,7 +85,7 @@ class DokuService
         }
 
         $order = $attempt->order;
-        $body = ['order' => ['invoice_number' => $attempt->invoice_number, 'amount' => (int) $attempt->amount_snapshot, 'currency' => 'IDR', 'callback_url' => route('doku.redirect', ['invoice_number' => $attempt->invoice_number]), 'callback_url_result' => config('doku.callback_url') ?: route('doku.notify'), 'auto_redirect' => true, 'payment_due_date' => config('doku.payment_timeout', 30), 'line_items' => $this->buildLineItems($order)], 'payment' => array_merge(['payment_method_types' => [$this->mapPaymentMethod($attempt->payment_method)]], $this->channelInfo($attempt->payment_method) ?? []), 'customer' => $this->buildCustomerInfo($order)];
+        $body = ['order' => ['invoice_number' => $attempt->invoice_number, 'amount' => (int) $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'callback_url' => route('doku.redirect', ['invoice_number' => $attempt->invoice_number]), 'callback_url_result' => config('doku.callback_url') ?: route('doku.notify'), 'auto_redirect' => true, 'payment_due_date' => config('doku.payment_timeout', 30), 'line_items' => data_get($attempt->metadata ?? [], 'line_items', $this->buildLineItems($order))], 'payment' => array_merge(['payment_method_types' => [$this->mapPaymentMethod($attempt->payment_method)]], $this->channelInfo($attempt->payment_method) ?? []), 'customer' => $this->buildCustomerInfo($order)];
         $bodyJson = json_encode($body);
         $endpoint = '/checkout/v1/payment';
         $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
@@ -118,7 +118,7 @@ class DokuService
                 return false;
             }
             $locked->update(['creation_state' => 'created', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data, 'metadata' => array_merge($locked->metadata ?? [], ['payment_url' => $paymentUrl])]);
-            PaymentTransaction::firstOrCreate(['doku_order_id' => $locked->invoice_number], ['order_id' => $order->id, 'doku_order_id' => $locked->invoice_number, 'payment_method' => $order->payment_method ?? 'qris', 'amount' => (int) $order->total, 'status' => 'pending', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data]);
+            PaymentTransaction::firstOrCreate(['doku_order_id' => $locked->invoice_number], ['order_id' => $order->id, 'doku_order_id' => $locked->invoice_number, 'payment_method' => $locked->payment_method ?? $order->payment_method ?? 'qris', 'amount' => (int) $locked->amount_snapshot, 'status' => 'pending', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data]);
             $order->update(['doku_order_id' => $locked->invoice_number, 'payment_status' => 'pending']);
 
             return true;
@@ -265,7 +265,7 @@ class DokuService
             }
             $identity = strtoupper('DMB-'.$order->id.'-'.bin2hex(random_bytes(6)));
 
-            return PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => $identity, 'invoice_number' => $identity, 'merchant_request_id' => $identity.'-REQ', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'payment_method' => $order->payment_method ?? 'qris', 'creation_state' => 'initiated']);
+            return PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => $identity, 'invoice_number' => $identity, 'merchant_request_id' => $identity.'-REQ', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'payment_method' => $order->payment_method ?? 'qris', 'creation_state' => 'initiated', 'metadata' => ['line_items' => $this->buildLineItems($order)]]);
         });
     }
 

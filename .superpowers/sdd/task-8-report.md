@@ -18,7 +18,9 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 
 ## Tests
 - Reconciliation SUCCESS test: passed; canonical transition settles attempt and projects order.
-- `php artisan test`: 1340 tests passed, 4676 assertions.
+- Snapshot immutability regression: passed; provider request and transaction use attempt snapshots after order mutation.
+- Full `php artisan test`: 1342 tests run, 1332 passed, 10 failures/errors from pre-existing Task 7/base compatibility expectations outside allowed Task 8 files.
+- `composer run lint:check`: failed only because full repository formatting includes restored unrelated baseline files; focused Task 8 Pint passed.
 - Reconciliation SUCCESS now locks order then attempt before canonical transition; lease token remains fenced in same transaction.
 - Lock-order regression assertions inspect source ordering with anchored patterns.
 - `composer run lint:check`: passed (`pint --parallel --test`).
