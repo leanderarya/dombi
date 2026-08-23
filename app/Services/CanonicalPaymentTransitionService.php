@@ -55,7 +55,7 @@ class CanonicalPaymentTransitionService
                     'pending' => PaymentAttemptSettlementStatus::Pending,
                     default => PaymentAttemptSettlementStatus::Unknown,
                 };
-                if ($oldSettlement !== $target) {
+                if ($oldSettlement !== $target && $this->settlementRank($target) > $this->settlementRank($oldSettlement)) {
                     $lockedAttempt->settlement_status = $target;
                     $changed = true;
                 }
@@ -111,6 +111,17 @@ class CanonicalPaymentTransitionService
         if (strtoupper($event->currency) !== strtoupper($attempt->currency_snapshot)) {
             throw new \InvalidArgumentException('Payment currency does not match attempt.');
         }
+    }
+
+    private function settlementRank(PaymentAttemptSettlementStatus $status): int
+    {
+        return match ($status) {
+            PaymentAttemptSettlementStatus::Pending => 10,
+            PaymentAttemptSettlementStatus::Unknown => 20,
+            PaymentAttemptSettlementStatus::Failed => 30,
+            PaymentAttemptSettlementStatus::Expired => 40,
+            PaymentAttemptSettlementStatus::Paid => 50,
+        };
     }
 
     private function isTerminalOrder(Order $order): bool

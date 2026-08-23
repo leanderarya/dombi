@@ -86,15 +86,18 @@ class PaymentProductionInvariantTest extends TestCase
             'status' => 'pending',
         ]);
 
+        PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'mismatch-'.$order->id,
+            'invoice_number' => $order->order_code, 'merchant_request_id' => 'mismatch-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
         app(DokuService::class)->handleWebhook([
             'order' => ['invoice_number' => $order->order_code],
             'transaction' => ['status' => 'SUCCESS', 'amount' => 10000],
         ]);
 
-        $this->assertSame(0, PaymentAttempt::where('order_id', $order->id)->count());
-        $this->assertSame('pending', $order->fresh()->payment_status);
-
-        return;
+        $attempt = PaymentAttempt::where('order_id', $order->id)->sole();
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->settlement_status);
         $this->assertSame(PaymentAttemptVerificationStatus::NeedsReview, $attempt->verification_status);
         $this->assertSame('pending', $order->fresh()->payment_status);
         $this->assertDatabaseCount('refund_status_histories', 0);
