@@ -2,19 +2,16 @@
 
 ## Findings Fixed
 
-- Added bounded command dispatch with `--limit` override and `doku.reconciliation_batch_limit` default (100), ordered by attempt ID.
-- Oversized operator `--limit` is clamped to configured maximum; coverage added.
-- Job checks attempt existence, pending/unknown creation state, retry cap, and due `next_reconciliation_at` before calling service.
-- `DokuReconciliationService::reconcile` safely returns unchanged `TransitionResult` when `fresh()` finds a deleted attempt.
-- Added job eligibility and deleted-attempt tests.
-- Added integration assertion that successful reconciliation creates `NormalizedPaymentEvent` with `source=doku-reconciliation` and routes through `CanonicalPaymentTransitionService`, matching webhook architecture.
-- Production-driver test races reconciliation against real webhook ingress, gated by `RUN_PRODUCTION_DRIVER_TESTS=true`; asserts one DOKU status request, one paid transition, and successful exit status for every child after `pcntl_waitpid`. Local environments skip only when gate, production DB driver, or `pcntl` is unavailable.
+- DOKU status 404 now preserves unresolved creation state (`pending` remains `pending`, `unknown` remains `unknown`), records `last_reconciliation_status=404`, `last_reconciliation_error=invoice_not_found`, raw evidence, and schedules bounded retry using normal backoff.
+- 404 no longer applies terminal FAILED canonical transition.
+- Deleted `PaymentAttempt` is a no-op `TransitionResult(false)` after preflight refresh, after service claim/failure exceptions, and after final refresh.
+- Existing bounded command, job eligibility, canonical normalized-event integration, scheduler, and production-driver race coverage retained.
 
 ## Verification
 
-- `php artisan test tests/Feature/DokuReconciliationTest.php`: 20 passing, 1 explicit local skip.
-- `composer run lint:check -- --dirty`: pending final run.
+- `php artisan test tests/Feature/DokuReconciliationTest.php`: 20 passed, 1 skipped, 45 assertions.
+- `composer run lint:check -- --dirty`: run below; must pass before commit.
 
 ## Scope
 
-Task 9 files only.
+Task 9 files only, with required existing DOKU reconciliation implementation correction in `app/Services/DokuService.php`.

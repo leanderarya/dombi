@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\PaymentAttempt;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class DokuReconciliationService
 {
@@ -25,9 +26,16 @@ class DokuReconciliationService
         $beforeSettlement = $attempt->settlement_status?->value;
         $beforeCreation = $attempt->creation_state?->value;
 
-        $this->doku->reconcilePaymentAttempt($attempt);
+        try {
+            $this->doku->reconcilePaymentAttempt($attempt);
+        } catch (ModelNotFoundException) {
+            return new TransitionResult(false);
+        }
 
-        $attempt->refresh();
+        $attempt = $attempt->fresh();
+        if (! $attempt) {
+            return new TransitionResult(false);
+        }
 
         $changed = $attempt->settlement_status?->value !== $beforeSettlement
             || $attempt->creation_state?->value !== $beforeCreation;

@@ -154,17 +154,27 @@ class DokuReconciliationTest extends TestCase
         $this->travelBack();
     }
 
-    public function test_404_terminates_attempt_as_failed(): void
+    public function test_404_preserves_unresolved_state_and_schedules_bounded_retry(): void
     {
+        $now = now()->startOfSecond();
+        $this->travelTo($now);
         $attempt = $this->makeAttempt('pending');
         Http::fake([
             '*/checkout/v1/payment/*' => Http::response(null, 404),
         ]);
 
-        $this->reconciliation->reconcile($attempt);
+        $result = $this->reconciliation->reconcile($attempt);
 
         $attempt->refresh();
-        $this->assertSame('failed', $attempt->creation_state?->value);
+        $metadata = $attempt->metadata ?? [];
+        $this->assertFalse($result->changed);
+        $this->assertSame('pending', $attempt->creation_state?->value);
+        $this->assertSame(1, $metadata['reconciliation_attempts']);
+        $this->assertSame(404, $metadata['last_reconciliation_status']);
+        $this->assertSame('invoice_not_found', $metadata['last_reconciliation_error']);
+        $this->assertSame($now->copy()->addMinutes(2)->toIso8601String(), $metadata['next_reconciliation_at']);
+        $this->assertSame(['reason' => 'invoice_not_found'], $attempt->raw_response);
+        $this->travelBack();
     }
 
     public function test_max_attempts_stops_polling(): void
