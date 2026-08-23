@@ -43,6 +43,9 @@ class DokuService
         if ($url && in_array($attempt->creation_state?->value, ['created', 'pending'], true)) {
             return $url;
         }
+        if ($attempt->creation_state?->value === 'failed') {
+            throw new DokuPaymentException('Failed payment attempt requires reconciliation before retry.');
+        }
         if (in_array($attempt->creation_state?->value, ['pending', 'unknown'], true)) {
             throw new DokuPaymentException('Payment attempt requires reconciliation before retry.');
         }
