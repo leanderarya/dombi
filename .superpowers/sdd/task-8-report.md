@@ -18,9 +18,9 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 
 ## Tests
 - Reconciliation SUCCESS test: passed; canonical transition settles attempt and projects order.
-- `php artisan test`: 1334 tests run, 1332 passed, 2 unrelated failures.
-- Unrelated failures: `CanonicalPaymentTransitionServiceTest::test_payment_aggregate_lock_order_is_order_then_attempt` and `PaymentAttemptBackfillTest::test_legacy_transactions_are_backfilled_once_with_historical_values`.
-- Reconciliation failure regression: passed; durable attempt count/status/error/next-backoff persisted and capped at five attempts.
+- `php artisan test`: 1334 tests passed, 4657 assertions.
+- Lock-order regression and payment backfill identity regression fixed.
+- Reconciliation failure regression: passed; durable attempt count/status/error/next-backoff persisted and capped at five attempts under row lock.
 - `composer run lint:check`: passed (`pint --parallel --test`).
 - Pending settlement attempts are active and reused by order-locked preparation.
 - Completion verifies current creation lease token; stale provider responses become unknown evidence without transaction/order persistence.
