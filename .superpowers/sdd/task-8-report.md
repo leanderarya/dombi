@@ -1,71 +1,13 @@
 # Task 8 Report
 
 ## Scope
-Harden checkout payment creation and retry around canonical `PaymentAttempt` records.
+Harden canonical DOKU payment creation, retry, reconciliation, leases, snapshots, and active-attempt projection.
 
-## Changes
-- Added `DokuService::preparePaymentAttempt(Order)` under order row lock.
-- Restricted `DokuService::createPayment` to canonical `PaymentAttempt`; controllers prepare attempts through order-locked creation.
-- Unknown attempts reconcile exact invoice/request identity before retry.
-- Active leased attempts return controlled in-progress failure instead of generic duplicate failure.
-- Active `initiated`, `created`, `pending`, and `unknown` attempts are not duplicated.
-- Fresh `initiated` attempts acquire an atomic two-minute creation lease under row lock; only lease owner calls DOKU.
-- Provider HTTP runs outside database transactions.
-- Definitive 4xx rejection marks attempt `failed`; 408, 5xx, transport timeout, and malformed/ambiguous responses mark `unknown`.
-- Retries use fresh attempt/invoice/request identities and preserve historical attempts/transactions.
-- Checkout and order retry controllers use attempts instead of deleting payment history.
-- Webhook processing requires canonical attempts; legacy transaction evidence is retained but cannot settle or fulfil without one.
+## Verification
+- Focused Task 8 creation/retry/boundary tests: 24 passed, 62 assertions.
+- `php artisan test`: 1343 run, 1332 passed, 11 baseline failures/errors. Verification blocked.
+- Baseline failures/errors are prior-task compatibility issues after restoring approved Task 7 state: lock-order assertion; missing canonical-attempt fixtures in DokuMarkPaid/DokuPayment atomic and webhook tests; removed Order overload callers; legacy backfill hard-coded ID; schema expectation missing pending state; late-refund expectation mismatch.
+- `composer run lint:check`: passed (`pint --parallel --test`).
 
-## Tests
-- Reconciliation SUCCESS test: passed; canonical transition settles attempt and projects order.
-- Snapshot immutability regression: passed; provider request and transaction use attempt snapshots after order mutation.
-- Focused Task 8 creation/retry/boundary tests: 23 passed, 58 assertions.
-- Max-attempt boundary is inclusive (`>=`); active-attempt reuse still occurs before cap enforcement.
-- Full `php artisan test`: 1343 tests run, 1332 passed, 11 failures/errors; Task 8 verification blocked.
-- Failures/errors: `CanonicalPaymentTransitionServiceTest::test_payment_aggregate_lock_order_is_order_then_attempt` (restored baseline assertion conflicts with current source ordering); `DokuMarkPaidCommandTest::test_pending_terminal_order_reaches_refund_pending` and both `DokuPaymentAtomicTest` methods (restored baseline lacks canonical attempt fixtures); `DokuPaymentTest::test_create_payment_returns_url` and `PaymentProductionInvariantTest::test_duplicate_payment_retry_creation_keeps_single_attempt_for_same_invoice` (restored baseline calls removed Order overload); `DokuPaymentTest::test_webhook_success_marks_paid` and `test_redirect_proceeds_on_verified_status_api` (restored baseline lacks canonical attempt state); `PaymentAttemptBackfillTest::test_legacy_transactions_are_backfilled_once_with_historical_values` (hard-coded legacy attempt id); `PaymentAttemptSchemaTest::test_status_enums_expose_canonical_values` (restored baseline omits pending state); `PaymentProductionInvariantTest::test_duplicate_late_success_webhooks_create_one_refund_obligation_for_attempt` (restored baseline expects paid instead of late refund_pending).
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- Full `php artisan test`: 1342 tests run, 1331 passed, 11 failures/errors after restoring approved prior-task files; failures are baseline compatibility with canonical Task 8 API/state.
-- `composer run lint:check`: failed on restored baseline compatibility; focused Task 8 Pint passed.
-- Reconciliation SUCCESS now locks order then attempt before canonical transition; lease token remains fenced in same transaction.
-- Lock-order regression assertions inspect source ordering with anchored patterns.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- Projection active precedence includes `initiated`, `pending`, `created`, and `unknown` creation states; ambiguous attempts remain pending and block unsafe retry.
-- Projection regression coverage: passed.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- `creation_state=pending` is canonical active state; preparation reuses pending creation intents and creation blocks duplicate provider calls.
-- Pending creation regression and schema coverage: passed.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- Unrecognized successful provider statuses persist unknown evidence/error/backoff and clear the current reconciliation lease transactionally.
-- Unknown-status lease recovery regression: passed.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- Reconciliation SUCCESS transition, evidence, settlement/projection, paid_at, late-refund effects, and lease clearing share one token-fenced transaction.
-- Stale reconciliation SUCCESS race regression: passed.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- All DOKU creation outcomes persist through token-fenced short transactions; stale creators cannot alter state/evidence or clear current leases.
-- Expired creation lease transition is row-locked and token-checked.
-- Stale creator success/failure regressions: passed.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- Every reconciliation response persists through a token-checked attempt transaction; stale workers cannot alter state, evidence, backoff, or clear another lease.
-- Stale-worker reconciliation regression: passed.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- Reconciliation retry slot is claimed under attempt row lock before HTTP; lease released/updated after response and concurrent workers cannot exceed cap.
-- Concurrent reconciliation lease regression: passed.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- Lock-order regression and payment backfill identity regression fixed.
-- Reconciliation failure regression: passed; durable attempt count/status/error/next-backoff persisted and capped at five attempts under row lock.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- Pending settlement attempts are active and reused by order-locked preparation.
-- Completion verifies current creation lease token; stale provider responses become unknown evidence without transaction/order persistence.
-- Legacy success and redirect tests assert `paid_at`.
-- Historical `PaymentTransaction` rows remain after retries.
-- Webhook evidence without canonical attempt remains persisted and cannot settle or fulfil an order.
-- Task 7 workflow and report remain unchanged.
-- Pint: passed for all Task 8 PHP files.
-
-## Legacy suite
-`DokuPaymentTest`, `DokuPaymentAtomicTest`, `PaymentScenarioTest`, `PaymentFailureFlowTest`, `PaymentReliabilityTest`, `PaymentAuthorizationMutationTest`, `PaymentFeeIntegrationTest`, `DokuMarkPaidCommandTest`, plus Task 8 creation/retry tests.
-- `vendor/bin/pint --test app/Http/Controllers/Customer/CheckoutController.php app/Http/Controllers/Customer/OrderController.php app/Services/DokuService.php tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentRetryTest.php`
-- Result: passed.
-
-## Notes
-No Task 7 files are part of this change.
+## Task 8 result
+PENDING reconciliation persists `creation_state=pending`, preserves pending settlement projection, and clears reconciliation lease. No Task 7 workflow/report changes included.
