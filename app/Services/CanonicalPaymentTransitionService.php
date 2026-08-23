@@ -62,7 +62,7 @@ class CanonicalPaymentTransitionService
                 }
             }
 
-            if (in_array($lockedAttempt->settlement_status, [PaymentAttemptSettlementStatus::Failed, PaymentAttemptSettlementStatus::Expired], true)
+            if ($changed && in_array($lockedAttempt->settlement_status, [PaymentAttemptSettlementStatus::Failed, PaymentAttemptSettlementStatus::Expired], true)
                 && $order->payment_status === 'pending') {
                 $order->confirmation_expires_at = now()->addMinutes((int) config('order.payment_retry_window_minutes', 15));
                 $order->save();

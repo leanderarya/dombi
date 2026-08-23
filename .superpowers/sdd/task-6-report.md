@@ -4,12 +4,14 @@
 
 `php artisan test tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
-PASS — 26 tests, 60 assertions, 5.0 seconds.
+PASS — 27 tests, 61 assertions, 5.0 seconds.
 
 `vendor/bin/pint --test app/Services/CanonicalPaymentTransitionService.php app/Services/OrderPaymentProjectionService.php app/Services/DokuService.php app/Services/NormalizedPaymentEvent.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
 PASS.
 
-## P0 regression fix
+## Final fixes
 
-Canonical failed/expired transitions now set pending orders' `confirmation_expires_at` using configured `order.payment_retry_window_minutes`, within canonical transition transaction. Added regression coverage; no controller duplicate logic added.
+- Retry expiry is written only when settlement actually changes into failed/expired; repeated or stale events cannot reset it.
+- Projection no longer reacquires all attempt locks after canonical transition already owns attempt→order locks, avoiding reverse lock acquisition.
+- Added repeated-failure retry-window regression coverage.
