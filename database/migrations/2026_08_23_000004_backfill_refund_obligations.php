@@ -61,7 +61,7 @@ return new class extends Migration
             return;
         }
         $requiredColumns = [
-            'payment_status', 'refund_amount', 'refund_reason', 'refunded_by',
+            'payment_status', 'refund_amount', 'refund_reason', 'refunded_by', 'total',
             'refund_destination_type', 'refund_bank_name', 'refund_account_number', 'refund_account_holder',
             'refund_ewallet_provider', 'refund_ewallet_number', 'refund_ewallet_holder',
             'refund_destination_submitted_at', 'refund_transfer_reference', 'refund_transfer_note',
@@ -146,6 +146,12 @@ return new class extends Migration
                 $refundAmount = (float) $refund->refund_amount;
                 if ($refundAmount > $attemptAmount) {
                     $this->recordException($refund, 'refund_exceeds_attempt_amount');
+
+                    return;
+                }
+
+                if (! is_string($attempt->currency_snapshot) || ! preg_match('/^[A-Z]{3}$/', $attempt->currency_snapshot)) {
+                    $this->recordException($refund, 'missing_currency');
 
                     return;
                 }
