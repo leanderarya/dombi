@@ -9,6 +9,7 @@ use App\Models\RefundObligation;
 use App\Services\RefundObligationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -69,6 +70,26 @@ class RefundObligationTest extends TestCase
     {
         $this->expectException(QueryException::class);
         RefundObligation::create(['payment_attempt_id' => 999999, 'amount' => 1, 'currency' => 'IDR', 'reason' => 'fk']);
+    }
+
+    public function test_database_rejects_zero_amount(): void
+    {
+        $attempt = PaymentAttempt::create([
+            'order_id' => Order::factory()->create()->id,
+            'attempt_key' => 'attempt-zero', 'invoice_number' => 'invoice-zero', 'merchant_request_id' => 'request-zero',
+            'amount_snapshot' => 12500, 'currency_snapshot' => 'IDR',
+        ]);
+
+        $this->expectException(QueryException::class);
+        DB::table('refund_obligations')->insert([
+            'payment_attempt_id' => $attempt->id,
+            'amount' => 0,
+            'currency' => 'IDR',
+            'reason' => 'zero',
+            'status' => 'pending',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     public function test_duplicate_key_recovery_uses_existing_obligation(): void

@@ -1,11 +1,21 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private function isDuplicateKey(QueryException $exception): bool
+    {
+        $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
+        $driverCode = (string) ($exception->errorInfo[1] ?? '');
+
+        return in_array($sqlState, ['23000', '23505'], true)
+            || in_array($driverCode, ['1062', '1555', '2067', '2627', '2601'], true);
+    }
+
     public function up(): void
     {
         if (! Schema::hasTable('refund_obligations') || ! Schema::hasTable('payment_attempts')) {
@@ -26,9 +36,9 @@ return new class extends Migration
                 ->first();
 
             if (! $attempt) {
-                $order = DB::table('orders')->where('id', $refund->id)->first(['id', 'total']);
+                $order = DB::table('orders')->where('id', $refund->id)->lockForUpdate()->first(['id', 'total']);
                 if ($order && (float) $order->total > 0) {
-                    $attemptId = DB::table('payment_attempts')->insertGetId([
+                    $values = [
                         'order_id' => $order->id,
                         'attempt_key' => 'legacy-refund-'.$order->id,
                         'invoice_number' => 'legacy-refund-invoice-'.$order->id,
@@ -41,19 +51,33 @@ return new class extends Migration
                         'metadata' => json_encode(['synthesized_for_refund_backfill' => true]),
                         'created_at' => now(),
                         'updated_at' => now(),
-                    ]);
-                    $attempt = DB::table('payment_attempts')->where('id', $attemptId)->first();
+                    ];
+                    try {
+                        DB::table('payment_attempts')->insert($values);
+                    } catch (QueryException $exception) {
+                        if (! $this->isDuplicateKey($exception)) {
+                            throw $exception;
+                        }
+                    }
+                    $attempt = DB::table('payment_attempts')->where('attempt_key', $values['attempt_key'])->first();
                 }
             }
 
             if (! $attempt) {
-                DB::table('refund_obligation_backfill_exceptions')->insertOrIgnore([
+                $exception = [
                     'order_id' => $refund->id,
                     'reason' => 'missing_defensible_payment_attempt',
                     'payload' => json_encode((array) $refund),
                     'created_at' => now(),
                     'updated_at' => now(),
-                ]);
+                ];
+                try {
+                    DB::table('refund_obligation_backfill_exceptions')->insert($exception);
+                } catch (QueryException $queryException) {
+                    if (! $this->isDuplicateKey($queryException)) {
+                        throw $queryException;
+                    }
+                }
 
                 continue;
             }
@@ -66,7 +90,7 @@ return new class extends Migration
                 default => 'pending',
             };
 
-            DB::table('refund_obligations')->insertOrIgnore([
+            $obligation = [
                 'payment_attempt_id' => $attempt->id,
                 'amount' => $refund->refund_amount,
                 'currency' => $attempt->currency_snapshot,
@@ -88,7 +112,14 @@ return new class extends Migration
                 'metadata' => json_encode(['backfilled_from_order_id' => $refund->id]),
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]);
+            ];
+            try {
+                DB::table('refund_obligations')->insert($obligation);
+            } catch (QueryException $queryException) {
+                if (! $this->isDuplicateKey($queryException)) {
+                    throw $queryException;
+                }
+            }
         }
     }
 
