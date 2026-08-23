@@ -1,12 +1,24 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private function addMysqlCheckConstraint(): void
+    {
+        try {
+            DB::statement('ALTER TABLE refund_obligations ADD CONSTRAINT refund_obligations_amount_positive CHECK (amount > 0)');
+        } catch (QueryException $exception) {
+            if (! str_contains(strtolower($exception->getMessage()), 'duplicate') && ! str_contains(strtolower($exception->getMessage()), 'already exists')) {
+                throw $exception;
+            }
+        }
+    }
+
     public function up(): void
     {
         $created = ! Schema::hasTable('refund_obligations');
@@ -47,7 +59,7 @@ return new class extends Migration
                 DB::statement('CREATE TRIGGER IF NOT EXISTS refund_obligations_amount_positive_insert BEFORE INSERT ON refund_obligations FOR EACH ROW WHEN NEW.amount <= 0 BEGIN SELECT RAISE(ABORT, \'Refund obligation amount must be positive\'); END'),
                 DB::statement('CREATE TRIGGER IF NOT EXISTS refund_obligations_amount_positive_update BEFORE UPDATE OF amount ON refund_obligations FOR EACH ROW WHEN NEW.amount <= 0 BEGIN SELECT RAISE(ABORT, \'Refund obligation amount must be positive\'); END'),
             ],
-            'mysql' => DB::table('information_schema.check_constraints')->where('constraint_name', 'refund_obligations_amount_positive')->doesntExist() ? DB::statement('ALTER TABLE refund_obligations ADD CONSTRAINT refund_obligations_amount_positive CHECK (amount > 0)') : null,
+            'mysql' => $this->addMysqlCheckConstraint(),
             'pgsql' => DB::statement("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'refund_obligations_amount_positive') THEN ALTER TABLE refund_obligations ADD CONSTRAINT refund_obligations_amount_positive CHECK (amount > 0); END IF; END $$"),
             default => null,
         };
