@@ -97,6 +97,65 @@ class PaymentAttemptBackfillTest extends TestCase
         $this->assertDatabaseCount('payment_attempts', 0);
     }
 
+    public function test_orphan_order_is_reported_without_aborting_batch(): void
+    {
+        $orphan = PaymentTransaction::query()->create([
+            'order_id' => Order::factory()->create()->id,
+            'doku_order_id' => 'DOKU-orphan',
+            'payment_method' => 'qris',
+            'amount' => 1000,
+            'status' => 'pending',
+        ]);
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        DB::table('payment_transactions')->where('id', $orphan->id)->update(['order_id' => 999999]);
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+        $valid = PaymentTransaction::query()->create([
+            'order_id' => Order::factory()->create()->id,
+            'doku_order_id' => 'DOKU-valid',
+            'payment_method' => 'qris',
+            'amount' => 1000,
+            'status' => 'pending',
+        ]);
+
+        $this->artisan('payments:backfill-attempts')
+            ->expectsOutputToContain("Payment transaction {$orphan->id} could not be mapped")
+            ->assertExitCode(0);
+        $this->assertDatabaseHas('payment_attempts', ['legacy_payment_transaction_id' => $valid->id]);
+    }
+
+    public function test_failed_attempt_insert_is_reported_and_batch_continues(): void
+    {
+        $order = Order::factory()->create();
+        PaymentAttempt::query()->create([
+            'order_id' => $order->id,
+            'attempt_key' => 'legacy-attempt-6',
+            'invoice_number' => 'DOKU-conflict',
+            'merchant_request_id' => 'existing-request',
+            'amount_snapshot' => 1000,
+            'currency_snapshot' => 'IDR',
+        ]);
+        $failed = PaymentTransaction::query()->create([
+            'order_id' => $order->id,
+            'doku_order_id' => 'DOKU-conflict',
+            'payment_method' => 'qris',
+            'amount' => 1000,
+            'status' => 'pending',
+        ]);
+        $valid = PaymentTransaction::query()->create([
+            'order_id' => Order::factory()->create()->id,
+            'doku_order_id' => 'DOKU-after-failure',
+            'payment_method' => 'qris',
+            'amount' => 1000,
+            'status' => 'pending',
+        ]);
+
+        $this->artisan('payments:backfill-attempts')
+            ->expectsOutputToContain("Payment transaction {$failed->id} failed")
+            ->assertExitCode(0);
+        $this->assertDatabaseHas('payment_attempts', ['legacy_payment_transaction_id' => $valid->id]);
+    }
+
     public function test_empty_provider_identity_is_not_unmappable_when_order_exists(): void
     {
         PaymentTransaction::query()->create([
