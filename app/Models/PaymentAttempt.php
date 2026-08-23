@@ -13,7 +13,7 @@ use LogicException;
 class PaymentAttempt extends Model
 {
     protected $fillable = [
-        'order_id', 'attempt_key', 'invoice_number', 'merchant_request_id', 'session_token',
+        'order_id', 'legacy_payment_transaction_id', 'attempt_key', 'invoice_number', 'merchant_request_id', 'session_token',
         'payment_method', 'amount_snapshot', 'currency_snapshot', 'gateway_amount',
         'gateway_currency', 'gateway_transaction_id', 'gateway_status', 'creation_state',
         'settlement_status', 'verification_status', 'status_version', 'reconciliation_status',
