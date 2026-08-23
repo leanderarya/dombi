@@ -60,7 +60,13 @@ return new class extends Migration
         if (! Schema::hasTable('orders') || ! Schema::hasTable('refund_obligations') || ! Schema::hasTable('payment_attempts')) {
             return;
         }
-        $requiredColumns = ['payment_status', 'refund_amount', 'refund_reason', 'refunded_by'];
+        $requiredColumns = [
+            'payment_status', 'refund_amount', 'refund_reason', 'refunded_by',
+            'refund_destination_type', 'refund_bank_name', 'refund_account_number', 'refund_account_holder',
+            'refund_ewallet_provider', 'refund_ewallet_number', 'refund_ewallet_holder',
+            'refund_destination_submitted_at', 'refund_transfer_reference', 'refund_transfer_note',
+            'refund_proof_image', 'refunded_at',
+        ];
         foreach ($requiredColumns as $column) {
             if (! Schema::hasColumn('orders', $column)) {
                 return;
@@ -99,7 +105,7 @@ return new class extends Migration
 
                         return;
                     } elseif ($order && (float) $order->total > 0) {
-                        $currency = $orderCurrencyColumn ? $order->{$orderCurrencyColumn} : 'IDR';
+                        $currency = $orderCurrencyColumn ? $order->{$orderCurrencyColumn} : null;
                         if (! $currency) {
                             $this->recordException($refund, 'missing_currency');
 
@@ -194,17 +200,23 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::table('refund_obligations')
-            ->whereJsonContains('metadata->backfill_run_key', self::RUN_KEY)
-            ->delete();
+        if (Schema::hasTable('refund_obligations')) {
+            DB::table('refund_obligations')
+                ->whereJsonContains('metadata->backfill_run_key', self::RUN_KEY)
+                ->delete();
+        }
 
-        DB::table('payment_attempts')
-            ->where('attempt_key', 'like', 'legacy-refund-%')
-            ->whereJsonContains('metadata->backfill_run_key', self::RUN_KEY)
-            ->delete();
+        if (Schema::hasTable('payment_attempts')) {
+            DB::table('payment_attempts')
+                ->where('attempt_key', 'like', 'legacy-refund-%')
+                ->whereJsonContains('metadata->backfill_run_key', self::RUN_KEY)
+                ->delete();
+        }
 
-        DB::table('refund_obligation_backfill_exceptions')
-            ->where('backfill_run_key', self::RUN_KEY)
-            ->delete();
+        if (Schema::hasTable('refund_obligation_backfill_exceptions')) {
+            DB::table('refund_obligation_backfill_exceptions')
+                ->where('backfill_run_key', self::RUN_KEY)
+                ->delete();
+        }
     }
 };
