@@ -192,7 +192,7 @@ class PaymentProductionInvariantTest extends TestCase
         $service->handleWebhook($payload);
         $service->handleWebhook($payload);
 
-        $this->assertSame('paid', $order->fresh()->payment_status);
+        $this->assertSame('refund_pending', $order->fresh()->payment_status);
         $attempt = PaymentAttempt::where('order_id', $order->id)->sole();
         $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->settlement_status);
         $this->assertNull($attempt->fulfilment_claimed_at);
