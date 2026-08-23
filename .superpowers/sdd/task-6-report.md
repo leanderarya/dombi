@@ -4,12 +4,15 @@
 
 `php artisan test tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
-PASS — 27 tests, 61 assertions, 5.6 seconds.
+PASS — 27 tests, 61 assertions, 5.3 seconds.
 
 `vendor/bin/pint --test app/Services/CanonicalPaymentTransitionService.php app/Services/OrderPaymentProjectionService.php app/Services/DokuService.php app/Services/NormalizedPaymentEvent.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
 PASS.
 
-## Reservation fix
+## Final reservation/projection fixes
 
-Payment reservation now locks only order, re-reads existing attempt without locking it, and reuses an existing attempt when URL/state is incomplete. No attempt lock is held during reservation or HTTP; canonical transition retains attempt→order locking.
+- Reused incomplete attempts receive new merchant request identity before HTTP.
+- Prior request IDs persist in `metadata.merchant_request_history`.
+- Projection locks order before reading attempts and runs projection update in same transaction.
+- Canonical transition uses the same order→attempt aggregate lock order.

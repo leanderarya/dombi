@@ -16,8 +16,8 @@ class CanonicalPaymentTransitionService
     public function apply(PaymentAttempt $attempt, NormalizedPaymentEvent $event): TransitionResult
     {
         return DB::transaction(function () use ($attempt, $event): TransitionResult {
+            $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
             $lockedAttempt = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
-            $order = Order::query()->whereKey($lockedAttempt->order_id)->lockForUpdate()->firstOrFail();
             $lastReceivedAt = data_get($lockedAttempt->metadata ?? [], 'last_event_received_at');
             if ($lastReceivedAt !== null && $event->receivedAt->lessThanOrEqualTo(Carbon::parse($lastReceivedAt)->utc())) {
                 return new TransitionResult(false, $lockedAttempt->fulfilment_claimed_at !== null);
