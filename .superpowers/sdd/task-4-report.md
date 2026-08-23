@@ -8,7 +8,7 @@ Review findings fixed.
 - Obligation creation classifies duplicate-key races by SQLSTATE/driver code and propagates FK/schema failures.
 - Refund obligation creation requires a persisted payment attempt whose order exists.
 - Each historical refund is processed in its own transaction; order and relevant existing attempt rows lock before synthesis/obligation creation.
-- Backfill owns exception-table creation, checks required tables/columns, validates `refunded_by`, and tags every synthesized attempt, obligation, and exception with `2026_08_23_000004_refund_obligations`; scoped `down()` removes exact-key rows only.
+- Backfill owns exception-table creation and cleanup, checks required tables/columns, validates `refunded_by`, and tags every synthesized attempt, obligation, and exception with `2026_08_23_000004_refund_obligations`; scoped `down()` removes exact-key rows only.
 - Existing-attempt mapping chooses a locked candidate whose amount covers refund amount; synthesis requires order total to equal refund amount.
 - Migration creation, trigger setup, and indexes are guarded for interrupted reruns.
 - `orders.total` and every selected historical refund column are validated before processing; absent sources stop safely.
@@ -22,7 +22,7 @@ Review findings fixed.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (18 tests, 36 assertions; 18.849s)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (18 tests, 36 assertions; 19.611s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 
