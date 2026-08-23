@@ -251,6 +251,12 @@ class DokuService
             if (data_get($locked->metadata ?? [], 'reconciliation_lease.token') !== $claimToken) {
                 return false;
             }
+            if (! in_array($locked->creation_state?->value, ['pending', 'unknown'], true)
+                || ($locked->settlement_status !== null && ! in_array($locked->settlement_status?->value, ['pending', 'unknown'], true))) {
+                $locked->update(['metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
+
+                return false;
+            }
             $locked->update(['creation_state' => $creationState, 'settlement_status' => $creationState === 'pending' ? 'pending' : $locked->settlement_status, 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
             app(OrderPaymentProjectionService::class)->recompute($locked->order);
 

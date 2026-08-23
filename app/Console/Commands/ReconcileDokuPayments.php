@@ -28,6 +28,10 @@ class ReconcileDokuPayments extends Command
                     ->orWhere('metadata->next_reconciliation_at', '<=', now());
             })
             ->where(function ($q) {
+                $q->whereNull('settlement_status')
+                    ->orWhereIn('settlement_status', ['pending', 'unknown']);
+            })
+            ->where(function ($q) {
                 $q->whereNull('metadata->reconciliation_attempts')
                     ->orWhere('metadata->reconciliation_attempts', '<', 5);
             })
