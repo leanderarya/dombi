@@ -5,84 +5,23 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\PaymentWebhookLog;
 use App\Services\DokuService;
+use App\Services\DokuWebhookIngressService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class DokuPaymentController extends Controller
 {
-    public function notify(Request $request, DokuService $doku): JsonResponse
+    public function notify(Request $request, DokuWebhookIngressService $ingress): JsonResponse
     {
-        $rawBody = $request->getContent();
-        $payload = json_decode($rawBody, true) ?? [];
-        $requestId = $request->header('Request-Id', '');
-        $invoiceNumber = $payload['order']['invoice_number'] ?? $request->query('invoice_number') ?? null;
-
-        // DOKU sends GET requests for endpoint verification — return OK without processing
         if ($request->isMethod('GET')) {
-            Log::debug('DOKU webhook: GET verification request, returning OK');
-
             return response()->json(['message' => 'OK']);
         }
 
-        $log = PaymentWebhookLog::create([
-            'request_id' => $requestId,
-            'source' => 'notify',
-            'invoice_number' => $invoiceNumber,
-            'status' => 'received',
-            'signature_valid' => false,
-            'payload' => $payload,
-        ]);
+        $receipt = $ingress->receive($request->getContent(), $request->headers->all());
 
-        Log::debug('DOKU webhook received', [
-            'method' => $request->method(),
-            'request_id' => $requestId,
-        ]);
+        return response()->json(['message' => $receipt->message], $receipt->statusCode);
 
-        // Verify webhook signature
-        $clientIdHeader = $request->header('Client-Id');
-        if (! $doku->verifySignature(
-            $payload,
-            $requestId,
-            $rawBody,
-            $request->header('Request-Timestamp'),
-            $request->header('Signature'),
-            $clientIdHeader
-        )) {
-            Log::warning('DOKU webhook: invalid signature', ['request_id' => $requestId]);
-            $log->update(['status' => 'signature_invalid']);
-
-            return response()->json(['message' => 'Invalid signature'], 401);
-        }
-
-        // Idempotency: use Request-Id as dedup key (DOKU retries with same ID)
-        $idempotencyKey = 'doku_webhook:'.$requestId;
-        if (Cache::has($idempotencyKey)) {
-            Log::info('DOKU webhook: duplicate, already processed', ['request_id' => $requestId]);
-            $log->update(['status' => 'processed', 'signature_valid' => true]);
-
-            return response()->json(['message' => 'OK']);
-        }
-
-        try {
-            $doku->handleWebhook($payload);
-
-            // Mark as processed after successful handling
-            Cache::put($idempotencyKey, true, 86400); // 24h TTL
-            $log->update(['status' => 'processed', 'signature_valid' => true]);
-        } catch (\Exception $e) {
-            Log::error('DOKU webhook error', [
-                'error' => $e->getMessage(),
-                'payload' => $payload,
-            ]);
-            $log->update(['status' => 'error', 'error' => $e->getMessage()]);
-
-            return response()->json(['message' => 'Internal error'], 500);
-        }
-
-        return response()->json(['message' => 'OK']);
     }
 
     public function redirect(Request $request, DokuService $doku): RedirectResponse
