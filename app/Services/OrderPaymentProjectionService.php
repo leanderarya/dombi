@@ -15,7 +15,7 @@ class OrderPaymentProjectionService
     public function recompute(Order $order): string
     {
         return DB::transaction(function () use ($order): string {
-            $attempts = PaymentAttempt::query()->where('order_id', $order->id)->lockForUpdate()->get();
+            $attempts = PaymentAttempt::query()->where('order_id', $order->id)->orderBy('id')->lockForUpdate()->get();
             $lockedOrder = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             $paid = $attempts->contains(fn ($attempt): bool => $attempt->settlement_status === PaymentAttemptSettlementStatus::Paid
                 && $attempt->verification_status?->value === 'verified'
