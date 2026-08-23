@@ -230,6 +230,9 @@ class CanonicalPaymentTransitionService
         if ($needsReview) {
             $events[] = ['type' => 'payment.needs_review', 'key' => "payment.needs_review:{$attempt->id}:{$attempt->status_version}"];
         }
+        foreach (RefundObligation::query()->where('payment_attempt_id', $attempt->id)->get() as $obligation) {
+            $events[] = ['type' => 'refund.obligation_created', 'key' => "refund.obligation_created:{$obligation->id}"];
+        }
         foreach ($events as $definition) {
             $event = PaymentOutboxEvent::firstOrCreate(
                 ['event_key' => $definition['key']],

@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Jobs\DispatchPaymentOutboxEvent;
 use App\Models\PaymentOutboxEvent;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class DispatchPaymentOutbox extends Command
 {
@@ -14,8 +15,16 @@ class DispatchPaymentOutbox extends Command
 
     public function handle(): int
     {
-        PaymentOutboxEvent::pending()->orderBy('id')->limit(max(1, (int) $this->option('limit')))->pluck('id')
-            ->each(fn (int $id) => DispatchPaymentOutboxEvent::dispatch($id));
+        $limit = min(1000, max(1, (int) $this->option('limit')));
+        $ids = DB::transaction(function () use ($limit): array {
+            return PaymentOutboxEvent::pending()->orderBy('id')->lockForUpdate()->limit($limit)->get()
+                ->map(fn (PaymentOutboxEvent $event): ?array => ($token = $event->claim()) ? [$event->id, $token] : null)
+                ->filter()->values()->all();
+        });
+
+        foreach ($ids as [$id, $token]) {
+            DispatchPaymentOutboxEvent::dispatch($id, $token);
+        }
 
         return self::SUCCESS;
     }

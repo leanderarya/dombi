@@ -13,6 +13,7 @@ use App\Services\NormalizedPaymentEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class PaymentOutboxTest extends TestCase
@@ -43,6 +44,20 @@ class PaymentOutboxTest extends TestCase
         $this->assertSame('paid', $order->fresh()->payment_status);
     }
 
+    public function test_refund_obligation_creation_emits_one_outbox_event(): void
+    {
+        Queue::fake();
+        [$order, $attempt] = $this->attempt(['status' => Order::STATUS_CANCELLED_BY_CUSTOMER]);
+        $service = app(CanonicalPaymentTransitionService::class);
+        $event = new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []);
+
+        $service->apply($attempt, $event);
+        $service->apply($attempt->fresh(), new NormalizedPaymentEvent('doku', 'FAILED', 50000, 'IDR', 'invoice-first', now()->addMinute(), []));
+        $service->apply($attempt->fresh(), new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now()->addMinutes(2), []));
+
+        $this->assertSame(1, PaymentOutboxEvent::where('event_type', 'refund.obligation_created')->count());
+    }
+
     public function test_failed_dispatch_remains_retryable(): void
     {
         Queue::fake();
@@ -62,11 +77,41 @@ class PaymentOutboxTest extends TestCase
         $this->assertSame(1, $fresh->attempts);
         $this->assertSame('transport unavailable', $fresh->last_error);
         $this->assertNotNull($fresh->next_attempt_at);
+        $this->travelTo($fresh->next_attempt_at->copy()->addSecond());
+        $job->handle();
+        $this->assertSame('delivered', $outbox->fresh()->status);
+        $this->travelBack();
     }
 
-    private function attempt(): array
+    public function test_claim_lease_fences_completion_and_stale_lease_is_reclaimable(): void
     {
-        $order = Order::factory()->create(['total' => 50000, 'payment_status' => 'pending']);
+        $outbox = PaymentOutboxEvent::create(['event_key' => 'test', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);
+        $first = $outbox->claim();
+        $this->assertNotNull($first);
+        $this->assertNull($outbox->fresh()->claim(Str::uuid()->toString()));
+        $this->assertFalse($outbox->fresh()->markDelivered(Str::uuid()->toString()));
+        $outbox->update(['claim_expires_at' => now()->subSecond()]);
+        $second = $outbox->fresh()->claim();
+        $this->assertNotNull($second);
+        $this->assertTrue($outbox->fresh()->markDelivered($second));
+        $this->assertFalse($outbox->fresh()->markDelivered($first));
+    }
+
+    public function test_scheduler_claims_bounded_rows_without_duplicate_dispatch(): void
+    {
+        Queue::fake();
+        foreach (range(1, 3) as $id) {
+            PaymentOutboxEvent::create(['event_key' => "test-{$id}", 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => $id, 'payload' => []]);
+        }
+
+        $this->artisan('payments:dispatch-outbox', ['--limit' => 2])->assertSuccessful();
+        Queue::assertPushed(DispatchPaymentOutboxEvent::class, 2);
+        $this->assertSame(2, PaymentOutboxEvent::whereNotNull('claim_token')->count());
+    }
+
+    private function attempt(array $order = []): array
+    {
+        $order = Order::factory()->create($order + ['total' => 50000, 'payment_status' => 'pending']);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'first', 'invoice_number' => 'invoice-first',
             'merchant_request_id' => 'request-first', 'amount_snapshot' => 50000, 'currency_snapshot' => 'IDR',
