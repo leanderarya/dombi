@@ -122,11 +122,22 @@ class DokuService
     public function reconcilePaymentAttempt(PaymentAttempt $attempt): PaymentAttempt
     {
         $attempt = PaymentAttempt::query()->whereKey($attempt->id)->with('order')->firstOrFail();
-        $metadata = $attempt->metadata ?? [];
-        $reconciliationAttempts = (int) ($metadata['reconciliation_attempts'] ?? 0);
-        $nextReconciliationAt = data_get($metadata, 'next_reconciliation_at');
-        if ($reconciliationAttempts >= 5 || ($nextReconciliationAt && now()->lt($nextReconciliationAt))) {
-            return $attempt;
+        $claimToken = bin2hex(random_bytes(16));
+        $claimed = DB::transaction(function () use ($attempt, $claimToken): bool {
+            $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            $metadata = $locked->metadata ?? [];
+            $count = (int) ($metadata['reconciliation_attempts'] ?? 0);
+            $next = data_get($metadata, 'next_reconciliation_at');
+            $lease = data_get($metadata, 'reconciliation_lease');
+            if ($count >= 5 || ($next && now()->lt($next)) || ($lease && data_get($lease, 'expires_at') > now()->toIso8601String())) {
+                return false;
+            }
+            $locked->update(['metadata' => array_merge($metadata, ['reconciliation_attempts' => $count + 1, 'reconciliation_lease' => ['token' => $claimToken, 'expires_at' => now()->addMinutes(2)->toIso8601String()]]), 'creation_state' => 'unknown']);
+
+            return true;
+        });
+        if (! $claimed) {
+            return $attempt->fresh();
         }
         $requestId = 'REC-'.$attempt->id.'-'.bin2hex(random_bytes(4));
         $endpoint = '/checkout/v1/payment/'.$attempt->invoice_number;
@@ -151,15 +162,15 @@ class DokuService
                 receivedAt: now(),
                 rawEvidence: $data,
             ));
-            $attempt->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now()]);
+            $attempt->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($attempt->metadata ?? [], ['reconciliation_lease' => null])]);
             $order = $attempt->order->fresh();
             if ($order->payment_status === 'paid' && $order->paid_at === null) {
                 $order->update(['paid_at' => now()]);
             }
         } elseif (in_array($status, ['FAILED', 'REJECTED', 'DENIED', 'CANCELLED', 'EXPIRED'], true)) {
-            $attempt->update(['creation_state' => 'failed', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now()]);
+            $attempt->update(['creation_state' => 'failed', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($attempt->metadata ?? [], ['reconciliation_lease' => null])]);
         } elseif ($status === 'PENDING') {
-            $attempt->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now()]);
+            $attempt->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($attempt->metadata ?? [], ['reconciliation_lease' => null])]);
         }
 
         return $attempt->fresh();
@@ -170,7 +181,7 @@ class DokuService
         return DB::transaction(function () use ($attempt, $status, $error): PaymentAttempt {
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             $metadata = $locked->metadata ?? [];
-            $count = min((int) ($metadata['reconciliation_attempts'] ?? 0) + 1, 5);
+            $count = min((int) ($metadata['reconciliation_attempts'] ?? 0), 5);
             $delay = min(2 ** ($count - 1), 16);
             $locked->update([
                 'creation_state' => 'unknown',
@@ -179,6 +190,7 @@ class DokuService
                     'last_reconciliation_status' => $status,
                     'last_reconciliation_error' => $error,
                     'next_reconciliation_at' => now()->addMinutes($delay)->toIso8601String(),
+                    'reconciliation_lease' => null,
                 ]),
             ]);
 
