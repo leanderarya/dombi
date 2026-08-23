@@ -30,6 +30,12 @@ class RefundObligation extends Model
         return [
             'amount' => 'decimal:2',
             'status' => RefundObligationStatus::class,
+            'bank_name' => 'encrypted',
+            'account_number' => 'encrypted',
+            'account_holder' => 'encrypted',
+            'ewallet_provider' => 'encrypted',
+            'ewallet_number' => 'encrypted',
+            'ewallet_holder' => 'encrypted',
             'destination_submitted_at' => 'datetime',
             'processed_at' => 'datetime',
             'metadata' => 'array',
