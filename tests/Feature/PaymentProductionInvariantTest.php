@@ -9,6 +9,7 @@ use App\Services\DokuService;
 use App\Services\NotificationService;
 use App\Services\RefundService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class PaymentProductionInvariantTest extends TestCase
@@ -57,82 +58,99 @@ class PaymentProductionInvariantTest extends TestCase
             'order_id' => $order->id,
             'doku_order_id' => $order->order_code,
             'payment_method' => 'qris',
-            'amount' => 10000,
+            'amount' => $order->total,
             'status' => 'pending',
         ]);
 
         app(DokuService::class)->handleWebhook([
             'order' => ['invoice_number' => $order->order_code],
-            'transaction' => ['status' => 'SUCCESS'],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => 10000],
         ]);
 
         $this->assertSame('pending', $order->fresh()->payment_status);
     }
 
-    public function test_order_payment_status_is_projection_of_successful_attempt(): void
+    public function test_order_payment_status_projects_from_successful_attempt_state(): void
     {
-        $order = Order::factory()->create(['payment_status' => 'paid']);
-        PaymentTransaction::create([
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $transaction = PaymentTransaction::create([
             'order_id' => $order->id,
             'doku_order_id' => $order->order_code,
             'payment_method' => 'qris',
             'amount' => $order->total,
-            'status' => 'failed',
-        ]);
-
-        $this->assertSame('paid', $order->fresh()->payment_status);
-        $this->assertSame(0, PaymentTransaction::where('order_id', $order->id)->whereIn('status', ['paid', 'settled'])->count());
-    }
-
-    public function test_duplicate_payment_retry_keeps_single_attempt_for_same_invoice(): void
-    {
-        $order = Order::factory()->create(['order_code' => 'INV-RETRY', 'payment_status' => 'pending']);
-        PaymentTransaction::create([
-            'order_id' => $order->id,
-            'doku_order_id' => 'INV-RETRY',
-            'payment_method' => 'qris',
-            'amount' => $order->total,
             'status' => 'pending',
         ]);
+
+        $transaction->update(['status' => 'paid']);
+
+        $this->assertSame('paid', $order->fresh()->payment_status);
+    }
+
+    public function test_duplicate_payment_retry_creation_keeps_single_attempt_for_same_invoice(): void
+    {
+        $order = Order::factory()->create(['order_code' => 'INV-RETRY', 'payment_status' => 'pending']);
+        Http::fake([
+            '*/checkout/v1/payment' => Http::response([
+                'response' => [
+                    'order' => ['session_id' => 'sess-retry'],
+                    'payment' => ['url' => 'https://sandbox.doku.com/pay/retry'],
+                ],
+            ]),
+        ]);
+
+        $service = app(DokuService::class);
+        $service->createPayment($order);
+
+        try {
+            $service->createPayment($order->fresh());
+        } catch (\Throwable) {
+            $this->fail('Duplicate retry creation must be idempotent, not fail with a database exception.');
+        }
 
         $this->assertSame(1, PaymentTransaction::where('doku_order_id', 'INV-RETRY')->count());
     }
 
-    public function test_ambiguous_invoice_cannot_settle_multiple_orders(): void
+    public function test_invoice_without_canonical_attempt_cannot_settle_order(): void
     {
-        $order = Order::factory()->create(['order_code' => 'INV-AMBIGUOUS', 'payment_status' => 'pending']);
-        PaymentTransaction::create([
-            'order_id' => $order->id,
-            'doku_order_id' => 'INV-AMBIGUOUS',
-            'payment_method' => 'qris',
-            'amount' => $order->total,
-            'status' => 'pending',
-        ]);
+        $order = Order::factory()->create(['payment_status' => 'pending']);
 
         app(DokuService::class)->handleWebhook([
-            'order' => ['invoice_number' => 'INV-AMBIGUOUS'],
+            'order' => ['invoice_number' => 'INV-NO-ATTEMPT'],
             'transaction' => ['status' => 'SUCCESS'],
         ]);
 
         $this->assertSame('pending', $order->fresh()->payment_status);
+        $this->assertDatabaseMissing('payment_transactions', ['doku_order_id' => 'INV-NO-ATTEMPT']);
     }
 
-    public function test_late_success_creates_one_refund_obligation(): void
+    public function test_duplicate_late_success_webhooks_create_one_refund_obligation_for_attempt(): void
     {
         $order = Order::factory()->create([
             'status' => Order::STATUS_CANCELLED_BY_CUSTOMER,
             'payment_status' => 'pending',
             'total' => 50000,
         ]);
+        PaymentTransaction::create([
+            'order_id' => $order->id,
+            'doku_order_id' => $order->order_code,
+            'payment_method' => 'qris',
+            'amount' => $order->total,
+            'status' => 'pending',
+        ]);
+        $payload = [
+            'order' => ['invoice_number' => $order->order_code],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => 50000],
+        ];
         $service = app(DokuService::class);
-        $service->markOrderPaidPublic($order);
-        $service->markOrderPaidPublic($order->fresh());
+        $service->handleWebhook($payload);
+        $service->handleWebhook($payload);
 
         $this->assertSame('refund_pending', $order->fresh()->payment_status);
-        $this->assertDatabaseCount('refund_status_histories', 1);
+        $this->assertSame(1, RefundStatusHistory::where('order_id', $order->id)->where('event', 'refund_requested')->count());
+        $this->assertSame(1, PaymentTransaction::where('order_id', $order->id)->where('status', 'paid')->count());
     }
 
-    public function test_refund_obligation_is_unique_for_repeated_request(): void
+    public function test_duplicate_refund_request_returns_null_without_second_obligation(): void
     {
         $order = Order::factory()->paid()->create(['total' => 50000]);
         PaymentTransaction::create([
@@ -143,9 +161,11 @@ class PaymentProductionInvariantTest extends TestCase
             'status' => 'paid',
         ]);
         $service = app(RefundService::class);
-        $service->request($order, 'system', null, 'late_payment');
-        $service->request($order->fresh(), 'system', null, 'late_payment');
+        $first = $service->request($order, 'system', null, 'late_payment');
+        $second = $service->request($order->fresh(), 'system', null, 'late_payment');
 
+        $this->assertNotNull($first);
+        $this->assertNull($second);
         $this->assertSame(1, RefundStatusHistory::where('order_id', $order->id)->where('event', 'refund_requested')->count());
     }
 
