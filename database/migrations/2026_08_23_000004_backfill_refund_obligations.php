@@ -221,7 +221,13 @@ return new class extends Migration
                     default => 'pending',
                 };
 
-                $destinationValues = $this->encryptedDestinationValues($refund);
+                try {
+                    $destinationValues = $this->encryptedDestinationValues($refund);
+                } catch (Throwable) {
+                    $this->recordException($refund, 'invalid_refund_destination_ciphertext');
+
+                    return;
+                }
                 $obligation = [
                     'payment_attempt_id' => $attempt->id,
                     'amount' => $refund->refund_amount,
