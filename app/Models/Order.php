@@ -180,6 +180,15 @@ class Order extends Model
         return PaymentStatus::from($this->payment_status ?? 'pending');
     }
 
+    public function paymentIsFulfilmentEligible(): bool
+    {
+        return $this->payment_status === PaymentStatus::Paid->value
+            && $this->paymentAttempts()->where('settlement_status', 'paid')
+                ->where('verification_status', 'verified')
+                ->where('amount_snapshot', $this->total)
+                ->exists();
+    }
+
     public function scopePaymentStatus(Builder $query, PaymentStatus $status): Builder
     {
         return $query->where('payment_status', $status->value);
