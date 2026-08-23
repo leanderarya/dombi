@@ -75,8 +75,18 @@ class RefundService
                     $query->where('settlement_status', 'paid')
                         ->orWhere('verification_status', 'verified');
                 })
+                ->where(function ($query): void {
+                    $query->whereNull('metadata->provenance')
+                        ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                })
                 ->latest('id')
-                ->first() ?? $locked->paymentAttempts()->latest('id')->first();
+                ->first() ?? $locked->paymentAttempts()
+                ->where(function ($query): void {
+                    $query->whereNull('metadata->provenance')
+                        ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                })
+                ->latest('id')
+                ->first();
 
             if (! $attempt && $locked->paid_at !== null) {
                 $attempt = $locked->paymentAttempts()->create([
@@ -85,6 +95,7 @@ class RefundService
                     'merchant_request_id' => 'legacy-manual-refund-'.$locked->id,
                     'amount_snapshot' => $locked->total,
                     'currency_snapshot' => 'IDR',
+                    'metadata' => ['provenance' => 'synthetic_legacy_refund', 'verified' => false],
                 ]);
             }
 
@@ -92,7 +103,7 @@ class RefundService
                 throw new DomainException('Refund membutuhkan pembayaran terverifikasi.');
             }
 
-            $this->obligations->createForAttempt($attempt, $source);
+            $obligation = $this->obligations->createForAttempt($attempt, $source);
 
             $locked->update([
                 'payment_status' => PaymentStatus::RefundPending->value,
