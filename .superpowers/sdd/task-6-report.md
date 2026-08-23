@@ -4,15 +4,15 @@
 
 `php artisan test tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
-PASS — 25 tests, 55 assertions, 4.9 seconds.
+PASS — 25 tests, 55 assertions, 5.0 seconds.
 
 `vendor/bin/pint --test app/Services/CanonicalPaymentTransitionService.php app/Services/OrderPaymentProjectionService.php app/Services/DokuService.php app/Services/NormalizedPaymentEvent.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
 PASS.
 
-## Final fixes
+## Review fixes
 
-- Canonical transition and projection use approved attempt-first then order lock order.
-- Amount comparison uses strict decimal parsing/minor units; malformed amounts do not verify.
-- Missing/unrecognized webhook invoices remain durable evidence-only and do not synthesize attempts or settle orders.
-- Task 6 invariants updated to assert canonical-attempt absence for unrecognized webhook identity.
+- DOKU webhook resolves and locks canonical attempt first, then locks order.
+- Unknown invoice/no-attempt events persist durable `PaymentWebhookLog` evidence and cannot settle.
+- Canonical transition remains source of state changes; legacy transaction projection follows successful apply.
+- Existing monotonic, stale, duplicate-success, late-success, one-winner, duplicate-refund, and mismatch assertions remain green.

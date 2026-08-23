@@ -8,6 +8,7 @@ use App\Exceptions\DokuPaymentException;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
+use App\Models\PaymentWebhookLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -168,16 +169,18 @@ class DokuService
         $status = $this->mapStatus($paymentStatus);
 
         DB::transaction(function () use ($invoiceNumber, $status, $paymentStatus, $payload): void {
-            // Find order via transaction OR directly by invoice number
+            $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->lockForUpdate()->first();
             $transaction = PaymentTransaction::where('doku_order_id', $invoiceNumber)->first();
-            $order = $transaction?->order
+            $order = $attempt?->order
+                ?? $transaction?->order
                 ?? Order::where('order_code', $invoiceNumber)->first()
                 ?? Order::where('doku_order_id', $invoiceNumber)->first();
 
-            if (! $order) {
-                Log::warning('DOKU webhook: order not found', [
-                    'invoice_number' => $invoiceNumber,
-                    'mapped_status' => $status,
+            if (! $order || ! $attempt) {
+                PaymentWebhookLog::create([
+                    'source' => 'doku', 'invoice_number' => $invoiceNumber,
+                    'status' => $paymentStatus, 'mapped_status' => $status,
+                    'payload' => $payload, 'error' => 'canonical_attempt_missing',
                 ]);
 
                 return;
@@ -192,15 +195,6 @@ class DokuService
             }
 
             $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
-            if (! $order->paymentAttempts()->where('invoice_number', $invoiceNumber)->exists()) {
-                Log::warning('DOKU webhook retained as evidence without canonical attempt', [
-                    'order_id' => $order->id,
-                    'invoice_number' => $invoiceNumber,
-                    'payload' => $payload,
-                ]);
-
-                return;
-            }
 
             $this->processPaymentStatusChange($order, $status, $payload);
             if ($transaction) {
