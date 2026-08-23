@@ -1,13 +1,13 @@
 # Task 10 Report
 
-## Review fix
+## P0 fix
 
-- Consumer lease is renewed immediately before side-effect delivery using consumer claim token.
-- Bounded consumer lease prevents slow delivery from silently losing ownership; token mismatch aborts delivery.
-- Added slow-delivery/lease-expiry regression while retaining event-key idempotency.
+- Added bounded token-checked consumer heartbeat callback during delivery.
+- Long delivery can renew consumer lease; ownership loss aborts before effect/completion.
+- Event-key durable idempotency remains active.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentOutboxTest.php` — 13 tests, 13 passed, 45 assertions.
+- `php artisan test tests/Feature/PaymentOutboxTest.php` — 14 tests, 14 passed, 47 assertions.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed; graph rebuilt with 7172 nodes, 18226 edges, 475 communities.
+- `graphify update .` — passed; graph rebuilt with 7173 nodes, 18228 edges, 487 communities.

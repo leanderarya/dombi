@@ -78,6 +78,21 @@ class PaymentOutboxTest extends TestCase
         $this->assertSame(1, PaymentOutboxEvent::where('event_type', 'refund.obligation_created')->count());
     }
 
+    public function test_long_delivery_heartbeat_keeps_consumer_lease_owned(): void
+    {
+        $outbox = PaymentOutboxEvent::create(['event_key' => 'consumer-heartbeat', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);
+        $heartbeat = null;
+        $job = new DispatchPaymentOutboxEvent($outbox->id);
+        $job->handle(function (PaymentOutboxEvent $event) use (&$heartbeat): void {
+            $heartbeat = $event->consumer_claim_token;
+            $this->travelTo(now()->addMinutes(6));
+            $this->assertTrue($event->renewConsumerClaim($heartbeat));
+            $this->travelBack();
+        });
+
+        $this->assertSame('delivered', $outbox->fresh()->status);
+    }
+
     public function test_consumer_lease_is_renewed_before_slow_delivery(): void
     {
         $outbox = PaymentOutboxEvent::create(['event_key' => 'consumer-renew', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);
