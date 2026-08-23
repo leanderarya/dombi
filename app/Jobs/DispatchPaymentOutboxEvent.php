@@ -14,7 +14,11 @@ class DispatchPaymentOutboxEvent implements ShouldQueue
 
     public int $tries = 1;
 
-    public function __construct(public int $eventId, public ?string $claimToken = null, public $heartbeat = null) {}
+    public int $timeout = 240;
+
+    public bool $failOnTimeout = true;
+
+    public function __construct(public int $eventId, public ?string $claimToken = null) {}
 
     public function handle(?callable $deliver = null): void
     {
@@ -44,18 +48,7 @@ class DispatchPaymentOutboxEvent implements ShouldQueue
             if (! $event->renewConsumerClaim($consumerToken)) {
                 return;
             }
-            if ($this->heartbeat !== null && ! ($this->heartbeat)($event, $consumerToken)) {
-                return;
-            }
-            $heartbeat = fn (): bool => $event->renewConsumerClaim($consumerToken) && $event->renewClaim($token);
-            if ($this->heartbeat !== null && ! ($this->heartbeat)($event, $consumerToken)) {
-                return;
-            }
-            $startedAt = microtime(true);
-            ($deliver ?? static fn (PaymentOutboxEvent $event): mixed => Event::dispatch($event->event_type, [$event->payload]))($event, $heartbeat);
-            if (microtime(true) - $startedAt > 240) {
-                throw new \RuntimeException('Payment outbox delivery exceeded hard timeout.');
-            }
+            ($deliver ?? static fn (PaymentOutboxEvent $event): mixed => Event::dispatch($event->event_type, [$event->payload]))($event);
             if (! $event->completeConsumer($consumerToken)) {
                 return;
             }
