@@ -14,9 +14,10 @@ Verification:
 - `composer run lint:check` — passed.
 - Duplicate cleanup explicitly retains a processed row when available, otherwise newest row, then deletes all other IDs; portable migration regression covered.
 - Unique-constraint race recovery performs bounded committed-row lookup before status-based claim/reprocess, returning `503` only when row visibility fails.
-- Every duplicate status decision now occurs inside the row-lock transaction; initial lookup only locates candidate row.
-- Migration backfills raw body/digest from payload before deduplication and retains processed rows when available.
-- Added `.github/workflows/task-7-production.yml`: MySQL 8, `pdo_mysql`, `pcntl`, and mandatory production-driver concurrency test; SQLite remains local-only with explicit skip reason.
+- Signature authentication now precedes all durable mutation; invalid duplicates cannot mutate valid rows.
+- Duplicate digest/status decisions and valid claims occur in one row-locked transaction after authentication.
+- Historical rows without original raw bytes are marked retryable/reprocess-required; migration never fabricates signed evidence.
+- Added `.github/workflows/task-7-production.yml` Laravel key/env setup and MySQL readiness wait before migration; production concurrency gate remains mandatory.
 - Added `claimed_at` lease with five-minute stale recovery under row lock; failed workers become retryable.
 - SQLite tests deterministically verify durable claim; CI production-driver gate must run the forked two-worker test on MySQL/PostgreSQL with `pcntl`; local SQLite runs skip with explicit reason.
 - Parallel test writes actual newline-delimited worker results, requires exactly two result lines, then asserts one durable request row and at most one successful/processing claim response.

@@ -21,15 +21,10 @@ return new class extends Migration
             ->groupBy('request_id')
             ->havingRaw('COUNT(*) > 1')
             ->pluck('request_id');
-        DB::table('payment_webhook_logs')->whereNull('raw_body')->orderBy('id')->chunkById(100, function ($rows): void {
-            foreach ($rows as $row) {
-                $rawBody = json_encode($row->payload ?? [], JSON_UNESCAPED_SLASHES);
-                DB::table('payment_webhook_logs')->where('id', $row->id)->update([
-                    'raw_body' => $rawBody,
-                    'body_digest' => base64_encode(hash('sha256', $rawBody, true)),
-                ]);
-            }
-        });
+        DB::table('payment_webhook_logs')->whereNull('raw_body')->update([
+            'status' => 'retryable',
+            'error' => 'historical_raw_body_unavailable_reprocess_required',
+        ]);
 
         foreach ($duplicates as $requestId) {
             $rows = DB::table('payment_webhook_logs')

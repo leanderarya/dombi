@@ -36,8 +36,7 @@ class DokuWebhookIngressTest extends TestCase
         $response = $this->postJson(route('doku.notify'), json_decode($body, true), $headers);
 
         $response->assertUnauthorized();
-        $this->assertSame($body, PaymentWebhookLog::query()->where('request_id', 'REQ-INVALID')->firstOrFail()->raw_body);
-        $this->assertSame('signature_invalid', PaymentWebhookLog::query()->where('request_id', 'REQ-INVALID')->first()->status);
+        $this->assertDatabaseMissing('payment_webhook_logs', ['request_id' => 'REQ-INVALID']);
     }
 
     public function test_unique_race_recovery_reprocesses_committed_retryable_row(): void
@@ -53,6 +52,20 @@ class DokuWebhookIngressTest extends TestCase
 
         $response->assertStatus(500);
         $this->assertSame('retryable', $log->fresh()->status);
+    }
+
+    public function test_invalid_signature_duplicate_does_not_mutate_valid_row(): void
+    {
+        $body = '{"order":{"invoice_number":"INV-SAFE"}}';
+        PaymentWebhookLog::create([
+            'request_id' => 'REQ-SAFE', 'source' => 'notify', 'status' => 'processing',
+            'signature_valid' => true, 'payload' => json_decode($body, true), 'raw_body' => $body,
+            'body_digest' => base64_encode(hash('sha256', $body, true)), 'claimed_at' => now(),
+        ]);
+        $headers = $this->signed('REQ-SAFE', $body, 'wrong-client');
+
+        $this->call('POST', route('doku.notify'), [], [], [], $headers, $body)->assertUnauthorized();
+        $this->assertSame('processing', PaymentWebhookLog::where('request_id', 'REQ-SAFE')->value('status'));
     }
 
     public function test_same_request_id_is_deduplicated_without_cache(): void
