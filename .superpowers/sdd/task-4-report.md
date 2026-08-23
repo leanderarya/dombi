@@ -17,6 +17,8 @@ Review findings fixed.
 - Existing and synthesized currency must be exactly three uppercase letters; missing/invalid values record `missing_currency` without creating an orphan attempt or defaulting to IDR.
 - Constraint/trigger setup and rollback are rerun-safe; rollback removes only exact-run obligations and unreferenced synthesized attempts.
 - Duplicate creation races use bounded retry/requery and canonical-field validation; conflicting synthesized attempts/obligations become tagged exceptions.
+- Amount validation rejects fractional precision beyond two digits before minor-unit conversion; currency remains exactly three uppercase letters with no IDR fallback.
+- MySQL/MariaDB constraint repair uses guarded ALTER fallback; PostgreSQL/SQLite remain driver-safe.
 - Duplicate detection matches narrow SQLSTATE/driver duplicate codes; FK/schema errors propagate or become tagged mapping exceptions where applicable.
 - Existing-table migration reruns repair required constraints/triggers/indexes.
 - Backfill uses duplicate-only handling for synthesized attempts, exception rows, and obligations; reruns remain idempotent.
@@ -24,7 +26,7 @@ Review findings fixed.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (19 tests, 38 assertions; 23.226s)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (19 tests, 38 assertions; 24.083s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 
