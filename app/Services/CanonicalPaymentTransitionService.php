@@ -15,8 +15,9 @@ class CanonicalPaymentTransitionService
     public function apply(PaymentAttempt $attempt, NormalizedPaymentEvent $event): TransitionResult
     {
         return DB::transaction(function () use ($attempt, $event): TransitionResult {
-            $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
             $lockedAttempt = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            $order = Order::query()->whereKey($lockedAttempt->order_id)->lockForUpdate()->firstOrFail();
+            $event = $event->withGatewayReference($this->normalizeReference($lockedAttempt, $event));
             $this->validate($lockedAttempt, $event);
             $lastReceivedAt = data_get($lockedAttempt->metadata, 'last_event_received_at');
             if ($lastReceivedAt !== null && $event->receivedAt->lessThanOrEqualTo($lastReceivedAt)) {
@@ -83,6 +84,13 @@ class CanonicalPaymentTransitionService
         });
     }
 
+    private function normalizeReference(PaymentAttempt $attempt, NormalizedPaymentEvent $event): ?string
+    {
+        return $event->gatewayReference
+            ?? data_get($event->rawEvidence, 'order.invoice_number')
+            ?? $attempt->invoice_number;
+    }
+
     private function validate(PaymentAttempt $attempt, NormalizedPaymentEvent $event): void
     {
         if (strtoupper($event->currency) !== strtoupper($attempt->currency_snapshot)) {
@@ -105,6 +113,17 @@ class CanonicalPaymentTransitionService
             return true;
         }
 
+        if (in_array($order->status, [
+            Order::STATUS_CANCELLED_BY_CUSTOMER,
+            Order::STATUS_CANCELLED_BY_OUTLET,
+            Order::STATUS_REJECTED_BY_OUTLET,
+            Order::STATUS_EXPIRED,
+        ], true)) {
+            $this->createRefundObligation($attempt);
+
+            return false;
+        }
+
         $winner = PaymentAttempt::query()->where('order_id', $order->id)
             ->where('settlement_status', PaymentAttemptSettlementStatus::Paid)
             ->where('verification_status', PaymentAttemptVerificationStatus::Verified)
@@ -115,11 +134,16 @@ class CanonicalPaymentTransitionService
 
             return true;
         }
+        $this->createRefundObligation($attempt);
+
+        return false;
+    }
+
+    private function createRefundObligation(PaymentAttempt $attempt): void
+    {
         RefundObligation::firstOrCreate(
             ['payment_attempt_id' => $attempt->id, 'reason' => 'duplicate_paid_attempt'],
             ['amount' => $attempt->gateway_amount ?? $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'status' => RefundObligationStatus::Pending]
         );
-
-        return false;
     }
 }

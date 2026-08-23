@@ -352,7 +352,7 @@ class DokuService
             ]);
         }
 
-        $this->processPaymentStatusChange($order, $status);
+        $this->processPaymentStatusChange($order, $status, $dokuStatus);
 
         return $status;
     }
