@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
 use App\Services\RefundObligationService;
+use App\Services\RefundService;
 use DomainException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,6 +36,28 @@ class RefundObligationTest extends TestCase
         $this->assertNotSame('Bank Rahasia', $raw->bank_name);
         $this->assertSame('Bank Rahasia', $obligation->fresh()->bank_name);
         $this->assertSame('123456789', $obligation->fresh()->account_number);
+    }
+
+    public function test_manual_refund_request_creates_canonical_obligation(): void
+    {
+        $order = Order::factory()->create([
+            'total' => 12500,
+            'payment_status' => 'paid',
+            'paid_at' => now(),
+        ]);
+        PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'task-11', 'invoice_number' => 'task-11-invoice',
+            'merchant_request_id' => 'task-11-request', 'amount_snapshot' => 12500, 'currency_snapshot' => 'IDR',
+        ]);
+
+        app(RefundService::class)->request($order, 'customer', null, 'customer_cancellation');
+
+        $this->assertDatabaseHas('refund_obligations', [
+            'payment_attempt_id' => PaymentAttempt::where('order_id', $order->id)->value('id'),
+            'amount' => 12500,
+            'reason' => 'customer_cancellation',
+            'status' => 'pending',
+        ]);
     }
 
     public function test_schema_and_canonical_lifecycle(): void
