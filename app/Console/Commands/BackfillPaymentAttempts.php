@@ -57,9 +57,11 @@ class BackfillPaymentAttempts extends Command
                     $attempt->fill([
                         'order_id' => $transaction->order_id,
                         'attempt_key' => "legacy-attempt-{$transaction->id}",
-                        'invoice_number' => $transaction->doku_order_id ?: "legacy-invoice-{$transaction->id}",
+                        'invoice_number' => $orderCode ?: ($transaction->doku_order_id ?: "legacy-invoice-{$transaction->id}"),
                         'merchant_request_id' => $transaction->doku_order_id ?: "legacy-request-{$transaction->id}",
                         'session_token' => $transaction->session_id ?: $transaction->token_id,
+                        'session_id' => $transaction->session_id,
+                        'token_id' => $transaction->token_id,
                         'payment_method' => $transaction->payment_method,
                         'amount_snapshot' => $transaction->amount,
                         'currency_snapshot' => 'IDR',
@@ -70,7 +72,8 @@ class BackfillPaymentAttempts extends Command
                         'creation_state' => 'unknown',
                         'settlement_status' => $status,
                         'verification_status' => 'needs_review',
-                        'metadata' => ['legacy_raw_response' => $transaction->raw_response, 'legacy_identity' => $identity],
+                        'metadata' => ['legacy_identity' => $identity],
+                        'raw_response' => $transaction->raw_response,
                     ]);
                     $attempt->timestamps = false;
                     $attempt->save();
