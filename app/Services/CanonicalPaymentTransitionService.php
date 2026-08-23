@@ -18,6 +18,10 @@ class CanonicalPaymentTransitionService
             $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
             $lockedAttempt = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             $this->validate($lockedAttempt, $event);
+            $lastReceivedAt = data_get($lockedAttempt->metadata, 'last_event_received_at');
+            if ($lastReceivedAt !== null && $event->receivedAt->lessThanOrEqualTo($lastReceivedAt)) {
+                return new TransitionResult(false, $lockedAttempt->fulfilment_claimed_at !== null);
+            }
 
             $status = strtolower($event->gatewayStatus);
             $oldSettlement = $lockedAttempt->settlement_status;
@@ -97,6 +101,10 @@ class CanonicalPaymentTransitionService
 
     private function claimOrRefund(PaymentAttempt $attempt, Order $order): bool
     {
+        if ($attempt->fulfilment_claimed_at !== null) {
+            return true;
+        }
+
         $winner = PaymentAttempt::query()->where('order_id', $order->id)
             ->where('settlement_status', PaymentAttemptSettlementStatus::Paid)
             ->where('verification_status', PaymentAttemptVerificationStatus::Verified)

@@ -405,6 +405,24 @@ class DokuService
      */
     public function markOrderPaid(Order $order): void
     {
+        $attempt = $order->paymentAttempts()->where('invoice_number', $order->doku_order_id ?: $order->order_code)->first();
+        if (! $attempt) {
+            throw new \LogicException('Canonical payment attempt required before marking order paid.');
+        }
+
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            source: 'legacy-entry-point',
+            gatewayStatus: 'SUCCESS',
+            amount: $attempt->amount_snapshot,
+            currency: $attempt->currency_snapshot,
+            gatewayReference: $attempt->invoice_number,
+            receivedAt: now(),
+            rawEvidence: ['legacy_entry_point' => true],
+        ));
+    }
+
+    private function legacyMarkOrderPaid(Order $order): void
+    {
         $terminalStatuses = [
             Order::STATUS_CANCELLED_BY_CUSTOMER,
             Order::STATUS_CANCELLED_BY_OUTLET,
@@ -448,14 +466,15 @@ class DokuService
      */
     public function processPaymentStatusChange(Order $order, string $status, array $evidence = []): void
     {
-        $attempt = $order->paymentAttempts()->where('invoice_number', $order->doku_order_id ?: $order->order_code)->first();
+        $invoiceNumber = $evidence['order']['invoice_number'] ?? $order->doku_order_id ?: $order->order_code;
+        $attempt = $order->paymentAttempts()->where('invoice_number', $invoiceNumber)->first();
         if ($attempt) {
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
                 source: 'doku',
                 gatewayStatus: $evidence['transaction']['status'] ?? $status,
                 amount: $evidence['transaction']['amount'] ?? null,
                 currency: $evidence['order']['currency'] ?? 'IDR',
-                gatewayReference: $evidence['transaction']['original_request_id'] ?? $evidence['transaction']['id'] ?? null,
+                gatewayReference: $evidence['transaction']['original_request_id'] ?? $evidence['transaction']['id'] ?? $invoiceNumber,
                 receivedAt: now(),
                 rawEvidence: $evidence,
             ));

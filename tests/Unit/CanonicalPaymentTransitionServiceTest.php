@@ -89,6 +89,32 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $this->assertSame('pending', $order->fresh()->payment_status);
     }
 
+    public function test_same_attempt_duplicate_success_is_idempotent_without_self_refund(): void
+    {
+        [, $attempt] = $this->attempt();
+        $service = app(CanonicalPaymentTransitionService::class);
+        $event = new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []);
+
+        $first = $service->apply($attempt, $event);
+        $second = $service->apply($attempt->fresh(), $event);
+
+        $this->assertTrue($first->fulfilmentWinner);
+        $this->assertTrue($second->fulfilmentWinner);
+        $this->assertSame(0, RefundObligation::count());
+    }
+
+    public function test_stale_event_does_not_overwrite_newer_evidence_or_state(): void
+    {
+        [, $attempt] = $this->attempt();
+        $service = app(CanonicalPaymentTransitionService::class);
+        $service->apply($attempt, new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), ['new' => true]));
+        $service->apply($attempt->fresh(), new NormalizedPaymentEvent('doku', 'FAILED', 50000, 'IDR', 'invoice-first', now()->subMinute(), ['old' => true]));
+
+        $fresh = $attempt->fresh();
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $fresh->settlement_status);
+        $this->assertSame(['new' => true], $fresh->raw_response);
+    }
+
     public function test_late_failure_cannot_regress_paid_attempt_and_duplicate_success_creates_one_obligation(): void
     {
         [$order, $attempt] = $this->attempt(['status' => Order::STATUS_CANCELLED_BY_CUSTOMER]);
@@ -99,7 +125,7 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $service->apply($attempt->fresh(), $success);
 
         $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
-        $this->assertSame(1, RefundObligation::where('payment_attempt_id', $attempt->id)->count());
+        $this->assertSame(0, RefundObligation::where('payment_attempt_id', $attempt->id)->count());
     }
 
     public function test_only_one_paid_attempt_claims_fulfilment(): void
