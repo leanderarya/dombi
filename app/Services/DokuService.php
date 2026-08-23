@@ -96,6 +96,7 @@ class DokuService
         ]);
 
         Log::debug('DOKU request headers', ['headers' => $headers]);
+        DB::commit();
 
         $response = Http::withHeaders($headers)
             ->timeout(30)
@@ -126,27 +127,25 @@ class DokuService
             throw new DokuPaymentException('Invalid DOKU response structure');
         }
 
-        // Log transaction
-        $attempt->update(['metadata' => ['payment_url' => $paymentUrl]]);
+        DB::transaction(function () use ($attempt, $paymentUrl, $order, $invoiceNumber, $sessionId, $tokenId, $data): void {
+            $attempt->update(['metadata' => ['payment_url' => $paymentUrl]]);
 
-        PaymentTransaction::create([
-            'order_id' => $order->id,
-            'doku_order_id' => $invoiceNumber,
-            'payment_method' => $order->payment_method ?? 'qris',
-            'amount' => (int) $order->total,
-            'status' => 'pending',
-            'session_id' => $sessionId,
-            'token_id' => $tokenId,
-            'raw_response' => $data,
-        ]);
+            PaymentTransaction::firstOrCreate(['doku_order_id' => $invoiceNumber], [
+                'order_id' => $order->id,
+                'doku_order_id' => $invoiceNumber,
+                'payment_method' => $order->payment_method ?? 'qris',
+                'amount' => (int) $order->total,
+                'status' => 'pending',
+                'session_id' => $sessionId,
+                'token_id' => $tokenId,
+                'raw_response' => $data,
+            ]);
 
-        // Update order
-        $order->update([
-            'doku_order_id' => $invoiceNumber,
-            'payment_status' => 'pending',
-        ]);
-
-        DB::commit();
+            $order->update([
+                'doku_order_id' => $invoiceNumber,
+                'payment_status' => 'pending',
+            ]);
+        });
 
         return $paymentUrl;
     }
