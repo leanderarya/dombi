@@ -447,8 +447,11 @@ class DokuReconciliationTest extends TestCase
                     $result = app(DokuReconciliationService::class)->reconcile($attempt->fresh());
                     file_put_contents($outcomes, ($result->changed ? 'transition' : 'noop')."\n", FILE_APPEND | LOCK_EX);
                 } else {
-                    $receipt = app(DokuWebhookIngressService::class)->receive($body, $headers);
-                    file_put_contents($outcomes, ($receipt->statusCode === 200 ? 'transition' : 'noop')."\n", FILE_APPEND | LOCK_EX);
+                    $beforeVersion = (int) $attempt->fresh()->status_version;
+                    app(DokuWebhookIngressService::class)->receive($body, $headers);
+                    $after = $attempt->fresh();
+                    $outcome = (int) $after->status_version > $beforeVersion ? 'transition' : 'noop';
+                    file_put_contents($outcomes, $outcome."\n", FILE_APPEND | LOCK_EX);
                 }
                 exit(0);
             }
