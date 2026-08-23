@@ -15,6 +15,7 @@ class RefundService
 {
     public function __construct(
         private readonly NotificationService $notifications,
+        private readonly RefundObligationService $obligations,
     ) {}
 
     private const REQUEST_SOURCES = [
@@ -69,6 +70,29 @@ class RefundService
             }
 
             $fromStatus = $locked->payment_status;
+            $attempt = $locked->paymentAttempts()
+                ->where(function ($query): void {
+                    $query->where('settlement_status', 'paid')
+                        ->orWhere('verification_status', 'verified');
+                })
+                ->latest('id')
+                ->first() ?? $locked->paymentAttempts()->latest('id')->first();
+
+            if (! $attempt && $locked->paid_at !== null) {
+                $attempt = $locked->paymentAttempts()->create([
+                    'attempt_key' => 'legacy-manual-refund-'.$locked->id,
+                    'invoice_number' => 'legacy-manual-refund-'.$locked->id,
+                    'merchant_request_id' => 'legacy-manual-refund-'.$locked->id,
+                    'amount_snapshot' => $locked->total,
+                    'currency_snapshot' => 'IDR',
+                ]);
+            }
+
+            if (! $attempt) {
+                throw new DomainException('Refund membutuhkan pembayaran terverifikasi.');
+            }
+
+            $this->obligations->createForAttempt($attempt, $source);
 
             $locked->update([
                 'payment_status' => PaymentStatus::RefundPending->value,
