@@ -78,6 +78,25 @@ class PaymentOutboxTest extends TestCase
         $this->assertSame(1, PaymentOutboxEvent::where('event_type', 'refund.obligation_created')->count());
     }
 
+    public function test_stale_outer_worker_aborts_before_consumer_effect_after_reclaim(): void
+    {
+        $outbox = PaymentOutboxEvent::create(['event_key' => 'outer-token', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);
+        $oldToken = $outbox->claim();
+        $outbox->update(['claim_expires_at' => now()->subSecond()]);
+        $newToken = $outbox->fresh()->claim();
+        $effects = 0;
+
+        (new DispatchPaymentOutboxEvent($outbox->id, $oldToken))->handle(function () use (&$effects): void {
+            $effects++;
+        });
+        (new DispatchPaymentOutboxEvent($outbox->id, $newToken))->handle(function () use (&$effects): void {
+            $effects++;
+        });
+
+        $this->assertSame(1, $effects);
+        $this->assertSame('delivered', $outbox->fresh()->status);
+    }
+
     public function test_stale_worker_reclaim_delivers_consumer_effect_once(): void
     {
         $outbox = PaymentOutboxEvent::create(['event_key' => 'consumer-once', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);

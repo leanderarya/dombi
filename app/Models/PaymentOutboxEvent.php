@@ -33,6 +33,11 @@ class PaymentOutboxEvent extends Model
             ->where(fn (Builder $query) => $query->whereNull('claim_expires_at')->orWhere('claim_expires_at', '<=', now()));
     }
 
+    public function ownsClaim(string $token): bool
+    {
+        return static::query()->whereKey($this->id)->where('status', 'pending')->where('claim_token', $token)->where('claim_expires_at', '>', now())->exists();
+    }
+
     public function claim(?string $token = null): ?string
     {
         $token ??= (string) Str::uuid();
