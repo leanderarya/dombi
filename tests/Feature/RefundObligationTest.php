@@ -171,6 +171,19 @@ class RefundObligationTest extends TestCase
         $this->assertDatabaseHas('refund_obligations', ['payment_attempt_id' => $older->id, 'amount' => 5000]);
     }
 
+    public function test_historical_backfill_reports_missing_existing_attempt_currency(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'refund_pending', 'refund_amount' => 5000]);
+        PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'missing-currency-attempt', 'invoice_number' => 'missing-currency-invoice',
+            'merchant_request_id' => 'missing-currency-request', 'amount_snapshot' => 5000, 'currency_snapshot' => '',
+        ]);
+
+        $this->runRefundBackfill();
+
+        $this->assertDatabaseHas('refund_obligation_backfill_exceptions', ['order_id' => $order->id, 'reason' => 'missing_currency']);
+    }
+
     public function test_historical_backfill_reports_missing_synthesized_currency(): void
     {
         Schema::table('orders', function ($table): void {
