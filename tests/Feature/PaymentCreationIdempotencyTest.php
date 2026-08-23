@@ -58,6 +58,45 @@ class PaymentCreationIdempotencyTest extends TestCase
         $this->assertDatabaseHas('payment_attempts', ['id' => $attempt->id, 'creation_state' => 'created']);
     }
 
+    public function test_pending_attempt_with_url_is_reused_without_provider_call(): void
+    {
+        Http::fake();
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'attempt-pending',
+            'invoice_number' => 'INV-PENDING',
+            'merchant_request_id' => 'REQ-PENDING',
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'creation_state' => PaymentAttemptCreationState::Created,
+            'metadata' => ['payment_url' => 'https://pay.test/pending'],
+        ]);
+        $attempt->update(['creation_state' => 'created']);
+
+        $this->assertSame('https://pay.test/pending', app(DokuService::class)->createPayment($attempt));
+        Http::assertNothingSent();
+    }
+
+    public function test_pending_attempt_without_url_is_blocked(): void
+    {
+        Http::fake();
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'attempt-pending-no-url',
+            'invoice_number' => 'INV-PENDING-NO-URL',
+            'merchant_request_id' => 'REQ-PENDING-NO-URL',
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'creation_state' => PaymentAttemptCreationState::Created,
+        ]);
+
+        $this->expectException(DokuPaymentException::class);
+        app(DokuService::class)->createPayment($attempt);
+        Http::assertNothingSent();
+    }
+
     public function test_unknown_attempt_is_reused_without_provider_call(): void
     {
         Http::fake();
