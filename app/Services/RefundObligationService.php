@@ -55,7 +55,11 @@ class RefundObligationService
 
         return DB::transaction(function () use ($obligation, $to, $metadata, $allowed): bool {
             $locked = RefundObligation::lockForUpdate()->findOrFail($obligation->id);
-            if (! in_array($to, $allowed[$locked->status->value] ?? [], true)) {
+            $allowedStatuses = array_map(
+                static fn (RefundObligationStatus $status): string => $status->value,
+                $allowed[$locked->status->value] ?? [],
+            );
+            if (! in_array($to->value, $allowedStatuses, true)) {
                 return false;
             }
             $locked->update(['status' => $to, 'metadata' => array_merge($locked->metadata ?? [], $metadata), 'processed_at' => $to === RefundObligationStatus::Completed ? now() : $locked->processed_at]);
