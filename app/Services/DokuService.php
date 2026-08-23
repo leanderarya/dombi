@@ -201,7 +201,7 @@ class DokuService
             $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
 
             $this->processPaymentStatusChange($order, $status, $payload);
-            if ($transaction) {
+            if ($transaction && ! ($transaction->status === 'paid' && $status !== 'paid')) {
                 $transaction->update(['status' => $status, 'raw_response' => $payload]);
             }
 

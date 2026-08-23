@@ -172,7 +172,7 @@ class CanonicalPaymentTransitionService
             Order::STATUS_REJECTED_BY_OUTLET,
             Order::STATUS_EXPIRED,
         ], true)) {
-            $this->createRefundObligation($attempt);
+            $this->createRefundObligation($attempt, 'late_payment');
 
             return false;
         }
@@ -187,15 +187,15 @@ class CanonicalPaymentTransitionService
 
             return true;
         }
-        $this->createRefundObligation($attempt);
+        $this->createRefundObligation($attempt, 'duplicate_paid_attempt');
 
         return false;
     }
 
-    private function createRefundObligation(PaymentAttempt $attempt): void
+    private function createRefundObligation(PaymentAttempt $attempt, string $reason): void
     {
         RefundObligation::firstOrCreate(
-            ['payment_attempt_id' => $attempt->id, 'reason' => 'duplicate_paid_attempt'],
+            ['payment_attempt_id' => $attempt->id, 'reason' => $reason],
             ['amount' => $attempt->gateway_amount ?? $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'status' => RefundObligationStatus::Pending]
         );
     }

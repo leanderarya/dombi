@@ -179,6 +179,11 @@ class PaymentProductionInvariantTest extends TestCase
             'amount' => $order->total,
             'status' => 'pending',
         ]);
+        PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'late-'.$order->id,
+            'invoice_number' => $order->order_code, 'merchant_request_id' => 'late-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
         $payload = [
             'order' => ['invoice_number' => $order->order_code],
             'transaction' => ['status' => 'SUCCESS', 'amount' => 50000],
@@ -187,10 +192,12 @@ class PaymentProductionInvariantTest extends TestCase
         $service->handleWebhook($payload);
         $service->handleWebhook($payload);
 
-        $this->assertSame('pending', $order->fresh()->payment_status);
-        $this->assertSame(0, RefundObligation::where('payment_attempt_id', PaymentAttempt::where('order_id', $order->id)->value('id'))->count());
-        $this->assertSame(0, PaymentAttempt::where('order_id', $order->id)->count());
-        $this->assertSame(1, PaymentTransaction::where('order_id', $order->id)->where('status', 'pending')->count());
+        $this->assertSame('paid', $order->fresh()->payment_status);
+        $attempt = PaymentAttempt::where('order_id', $order->id)->sole();
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->settlement_status);
+        $this->assertNull($attempt->fulfilment_claimed_at);
+        $this->assertSame(1, RefundObligation::where('payment_attempt_id', $attempt->id)->where('reason', 'late_payment')->count());
+        $this->assertSame(1, PaymentTransaction::where('order_id', $order->id)->where('status', 'paid')->count());
     }
 
     public function test_duplicate_refund_request_returns_null_without_second_obligation(): void
