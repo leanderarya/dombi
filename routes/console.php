@@ -97,6 +97,14 @@ Schedule::call(function () {
     SchedulerHeartbeat::record();
 })->everyMinute()->name('scheduler-heartbeat');
 
+// ─── DOKU PAYMENT RECONCILIATION ──────────────────────
+
+Schedule::command('payments:reconcile-doku')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/reconcile-doku.log'));
+
 // ─── QUEUE WORKER ────────────────────────────────────────────────────
 
 Schedule::command('queue:work --tries=3 --stop-when-empty')
