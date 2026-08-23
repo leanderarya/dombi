@@ -4,7 +4,10 @@
 Harden canonical DOKU payment creation, retry, reconciliation, leases, snapshots, and active-attempt projection.
 
 ## Verification
-- Focused Task 8 creation/retry/boundary tests: 24 passed, 62 assertions.
+- Focused Task 8 creation/retry/boundary tests: 25 passed, 66 assertions.
+- PENDING reconciliation updates settlement and aggregate order projection in same transaction.
+- Boundary behavior tests prove cap prevents fresh rows/provider calls and active attempts are reused.
+- `composer run lint:check`: passed (`pint --parallel --test`).
 - `php artisan test`: 1343 run, 1332 passed, 11 baseline failures/errors. Verification blocked.
 - Baseline failures/errors are prior-task compatibility issues after restoring approved Task 7 state: lock-order assertion; missing canonical-attempt fixtures in DokuMarkPaid/DokuPayment atomic and webhook tests; removed Order overload callers; legacy backfill hard-coded ID; schema expectation missing pending state; late-refund expectation mismatch.
 - `composer run lint:check`: passed (`pint --parallel --test`).
