@@ -9,6 +9,26 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentStatusService
 {
+    public function project(Order $order, PaymentStatus $to): bool
+    {
+        if ($order->payment_status === $to->value) {
+            return false;
+        }
+
+        $updated = Order::whereKey($order->id)
+            ->where('payment_status', $order->payment_status)
+            ->update(['payment_status' => $to->value]);
+
+        if ($updated === 0) {
+            return false;
+        }
+
+        $order->refresh();
+        $this->bustCaches($order);
+
+        return true;
+    }
+
     public function transition(Order $order, PaymentStatus $to, array $extra = []): bool
     {
         $current = PaymentStatus::from($order->payment_status ?? 'pending');
