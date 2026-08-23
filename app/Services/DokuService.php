@@ -168,53 +168,55 @@ class DokuService
 
         $status = $this->mapStatus($paymentStatus);
 
-        // Find order via transaction OR directly by invoice number
-        $transaction = PaymentTransaction::where('doku_order_id', $invoiceNumber)->first();
-        $order = $transaction?->order
-            ?? Order::where('order_code', $invoiceNumber)->first()
-            ?? Order::where('doku_order_id', $invoiceNumber)->first();
+        DB::transaction(function () use ($invoiceNumber, $status, $paymentStatus, $payload): void {
+            // Find order via transaction OR directly by invoice number
+            $transaction = PaymentTransaction::where('doku_order_id', $invoiceNumber)->first();
+            $order = $transaction?->order
+                ?? Order::where('order_code', $invoiceNumber)->first()
+                ?? Order::where('doku_order_id', $invoiceNumber)->first();
 
-        if (! $order) {
-            Log::warning('DOKU webhook: order not found', [
+            if (! $order) {
+                Log::warning('DOKU webhook: order not found', [
+                    'invoice_number' => $invoiceNumber,
+                    'mapped_status' => $status,
+                ]);
+
+                return;
+            }
+
+            // Preserve transaction evidence until canonical transition validates the event.
+            if (! $transaction) {
+                Log::warning('DOKU webhook: no PaymentTransaction record, processing order directly', [
+                    'order_id' => $order->id,
+                    'invoice_number' => $invoiceNumber,
+                ]);
+            }
+
+            $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+            PaymentAttempt::firstOrCreate(
+                ['order_id' => $order->id, 'invoice_number' => $invoiceNumber],
+                [
+                    'attempt_key' => 'legacy-'.$invoiceNumber,
+                    'merchant_request_id' => 'legacy-'.$invoiceNumber,
+                    'amount_snapshot' => $transaction?->amount ?? $order->total,
+                    'currency_snapshot' => $payload['order']['currency'] ?? 'IDR',
+                    'verification_status' => PaymentAttemptVerificationStatus::NeedsReview,
+                    'metadata' => ['legacy_webhook_needs_review' => true],
+                ]
+            );
+
+            $this->processPaymentStatusChange($order, $status, $payload);
+            if ($transaction) {
+                $transaction->update(['status' => $status, 'raw_response' => $payload]);
+            }
+
+            Log::info('DOKU webhook processed', [
+                'order_id' => $order->id,
                 'invoice_number' => $invoiceNumber,
+                'doku_status' => $paymentStatus,
                 'mapped_status' => $status,
             ]);
-
-            return;
-        }
-
-        // Preserve transaction evidence until canonical transition validates the event.
-        if (! $transaction) {
-            Log::warning('DOKU webhook: no PaymentTransaction record, processing order directly', [
-                'order_id' => $order->id,
-                'invoice_number' => $invoiceNumber,
-            ]);
-        }
-
-        if (! $order->paymentAttempts()->where('invoice_number', $invoiceNumber)->exists()) {
-            PaymentAttempt::create([
-                'order_id' => $order->id,
-                'attempt_key' => $invoiceNumber,
-                'invoice_number' => $invoiceNumber,
-                'merchant_request_id' => 'legacy-'.$invoiceNumber,
-                'amount_snapshot' => $transaction?->amount ?? $order->total,
-                'currency_snapshot' => $payload['order']['currency'] ?? 'IDR',
-                'verification_status' => PaymentAttemptVerificationStatus::NeedsReview,
-                'metadata' => ['legacy_webhook_needs_review' => true],
-            ]);
-        }
-
-        $this->processPaymentStatusChange($order, $status, $payload);
-        if ($transaction) {
-            $transaction->update(['status' => $status, 'raw_response' => $payload]);
-        }
-
-        Log::info('DOKU webhook processed', [
-            'order_id' => $order->id,
-            'invoice_number' => $invoiceNumber,
-            'doku_status' => $paymentStatus,
-            'mapped_status' => $status,
-        ]);
+        });
     }
 
     /**
