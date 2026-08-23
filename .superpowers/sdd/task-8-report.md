@@ -4,7 +4,8 @@
 Canonical DOKU payment creation, retry, reconciliation, leases, immutable snapshots, and active-attempt projection.
 
 ## Verification
-- Focused Task 8 creation/retry/boundary tests: 26 passed, 67 assertions.
+- Focused Task 8 creation/retry/boundary tests: 27 passed, 71 assertions.
+- Definitive reconciliation failures transition settlement to failed/expired through canonical transition, update projection/retry window, and permit fresh retry; unknown remains blocked.
 - `composer run lint:check`: passed (`pint --parallel --test`).
 - Full `php artisan test`: 1343 run, 1332 passed, 11 baseline failures/errors. Verification blocked.
 

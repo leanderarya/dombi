@@ -206,7 +206,27 @@ class DokuService
                 return $attempt->fresh();
             }
         } elseif (in_array($status, ['FAILED', 'REJECTED', 'DENIED', 'CANCELLED', 'EXPIRED'], true)) {
-            $this->persistReconciliationResult($attempt, $claimToken, 'failed', $status, $data);
+            $persisted = DB::transaction(function () use ($attempt, $claimToken, $status, $data): bool {
+                $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+                if (data_get($locked->metadata ?? [], 'reconciliation_lease.token') !== $claimToken) {
+                    return false;
+                }
+                app(CanonicalPaymentTransitionService::class)->apply($locked, new NormalizedPaymentEvent(
+                    source: 'doku-reconciliation',
+                    gatewayStatus: $status,
+                    amount: data_get($data, 'transaction.amount'),
+                    currency: data_get($data, 'order.currency', 'IDR'),
+                    gatewayReference: data_get($data, 'transaction.original_request_id') ?? data_get($data, 'transaction.id') ?? $locked->invoice_number,
+                    receivedAt: now(),
+                    rawEvidence: $data,
+                ));
+                $locked->update(['creation_state' => 'failed', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
+
+                return true;
+            });
+            if (! $persisted) {
+                return $attempt->fresh();
+            }
         } elseif ($status === 'PENDING') {
             $this->persistReconciliationResult($attempt, $claimToken, 'pending', $status, $data);
         } else {
