@@ -177,22 +177,30 @@ class DokuService
         $data = $response->json();
         $status = strtoupper(data_get($data, 'transaction.status', ''));
         if ($status === 'SUCCESS') {
-            if (! $this->persistReconciliationResult($attempt, $claimToken, 'created', $status, $data)) {
+            $persisted = DB::transaction(function () use ($attempt, $claimToken, $data, $status): bool {
+                $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+                if (data_get($locked->metadata ?? [], 'reconciliation_lease.token') !== $claimToken) {
+                    return false;
+                }
+                app(CanonicalPaymentTransitionService::class)->apply($locked, new NormalizedPaymentEvent(
+                    source: 'doku-reconciliation',
+                    gatewayStatus: 'SUCCESS',
+                    amount: data_get($data, 'transaction.amount'),
+                    currency: data_get($data, 'order.currency', 'IDR'),
+                    gatewayReference: data_get($data, 'transaction.original_request_id') ?? data_get($data, 'transaction.id') ?? $locked->invoice_number,
+                    receivedAt: now(),
+                    rawEvidence: $data,
+                ));
+                $locked->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
+                $order = Order::query()->whereKey($locked->order_id)->lockForUpdate()->firstOrFail();
+                if ($order->payment_status === 'paid' && $order->paid_at === null) {
+                    $order->update(['paid_at' => now()]);
+                }
+
+                return true;
+            });
+            if (! $persisted) {
                 return $attempt->fresh();
-            }
-            app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
-                source: 'doku-reconciliation',
-                gatewayStatus: 'SUCCESS',
-                amount: data_get($data, 'transaction.amount'),
-                currency: data_get($data, 'order.currency', 'IDR'),
-                gatewayReference: data_get($data, 'transaction.original_request_id') ?? data_get($data, 'transaction.id') ?? $attempt->invoice_number,
-                receivedAt: now(),
-                rawEvidence: $data,
-            ));
-            $attempt->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($attempt->metadata ?? [], ['reconciliation_lease' => null])]);
-            $order = $attempt->order->fresh();
-            if ($order->payment_status === 'paid' && $order->paid_at === null) {
-                $order->update(['paid_at' => now()]);
             }
         } elseif (in_array($status, ['FAILED', 'REJECTED', 'DENIED', 'CANCELLED', 'EXPIRED'], true)) {
             $this->persistReconciliationResult($attempt, $claimToken, 'failed', $status, $data);
