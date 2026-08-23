@@ -31,10 +31,16 @@ class DispatchPaymentOutboxEvent implements ShouldQueue
             if (! $event->ownsClaim($token)) {
                 return;
             }
-            $consumerToken = $event->claimConsumer();
-            if (! $consumerToken) {
+            if ($event->consumerCompleted()) {
+                $event->markDelivered($token);
+
                 return;
             }
+            $consumerToken = $event->claimConsumer();
+            if (! $consumerToken || ! $event->renewClaim($token)) {
+                return;
+            }
+            $event->refresh();
             ($deliver ?? static fn (PaymentOutboxEvent $event): mixed => Event::dispatch($event->event_type, [$event->payload]))($event);
             if (! $event->completeConsumer($consumerToken)) {
                 return;

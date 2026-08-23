@@ -35,7 +35,14 @@ class PaymentOutboxEvent extends Model
 
     public function ownsClaim(string $token): bool
     {
-        return static::query()->whereKey($this->id)->where('status', 'pending')->where('claim_token', $token)->where('claim_expires_at', '>', now())->exists();
+        return static::query()->whereKey($this->id)->where('status', 'pending')->where('claim_token', $token)->exists();
+    }
+
+    public function renewClaim(string $token): bool
+    {
+        static::query()->whereKey($this->id)->where('claim_token', $token)->update(['claim_expires_at' => now()->addMinutes(5)]);
+
+        return static::query()->whereKey($this->id)->where('claim_token', $token)->exists();
     }
 
     public function claim(?string $token = null): ?string
@@ -60,6 +67,11 @@ class PaymentOutboxEvent extends Model
         })->update(['consumer_status' => 'processing', 'consumer_claim_token' => $token, 'consumer_claimed_at' => now()]);
 
         return $claimed === 1 ? $token : null;
+    }
+
+    public function consumerCompleted(): bool
+    {
+        return static::query()->whereKey($this->id)->where('consumer_status', 'completed')->exists();
     }
 
     public function completeConsumer(string $token): bool
