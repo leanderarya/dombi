@@ -42,6 +42,18 @@ class PaymentRetryTest extends TestCase
         $this->assertNotNull($order->fresh()->paid_at);
     }
 
+    public function test_reconciliation_lease_blocks_concurrent_provider_request(): void
+    {
+        Http::fake();
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'reconcile-lease', 'invoice_number' => 'reconcile-lease', 'merchant_request_id' => 'reconcile-lease-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Unknown, 'metadata' => ['reconciliation_lease' => ['token' => 'worker-1', 'expires_at' => now()->addMinute()->toIso8601String()]]]);
+
+        app(DokuService::class)->reconcilePaymentAttempt($attempt);
+
+        Http::assertNothingSent();
+        $this->assertDatabaseHas('payment_attempts', ['id' => $attempt->id, 'creation_state' => 'unknown']);
+    }
+
     public function test_reconciliation_failure_persists_bounded_backoff_state(): void
     {
         Http::fake(['*/checkout/v1/payment/reconcile-failure' => Http::response('', 503)]);
