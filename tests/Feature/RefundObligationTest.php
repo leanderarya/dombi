@@ -185,8 +185,11 @@ class RefundObligationTest extends TestCase
 
     public function test_historical_refund_backfill_synthesizes_missing_attempt(): void
     {
+        Schema::table('orders', function ($table): void {
+            $table->char('currency', 3)->nullable();
+        });
         $order = Order::factory()->create([
-            'total' => 8000, 'payment_status' => 'refund_pending', 'refund_amount' => 8000,
+            'total' => 8000, 'payment_status' => 'refund_pending', 'refund_amount' => 8000, 'currency' => 'IDR',
         ]);
 
         $this->runRefundBackfill();
@@ -197,8 +200,11 @@ class RefundObligationTest extends TestCase
 
     public function test_historical_refund_backfill_reports_unmappable_refund_and_recovers_on_rerun(): void
     {
+        Schema::table('orders', function ($table): void {
+            $table->char('currency', 3)->nullable();
+        });
         $order = Order::factory()->create([
-            'total' => 0, 'payment_status' => 'refund_pending', 'refund_amount' => 1000,
+            'total' => 0, 'payment_status' => 'refund_pending', 'refund_amount' => 1000, 'currency' => 'IDR',
         ]);
 
         $this->runRefundBackfill();
