@@ -110,7 +110,7 @@ class DokuWebhookIngressTest extends TestCase
                     'Client-Id' => $headers['HTTP_Client-Id'],
                     'Signature' => $headers['HTTP_Signature'],
                 ]);
-                file_put_contents($results, $response->statusCode.'\\n', FILE_APPEND | LOCK_EX);
+                file_put_contents($results, $response->statusCode."\n", FILE_APPEND | LOCK_EX);
                 exit(0);
             }
             $children[] = $pid;
@@ -124,6 +124,7 @@ class DokuWebhookIngressTest extends TestCase
         $statuses = array_map('intval', file($results, FILE_IGNORE_NEW_LINES));
         unlink($results);
         sort($statuses);
+        $this->assertCount(2, $statuses);
         $this->assertLessThanOrEqual(1, count(array_filter($statuses, static fn (int $status): bool => in_array($status, [200, 202], true))));
         $this->assertSame(1, PaymentWebhookLog::where('request_id', 'REQ-PARALLEL')->count());
         $this->assertContains(PaymentWebhookLog::where('request_id', 'REQ-PARALLEL')->value('status'), ['processed', 'retryable']);

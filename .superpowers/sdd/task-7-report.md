@@ -15,6 +15,7 @@ Verification:
 - Duplicate cleanup uses explicit retained/deleted IDs for portable migrations.
 - Added `claimed_at` lease with five-minute stale recovery under row lock; failed workers become retryable.
 - SQLite tests deterministically verify durable claim; production-driver test forks two real workers when MySQL/PostgreSQL and `pcntl` are available, otherwise skips with explicit reason.
-- Parallel test asserts one durable request row and at most one successful/processing claim response.
+- Parallel test writes actual newline-delimited worker results, requires exactly two result lines, then asserts one durable request row and at most one successful/processing claim response.
+- Restored `Log` facade import in `DokuPaymentController`.
 - `php artisan test tests/Feature/DokuWebhookIngressTest.php tests/Unit/WebhookSecurityTest.php` — 16 passed.
 - `composer run lint:check` — passed.
