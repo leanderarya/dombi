@@ -29,6 +29,32 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $this->assertSame(1, RefundObligation::where('payment_attempt_id', $attempt->id)->count());
     }
 
+    public function test_unmatched_gateway_reference_is_evidence_only_and_canonical_invoice_remains(): void
+    {
+        [, $attempt] = $this->attempt();
+
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'doku', 'SUCCESS', 50000, 'IDR', 'transaction-id', now(), ['order' => ['invoice_number' => 'invoice-first']]
+        ));
+
+        $fresh = $attempt->fresh();
+        $this->assertSame('invoice-first', $fresh->invoice_number);
+        $this->assertNull($fresh->gateway_transaction_id);
+        $this->assertSame('paid', $fresh->settlement_status->value);
+    }
+
+    public function test_legacy_webhook_attempt_stays_needs_review_until_reconciliation(): void
+    {
+        [, $attempt] = $this->attempt();
+        $attempt->update(['metadata' => ['legacy_webhook_needs_review' => true]]);
+
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []
+        ));
+
+        $this->assertSame(PaymentAttemptVerificationStatus::NeedsReview, $attempt->fresh()->verification_status);
+    }
+
     public function test_success_matching_amount_is_verified_and_paid(): void
     {
         [$order, $attempt] = $this->attempt();

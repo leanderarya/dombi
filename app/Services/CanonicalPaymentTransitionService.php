@@ -21,6 +21,8 @@ class CanonicalPaymentTransitionService
             if ($lastReceivedAt !== null && $event->receivedAt->lessThanOrEqualTo($lastReceivedAt)) {
                 return new TransitionResult(false, $lockedAttempt->fulfilment_claimed_at !== null);
             }
+            $invoice = data_get($event->rawEvidence, 'order.invoice_number') ?? $lockedAttempt->invoice_number;
+            $this->validateInvoice($lockedAttempt, $invoice);
             $event = $event->withGatewayReference($this->normalizeReference($lockedAttempt, $event));
             $this->validate($lockedAttempt, $event);
 
@@ -35,7 +37,8 @@ class CanonicalPaymentTransitionService
                     $lockedAttempt->settlement_status = PaymentAttemptSettlementStatus::Paid;
                     $changed = true;
                 }
-                if ($lockedAttempt->verification_status !== PaymentAttemptVerificationStatus::Verified && ! $needsReview) {
+                if ($lockedAttempt->verification_status !== PaymentAttemptVerificationStatus::Verified && ! $needsReview
+                    && ! data_get($lockedAttempt->metadata, 'legacy_webhook_needs_review')) {
                     $lockedAttempt->verification_status = PaymentAttemptVerificationStatus::Verified;
                     $changed = true;
                 }
@@ -57,8 +60,10 @@ class CanonicalPaymentTransitionService
                 }
             }
 
-            if ($event->gatewayReference !== null) {
+            if ($event->gatewayReference !== null && $event->gatewayReference === $lockedAttempt->invoice_number) {
                 $lockedAttempt->gateway_transaction_id = $event->gatewayReference;
+            } elseif ($event->gatewayReference !== null) {
+                $lockedAttempt->metadata = array_merge($lockedAttempt->metadata ?? [], ['last_gateway_reference_evidence' => $event->gatewayReference]);
             }
             $lockedAttempt->gateway_amount = $event->amount;
             $lockedAttempt->gateway_currency = strtoupper($event->currency);
@@ -91,6 +96,13 @@ class CanonicalPaymentTransitionService
         return $event->gatewayReference
             ?? data_get($event->rawEvidence, 'order.invoice_number')
             ?? $attempt->invoice_number;
+    }
+
+    private function validateInvoice(PaymentAttempt $attempt, string $invoice): void
+    {
+        if ($invoice !== $attempt->invoice_number) {
+            throw new \InvalidArgumentException('Payment invoice does not match attempt.');
+        }
     }
 
     private function validate(PaymentAttempt $attempt, NormalizedPaymentEvent $event): void
