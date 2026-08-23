@@ -18,7 +18,10 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 
 ## Tests
 - Reconciliation SUCCESS test: passed; canonical transition settles attempt and projects order.
-- `php artisan test`: 1340 tests passed, 4675 assertions.
+- `php artisan test`: 1340 tests passed, 4677 assertions.
+- Projection active precedence includes `initiated`, `pending`, `created`, and `unknown` creation states; ambiguous attempts remain pending and block unsafe retry.
+- Projection regression coverage: passed.
+- `composer run lint:check`: passed (`pint --parallel --test`).
 - `creation_state=pending` is canonical active state; preparation reuses pending creation intents and creation blocks duplicate provider calls.
 - Pending creation regression and schema coverage: passed.
 - `composer run lint:check`: passed (`pint --parallel --test`).
