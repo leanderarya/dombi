@@ -114,6 +114,7 @@ class DokuService
         $sessionId = $data['response']['order']['session_id'] ?? null;
         $tokenId = $data['response']['payment']['token_id'] ?? null;
         $persisted = DB::transaction(function () use ($attempt, $claimToken, $paymentUrl, $order, $data, $sessionId, $tokenId): bool {
+            $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             if (data_get($locked->metadata ?? [], 'creation_lease.token') !== $claimToken) {
                 $locked->update(['creation_state' => 'unknown', 'raw_response' => $data]);
