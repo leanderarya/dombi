@@ -16,6 +16,26 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_payment_aggregate_lock_order_is_order_then_attempt(): void
+    {
+        $service = file_get_contents(app_path('Services/CanonicalPaymentTransitionService.php'));
+        $projection = file_get_contents(app_path('Services/OrderPaymentProjectionService.php'));
+        $webhook = file_get_contents(app_path('Services/DokuService.php'));
+
+        $this->assertLessThan(
+            strpos($service, 'PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()'),
+            strpos($service, 'Order::query()->whereKey($attempt->order_id)->lockForUpdate()')
+        );
+        $this->assertLessThan(
+            strpos($projection, 'PaymentAttempt::query()->where(\'order_id\''),
+            strpos($projection, 'Order::query()->whereKey($order->id)->lockForUpdate()')
+        );
+        $this->assertLessThan(
+            strpos($webhook, 'PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()'),
+            strpos($webhook, 'Order::query()->whereKey($attempt->order_id)->lockForUpdate()')
+        );
+    }
+
     public function test_repeated_failed_event_does_not_reset_payment_retry_window(): void
     {
         [$order, $attempt] = $this->attempt();
