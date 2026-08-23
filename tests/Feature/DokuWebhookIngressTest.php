@@ -158,6 +158,22 @@ class DokuWebhookIngressTest extends TestCase
         $this->assertContains(PaymentWebhookLog::where('request_id', 'REQ-PARALLEL')->value('status'), ['processed', 'retryable']);
     }
 
+    public function test_processing_claim_has_fencing_token_and_completion_requires_ownership(): void
+    {
+        $body = '{"transaction":{"status":"SUCCESS"}}';
+        $log = PaymentWebhookLog::create([
+            'request_id' => 'REQ-FENCE', 'source' => 'notify', 'status' => 'processing',
+            'signature_valid' => true, 'payload' => json_decode($body, true), 'raw_body' => $body,
+            'body_digest' => base64_encode(hash('sha256', $body, true)), 'claimed_at' => now()->subMinutes(10),
+            'claim_token' => 'old-token',
+        ]);
+
+        $this->call('POST', route('doku.notify'), [], [], [], $this->signed('REQ-FENCE', $body), $body)->assertStatus(500);
+        $fresh = $log->fresh();
+        $this->assertSame('retryable', $fresh->status);
+        $this->assertNotSame('old-token', $fresh->claim_token);
+    }
+
     public function test_stale_processing_claim_is_recovered(): void
     {
         $body = '{"transaction":{"status":"SUCCESS"}}';

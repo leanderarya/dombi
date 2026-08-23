@@ -17,6 +17,8 @@ Verification:
 - Signature authentication now precedes all durable mutation; invalid duplicates cannot mutate valid rows.
 - Duplicate digest/status decisions and valid claims occur in one row-locked transaction after authentication.
 - Historical rows without original raw bytes are marked retryable/reprocess-required; migration never fabricates signed evidence.
+- Processing leases now carry fencing tokens; completion/failure updates require current token ownership.
+- Null historical digests cannot pass duplicate checks or mutate rows before authentication.
 - Added `.github/workflows/task-7-production.yml` Laravel key/env setup and MySQL readiness wait before migration; production concurrency gate remains mandatory.
 - Added `claimed_at` lease with five-minute stale recovery under row lock; failed workers become retryable.
 - SQLite tests deterministically verify durable claim; CI production-driver gate must run the forked two-worker test on MySQL/PostgreSQL with `pcntl`; local SQLite runs skip with explicit reason.

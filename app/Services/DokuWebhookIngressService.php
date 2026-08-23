@@ -64,7 +64,8 @@ final class DokuWebhookIngressService
             return new WebhookReceipt($log, 401, 'Invalid signature');
         }
 
-        $claim = DB::transaction(function () use ($digest, $log): ?WebhookReceipt {
+        $claimToken = bin2hex(random_bytes(32));
+        $claim = DB::transaction(function () use ($digest, $log, $claimToken): ?WebhookReceipt {
             $locked = PaymentWebhookLog::query()->whereKey($log->id)->lockForUpdate()->firstOrFail();
             if (! hash_equals((string) $locked->body_digest, $digest)) {
                 return new WebhookReceipt($locked, 409, 'Request-Id body conflict');
@@ -78,7 +79,7 @@ final class DokuWebhookIngressService
             if ($locked->status === 'processing' && $locked->claimed_at?->gt(now()->subMinutes(5))) {
                 return new WebhookReceipt($locked, 202, 'Processing');
             }
-            $locked->update(['status' => 'processing', 'signature_valid' => true, 'claimed_at' => now()]);
+            $locked->update(['status' => 'processing', 'signature_valid' => true, 'claimed_at' => now(), 'claim_token' => $claimToken]);
 
             return null;
         });
@@ -89,11 +90,14 @@ final class DokuWebhookIngressService
         try {
             $event = $this->normalize($payload);
             $this->doku->handleNormalizedWebhook($event);
-            $log->update(['status' => 'processed']);
+            $updated = PaymentWebhookLog::query()->whereKey($log->id)->where('claim_token', $claimToken)->update(['status' => 'processed', 'claim_token' => null]);
+            if ($updated !== 1) {
+                return new WebhookReceipt($log, 409, 'Webhook claim lost');
+            }
 
             return new WebhookReceipt($log, 200, 'OK');
         } catch (\Throwable $exception) {
-            PaymentWebhookLog::query()->whereKey($log->id)->update(['status' => 'retryable', 'claimed_at' => null, 'error' => $exception->getMessage()]);
+            PaymentWebhookLog::query()->whereKey($log->id)->where('claim_token', $claimToken)->update(['status' => 'retryable', 'claimed_at' => null, 'claim_token' => null, 'error' => $exception->getMessage()]);
 
             return new WebhookReceipt($log, 500, 'Internal error');
         }
