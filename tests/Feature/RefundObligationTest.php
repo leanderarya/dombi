@@ -71,6 +71,26 @@ class RefundObligationTest extends TestCase
         RefundObligation::create(['payment_attempt_id' => 999999, 'amount' => 1, 'currency' => 'IDR', 'reason' => 'fk']);
     }
 
+    public function test_duplicate_key_recovery_uses_existing_obligation(): void
+    {
+        $attempt = PaymentAttempt::create([
+            'order_id' => Order::factory()->create()->id,
+            'attempt_key' => 'attempt-race', 'invoice_number' => 'invoice-race', 'merchant_request_id' => 'request-race',
+            'amount_snapshot' => 12500, 'currency_snapshot' => 'IDR',
+        ]);
+        RefundObligation::create([
+            'payment_attempt_id' => $attempt->id,
+            'amount' => 12500,
+            'currency' => 'IDR',
+            'reason' => 'race',
+        ]);
+
+        $existing = app(RefundObligationService::class)->createForAttempt($attempt, 'race');
+
+        $this->assertDatabaseCount('refund_obligations', 1);
+        $this->assertSame('race', $existing->reason);
+    }
+
     public function test_invalid_transitions_are_rejected_and_needs_review_is_supported(): void
     {
         $attempt = PaymentAttempt::create([

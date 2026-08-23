@@ -23,7 +23,7 @@ class RefundObligationService
                 ['amount' => $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'status' => RefundObligationStatus::Pending]
             );
         } catch (QueryException $exception) {
-            if (! str_contains($exception->getMessage(), 'unique')) {
+            if (! $this->isDuplicateKeyException($exception)) {
                 throw $exception;
             }
 
@@ -31,6 +31,15 @@ class RefundObligationService
                 ->where('reason', $reason)
                 ->firstOrFail();
         }
+    }
+
+    private function isDuplicateKeyException(QueryException $exception): bool
+    {
+        $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
+        $driverCode = (string) ($exception->errorInfo[1] ?? '');
+
+        return in_array($sqlState, ['23000', '23505', '2627', '2601'], true)
+            || in_array($driverCode, ['1062', '1555', '2067', '2627', '2601'], true);
     }
 
     public function transition(RefundObligation $obligation, RefundObligationStatus $to, array $metadata = []): bool
