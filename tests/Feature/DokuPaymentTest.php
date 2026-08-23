@@ -86,6 +86,7 @@ class DokuPaymentTest extends TestCase
         $this->doku->handleWebhook($payload);
 
         $this->assertEquals('paid', $order->fresh()->payment_status);
+        $this->assertNotNull($order->fresh()->paid_at);
     }
 
     public function test_webhook_invalid_signature_rejected(): void
@@ -193,5 +194,6 @@ class DokuPaymentTest extends TestCase
 
         $response->assertRedirect();
         $this->assertEquals('paid', $order->fresh()->payment_status);
+        $this->assertNotNull($order->fresh()->paid_at);
     }
 }

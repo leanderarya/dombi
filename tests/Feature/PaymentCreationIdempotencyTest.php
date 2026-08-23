@@ -58,6 +58,22 @@ class PaymentCreationIdempotencyTest extends TestCase
         $this->assertDatabaseHas('payment_attempts', ['id' => $attempt->id, 'creation_state' => 'created']);
     }
 
+    public function test_stale_creation_response_becomes_unknown_without_persisting_payment(): void
+    {
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'stale', 'invoice_number' => 'INV-STALE', 'merchant_request_id' => 'REQ-STALE', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Initiated]);
+        Http::fake(function () use ($attempt) {
+            $attempt->update(['metadata' => ['creation_lease' => ['token' => 'different', 'expires_at' => now()->addMinute()->toIso8601String()]]]);
+
+            return Http::response(['response' => ['payment' => ['url' => 'https://pay.test/stale']]], 200);
+        });
+
+        $this->expectException(DokuPaymentException::class);
+        app(DokuService::class)->createPayment($attempt);
+        $this->assertDatabaseHas('payment_attempts', ['id' => $attempt->id, 'creation_state' => 'unknown']);
+        $this->assertDatabaseMissing('payment_transactions', ['doku_order_id' => 'INV-STALE']);
+    }
+
     public function test_pending_attempt_with_url_is_reused_without_provider_call(): void
     {
         Http::fake();

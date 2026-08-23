@@ -19,7 +19,7 @@ class PaymentRetryTest extends TestCase
     public function test_retry_creates_fresh_identity_and_preserves_failed_attempt(): void
     {
         $order = Order::factory()->create();
-        $old = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'old', 'invoice_number' => 'old-invoice', 'merchant_request_id' => 'old-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Failed]);
+        $old = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'old', 'invoice_number' => 'old-invoice', 'merchant_request_id' => 'old-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Failed, 'settlement_status' => 'failed']);
         $service = app(DokuService::class);
 
         $new = $service->preparePaymentAttempt($order);
@@ -61,9 +61,9 @@ class PaymentRetryTest extends TestCase
     {
         $order = Order::factory()->create();
         $service = app(DokuService::class);
-        $first = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'retry-one', 'invoice_number' => 'retry-one-invoice', 'merchant_request_id' => 'retry-one-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Failed]);
+        $first = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'retry-one', 'invoice_number' => 'retry-one-invoice', 'merchant_request_id' => 'retry-one-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Failed, 'settlement_status' => 'failed']);
         $second = $service->preparePaymentAttempt($order);
-        $second->update(['creation_state' => PaymentAttemptCreationState::Failed]);
+        $second->update(['creation_state' => PaymentAttemptCreationState::Failed, 'settlement_status' => 'failed']);
         $third = $service->preparePaymentAttempt($order);
 
         PaymentTransaction::create(['order_id' => $order->id, 'doku_order_id' => $first->invoice_number, 'payment_method' => 'qris', 'amount' => $order->total, 'status' => 'failed']);
