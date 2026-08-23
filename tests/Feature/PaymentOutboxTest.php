@@ -60,6 +60,8 @@ class PaymentOutboxTest extends TestCase
         $this->assertGreaterThan(1, PaymentOutboxEvent::count());
         $this->assertSame(0, PaymentOutboxEvent::where('status', 'delivered')->count());
         $this->assertSame(PaymentOutboxEvent::count(), PaymentOutboxEvent::where('status', 'pending')->count());
+        $this->assertSame(PaymentOutboxEvent::count(), PaymentOutboxEvent::where('last_error', 'queue unavailable')->count());
+        $this->assertSame(PaymentOutboxEvent::count(), PaymentOutboxEvent::whereNotNull('next_attempt_at')->count());
     }
 
     public function test_refund_obligation_creation_emits_one_outbox_event(): void
@@ -82,17 +84,17 @@ class PaymentOutboxTest extends TestCase
         $first = $outbox->claim();
         $effects = 0;
         $job = new DispatchPaymentOutboxEvent($outbox->id, $first);
-        $job->handle(function () use (&$effects): void {
-            $effects++;
+        $job->handle(function (): void {
             throw new \RuntimeException('worker crashed after consumer claim');
         });
-        $outbox->update(['claim_expires_at' => now()->subSecond(), 'next_attempt_at' => now()->subSecond()]);
+        $outbox->update(['claim_expires_at' => now()->subSecond(), 'next_attempt_at' => now()->subSecond(), 'consumer_claimed_at' => now()->subMinutes(6)]);
         (new DispatchPaymentOutboxEvent($outbox->id))->handle(function () use (&$effects): void {
             $effects++;
         });
 
         $this->assertSame(1, $effects);
         $this->assertSame('delivered', $outbox->fresh()->status);
+        $this->assertSame('completed', $outbox->fresh()->consumer_status);
     }
 
     public function test_failed_dispatch_remains_retryable(): void
