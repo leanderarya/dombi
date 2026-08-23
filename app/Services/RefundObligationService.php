@@ -30,25 +30,41 @@ class RefundObligationService
         $values = ['amount' => $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'status' => RefundObligationStatus::Pending];
         for ($retry = 0; $retry < 3; $retry++) {
             try {
-                return RefundObligation::firstOrCreate($attributes, $values);
+                $obligation = RefundObligation::firstOrCreate($attributes, $values);
+                if (! $this->matchesCanonical($obligation, $attempt, $reason, $values)) {
+                    throw new DomainException('Existing refund obligation does not match requested canonical values.');
+                }
+
+                return $obligation;
             } catch (QueryException $exception) {
                 if (! $this->isDuplicateKeyException($exception)) {
                     throw $exception;
                 }
                 usleep(10000 * ($retry + 1));
                 $existing = RefundObligation::where($attributes)->first();
-                if ($existing && $this->matchesCanonical($existing, $values)) {
-                    return $existing;
+                if ($existing) {
+                    if ($this->matchesCanonical($existing, $attempt, $reason, $values)) {
+                        return $existing;
+                    }
+                    throw new DomainException('Existing refund obligation does not match requested canonical values.');
                 }
             }
         }
 
-        return RefundObligation::where($attributes)->firstOrFail();
+        $existing = RefundObligation::where($attributes)->firstOrFail();
+        if (! $this->matchesCanonical($existing, $attempt, $reason, $values)) {
+            throw new DomainException('Existing refund obligation does not match requested canonical values.');
+        }
+
+        return $existing;
     }
 
-    private function matchesCanonical(RefundObligation $obligation, array $values): bool
+    private function matchesCanonical(RefundObligation $obligation, PaymentAttempt $attempt, string $reason, array $values): bool
     {
-        return $this->toMinorUnits((string) $obligation->amount) === $this->toMinorUnits((string) $values['amount'])
+        return $obligation->payment_attempt_id === $attempt->id
+            && $obligation->reason === $reason
+            && $obligation->paymentAttempt?->order_id === $attempt->order_id
+            && $this->toMinorUnits((string) $obligation->amount) === $this->toMinorUnits((string) $values['amount'])
             && $obligation->currency === $values['currency'];
     }
 

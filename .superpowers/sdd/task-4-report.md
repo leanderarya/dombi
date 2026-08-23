@@ -16,7 +16,7 @@ Review findings fixed.
 - Candidate attempts are locked first, invalid amount formats/precision are reported as `invalid_attempt_amount`, then valid candidates are selected using exact two-decimal minor-unit comparisons; service rejects non-positive/non-canonical amounts.
 - Existing and synthesized currency must be exactly three uppercase letters; missing/invalid values record `missing_currency` without creating an orphan attempt or defaulting to IDR.
 - Constraint/trigger setup and rollback are rerun-safe; rollback removes only exact-run obligations and unreferenced synthesized attempts.
-- Duplicate creation races use bounded retry/requery and canonical-field validation; conflicting synthesized attempts/obligations become tagged exceptions.
+- Duplicate creation races use bounded retry/requery and canonical-field validation; every returned obligation validates attempt ID, reason, amount, currency, and originating order identity; mismatches throw.
 - Amount validation rejects fractional precision beyond two digits before minor-unit conversion; currency remains exactly three uppercase letters with no IDR fallback.
 - MySQL/MariaDB constraint repair uses guarded ALTER fallback; PostgreSQL/SQLite remain driver-safe.
 - Duplicate detection matches narrow SQLSTATE/driver duplicate codes; FK/schema errors propagate or become tagged mapping exceptions where applicable.
@@ -29,7 +29,7 @@ Review findings fixed.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (22 tests, 45 assertions; 27.420s)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (23 tests, 46 assertions; 28.135s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 
