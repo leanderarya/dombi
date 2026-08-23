@@ -22,20 +22,7 @@ final class DokuWebhookIngressService
         $digest = base64_encode(hash('sha256', $rawBody, true));
         $invoice = data_get($payload, 'order.invoice_number');
 
-        $existing = PaymentWebhookLog::query()->where('request_id', $requestId)->first();
-        if ($existing) {
-            if (! hash_equals((string) $existing->body_digest, $digest)) {
-                return new WebhookReceipt($existing, 409, 'Request-Id body conflict');
-            }
-            if ($existing->status === 'processed') {
-                return new WebhookReceipt($existing, 200, 'OK');
-            }
-            if ($existing->status === 'signature_invalid') {
-                return new WebhookReceipt($existing, 401, 'Invalid signature');
-            }
-            $log = $existing;
-        }
-
+        $log = PaymentWebhookLog::query()->where('request_id', $requestId)->first();
         try {
             $log ??= DB::transaction(fn () => PaymentWebhookLog::create([
                 'request_id' => $requestId,
@@ -57,15 +44,6 @@ final class DokuWebhookIngressService
             }
             if ($log === null) {
                 return new WebhookReceipt(new PaymentWebhookLog, 503, 'Webhook persistence unavailable');
-            }
-            if (! hash_equals((string) $log->body_digest, $digest)) {
-                return new WebhookReceipt($log, 409, 'Request-Id body conflict');
-            }
-            if ($log->status === 'processed') {
-                return new WebhookReceipt($log, 200, 'OK');
-            }
-            if ($log->status === 'signature_invalid') {
-                return new WebhookReceipt($log, 401, 'Invalid signature');
             }
         }
 
