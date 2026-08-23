@@ -10,7 +10,7 @@ class PaymentOutboxEvent extends Model
 {
     protected $fillable = [
         'event_key', 'event_type', 'aggregate_type', 'aggregate_id', 'payload',
-        'status', 'attempts', 'next_attempt_at', 'last_error', 'delivered_at', 'claim_token', 'claim_expires_at', 'consumer_claimed_at',
+        'status', 'attempts', 'next_attempt_at', 'last_error', 'delivered_at', 'claim_token', 'claim_expires_at', 'consumer_status', 'consumer_claimed_at', 'consumer_completed_at',
     ];
 
     protected function casts(): array
@@ -21,6 +21,7 @@ class PaymentOutboxEvent extends Model
             'delivered_at' => 'datetime',
             'claim_expires_at' => 'datetime',
             'consumer_claimed_at' => 'datetime',
+            'consumer_completed_at' => 'datetime',
         ];
     }
 
@@ -45,7 +46,15 @@ class PaymentOutboxEvent extends Model
 
     public function claimConsumer(): bool
     {
-        return static::query()->whereKey($this->id)->whereNull('consumer_claimed_at')->update(['consumer_claimed_at' => now()]) === 1;
+        return static::query()->whereKey($this->id)->where(function (Builder $query): void {
+            $query->where('consumer_status', 'pending')
+                ->orWhere(fn (Builder $query) => $query->where('consumer_status', 'processing')->where('consumer_claimed_at', '<=', now()->subMinutes(5)));
+        })->update(['consumer_status' => 'processing', 'consumer_claimed_at' => now()]) === 1;
+    }
+
+    public function completeConsumer(): void
+    {
+        $this->update(['consumer_status' => 'completed', 'consumer_completed_at' => now()]);
     }
 
     public function markDelivered(string $token): bool

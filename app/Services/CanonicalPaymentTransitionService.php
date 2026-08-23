@@ -241,8 +241,8 @@ class CanonicalPaymentTransitionService
             DB::afterCommit(function () use ($event): void {
                 try {
                     DispatchPaymentOutboxEvent::dispatch($event->id);
-                } catch (\Throwable) {
-                    $event->refresh();
+                } catch (\Throwable $exception) {
+                    $event->update(['last_error' => $exception->getMessage(), 'next_attempt_at' => now()]);
                 }
             });
         }

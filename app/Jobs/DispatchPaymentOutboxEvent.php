@@ -30,6 +30,7 @@ class DispatchPaymentOutboxEvent implements ShouldQueue
         try {
             if ($event->claimConsumer()) {
                 ($deliver ?? static fn (PaymentOutboxEvent $event): mixed => Event::dispatch($event->event_type, [$event->payload]))($event);
+                $event->completeConsumer();
             }
             $event->markDelivered($token);
         } catch (\Throwable $exception) {

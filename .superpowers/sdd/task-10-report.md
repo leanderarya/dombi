@@ -2,12 +2,11 @@
 
 ## Review fix
 
-- Added consumer-side durable idempotency marker keyed by outbox event row/event_key before side-effect delivery.
-- Reclaimed stale workers skip already-consumed effects and only finalize delivery.
-- Scheduler enqueue failures clear claim lease, schedule immediate retry, report error, and return non-zero while continuing other rows.
+- Consumer idempotency now uses pending, processing, and completed states with a processing lease. Stale processing claims can be reclaimed; only completed markers suppress delivery.
+- After-commit enqueue failures persist `last_error` and immediate `next_attempt_at` for operator visibility and retry.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentOutboxTest.php` — 7 tests, 7 passed, 26 assertions.
+- `php artisan test tests/Feature/PaymentOutboxTest.php` — 7 tests, 7 passed, 29 assertions.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed; graph rebuilt with 7160 nodes, 18208 edges, 483 communities.
+- `graphify update .` — passed; graph rebuilt with 7161 nodes, 18209 edges, 481 communities.
