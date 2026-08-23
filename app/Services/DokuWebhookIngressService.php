@@ -67,7 +67,14 @@ final class DokuWebhookIngressService
         $claimToken = bin2hex(random_bytes(32));
         $claim = DB::transaction(function () use ($digest, $log, $claimToken): ?WebhookReceipt {
             $locked = PaymentWebhookLog::query()->whereKey($log->id)->lockForUpdate()->firstOrFail();
-            if (! hash_equals((string) $locked->body_digest, $digest)) {
+            if ($locked->body_digest === null) {
+                if ($locked->status === 'retryable' && $locked->error === 'historical_raw_body_unavailable_reprocess_required') {
+                    return new WebhookReceipt($locked, 422, 'Historical webhook requires operator recovery');
+                }
+
+                return new WebhookReceipt($locked, 409, 'Request-Id body conflict');
+            }
+            if (! hash_equals($locked->body_digest, $digest)) {
                 return new WebhookReceipt($locked, 409, 'Request-Id body conflict');
             }
             if ($locked->status === 'processed') {
