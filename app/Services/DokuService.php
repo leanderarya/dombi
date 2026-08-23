@@ -99,12 +99,22 @@ class DokuService
         }
         $sessionId = $data['response']['order']['session_id'] ?? null;
         $tokenId = $data['response']['payment']['token_id'] ?? null;
-        DB::transaction(function () use ($attempt, $paymentUrl, $order, $data, $sessionId, $tokenId): void {
+        $persisted = DB::transaction(function () use ($attempt, $claimToken, $paymentUrl, $order, $data, $sessionId, $tokenId): bool {
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            if (data_get($locked->metadata ?? [], 'creation_lease.token') !== $claimToken) {
+                $locked->update(['creation_state' => 'unknown', 'raw_response' => $data]);
+
+                return false;
+            }
             $locked->update(['creation_state' => 'created', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data, 'metadata' => array_merge($locked->metadata ?? [], ['payment_url' => $paymentUrl])]);
             PaymentTransaction::firstOrCreate(['doku_order_id' => $locked->invoice_number], ['order_id' => $order->id, 'doku_order_id' => $locked->invoice_number, 'payment_method' => $order->payment_method ?? 'qris', 'amount' => (int) $order->total, 'status' => 'pending', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data]);
             $order->update(['doku_order_id' => $locked->invoice_number, 'payment_status' => 'pending']);
+
+            return true;
         });
+        if (! $persisted) {
+            throw new DokuPaymentException('Payment creation response became stale; reconciliation required.');
+        }
 
         return $paymentUrl;
     }
@@ -134,7 +144,10 @@ class DokuService
     {
         return DB::transaction(function () use ($order): PaymentAttempt {
             $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
-            $active = PaymentAttempt::query()->where('order_id', $order->id)->whereIn('creation_state', ['initiated', 'created', 'unknown'])->latest('id')->first();
+            $active = PaymentAttempt::query()->where('order_id', $order->id)->where(function ($query): void {
+                $query->whereIn('creation_state', ['initiated', 'created', 'unknown'])
+                    ->orWhereIn('settlement_status', ['pending', 'unknown']);
+            })->latest('id')->first();
             if ($active) {
                 return $active;
             }
@@ -207,6 +220,9 @@ class DokuService
             }
 
             $this->processPaymentStatusChange($order, $status, $payload);
+            if ($status === 'paid' && $order->fresh()->payment_status === 'paid' && $order->paid_at === null) {
+                $order->update(['paid_at' => now()]);
+            }
             if ($transaction && ! ($transaction->status === 'paid' && $status !== 'paid')) {
                 $transaction->update(['status' => $status, 'raw_response' => $payload]);
             }
@@ -535,6 +551,9 @@ class DokuService
                 receivedAt: now(),
                 rawEvidence: $evidence,
             ));
+            if ($status === 'paid' && $order->fresh()->payment_status === 'paid' && $order->paid_at === null) {
+                $order->update(['paid_at' => now()]);
+            }
 
             if (in_array($order->status, [Order::STATUS_CANCELLED_BY_CUSTOMER, Order::STATUS_CANCELLED_BY_OUTLET, Order::STATUS_REJECTED_BY_OUTLET, Order::STATUS_EXPIRED], true)) {
                 $order->refresh()->update(['payment_status' => 'refund_pending', 'refund_amount' => $attempt->amount_snapshot]);

@@ -17,8 +17,11 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 - Webhook processing requires canonical attempts; legacy transaction evidence is retained but cannot settle or fulfil without one.
 
 ## Tests
-- Focused Task 8 creation/retry suite: 14 tests passed, 31 assertions.
-- Complete listed legacy payment suite plus Task 8 tests: 68 tests passed, 117 assertions.
+- Focused Task 8 creation/retry suite: 15 tests passed, 35 assertions.
+- Complete listed legacy payment suite plus Task 8 tests: 69 tests passed, 120 assertions.
+- Pending settlement attempts are active and reused by order-locked preparation.
+- Completion verifies current creation lease token; stale provider responses become unknown evidence without transaction/order persistence.
+- Legacy success and redirect tests assert `paid_at`.
 - Historical `PaymentTransaction` rows remain after retries.
 - Webhook evidence without canonical attempt remains persisted and cannot settle or fulfil an order.
 - Task 7 workflow and report remain unchanged.
