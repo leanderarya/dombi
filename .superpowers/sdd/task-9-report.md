@@ -3,17 +3,18 @@
 ## Findings Fixed
 
 - Added bounded command dispatch with `--limit` override and `doku.reconciliation_batch_limit` default (100), ordered by attempt ID.
-- Added command test proving only configured batch size dispatches.
-- Job now checks attempt existence, pending/unknown creation state, retry cap, and due `next_reconciliation_at` before calling service.
-- Added job eligibility guard test.
+- Oversized operator `--limit` is clamped to configured maximum; coverage added.
+- Job checks attempt existence, pending/unknown creation state, retry cap, and due `next_reconciliation_at` before calling service.
+- `DokuReconciliationService::reconcile` safely returns unchanged `TransitionResult` when `fresh()` finds a deleted attempt.
+- Added job eligibility and deleted-attempt tests.
 - Added integration assertion that successful reconciliation creates `NormalizedPaymentEvent` with `source=doku-reconciliation` and routes through `CanonicalPaymentTransitionService`, matching webhook architecture.
-- Expanded production-driver test to race reconciliation against real webhook ingress, gated by `RUN_PRODUCTION_DRIVER_TESTS=true`; asserts one DOKU status request and one paid transition. Local environments skip only when gate, production DB driver, or `pcntl` is unavailable.
+- Production-driver test races reconciliation against real webhook ingress, gated by `RUN_PRODUCTION_DRIVER_TESTS=true`; asserts one DOKU status request, one paid transition, and successful exit status for every child after `pcntl_waitpid`. Local environments skip only when gate, production DB driver, or `pcntl` is unavailable.
 
 ## Verification
 
-- `php artisan test tests/Feature/DokuReconciliationTest.php`: 18 passing, 1 explicit local skip.
-- `composer run lint:check -- --dirty`: passed.
+- `php artisan test tests/Feature/DokuReconciliationTest.php`: 20 passing, 1 explicit local skip.
+- `composer run lint:check -- --dirty`: pending final run.
 
 ## Scope
 
-Task 9 files only, plus existing Task 8 `DokuService.php` backoff correction remains in prior commit.
+Task 9 files only.

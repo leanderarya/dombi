@@ -14,7 +14,8 @@ class ReconcileDokuPayments extends Command
 
     public function handle(): int
     {
-        $limit = (int) ($this->option('limit') ?: config('doku.reconciliation_batch_limit', 100));
+        $maximum = max(1, (int) config('doku.reconciliation_batch_limit', 100));
+        $limit = min((int) ($this->option('limit') ?: $maximum), $maximum);
         if ($limit < 1) {
             $this->error('Reconciliation batch limit must be positive.');
 
