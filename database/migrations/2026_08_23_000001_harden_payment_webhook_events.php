@@ -29,6 +29,7 @@ return new class extends Migration
         Schema::table('payment_webhook_logs', function (Blueprint $table): void {
             $table->text('raw_body')->nullable()->after('payload');
             $table->string('body_digest', 64)->nullable()->after('raw_body');
+            $table->timestamp('claimed_at')->nullable()->after('body_digest');
             $table->unique('request_id');
         });
     }
@@ -37,7 +38,7 @@ return new class extends Migration
     {
         Schema::table('payment_webhook_logs', function (Blueprint $table): void {
             $table->dropUnique(['request_id']);
-            $table->dropColumn(['raw_body', 'body_digest']);
+            $table->dropColumn(['raw_body', 'body_digest', 'claimed_at']);
         });
     }
 };
