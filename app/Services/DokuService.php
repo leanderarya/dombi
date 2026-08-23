@@ -171,19 +171,6 @@ class DokuService
                 ?? Order::where('order_code', $invoiceNumber)->first()
                 ?? Order::where('doku_order_id', $invoiceNumber)->first();
             $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->first();
-            if (! $attempt && $transaction && $order) {
-                $attempt = PaymentAttempt::firstOrCreate([
-                    'order_id' => $order->id,
-                    'invoice_number' => $invoiceNumber,
-                ], [
-                    'attempt_key' => 'legacy-webhook-'.$transaction->id,
-                    'merchant_request_id' => 'legacy-webhook-request-'.$transaction->id,
-                    'amount_snapshot' => $transaction->amount,
-                    'currency_snapshot' => 'IDR',
-                    'payment_method' => $transaction->payment_method,
-                    'creation_state' => 'unknown',
-                ]);
-            }
             $resolvedOrderId = $order?->id;
             if ($attempt && $resolvedOrderId !== null && $attempt->order_id !== $resolvedOrderId) {
                 PaymentWebhookLog::create([
@@ -514,9 +501,9 @@ class DokuService
         }
     }
 
-    public function markOrderPaidPublic(Order $order): void
+    public function markOrderPaidPublic(Order $order, int|float|string|null $authoritativeAmount = null): void
     {
-        $this->markOrderPaid($order);
+        $this->markOrderPaid($order, $authoritativeAmount);
     }
 
     /**
@@ -542,7 +529,7 @@ class DokuService
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
                 source: 'doku',
                 gatewayStatus: $evidence['transaction']['status'] ?? $status,
-                amount: $evidence['transaction']['amount'] ?? $attempt->amount_snapshot,
+                amount: $evidence['transaction']['amount'] ?? null,
                 currency: $evidence['order']['currency'] ?? 'IDR',
                 gatewayReference: $evidence['transaction']['original_request_id'] ?? $evidence['transaction']['id'] ?? $invoiceNumber,
                 receivedAt: now(),

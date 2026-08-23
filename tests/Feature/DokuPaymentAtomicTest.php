@@ -22,8 +22,8 @@ class DokuPaymentAtomicTest extends TestCase
         ]);
         PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'atomic-'.$order->id, 'invoice_number' => $order->order_code, 'merchant_request_id' => 'atomic-request-'.$order->id, 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR']);
         $service = app(DokuService::class);
-        $service->markOrderPaidPublic($order);
-        $service->markOrderPaidPublic($order);
+        $service->markOrderPaidPublic($order, $order->total);
+        $service->markOrderPaidPublic($order, $order->total);
         $this->assertSame('paid', Order::find($order->id)->payment_status);
     }
 

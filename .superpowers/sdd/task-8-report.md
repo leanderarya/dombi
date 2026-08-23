@@ -14,14 +14,14 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 - Definitive 4xx rejection marks attempt `failed`; 408, 5xx, transport timeout, and malformed/ambiguous responses mark `unknown`.
 - Retries use fresh attempt/invoice/request identities and preserve historical attempts/transactions.
 - Checkout and order retry controllers use attempts instead of deleting payment history.
-- Webhook compatibility synthesizes canonical unknown attempts from legacy transaction evidence.
+- Webhook processing requires canonical attempts; legacy transaction evidence is retained but cannot settle or fulfil without one.
 
 ## Tests
-- `php artisan test tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentRetryTest.php`
-- Focused creation/retry suite: 12 tests passed, 23 assertions.
-- Complete legacy payment/recovery suite: 63 tests passed, 108 assertions, including webhook-only recovery coverage.
-- Definitively failed/expired reconciliation now prepares a fresh attempt before provider creation; historical attempts remain persisted.
-- Expired initiated leases are reconciled against invoice/request identity before any lease reclaim; unresolved attempts remain blocked.
+- Focused Task 8 creation/retry suite: 14 tests passed, 31 assertions.
+- Complete listed legacy payment suite plus Task 8 tests: 68 tests passed, 117 assertions.
+- Historical `PaymentTransaction` rows remain after retries.
+- Webhook evidence without canonical attempt remains persisted and cannot settle or fulfil an order.
+- Task 7 workflow and report remain unchanged.
 - Pint: passed for all Task 8 PHP files.
 
 ## Legacy suite
@@ -30,4 +30,4 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 - Result: passed.
 
 ## Notes
-Existing legacy payment tests expose behavior expectations around webhook-only transaction fixtures; those fixtures conflict with canonical-attempt-only processing and remain outside Task 8 focused verification.
+No Task 7 files are part of this change.
