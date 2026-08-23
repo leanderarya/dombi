@@ -2,12 +2,12 @@
 
 ## Review fix
 
-- Worker verifies active outer claim token immediately before consumer claim and side-effect delivery; stale jobs abort without executing effects.
-- After-commit enqueue failure metadata updates are fenced to pending, undelivered rows and cannot overwrite successful delivery state.
-- Added interleaved stale outer-worker regression proving one delivery.
+- Outer claim is renewed immediately before consumer side-effect delivery and revalidated by token.
+- Durable consumer completion marker keyed by event row/event_key suppresses duplicate effects across crash-window retry.
+- Added lease-renewal and crash-after-effect regression coverage.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentOutboxTest.php` — 10 tests, 10 passed, 39 assertions.
+- `php artisan test tests/Feature/PaymentOutboxTest.php` — 12 tests, 12 passed, 43 assertions.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed; graph rebuilt with 7166 nodes, 18217 edges, 486 communities.
+- `graphify update .` — passed; graph rebuilt with 7170 nodes, 18223 edges, 488 communities.

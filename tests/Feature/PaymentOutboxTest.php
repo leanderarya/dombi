@@ -78,6 +78,35 @@ class PaymentOutboxTest extends TestCase
         $this->assertSame(1, PaymentOutboxEvent::where('event_type', 'refund.obligation_created')->count());
     }
 
+    public function test_outer_claim_is_renewed_before_delivery(): void
+    {
+        $outbox = PaymentOutboxEvent::create(['event_key' => 'renew', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);
+        $token = $outbox->claim();
+        $this->assertTrue($outbox->fresh()->renewClaim($token));
+        $this->assertTrue($outbox->fresh()->claim_expires_at->isFuture());
+    }
+
+    public function test_crash_after_idempotent_effect_completion_does_not_duplicate_effect(): void
+    {
+        $outbox = PaymentOutboxEvent::create(['event_key' => 'crash-window', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);
+        $effects = 0;
+        (new DispatchPaymentOutboxEvent($outbox->id))->handle(function (PaymentOutboxEvent $event) use (&$effects): void {
+            $effects++;
+            $consumerToken = $event->consumer_claim_token;
+            $event->completeConsumer($consumerToken);
+            throw new \RuntimeException('crashed after effect');
+        });
+        $outbox->update(['claim_expires_at' => now()->subSecond(), 'next_attempt_at' => now()->subSecond()]);
+        $this->travelTo(now()->addMinutes(3));
+        (new DispatchPaymentOutboxEvent($outbox->id))->handle(function () use (&$effects): void {
+            $effects++;
+        });
+        $this->travelBack();
+
+        $this->assertSame(1, $effects);
+        $this->assertSame('delivered', $outbox->fresh()->status);
+    }
+
     public function test_stale_outer_worker_aborts_before_consumer_effect_after_reclaim(): void
     {
         $outbox = PaymentOutboxEvent::create(['event_key' => 'outer-token', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);
