@@ -151,7 +151,7 @@ class RefundObligationTest extends TestCase
 
         $this->runRefundBackfill();
 
-        $this->assertDatabaseHas('refund_obligation_backfill_exceptions', ['order_id' => $order->id, 'reason' => 'refund_exceeds_attempt_amount']);
+        $this->assertDatabaseHas('refund_obligation_backfill_exceptions', ['order_id' => $order->id, 'reason' => 'refund_exceeds_attempt_amount', 'backfill_run_key' => '2026_08_23_000004_refund_obligations']);
         $this->assertDatabaseMissing('refund_obligations', ['amount' => 9000]);
     }
 

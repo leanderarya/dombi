@@ -50,8 +50,9 @@ return new class extends Migration
         $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
         $driverCode = (string) ($exception->errorInfo[1] ?? '');
 
-        return in_array($sqlState, ['23000', '23505'], true)
-            || in_array($driverCode, ['1062', '1555', '2067', '2627', '2601'], true);
+        return $sqlState === '23505'
+            || ($sqlState === '23000' && $driverCode === '19')
+            || in_array($driverCode, ['1062', '2627', '2601'], true);
     }
 
     public function up(): void
@@ -69,14 +70,15 @@ return new class extends Migration
 
         foreach ($refunds as $refund) {
             DB::transaction(function () use ($refund): void {
+                $order = DB::table('orders')->where('id', $refund->id)->lockForUpdate()->first(['id', 'total']);
                 $attempt = DB::table('payment_attempts')
                     ->where('order_id', $refund->id)
                     ->where('amount_snapshot', '>', 0)
                     ->orderByDesc('id')
+                    ->lockForUpdate()
                     ->first();
 
                 if (! $attempt) {
-                    $order = DB::table('orders')->where('id', $refund->id)->lockForUpdate()->first(['id', 'total']);
                     if ($order && (float) $order->total > 0 && (float) $order->total !== (float) $refund->refund_amount) {
                         $this->recordException($refund, 'refund_amount_mismatch_order_total');
 
@@ -92,7 +94,7 @@ return new class extends Migration
                             'creation_state' => 'unknown',
                             'settlement_status' => 'unknown',
                             'verification_status' => 'needs_review',
-                            'metadata' => json_encode(['synthesized_for_refund_backfill' => true]),
+                            'metadata' => json_encode(['synthesized_for_refund_backfill' => true, 'backfill_run_key' => self::RUN_KEY]),
                             'created_at' => now(),
                             'updated_at' => now(),
                         ];
@@ -148,7 +150,7 @@ return new class extends Migration
                     'proof_image' => $refund->refund_proof_image,
                     'processed_by' => $refund->refunded_by,
                     'processed_at' => $refund->refunded_at,
-                    'metadata' => json_encode(['backfilled_from_order_id' => $refund->id]),
+                    'metadata' => json_encode(['backfilled_from_order_id' => $refund->id, 'backfill_run_key' => self::RUN_KEY]),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
@@ -166,16 +168,15 @@ return new class extends Migration
     public function down(): void
     {
         DB::table('refund_obligations')
-            ->where('metadata', 'like', '%"backfilled_from_order_id"%')
+            ->whereJsonContains('metadata->backfill_run_key', self::RUN_KEY)
             ->delete();
 
         DB::table('payment_attempts')
             ->where('attempt_key', 'like', 'legacy-refund-%')
-            ->where('metadata', 'like', '%synthesized_for_refund_backfill%')
+            ->whereJsonContains('metadata->backfill_run_key', self::RUN_KEY)
             ->delete();
 
         DB::table('refund_obligation_backfill_exceptions')
-            ->where('reason', 'missing_defensible_payment_attempt')
             ->where('backfill_run_key', self::RUN_KEY)
             ->delete();
     }
