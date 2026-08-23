@@ -85,10 +85,10 @@ final class DokuWebhookIngressService
             if ($locked->status === 'signature_invalid') {
                 return new WebhookReceipt($locked, 401, 'Invalid signature');
             }
-            if ($locked->status === 'processing') {
+            if ($locked->status === 'processing' && $locked->claimed_at?->gt(now()->subMinutes(5))) {
                 return new WebhookReceipt($locked, 202, 'Processing');
             }
-            $locked->update(['status' => 'processing', 'signature_valid' => true]);
+            $locked->update(['status' => 'processing', 'signature_valid' => true, 'claimed_at' => now()]);
 
             return null;
         });
@@ -103,7 +103,7 @@ final class DokuWebhookIngressService
 
             return new WebhookReceipt($log, 200, 'OK');
         } catch (\Throwable $exception) {
-            PaymentWebhookLog::query()->whereKey($log->id)->update(['status' => 'retryable', 'error' => $exception->getMessage()]);
+            PaymentWebhookLog::query()->whereKey($log->id)->update(['status' => 'retryable', 'claimed_at' => null, 'error' => $exception->getMessage()]);
 
             return new WebhookReceipt($log, 500, 'Internal error');
         }

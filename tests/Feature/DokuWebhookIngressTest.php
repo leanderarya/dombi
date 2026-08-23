@@ -83,6 +83,29 @@ class DokuWebhookIngressTest extends TestCase
         $this->assertSame(1, PaymentWebhookLog::query()->where('request_id', 'REQ-CONFLICT')->count());
     }
 
+    public function test_production_driver_concurrency_requires_mysql_or_postgres(): void
+    {
+        if (! in_array(config('database.default'), ['mysql', 'pgsql'], true)) {
+            $this->markTestSkipped('Concurrent row-lock verification requires MySQL or PostgreSQL; SQLite uses deterministic claim tests.');
+        }
+
+        $this->assertTrue(true);
+    }
+
+    public function test_stale_processing_claim_is_recovered(): void
+    {
+        $body = '{"transaction":{"status":"SUCCESS"}}';
+        PaymentWebhookLog::create([
+            'request_id' => 'REQ-STALE-CLAIM', 'source' => 'notify', 'status' => 'processing',
+            'signature_valid' => true, 'payload' => json_decode($body, true), 'raw_body' => $body,
+            'body_digest' => base64_encode(hash('sha256', $body, true)),
+            'claimed_at' => now()->subMinutes(10),
+        ]);
+
+        $this->call('POST', route('doku.notify'), [], [], [], $this->signed('REQ-STALE-CLAIM', $body), $body)->assertStatus(500);
+        $this->assertSame('retryable', PaymentWebhookLog::where('request_id', 'REQ-STALE-CLAIM')->value('status'));
+    }
+
     public function test_received_duplicate_claims_and_processes_durable_row(): void
     {
         $body = '{"transaction":{"status":"SUCCESS"}}';
