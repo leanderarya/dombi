@@ -4,7 +4,10 @@
 Canonical DOKU payment creation, retry, reconciliation, leases, immutable snapshots, and active-attempt projection.
 
 ## Verification
-- Focused Task 8 creation/retry/boundary tests: 28 passed, 72 assertions.
+- Focused Task 8 creation/retry/boundary tests: 29 passed, 73 assertions.
+- All DokuService post-transition `paid_at` mutations removed; canonical transition sets timestamp only on valid settlement transition and preserves duplicates.
+- Duplicate webhook/reconciliation paid_at regression: passed.
+- `composer run lint:check`: passed (`pint --parallel --test`).
 - `markOrderPaid` requires exact canonical `PaymentAttempt`; status processing rejects missing/unmatched invoice identity.
 - `paid_at` is owned by canonical transition transaction; no stale post-transition mutation.
 - Polling resolves failed-creation attempts with pending/unknown settlement, allowing ambiguous payments to reconcile instead of reporting unavailable.

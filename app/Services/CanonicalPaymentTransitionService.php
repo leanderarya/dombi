@@ -94,6 +94,10 @@ class CanonicalPaymentTransitionService
                 && ($lockedAttempt->verification_status === PaymentAttemptVerificationStatus::Verified || $this->isTerminalOrder($order))) {
                 $winner = $this->claimOrRefund($lockedAttempt, $order);
             }
+            if ($status === 'success' && $changed && $order->paid_at === null) {
+                $order->paid_at = now();
+                $order->save();
+            }
 
             app(OrderPaymentProjectionService::class)->recompute($order);
 
