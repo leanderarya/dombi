@@ -21,6 +21,9 @@ final class DokuWebhookIngressService
         }
         $digest = base64_encode(hash('sha256', $rawBody, true));
         $invoice = data_get($payload, 'order.invoice_number');
+        if (! $this->doku->verifySignature($payload, $requestId, $rawBody, $header('Request-Timestamp'), $header('Signature'), $header('Client-Id'))) {
+            return new WebhookReceipt(new PaymentWebhookLog, 401, 'Invalid signature');
+        }
 
         $log = PaymentWebhookLog::query()->where('request_id', $requestId)->first();
         try {
