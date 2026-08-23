@@ -2,15 +2,15 @@
 
 ## Findings Fixed
 
-- Reconciliation claim transaction now re-checks locked attempt eligibility after concurrent webhook/transition: creation state must be `pending|unknown` and settlement state, when present, must be `pending|unknown`.
-- Finalized attempts return no-op before any DOKU status request.
-- Added regression asserting finalized settlement skips DOKU request and returns unchanged result.
-- Existing 404 preservation, deleted-attempt no-op, bounded dispatch, job guards, canonical transition integration, scheduler, and production-driver race coverage retained.
+- Reconciliation error/timeout persistence now locks the attempt and re-checks unresolved eligibility before writing unknown/backoff.
+- If webhook/concurrent processing finalized the attempt, failure handling clears reconciliation lease and preserves finalized creation/settlement state without overwriting retry metadata.
+- Deleted attempts after claim/failure are handled as safe no-op results through reconciliation service exception handling; no return-type violation or crash.
+- Added regression for finalized-state error handling and retained finalized claim no-DOKU regression.
 
 ## Verification
 
-- `php artisan test tests/Feature/DokuReconciliationTest.php`: 21 passed, 1 skipped, 47 assertions.
-- `composer run lint:check -- --dirty`: passed.
+- `php artisan test tests/Feature/DokuReconciliationTest.php`: 22 passed, 1 skipped, 49 assertions.
+- `composer run lint:check -- --dirty`: pending final run.
 
 ## Scope
 

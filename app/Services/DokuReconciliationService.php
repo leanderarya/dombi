@@ -28,7 +28,7 @@ class DokuReconciliationService
 
         try {
             $this->doku->reconcilePaymentAttempt($attempt);
-        } catch (ModelNotFoundException) {
+        } catch (ModelNotFoundException|\TypeError) {
             return new TransitionResult(false);
         }
 

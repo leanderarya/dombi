@@ -266,6 +266,12 @@ class DokuService
             if (data_get($metadata, 'reconciliation_lease.token') !== $claimToken) {
                 return $locked->fresh();
             }
+            if (! in_array($locked->creation_state?->value, ['pending', 'unknown'], true)
+                || ($locked->settlement_status !== null && ! in_array($locked->settlement_status?->value, ['pending', 'unknown'], true))) {
+                $locked->update(['metadata' => array_merge($metadata, ['reconciliation_lease' => null])]);
+
+                return $locked->fresh();
+            }
             $count = min((int) ($metadata['reconciliation_attempts'] ?? 0), 5);
             $delay = min(2 ** $count, 16);
             $locked->update([
