@@ -44,7 +44,7 @@ class PaymentAttemptBackfillTest extends TestCase
         $attempt = PaymentAttempt::query()->sole();
         $this->assertSame($order->id, $attempt->order_id);
         $this->assertSame('DOKU-100', $attempt->invoice_number);
-        $this->assertSame('legacy-payment-transaction-1', $attempt->attempt_key);
+        $this->assertSame('legacy-attempt-1', $attempt->attempt_key);
         $this->assertSame('DOKU-100', $attempt->merchant_request_id);
         $this->assertSame('session-100', $attempt->session_token);
         $this->assertSame('qris', $attempt->payment_method);
@@ -59,19 +59,53 @@ class PaymentAttemptBackfillTest extends TestCase
         $this->assertDatabaseCount('payment_attempts', 1);
     }
 
-    public function test_missing_invoice_mapping_is_reported(): void
+    public function test_missing_provider_and_order_identities_are_synthesized(): void
     {
         $transaction = PaymentTransaction::query()->create([
             'order_id' => Order::factory()->create(['order_code' => ''])->id,
             'doku_order_id' => '',
             'payment_method' => 'qris',
             'amount' => 1000,
+            'status' => 'pending',
+        ]);
+
+        $this->artisan('payments:backfill-attempts')->assertExitCode(0);
+
+        $attempt = PaymentAttempt::query()->sole();
+        $this->assertSame("legacy-invoice-{$transaction->id}", $attempt->invoice_number);
+        $this->assertSame("legacy-attempt-{$transaction->id}", $attempt->attempt_key);
+        $this->assertSame("legacy-request-{$transaction->id}", $attempt->merchant_request_id);
+    }
+
+    public function test_unsupported_status_is_reported_and_not_imported(): void
+    {
+        $transaction = PaymentTransaction::query()->create([
+            'order_id' => Order::factory()->create()->id,
+            'doku_order_id' => 'DOKU-unsupported',
+            'payment_method' => 'qris',
+            'amount' => 1000,
+            'status' => 'refunded',
         ]);
 
         $this->artisan('payments:backfill-attempts')
-            ->expectsOutputToContain("Payment transaction {$transaction->id} could not be mapped")
+            ->expectsOutputToContain("Payment transaction {$transaction->id} has unsupported status [refunded]")
+            ->expectsOutputToContain('Exceptions: 1')
             ->assertExitCode(0);
 
         $this->assertDatabaseCount('payment_attempts', 0);
+    }
+
+    public function test_empty_provider_identity_is_not_unmappable_when_order_exists(): void
+    {
+        PaymentTransaction::query()->create([
+            'order_id' => Order::factory()->create(['order_code' => ''])->id,
+            'doku_order_id' => '',
+            'payment_method' => 'qris',
+            'amount' => 1000,
+            'status' => 'pending',
+        ]);
+
+        $this->artisan('payments:backfill-attempts')->assertExitCode(0);
+        $this->assertDatabaseCount('payment_attempts', 1);
     }
 }
