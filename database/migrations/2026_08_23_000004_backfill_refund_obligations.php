@@ -122,7 +122,7 @@ return new class extends Migration
                         return;
                     } elseif ($order && $this->toMinorUnits($order->total) > 0) {
                         $currency = $orderCurrencyColumn ? $order->{$orderCurrencyColumn} : null;
-                        if (! $currency) {
+                        if (! is_string($currency) || ! preg_match('/^[A-Z]{3}$/', $currency)) {
                             $this->recordException($refund, 'missing_currency');
 
                             return;
