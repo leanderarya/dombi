@@ -194,7 +194,7 @@ class PaymentAttemptSchemaTest extends TestCase
 
     public function test_status_enums_expose_canonical_values(): void
     {
-        $this->assertSame(['initiated', 'created', 'unknown', 'failed'], array_column(PaymentAttemptCreationState::cases(), 'value'));
+        $this->assertSame(['initiated', 'pending', 'created', 'unknown', 'failed'], array_column(PaymentAttemptCreationState::cases(), 'value'));
         $this->assertSame(['pending', 'paid', 'failed', 'expired', 'unknown'], array_column(PaymentAttemptSettlementStatus::cases(), 'value'));
         $this->assertSame(['verified', 'needs_review'], array_column(PaymentAttemptVerificationStatus::cases(), 'value'));
     }

@@ -92,6 +92,17 @@ class PaymentCreationIdempotencyTest extends TestCase
         }
     }
 
+    public function test_pending_creation_attempt_is_reused_without_new_identity(): void
+    {
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'pending-creation', 'invoice_number' => 'INV-PENDING-CREATION', 'merchant_request_id' => 'REQ-PENDING-CREATION', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'pending']);
+
+        $prepared = app(DokuService::class)->preparePaymentAttempt($order);
+
+        $this->assertSame($attempt->id, $prepared->id);
+        $this->assertDatabaseCount('payment_attempts', 1);
+    }
+
     public function test_pending_attempt_with_url_is_reused_without_provider_call(): void
     {
         Http::fake();
