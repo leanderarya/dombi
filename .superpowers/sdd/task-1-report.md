@@ -22,7 +22,8 @@ No production implementation changed. Existing unrelated uncommitted files were 
 - Original commit: `9d208511 test: characterize production payment invariants`
 - Follow-up commit: pending
 - Review follow-up commit: `cd25467d test: strengthen payment invariant findings`
-- Scope reconciliation commit: pending
+- Scope reconciliation commit: `test: reconcile payment task scope`
+- Regression test follow-up commit: pending
 
 ## Tests
 
@@ -32,9 +33,9 @@ Command:
 php artisan test tests/Feature/PaymentProductionInvariantTest.php
 ```
 
-Result after review fixes: 5 passed, 3 expected characterization failures, 13 assertions in focused suite.
+Focused suite result: 5 passed, 3 expected characterization failures, 13 assertions.
 
-Latest covering command: 63 passed, 4 expected characterization failures, 192 assertions across invariant and six existing payment suites. Failures are named below; one exposes missing current-schema source identity on refund histories, with existing metadata used as proxy for future `(payment_attempt_id, reason)` identity.
+Latest covering command result: 63 passed, 4 expected characterization failures, 192 assertions across invariant and six existing payment suites. Failures are named below; one exposes missing current-schema source identity on refund histories, with existing metadata used as proxy for future `(payment_attempt_id, reason)` identity.
 
 Added amount-mismatch assertions for unchanged attempt status and zero refund histories. Duplicate refund assertions now verify first/second return values and reason-scoped obligation proxy. Test names and failure messages explicitly identify future canonical obligation identity `(payment_attempt_id, reason)` without inventing model fields.
 
@@ -71,4 +72,4 @@ Result: formatter passed, syntax passed, diff check passed.
 
 - Brief listed six existing feature files for modification, but their current coverage already contains overlapping characterization cases. Only new invariant file was changed to minimize scope and avoid unrelated churn.
 - Existing schema uniqueness constraints prevent constructing duplicate invoice rows directly; retry test records current uniqueness behavior rather than bypassing database constraints.
-- Focused suite intentionally remains red for three production risks: provider amount validation, attempt-to-order projection, and duplicate retry creation.
+- Focused suite intentionally remains red for three production risks: provider amount validation, attempt-to-order projection, and duplicate retry creation. Covering suite has one additional expected refund-identity failure.

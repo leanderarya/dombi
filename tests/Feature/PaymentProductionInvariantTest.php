@@ -180,6 +180,14 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_paid_order_cannot_regress_on_late_failure(): void
     {
         $order = Order::factory()->create(['payment_status' => 'paid']);
+        PaymentTransaction::create([
+            'order_id' => $order->id,
+            'doku_order_id' => $order->order_code,
+            'payment_method' => 'qris',
+            'amount' => $order->total,
+            'status' => 'paid',
+        ]);
+
         app(DokuService::class)->handleWebhook([
             'order' => ['invoice_number' => $order->order_code],
             'transaction' => ['status' => 'FAILED'],
