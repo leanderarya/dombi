@@ -50,7 +50,7 @@ class DokuService
     {
         $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
         $invoiceNumber = $order->order_code;
-        $existingAttempt = PaymentAttempt::query()->where('order_id', $order->id)->where('invoice_number', $invoiceNumber)->lockForUpdate()->first();
+        $existingAttempt = PaymentAttempt::query()->where('order_id', $order->id)->where('invoice_number', $invoiceNumber)->first();
         if (data_get($existingAttempt?->metadata ?? [], 'payment_url')) {
             DB::commit();
 
@@ -85,7 +85,7 @@ class DokuService
 
         $headers = $this->generateHeaders($requestId, $timestamp, $endpoint, $bodyJson);
 
-        $attempt = PaymentAttempt::create([
+        $attempt = $existingAttempt ?? PaymentAttempt::create([
             'order_id' => $order->id,
             'attempt_key' => $invoiceNumber,
             'invoice_number' => $invoiceNumber,

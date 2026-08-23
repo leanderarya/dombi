@@ -10,6 +10,6 @@ PASS — 27 tests, 61 assertions, 5.6 seconds.
 
 PASS.
 
-## Reservation P0 fix
+## Reservation fix
 
-Short reservation transaction now locks order first, then re-reads and locks active canonical attempt under that order lock before reserving. Transaction commits before HTTP, so waiting concurrent creators recheck reservation state without network calls under lock.
+Payment reservation now locks only order, re-reads existing attempt without locking it, and reuses an existing attempt when URL/state is incomplete. No attempt lock is held during reservation or HTTP; canonical transition retains attempt→order locking.
