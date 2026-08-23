@@ -242,7 +242,7 @@ class OrderController extends Controller
             try {
                 $doku = app(DokuService::class);
                 $priorAttempt = PaymentAttempt::where('order_id', $order->id)->whereIn('creation_state', ['failed', 'unknown'])->latest('id')->first();
-                $doku->syncStatusFromDoku($priorAttempt ?: $doku->preparePaymentAttempt($order));
+                $syncStatus = $doku->syncStatusFromDoku($priorAttempt ?: $doku->preparePaymentAttempt($order));
                 $order->refresh();
 
                 // If paid after sync, redirect to confirm
@@ -252,8 +252,10 @@ class OrderController extends Controller
                     ]);
                 }
 
-                $order->update(['payment_status' => null, 'doku_order_id' => null]);
-                $order->refresh();
+                if (in_array($syncStatus, ['failed', 'expired'], true)) {
+                    $order->update(['payment_status' => null, 'doku_order_id' => null]);
+                    $order->refresh();
+                }
             } catch (\Exception $e) {
                 Log::warning('Payment status sync failed', [
                     'order_id' => $order->id,
@@ -321,10 +323,11 @@ class OrderController extends Controller
 
         // Always sync from DOKU API to ensure accurate status
         // This handles cases where webhook hasn't arrived yet
-        if ($order->doku_order_id) {
+        $attempt = PaymentAttempt::where('order_id', $order->id)->whereIn('creation_state', ['initiated', 'pending', 'created', 'unknown'])->latest('id')->first();
+        if ($attempt) {
             try {
                 $doku = app(DokuService::class);
-                $doku->syncStatusFromDoku($doku->preparePaymentAttempt($order));
+                $doku->syncStatusFromDoku($attempt);
                 $order->refresh();
             } catch (\Exception $e) {
                 Log::warning('Payment status sync failed', [
@@ -338,6 +341,7 @@ class OrderController extends Controller
             'payment_status' => $order->payment_status,
             'doku_order_id' => $order->doku_order_id,
             'paid_at' => $order->paid_at?->toISOString(),
+            'payment_available' => $attempt !== null,
         ]);
     }
 
