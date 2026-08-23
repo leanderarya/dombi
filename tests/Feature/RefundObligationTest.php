@@ -120,6 +120,18 @@ class RefundObligationTest extends TestCase
         ]);
     }
 
+    public function test_duplicate_key_recovery_rejects_canonical_mismatch(): void
+    {
+        $attempt = PaymentAttempt::create([
+            'order_id' => Order::factory()->create()->id, 'attempt_key' => 'mismatch-race', 'invoice_number' => 'mismatch-invoice',
+            'merchant_request_id' => 'mismatch-request', 'amount_snapshot' => 12500, 'currency_snapshot' => 'IDR',
+        ]);
+        RefundObligation::create(['payment_attempt_id' => $attempt->id, 'amount' => 9999, 'currency' => 'IDR', 'reason' => 'mismatch']);
+
+        $this->expectException(DomainException::class);
+        app(RefundObligationService::class)->createForAttempt($attempt, 'mismatch');
+    }
+
     public function test_duplicate_key_recovery_uses_existing_obligation(): void
     {
         $attempt = PaymentAttempt::create([
