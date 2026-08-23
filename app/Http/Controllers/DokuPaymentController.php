@@ -9,6 +9,7 @@ use App\Services\DokuWebhookIngressService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DokuPaymentController extends Controller
 {
