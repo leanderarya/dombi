@@ -10,7 +10,7 @@
 ## Verification
 
 - `php artisan test tests/Feature/DokuReconciliationTest.php`: 24 passed, 1 skipped, 54 assertions.
-- `composer run lint:check -- --dirty`: pending final run.
+- `composer run lint:check -- --dirty`: passed (`pint --parallel --test '--dirty'`, Pint passed).
 
 ## Scope
 
