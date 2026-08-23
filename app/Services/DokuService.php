@@ -382,17 +382,19 @@ class DokuService
 
         $status = $this->mapStatus($dokuStatus['transaction']['status'] ?? 'PENDING');
 
-        $transaction = PaymentTransaction::where('doku_order_id', $order->doku_order_id)->first();
-        if ($transaction && $transaction->status !== $status) {
-            $transaction->update([
-                'status' => $status,
-                'raw_response' => $dokuStatus,
-            ]);
-        }
+        return DB::transaction(function () use ($order, $status, $dokuStatus): string {
+            $transaction = PaymentTransaction::where('doku_order_id', $order->doku_order_id)->first();
+            if ($transaction && $transaction->status !== $status) {
+                $transaction->update([
+                    'status' => $status,
+                    'raw_response' => $dokuStatus,
+                ]);
+            }
 
-        $this->processPaymentStatusChange($order, $status, $dokuStatus);
+            $this->processPaymentStatusChange($order, $status, $dokuStatus);
 
-        return $status;
+            return $status;
+        });
     }
 
     /**
@@ -441,7 +443,7 @@ class DokuService
      * Uses atomic update to prevent race condition from concurrent webhook + redirect.
      * Handles late payments (after cancellation/expiry) by auto-refunding.
      */
-    public function markOrderPaid(Order $order): void
+    public function markOrderPaid(Order $order, int|float|string|null $authoritativeAmount = null): void
     {
         $attempt = $order->paymentAttempts()->where('invoice_number', $order->doku_order_id ?: $order->order_code)->first();
         if (! $attempt) {
@@ -451,7 +453,7 @@ class DokuService
         app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
             source: 'legacy-entry-point',
             gatewayStatus: 'SUCCESS',
-            amount: null,
+            amount: $authoritativeAmount,
             currency: $attempt->currency_snapshot,
             gatewayReference: $attempt->invoice_number,
             receivedAt: now(),

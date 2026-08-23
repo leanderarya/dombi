@@ -220,6 +220,27 @@ class PaymentProductionInvariantTest extends TestCase
         $this->assertSame(1, RefundObligation::where('payment_attempt_id', $attempt->id)->where('reason', 'late_payment')->count());
     }
 
+    public function test_manual_paid_without_authoritative_amount_requires_review_and_cannot_fulfil(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'manual-'.$order->id,
+            'invoice_number' => $order->order_code,
+            'merchant_request_id' => 'manual-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+        ]);
+
+        app(DokuService::class)->markOrderPaid($order);
+
+        $attempt = $attempt->fresh();
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->settlement_status);
+        $this->assertSame(PaymentAttemptVerificationStatus::NeedsReview, $attempt->verification_status);
+        $this->assertNull($attempt->fulfilment_claimed_at);
+        $this->assertSame('pending', $order->fresh()->payment_status);
+    }
+
     public function test_paid_order_cannot_regress_on_late_failure(): void
     {
         $order = Order::factory()->create(['payment_status' => 'paid']);
