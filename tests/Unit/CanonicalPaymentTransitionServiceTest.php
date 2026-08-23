@@ -16,6 +16,21 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_failed_transition_sets_payment_retry_window_on_pending_order(): void
+    {
+        [$order, $attempt] = $this->attempt();
+        config(['order.payment_retry_window_minutes' => 17]);
+        $before = now();
+
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'doku', 'FAILED', null, 'IDR', 'invoice-first', now(), []
+        ));
+
+        $expires = $order->fresh()->confirmation_expires_at;
+        $this->assertNotNull($expires);
+        $this->assertTrue($expires->between($before->copy()->addMinutes(17)->subSecond(), now()->addMinutes(17)->addSecond()));
+    }
+
     public function test_terminal_order_success_is_paid_but_creates_refund_without_claiming(): void
     {
         [$order, $attempt] = $this->attempt(['status' => Order::STATUS_CANCELLED_BY_CUSTOMER]);
