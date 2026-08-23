@@ -28,11 +28,53 @@ class PaymentRetryTest extends TestCase
         $this->assertDatabaseCount('payment_attempts', 2);
     }
 
-    public function test_timeout_marks_attempt_unknown_without_retrying_provider_call(): void
+    public function test_ambiguous_5xx_marks_attempt_unknown(): void
     {
         Http::fake(['*' => Http::response('', 504)]);
         $order = Order::factory()->create();
-        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'timeout', 'invoice_number' => 'timeout-invoice', 'merchant_request_id' => 'timeout-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Failed]);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'timeout', 'invoice_number' => 'timeout-invoice', 'merchant_request_id' => 'timeout-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Initiated]);
+
+        $this->expectException(DokuPaymentException::class);
+        try {
+            app(DokuService::class)->createPayment($attempt);
+        } finally {
+            $this->assertDatabaseHas('payment_attempts', ['id' => $attempt->id, 'creation_state' => 'unknown']);
+        }
+    }
+
+    public function test_timeout_after_provider_acceptance_marks_attempt_unknown(): void
+    {
+        Http::fake(['*' => Http::response(['response' => ['order' => ['session_id' => 'accepted']]], 200)]);
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'accepted', 'invoice_number' => 'accepted-invoice', 'merchant_request_id' => 'accepted-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Initiated]);
+
+        $this->expectException(DokuPaymentException::class);
+        try {
+            app(DokuService::class)->createPayment($attempt);
+        } finally {
+            $this->assertDatabaseHas('payment_attempts', ['id' => $attempt->id, 'creation_state' => 'unknown']);
+        }
+    }
+
+    public function test_two_retries_preserve_all_attempt_identities(): void
+    {
+        $order = Order::factory()->create();
+        $service = app(DokuService::class);
+        $first = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'retry-one', 'invoice_number' => 'retry-one-invoice', 'merchant_request_id' => 'retry-one-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Failed]);
+        $second = $service->preparePaymentAttempt($order);
+        $second->update(['creation_state' => PaymentAttemptCreationState::Failed]);
+        $third = $service->preparePaymentAttempt($order);
+
+        $this->assertCount(3, PaymentAttempt::where('order_id', $order->id)->get());
+        $this->assertNotSame($first->invoice_number, $second->invoice_number);
+        $this->assertNotSame($second->invoice_number, $third->invoice_number);
+    }
+
+    public function test_definitive_rejection_marks_attempt_failed(): void
+    {
+        Http::fake(['*' => Http::response(['error_messages' => ['rejected']], 400)]);
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'rejected', 'invoice_number' => 'rejected-invoice', 'merchant_request_id' => 'rejected-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Initiated]);
 
         $this->expectException(DokuPaymentException::class);
         try {
