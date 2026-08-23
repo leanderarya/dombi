@@ -16,6 +16,19 @@ class PaymentRetryTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_status_check_404_marks_exact_attempt_failed_and_retryable(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending', 'doku_order_id' => 'invoice-404']);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'invoice-404', 'invoice_number' => 'invoice-404', 'merchant_request_id' => 'invoice-404-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown', 'settlement_status' => 'unknown']);
+        Http::fake(['*/checkout/v1/payment/invoice-404' => Http::response('', 404)]);
+
+        $status = app(DokuService::class)->syncStatusFromDoku($attempt);
+
+        $this->assertSame('failed', $status);
+        $this->assertSame('failed', $attempt->fresh()->settlement_status?->value);
+        $this->assertSame('failed', $order->fresh()->payment_status);
+    }
+
     public function test_definitive_reconciliation_failure_becomes_retryable(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);

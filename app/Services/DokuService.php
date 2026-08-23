@@ -479,7 +479,7 @@ class DokuService
                     'doku_order_id' => $order->doku_order_id,
                 ]);
 
-                return null; // 404 = not expired; do not retry
+                return ['order' => ['invoice_number' => $order->doku_order_id], 'transaction' => ['status' => 'FAILED', 'reason' => 'invoice_not_found']];
             }
 
             Log::warning('DOKU status check failed (will retry)', [

@@ -1,7 +1,8 @@
 # Task 8 Report
 
 ## Verification
-- Focused Task 8 creation/retry/boundary tests: 30 passed, 74 assertions.
+- Focused Task 8 creation/retry/boundary tests: 31 passed, 77 assertions.
+- DOKU status 404 is definitive invoice-not-found: exact attempt transitions failed, projection/retry window update, fresh retry permitted; transport/5xx remain unknown.
 - `composer run lint:check`: passed (`pint --parallel --test`).
 - Full `php artisan test`: 1350 run, 1337 passed, 13 failures/errors. Verification blocked.
 
