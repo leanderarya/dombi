@@ -43,7 +43,7 @@ class DokuService
         if ($url && in_array($attempt->creation_state?->value, ['created', 'pending'], true)) {
             return $url;
         }
-        if ($attempt->creation_state?->value === 'unknown') {
+        if (in_array($attempt->creation_state?->value, ['pending', 'unknown'], true)) {
             throw new DokuPaymentException('Payment attempt requires reconciliation before retry.');
         }
         $lease = data_get($attempt->metadata ?? [], 'creation_lease');
@@ -257,7 +257,7 @@ class DokuService
         return DB::transaction(function () use ($order): PaymentAttempt {
             $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
             $active = PaymentAttempt::query()->where('order_id', $order->id)->where(function ($query): void {
-                $query->whereIn('creation_state', ['initiated', 'created', 'unknown'])
+                $query->whereIn('creation_state', ['initiated', 'pending', 'created', 'unknown'])
                     ->orWhereIn('settlement_status', ['pending', 'unknown']);
             })->latest('id')->first();
             if ($active) {
