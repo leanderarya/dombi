@@ -21,13 +21,14 @@ Review findings fixed.
 - MySQL/MariaDB constraint repair uses guarded ALTER fallback; PostgreSQL/SQLite remain driver-safe.
 - Duplicate detection matches narrow SQLSTATE/driver duplicate codes; FK/schema errors propagate or become tagged mapping exceptions where applicable.
 - Existing-table migration reruns inspect and repair required uniqueness and payment-attempt foreign-key constraints; invalid existing data raises explicit repair errors.
-- Deterministic duplicate-key recovery is covered by pre-existing canonical-row injection; repository does not provide portable parallel DB harness.
+- Deterministic duplicate-key recovery is covered by canonical-row injection; repository does not provide portable parallel DB harness.
+- Bank/account/e-wallet destination fields use encrypted casts matching `Order`; ciphertext is stored at rest and values round-trip through model access.
 - Backfill uses duplicate-only handling for synthesized attempts, exception rows, and obligations; reruns remain idempotent.
 - Synthesized attempts lock the order row, use unique legacy keys, and safely recover from concurrent insertion races.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (19 tests, 38 assertions; 24.083s)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (20 tests, 41 assertions; 21.794s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 

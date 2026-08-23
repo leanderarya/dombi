@@ -18,6 +18,25 @@ class RefundObligationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_destination_fields_are_encrypted_at_rest_and_round_trip(): void
+    {
+        $attempt = PaymentAttempt::create([
+            'order_id' => Order::factory()->create()->id, 'attempt_key' => 'encrypted-attempt',
+            'invoice_number' => 'encrypted-invoice', 'merchant_request_id' => 'encrypted-request',
+            'amount_snapshot' => 12500, 'currency_snapshot' => 'IDR',
+        ]);
+        $obligation = app(RefundObligationService::class)->createForAttempt($attempt, 'encrypted');
+        $obligation->update([
+            'bank_name' => 'Bank Rahasia', 'account_number' => '123456789', 'account_holder' => 'Pemilik Rahasia',
+            'ewallet_provider' => 'Dana', 'ewallet_number' => '08123456789', 'ewallet_holder' => 'Pemilik Ewallet',
+        ]);
+
+        $raw = DB::table('refund_obligations')->where('id', $obligation->id)->first();
+        $this->assertNotSame('Bank Rahasia', $raw->bank_name);
+        $this->assertSame('Bank Rahasia', $obligation->fresh()->bank_name);
+        $this->assertSame('123456789', $obligation->fresh()->account_number);
+    }
+
     public function test_schema_and_canonical_lifecycle(): void
     {
         $this->assertTrue(Schema::hasTable('refund_obligations'));
