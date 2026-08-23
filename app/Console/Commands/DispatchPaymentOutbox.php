@@ -22,10 +22,17 @@ class DispatchPaymentOutbox extends Command
                 ->filter()->values()->all();
         });
 
+        $failed = 0;
         foreach ($ids as [$id, $token]) {
-            DispatchPaymentOutboxEvent::dispatch($id, $token);
+            try {
+                DispatchPaymentOutboxEvent::dispatch($id, $token);
+            } catch (\Throwable $exception) {
+                PaymentOutboxEvent::find($id)?->releaseClaim($token, $exception->getMessage());
+                $failed++;
+                $this->error("Failed to enqueue outbox event {$id}: {$exception->getMessage()}");
+            }
         }
 
-        return self::SUCCESS;
+        return $failed === 0 ? self::SUCCESS : self::FAILURE;
     }
 }
