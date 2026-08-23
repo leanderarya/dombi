@@ -21,7 +21,9 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 - Snapshot immutability regression: passed; provider request and transaction use attempt snapshots after order mutation.
 - Focused Task 8 creation/retry/boundary tests: 23 passed, 58 assertions.
 - Max-attempt boundary is inclusive (`>=`); active-attempt reuse still occurs before cap enforcement.
-- `composer run lint:check`: pending final verification.
+- Full `php artisan test`: 1343 tests run, 1332 passed, 11 failures/errors; Task 8 verification blocked.
+- Failures/errors: `CanonicalPaymentTransitionServiceTest::test_payment_aggregate_lock_order_is_order_then_attempt` (restored baseline assertion conflicts with current source ordering); `DokuMarkPaidCommandTest::test_pending_terminal_order_reaches_refund_pending` and both `DokuPaymentAtomicTest` methods (restored baseline lacks canonical attempt fixtures); `DokuPaymentTest::test_create_payment_returns_url` and `PaymentProductionInvariantTest::test_duplicate_payment_retry_creation_keeps_single_attempt_for_same_invoice` (restored baseline calls removed Order overload); `DokuPaymentTest::test_webhook_success_marks_paid` and `test_redirect_proceeds_on_verified_status_api` (restored baseline lacks canonical attempt state); `PaymentAttemptBackfillTest::test_legacy_transactions_are_backfilled_once_with_historical_values` (hard-coded legacy attempt id); `PaymentAttemptSchemaTest::test_status_enums_expose_canonical_values` (restored baseline omits pending state); `PaymentProductionInvariantTest::test_duplicate_late_success_webhooks_create_one_refund_obligation_for_attempt` (restored baseline expects paid instead of late refund_pending).
+- `composer run lint:check`: passed (`pint --parallel --test`).
 - Full `php artisan test`: 1342 tests run, 1331 passed, 11 failures/errors after restoring approved prior-task files; failures are baseline compatibility with canonical Task 8 API/state.
 - `composer run lint:check`: failed on restored baseline compatibility; focused Task 8 Pint passed.
 - Reconciliation SUCCESS now locks order then attempt before canonical transition; lease token remains fenced in same transaction.
