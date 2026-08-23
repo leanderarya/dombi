@@ -368,7 +368,8 @@ class Order extends Model
 
     public function refundObligation(): HasOne
     {
-        return $this->hasOneThrough(RefundObligation::class, PaymentAttempt::class)->latestOfMany();
+        return $this->hasOneThrough(RefundObligation::class, PaymentAttempt::class)
+            ->where('refund_obligations.reason', $this->refund_reason);
     }
 
     public function refundStatusHistories(): HasMany
