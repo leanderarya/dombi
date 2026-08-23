@@ -20,7 +20,8 @@ Review findings fixed.
 - Amount validation rejects fractional precision beyond two digits before minor-unit conversion; currency remains exactly three uppercase letters with no IDR fallback.
 - MySQL/MariaDB constraint repair uses guarded ALTER fallback; PostgreSQL/SQLite remain driver-safe.
 - Duplicate detection matches narrow SQLSTATE/driver duplicate codes; FK/schema errors propagate or become tagged mapping exceptions where applicable.
-- Existing-table migration reruns repair required constraints/triggers/indexes.
+- Existing-table migration reruns inspect and repair required uniqueness and payment-attempt foreign-key constraints; invalid existing data raises explicit repair errors.
+- Deterministic duplicate-key recovery is covered by pre-existing canonical-row injection; repository does not provide portable parallel DB harness.
 - Backfill uses duplicate-only handling for synthesized attempts, exception rows, and obligations; reruns remain idempotent.
 - Synthesized attempts lock the order row, use unique legacy keys, and safely recover from concurrent insertion races.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
@@ -31,5 +32,4 @@ Review findings fixed.
 - `git diff --check` — PASS
 
 ## Concerns
-- Backfill synthesis uses `IDR` when legacy order currency is unavailable in existing schema.
 - Deterministic parallel DB test remains environment-dependent; duplicate-key recovery is covered explicitly.
