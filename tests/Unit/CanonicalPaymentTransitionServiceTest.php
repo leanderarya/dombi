@@ -39,7 +39,7 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
 
         $fresh = $attempt->fresh();
         $this->assertSame('invoice-first', $fresh->invoice_number);
-        $this->assertNull($fresh->gateway_transaction_id);
+        $this->assertSame('transaction-id', $fresh->gateway_transaction_id);
         $this->assertSame('paid', $fresh->settlement_status->value);
     }
 
