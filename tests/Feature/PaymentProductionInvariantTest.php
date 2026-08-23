@@ -45,7 +45,7 @@ class PaymentProductionInvariantTest extends TestCase
 
         $payload = [
             'order' => ['invoice_number' => $order->order_code],
-            'transaction' => ['status' => 'SUCCESS'],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
         ];
         $service = app(DokuService::class);
         $service->handleWebhook($payload);

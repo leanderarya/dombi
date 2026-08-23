@@ -17,8 +17,10 @@ Harden checkout payment creation and retry around canonical `PaymentAttempt` rec
 - Webhook processing requires canonical attempts; legacy transaction evidence is retained but cannot settle or fulfil without one.
 
 ## Tests
-- Focused Task 8 creation/retry suite: 15 tests passed, 35 assertions.
-- Complete listed legacy payment suite plus Task 8 tests: 69 tests passed, 120 assertions.
+- Reconciliation SUCCESS test: passed; canonical transition settles attempt and projects order.
+- `php artisan test`: 1333 tests run, 1331 passed, 2 unrelated failures.
+- Unrelated failures: `CanonicalPaymentTransitionServiceTest::test_payment_aggregate_lock_order_is_order_then_attempt` and `PaymentAttemptBackfillTest::test_legacy_transactions_are_backfilled_once_with_historical_values`.
+- `composer run lint:check`: passed (`pint --parallel --test`).
 - Pending settlement attempts are active and reused by order-locked preparation.
 - Completion verifies current creation lease token; stale provider responses become unknown evidence without transaction/order persistence.
 - Legacy success and redirect tests assert `paid_at`.
