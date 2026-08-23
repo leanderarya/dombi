@@ -2,9 +2,10 @@
 
 ## P0 fix
 
-- Added bounded token-checked consumer heartbeat callback during delivery.
-- Long delivery can renew consumer lease; ownership loss aborts before effect/completion.
-- Event-key durable idempotency remains active.
+- Delivery wrapper now exposes cooperative heartbeat callable during side-effect execution.
+- Heartbeat renews consumer and outer claim tokens with token checks; ownership loss aborts delivery.
+- Hard 240-second delivery timeout resets retry state instead of completing delivery.
+- Long-delivery regression proves lease remains owned during mid-effect heartbeat.
 
 ## Verification
 
