@@ -237,19 +237,11 @@ class OrderController extends Controller
             ]);
         }
 
-        // Guard: max payment retry attempts
-        $paymentAttempts = PaymentAttempt::where('order_id', $order->id)->count();
-        $maxPaymentAttempts = config('order.max_payment_attempts', 3);
-
-        if ($paymentAttempts >= $maxPaymentAttempts) {
-            return back()->with('error', 'Batas maksimum percobaan pembayaran tercapai.');
-        }
-
         // Guard: if payment failed/expired, reset so user can retry
         if (in_array($order->payment_status, ['failed', 'expired'], true)) {
             try {
                 $doku = app(DokuService::class);
-                $doku->syncStatusFromDoku($order);
+                $doku->syncStatusFromDoku($doku->preparePaymentAttempt($order));
                 $order->refresh();
 
                 // If paid after sync, redirect to confirm
@@ -273,6 +265,10 @@ class OrderController extends Controller
             $doku = app(DokuService::class);
 
             $attempt = $doku->preparePaymentAttempt($order);
+            $paymentAttempts = PaymentAttempt::where('order_id', $order->id)->count();
+            if ($paymentAttempts > config('order.max_payment_attempts', 3) && ! in_array($attempt->creation_state?->value, ['initiated', 'pending', 'created', 'unknown'], true)) {
+                return back()->with('error', 'Batas maksimum percobaan pembayaran tercapai.');
+            }
             if ($attempt->creation_state?->value === 'unknown') {
                 $attempt = $doku->reconcilePaymentAttempt($attempt);
                 $order->refresh();
@@ -321,7 +317,7 @@ class OrderController extends Controller
         if ($order->doku_order_id) {
             try {
                 $doku = app(DokuService::class);
-                $doku->syncStatusFromDoku($order);
+                $doku->syncStatusFromDoku($doku->preparePaymentAttempt($order));
                 $order->refresh();
             } catch (\Exception $e) {
                 Log::warning('Payment status sync failed', [

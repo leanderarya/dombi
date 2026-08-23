@@ -85,7 +85,7 @@ class DokuService
         }
 
         $order = $attempt->order;
-        $body = ['order' => ['invoice_number' => $attempt->invoice_number, 'amount' => (int) $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'callback_url' => route('doku.redirect', ['invoice_number' => $attempt->invoice_number]), 'callback_url_result' => config('doku.callback_url') ?: route('doku.notify'), 'auto_redirect' => true, 'payment_due_date' => config('doku.payment_timeout', 30), 'line_items' => data_get($attempt->metadata ?? [], 'line_items', $this->buildLineItems($order))], 'payment' => array_merge(['payment_method_types' => [$this->mapPaymentMethod($attempt->payment_method)]], $this->channelInfo($attempt->payment_method) ?? []), 'customer' => $this->buildCustomerInfo($order)];
+        $body = ['order' => ['invoice_number' => $attempt->invoice_number, 'amount' => (int) $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'callback_url' => route('doku.redirect', ['invoice_number' => $attempt->invoice_number]), 'callback_url_result' => config('doku.callback_url') ?: route('doku.notify'), 'auto_redirect' => true, 'payment_due_date' => config('doku.payment_timeout', 30), 'line_items' => data_get($attempt->metadata ?? [], 'line_items', $this->buildLineItems($order))], 'payment' => array_merge(['payment_method_types' => [$this->mapPaymentMethod($attempt->payment_method)]], $this->channelInfo($attempt->payment_method) ?? []), 'customer' => data_get($attempt->metadata ?? [], 'customer_snapshot', $this->buildCustomerInfo($order))];
         $bodyJson = json_encode($body);
         $endpoint = '/checkout/v1/payment';
         $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
@@ -265,7 +265,7 @@ class DokuService
             }
             $identity = strtoupper('DMB-'.$order->id.'-'.bin2hex(random_bytes(6)));
 
-            return PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => $identity, 'invoice_number' => $identity, 'merchant_request_id' => $identity.'-REQ', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'payment_method' => $order->payment_method ?? 'qris', 'creation_state' => 'initiated', 'metadata' => ['line_items' => $this->buildLineItems($order)]]);
+            return PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => $identity, 'invoice_number' => $identity, 'merchant_request_id' => $identity.'-REQ', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'payment_method' => $order->payment_method ?? 'qris', 'creation_state' => 'initiated', 'metadata' => ['line_items' => $this->buildLineItems($order), 'customer_snapshot' => $this->buildCustomerInfo($order)]]);
         });
     }
 
@@ -501,8 +501,14 @@ class DokuService
     /**
      * Sync order payment status from DOKU.
      */
-    public function syncStatusFromDoku(Order $order): string
+    public function syncStatusFromDoku(Order|PaymentAttempt $subject): string
     {
+        $attempt = $subject instanceof PaymentAttempt ? $subject->fresh() : PaymentAttempt::where('order_id', $subject->id)->whereIn('creation_state', ['initiated', 'pending', 'created', 'unknown'])->latest('id')->first();
+        if (! $attempt) {
+            throw new \LogicException('Canonical payment attempt required before status sync.');
+        }
+        $order = $attempt->order;
+        $order->doku_order_id = $attempt->invoice_number;
         $dokuStatus = $this->checkStatus($order);
 
         if (! $dokuStatus) {
