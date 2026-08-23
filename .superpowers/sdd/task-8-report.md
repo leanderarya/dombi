@@ -5,6 +5,9 @@ Canonical DOKU payment creation, retry, reconciliation, leases, immutable snapsh
 
 ## Verification
 - Focused Task 8 creation/retry/boundary tests: 27 passed, 71 assertions.
+- Transient status-sync failures preserve payment_status/doku_order_id; only definitive failed/expired statuses clear retry routing fields.
+- Polling resolves existing canonical attempts only; absent attempts do not prepare rows or consume quota and return `payment_available=false`.
+- `composer run lint:check`: passed (`pint --parallel --test`).
 - Definitive reconciliation failures transition settlement to failed/expired through canonical transition, update projection/retry window, and permit fresh retry; unknown remains blocked.
 - `composer run lint:check`: passed (`pint --parallel --test`).
 - Full `php artisan test`: 1343 run, 1332 passed, 11 baseline failures/errors. Verification blocked.
