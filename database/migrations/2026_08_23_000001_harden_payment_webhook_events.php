@@ -9,12 +9,28 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::table('payment_webhook_logs', function (Blueprint $table): void {
+            $table->text('raw_body')->nullable()->after('payload');
+            $table->string('body_digest', 64)->nullable()->after('raw_body');
+            $table->timestamp('claimed_at')->nullable()->after('body_digest');
+        });
+
         $duplicates = DB::table('payment_webhook_logs')
             ->select('request_id')
             ->whereNotNull('request_id')
             ->groupBy('request_id')
             ->havingRaw('COUNT(*) > 1')
             ->pluck('request_id');
+        DB::table('payment_webhook_logs')->whereNull('raw_body')->orderBy('id')->chunkById(100, function ($rows): void {
+            foreach ($rows as $row) {
+                $rawBody = json_encode($row->payload ?? [], JSON_UNESCAPED_SLASHES);
+                DB::table('payment_webhook_logs')->where('id', $row->id)->update([
+                    'raw_body' => $rawBody,
+                    'body_digest' => base64_encode(hash('sha256', $rawBody, true)),
+                ]);
+            }
+        });
+
         foreach ($duplicates as $requestId) {
             $rows = DB::table('payment_webhook_logs')
                 ->where('request_id', $requestId)
@@ -28,9 +44,6 @@ return new class extends Migration
         }
 
         Schema::table('payment_webhook_logs', function (Blueprint $table): void {
-            $table->text('raw_body')->nullable()->after('payload');
-            $table->string('body_digest', 64)->nullable()->after('raw_body');
-            $table->timestamp('claimed_at')->nullable()->after('body_digest');
             $table->unique('request_id');
         });
     }

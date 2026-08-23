@@ -1,0 +1,41 @@
+name: Task 7 production webhook concurrency
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  webhook-concurrency:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: dombi_test
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1 -proot" --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pcntl, pdo_mysql
+      - run: composer install --no-interaction --prefer-dist
+      - run: php artisan migrate:fresh --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: dombi_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+      - run: php artisan test tests/Feature/DokuWebhookIngressTest.php --filter=production_driver_concurrency
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: dombi_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
