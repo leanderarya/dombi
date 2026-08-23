@@ -178,6 +178,7 @@ class DokuService
         $status = strtoupper(data_get($data, 'transaction.status', ''));
         if ($status === 'SUCCESS') {
             $persisted = DB::transaction(function () use ($attempt, $claimToken, $data, $status): bool {
+                $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
                 $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
                 if (data_get($locked->metadata ?? [], 'reconciliation_lease.token') !== $claimToken) {
                     return false;
@@ -192,8 +193,7 @@ class DokuService
                     rawEvidence: $data,
                 ));
                 $locked->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
-                $order = Order::query()->whereKey($locked->order_id)->lockForUpdate()->firstOrFail();
-                if ($order->payment_status === 'paid' && $order->paid_at === null) {
+                if ($order->fresh()->payment_status === 'paid' && $order->paid_at === null) {
                     $order->update(['paid_at' => now()]);
                 }
 
