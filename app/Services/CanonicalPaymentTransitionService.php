@@ -66,7 +66,9 @@ class CanonicalPaymentTransitionService
             } elseif ($event->gatewayReference !== null) {
                 $lockedAttempt->metadata = array_merge($lockedAttempt->metadata ?? [], ['last_gateway_reference_evidence' => $event->gatewayReference]);
             }
-            $lockedAttempt->gateway_amount = $event->amount;
+            if ($event->amount !== null) {
+                $lockedAttempt->gateway_amount = $event->amount;
+            }
             $lockedAttempt->gateway_currency = strtoupper($event->currency);
             $lockedAttempt->gateway_status = $event->gatewayStatus;
             $lockedAttempt->raw_response = $event->rawEvidence;
