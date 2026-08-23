@@ -352,6 +352,11 @@ class Order extends Model
         return $this->hasMany(PaymentTransaction::class);
     }
 
+    public function paymentAttempts(): HasMany
+    {
+        return $this->hasMany(PaymentAttempt::class);
+    }
+
     public function refundStatusHistories(): HasMany
     {
         return $this->hasMany(RefundStatusHistory::class)->orderBy('created_at')->orderBy('id');
