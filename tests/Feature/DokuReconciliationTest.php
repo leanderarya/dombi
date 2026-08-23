@@ -5,7 +5,11 @@ namespace Tests\Feature;
 use App\Jobs\ReconcileDokuPayment;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
+use App\Services\CanonicalPaymentTransitionService;
 use App\Services\DokuReconciliationService;
+use App\Services\DokuService;
+use App\Services\DokuWebhookIngressService;
+use App\Services\TransitionResult;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Artisan;
@@ -13,6 +17,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schedule;
+use Mockery;
 use Tests\TestCase;
 
 class DokuReconciliationTest extends TestCase
@@ -217,6 +222,51 @@ class DokuReconciliationTest extends TestCase
         $this->assertSame('* * * * *', $event->expression);
     }
 
+    public function test_command_dispatches_bounded_batch_only(): void
+    {
+        config(['doku.reconciliation_batch_limit' => 2]);
+        $attempts = collect(range(1, 3))->map(fn () => $this->makeAttempt('pending'));
+        Bus::fake();
+
+        Artisan::call('payments:reconcile-doku');
+
+        Bus::assertDispatchedTimes(ReconcileDokuPayment::class, 2);
+        Bus::assertDispatched(ReconcileDokuPayment::class, fn ($job) => $job->attemptId === $attempts[0]->id);
+        Bus::assertDispatched(ReconcileDokuPayment::class, fn ($job) => $job->attemptId === $attempts[1]->id);
+    }
+
+    public function test_job_skips_ineligible_attempt_before_service_call(): void
+    {
+        $attempt = $this->makeAttempt('failed');
+        $service = Mockery::mock(DokuReconciliationService::class);
+        $service->shouldNotReceive('reconcile');
+
+        (new ReconcileDokuPayment($attempt->id))->handle($service);
+
+        $this->assertTrue(true);
+    }
+
+    public function test_reconciliation_success_uses_canonical_transition_and_normalized_event(): void
+    {
+        $attempt = $this->makeAttempt('pending');
+        Http::fake([
+            '*/checkout/v1/payment/*' => Http::response([
+                'order' => ['invoice_number' => $attempt->invoice_number, 'currency' => 'IDR'],
+                'transaction' => ['status' => 'SUCCESS', 'amount' => (int) $attempt->amount_snapshot],
+            ], 200),
+        ]);
+        $transition = Mockery::mock(CanonicalPaymentTransitionService::class);
+        $transition->shouldReceive('apply')
+            ->once()
+            ->withArgs(fn ($model, $event) => $model->id === $attempt->id
+                && $event->source === 'doku-reconciliation'
+                && $event->gatewayStatus === 'SUCCESS')
+            ->andReturn(new TransitionResult(true, true));
+        $this->app->instance(CanonicalPaymentTransitionService::class, $transition);
+
+        app(DokuReconciliationService::class)->reconcile($attempt);
+    }
+
     public function test_job_reconciles_single_attempt(): void
     {
         $attempt = $this->makeAttempt('pending');
@@ -271,6 +321,20 @@ class DokuReconciliationTest extends TestCase
             },
         ]);
 
+        $body = json_encode([
+            'order' => ['invoice_number' => $attempt->invoice_number, 'amount' => (int) $attempt->amount_snapshot, 'currency' => 'IDR'],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => (int) $attempt->amount_snapshot],
+        ]);
+        $requestId = 'RACE-'.$attempt->id;
+        $timestamp = now('UTC')->format('Y-m-d\\TH:i:s\\Z');
+        $doku = app(DokuService::class);
+        $headers = [
+            'Request-Id' => $requestId,
+            'Request-Timestamp' => $timestamp,
+            'Client-Id' => config('doku.client_id'),
+            'Signature' => $doku->signForTest($requestId, $timestamp, '/payment/doku/notify', $body),
+        ];
+
         $children = [];
         for ($worker = 0; $worker < 2; $worker++) {
             $pid = pcntl_fork();
@@ -278,7 +342,11 @@ class DokuReconciliationTest extends TestCase
             if ($pid === 0) {
                 DB::disconnect();
                 DB::reconnect();
-                app(DokuReconciliationService::class)->reconcile($attempt->fresh());
+                if ($worker === 0) {
+                    app(DokuReconciliationService::class)->reconcile($attempt->fresh());
+                } else {
+                    app(DokuWebhookIngressService::class)->receive($body, $headers);
+                }
                 exit(0);
             }
             $children[] = $pid;
