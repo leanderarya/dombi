@@ -141,6 +141,20 @@ class RefundObligationTest extends TestCase
         $this->assertDatabaseCount('refund_obligations', 1);
     }
 
+    public function test_historical_refund_amount_mismatch_is_reported_without_obligation(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'refund_pending', 'refund_amount' => 9000]);
+        PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'mismatch-attempt', 'invoice_number' => 'mismatch-invoice',
+            'merchant_request_id' => 'mismatch-request', 'amount_snapshot' => 8000, 'currency_snapshot' => 'IDR',
+        ]);
+
+        $this->runRefundBackfill();
+
+        $this->assertDatabaseHas('refund_obligation_backfill_exceptions', ['order_id' => $order->id, 'reason' => 'refund_exceeds_attempt_amount']);
+        $this->assertDatabaseMissing('refund_obligations', ['amount' => 9000]);
+    }
+
     public function test_historical_refund_backfill_synthesizes_missing_attempt(): void
     {
         $order = Order::factory()->create([

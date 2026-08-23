@@ -7,6 +7,44 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    private const RUN_KEY = '2026_08_23_000004_refund_obligations';
+
+    private function ensureExceptionTable(): void
+    {
+        if (Schema::hasTable('refund_obligation_backfill_exceptions')) {
+            return;
+        }
+
+        Schema::create('refund_obligation_backfill_exceptions', function ($table): void {
+            $table->id();
+            $table->unsignedBigInteger('order_id')->nullable();
+            $table->string('reason');
+            $table->string('backfill_run_key');
+            $table->json('payload')->nullable();
+            $table->timestamps();
+            $table->unique(['order_id', 'reason', 'backfill_run_key'], 'refund_backfill_exception_key');
+        });
+    }
+
+    private function recordException(object $refund, string $reason): void
+    {
+        $row = [
+            'order_id' => $refund->id,
+            'reason' => $reason,
+            'backfill_run_key' => self::RUN_KEY,
+            'payload' => json_encode((array) $refund),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+        try {
+            DB::table('refund_obligation_backfill_exceptions')->insert($row);
+        } catch (QueryException $exception) {
+            if (! $this->isDuplicateKey($exception)) {
+                throw $exception;
+            }
+        }
+    }
+
     private function isDuplicateKey(QueryException $exception): bool
     {
         $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
@@ -21,6 +59,7 @@ return new class extends Migration
         if (! Schema::hasTable('refund_obligations') || ! Schema::hasTable('payment_attempts')) {
             return;
         }
+        $this->ensureExceptionTable();
 
         $refunds = DB::table('orders')
             ->whereIn('payment_status', ['refund_pending', 'refund_in_progress', 'refunded', 'refund_rejected', 'refund_failed'])
@@ -38,7 +77,11 @@ return new class extends Migration
 
                 if (! $attempt) {
                     $order = DB::table('orders')->where('id', $refund->id)->lockForUpdate()->first(['id', 'total']);
-                    if ($order && (float) $order->total > 0) {
+                    if ($order && (float) $order->total > 0 && (float) $order->total !== (float) $refund->refund_amount) {
+                        $this->recordException($refund, 'refund_amount_mismatch_order_total');
+
+                        return;
+                    } elseif ($order && (float) $order->total > 0) {
                         $values = [
                             'order_id' => $order->id,
                             'attempt_key' => 'legacy-refund-'.$order->id,
@@ -65,20 +108,15 @@ return new class extends Migration
                 }
 
                 if (! $attempt) {
-                    $exception = [
-                        'order_id' => $refund->id,
-                        'reason' => 'missing_defensible_payment_attempt',
-                        'payload' => json_encode((array) $refund),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                    try {
-                        DB::table('refund_obligation_backfill_exceptions')->insert($exception);
-                    } catch (QueryException $queryException) {
-                        if (! $this->isDuplicateKey($queryException)) {
-                            throw $queryException;
-                        }
-                    }
+                    $this->recordException($refund, 'missing_defensible_payment_attempt');
+
+                    return;
+                }
+
+                $attemptAmount = (float) $attempt->amount_snapshot;
+                $refundAmount = (float) $refund->refund_amount;
+                if ($refundAmount > $attemptAmount) {
+                    $this->recordException($refund, 'refund_exceeds_attempt_amount');
 
                     return;
                 }
@@ -138,6 +176,7 @@ return new class extends Migration
 
         DB::table('refund_obligation_backfill_exceptions')
             ->where('reason', 'missing_defensible_payment_attempt')
+            ->where('backfill_run_key', self::RUN_KEY)
             ->delete();
     }
 };

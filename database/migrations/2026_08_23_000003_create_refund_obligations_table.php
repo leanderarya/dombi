@@ -44,14 +44,6 @@ return new class extends Migration
             default => null,
         };
 
-        Schema::create('refund_obligation_backfill_exceptions', function (Blueprint $table): void {
-            $table->id();
-            $table->unsignedBigInteger('order_id')->nullable();
-            $table->string('reason');
-            $table->json('payload')->nullable();
-            $table->timestamps();
-            $table->unique(['order_id', 'reason']);
-        });
     }
 
     public function down(): void
