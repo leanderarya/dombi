@@ -14,7 +14,7 @@ class PaymentAttempt extends Model
 {
     protected $fillable = [
         'order_id', 'legacy_payment_transaction_id', 'attempt_key', 'invoice_number', 'merchant_request_id', 'session_token',
-        'payment_method', 'amount_snapshot', 'currency_snapshot', 'gateway_amount',
+        'payment_method', 'amount_snapshot', 'currency_snapshot', 'gateway_amount', 'session_id', 'token_id', 'raw_response',
         'gateway_currency', 'gateway_transaction_id', 'gateway_status', 'creation_state',
         'settlement_status', 'verification_status', 'status_version', 'reconciliation_status',
         'reconciled_at', 'fulfilment_claimed_at', 'fulfilment_claimed_by', 'metadata',
@@ -31,6 +31,7 @@ class PaymentAttempt extends Model
             'reconciled_at' => 'datetime',
             'fulfilment_claimed_at' => 'datetime',
             'metadata' => 'array',
+            'raw_response' => 'array',
         ];
     }
 

@@ -43,15 +43,17 @@ class PaymentAttemptBackfillTest extends TestCase
 
         $attempt = PaymentAttempt::query()->sole();
         $this->assertSame($order->id, $attempt->order_id);
-        $this->assertSame('DOKU-100', $attempt->invoice_number);
+        $this->assertSame('INV-100', $attempt->invoice_number);
         $this->assertSame('legacy-attempt-1', $attempt->attempt_key);
         $this->assertSame('DOKU-100', $attempt->merchant_request_id);
         $this->assertSame('session-100', $attempt->session_token);
+        $this->assertSame('session-100', $attempt->session_id);
+        $this->assertSame('token-100', $attempt->token_id);
         $this->assertSame('qris', $attempt->payment_method);
         $this->assertSame('12500.00', $attempt->amount_snapshot);
         $this->assertSame('12500.00', $attempt->gateway_amount);
         $this->assertSame('paid', $attempt->gateway_status);
-        $this->assertSame(['result' => 'ok'], $attempt->metadata['legacy_raw_response']);
+        $this->assertSame(['result' => 'ok'], $attempt->raw_response);
         $this->assertSame($createdAt->toDateTimeString(), $attempt->fresh()->created_at->toDateTimeString());
         $this->assertSame($updatedAt->toDateTimeString(), $attempt->fresh()->updated_at->toDateTimeString());
 
