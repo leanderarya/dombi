@@ -8,7 +8,7 @@ class PaymentWebhookLog extends Model
 {
     protected $fillable = [
         'request_id', 'source', 'invoice_number', 'status',
-        'signature_valid', 'mapped_status', 'payload', 'error',
+        'signature_valid', 'mapped_status', 'payload', 'raw_body', 'body_digest', 'error',
     ];
 
     protected $casts = [
