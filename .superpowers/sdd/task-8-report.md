@@ -1,29 +1,11 @@
 # Task 8 Report
 
-## Scope
-Canonical DOKU payment creation, retry, reconciliation, leases, immutable snapshots, and active-attempt projection.
-
 ## Verification
-- Focused Task 8 creation/retry/boundary tests: 30 passed, 74 assertions.
-- Removed final DokuService webhook `paid_at` mutation; canonical transition exclusively owns timestamp.
-- Duplicate webhook timestamp regression: passed.
+- Focused Task 8 tests: 30 passed, 74 assertions.
 - `composer run lint:check`: passed (`pint --parallel --test`).
-- All DokuService post-transition `paid_at` mutations removed; canonical transition sets timestamp only on valid settlement transition and preserves duplicates.
-- Duplicate webhook/reconciliation paid_at regression: passed.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- `markOrderPaid` requires exact canonical `PaymentAttempt`; status processing rejects missing/unmatched invoice identity.
-- `paid_at` is owned by canonical transition transaction; no stale post-transition mutation.
-- Polling resolves failed-creation attempts with pending/unknown settlement, allowing ambiguous payments to reconcile instead of reporting unavailable.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- Transient status-sync failures preserve payment_status/doku_order_id; only definitive failed/expired statuses clear retry routing fields.
-- Polling resolves existing canonical attempts only; absent attempts do not prepare rows or consume quota and return `payment_available=false`.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- Definitive reconciliation failures transition settlement to failed/expired through canonical transition, update projection/retry window, and permit fresh retry; unknown remains blocked.
-- `composer run lint:check`: passed (`pint --parallel --test`).
-- Full `php artisan test`: 1343 run, 1332 passed, 11 baseline failures/errors. Verification blocked.
+- Full `php artisan test`: 1343 run, 1332 passed, 11 failures/errors. Verification blocked.
 
 ## Baseline quarantine
-11 failures/errors are quarantined as prior-task compatibility issues after restoring approved Task 7 state: lock-order assertion; missing canonical-attempt fixtures in DokuMarkPaid/DokuPayment atomic and webhook tests; removed Order overload callers; legacy backfill hard-coded ID; schema expectation missing pending state; late-refund expectation mismatch. No Task 8 focused regression remains.
+`CanonicalPaymentTransitionServiceTest::test_payment_aggregate_lock_order_is_order_then_attempt` — baseline source-order assertion; `DokuMarkPaidCommandTest::test_pending_terminal_order_reaches_refund_pending` — missing canonical attempt fixture; both `DokuPaymentAtomicTest` paid/late-payment methods — missing canonical attempt fixtures; `DokuPaymentTest::test_create_payment_returns_url` — removed Order overload; two DokuPayment success/redirect tests — missing canonical attempt fixtures; `PaymentAttemptBackfillTest::test_legacy_transactions_are_backfilled_once_with_historical_values` — hard-coded legacy ID; `PaymentAttemptSchemaTest::test_status_enums_expose_canonical_values` — baseline omits pending state; `PaymentProductionInvariantTest::test_duplicate_payment_retry_creation_keeps_single_attempt_for_same_invoice` — removed Order overload; `PaymentProductionInvariantTest::test_duplicate_late_success_webhooks_create_one_refund_obligation_for_attempt` — baseline expects paid instead of refund_pending.
 
-## Task 8 result
-Failed attempts with unknown settlement require exact-attempt reconciliation before creation. Unresolved attempts remain controlled blocked; definitive failure can lead to fresh attempt preparation. `createPayment` never sends provider requests for non-initiated failed attempts. Task 7 workflow/report unchanged.
+No Task 8 focused regression remains. Task 7 workflow/report unchanged.
