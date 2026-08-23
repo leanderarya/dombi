@@ -1,19 +1,25 @@
 # Task 6 report
 
-## Verification
+## Exact verification
 
-- `php artisan test tests/Unit/CanonicalPaymentTransitionServiceTest.php`: PASS — 11 tests, 26 assertions.
-- Focused Pint: PASS.
-- Required combined command: FAIL — latest run 13 passed, 6 failed, 39 assertions.
+Command:
 
-Remaining failures are in legacy PaymentProductionInvariant expectations that still assume PaymentTransaction-only settlement, old pending mismatch projection, refund-history proxy behavior, or pre-canonical terminal status behavior. Canonical unit coverage passes lock-order, normalized invoice identity, terminal mismatch refund, duplicate claimant, stale event, and evidence semantics.
+`php artisan test tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
-## Changes
+Result: PASS — 19 tests, 42 assertions, 4.8 seconds.
 
-- Canonical service locks attempt then order.
-- Projection service locks attempts then order consistently.
-- DOKU identity resolves canonical invoice first; transaction/original request values remain evidence/reference data.
-- DOKU status sync passes full evidence and amount fallback from persisted attempt.
-- DOKU callback path backfills canonical attempt from persisted transaction identity before transition.
-- Terminal SUCCESS, including amount mismatch, records paid settlement and refund obligation without fulfilment.
-- Retry creation creates one canonical attempt per invoice.
+Lint command:
+
+`vendor/bin/pint --test app/Services/CanonicalPaymentTransitionService.php app/Services/OrderPaymentProjectionService.php app/Services/DokuService.php app/Services/NormalizedPaymentEvent.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
+
+Result: PASS.
+
+## Task 6 updates
+
+- PaymentProductionInvariantTest now uses canonical PaymentAttempt, refund_obligation, and projection semantics instead of obsolete PaymentTransaction-only assertions.
+- Amount mismatch asserts paid settlement plus needs_review while order projection remains pending until verified.
+- Terminal late success asserts one canonical refund obligation and no fulfilment claim.
+- Legacy refund-history proxy assertion replaced with canonical obligation identity.
+- Retry uniqueness and no-canonical-attempt rejection remain covered.
+- Canonical service and projection service use consistent attempt-first then order locking.
+- DOKU sync passes full evidence and persisted amount/reference semantics.

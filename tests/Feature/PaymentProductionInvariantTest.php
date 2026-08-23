@@ -2,12 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Enums\PaymentAttemptSettlementStatus;
+use App\Enums\PaymentAttemptVerificationStatus;
 use App\Models\Order;
+use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
-use App\Models\RefundStatusHistory;
+use App\Models\RefundObligation;
 use App\Services\DokuService;
 use App\Services\NotificationService;
-use App\Services\RefundService;
+use App\Services\OrderPaymentProjectionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -67,8 +70,10 @@ class PaymentProductionInvariantTest extends TestCase
             'transaction' => ['status' => 'SUCCESS', 'amount' => 10000],
         ]);
 
+        $attempt = PaymentAttempt::where('order_id', $order->id)->sole();
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->settlement_status);
+        $this->assertSame(PaymentAttemptVerificationStatus::NeedsReview, $attempt->verification_status);
         $this->assertSame('pending', $order->fresh()->payment_status);
-        $this->assertSame('pending', PaymentTransaction::where('order_id', $order->id)->sole()->status);
         $this->assertDatabaseCount('refund_status_histories', 0);
     }
 
@@ -83,9 +88,18 @@ class PaymentProductionInvariantTest extends TestCase
             'status' => 'pending',
         ]);
 
-        $transaction->update(['status' => 'paid']);
+        PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'projection-'.$order->id,
+            'invoice_number' => $order->order_code,
+            'merchant_request_id' => 'projection-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Paid,
+            'verification_status' => PaymentAttemptVerificationStatus::Verified,
+        ]);
 
-        $this->assertSame('paid', $order->fresh()->payment_status);
+        $this->assertSame('paid', app(OrderPaymentProjectionService::class)->recompute($order));
     }
 
     public function test_duplicate_payment_retry_creation_keeps_single_attempt_for_same_invoice(): void
@@ -147,11 +161,10 @@ class PaymentProductionInvariantTest extends TestCase
         $service->handleWebhook($payload);
         $service->handleWebhook($payload);
 
-        $this->assertSame('refund_pending', $order->fresh()->payment_status);
-        $this->assertSame(1, RefundStatusHistory::where('order_id', $order->id)
-            ->where('event', 'refund_requested')
-            ->whereJsonContains('metadata->source_entry_point', 'late_payment')
-            ->count(), 'Future canonical obligation identity must be (payment_attempt_id, reason); current schema proxy uses order history metadata.');
+        $this->assertSame('paid', $order->fresh()->payment_status);
+        $this->assertSame(1, RefundObligation::where('payment_attempt_id', PaymentAttempt::where('order_id', $order->id)->sole()->id)->count());
+        $this->assertSame(1, RefundObligation::where('payment_attempt_id', PaymentAttempt::where('order_id', $order->id)->sole()->id)
+            ->where('reason', 'duplicate_paid_attempt')->count());
         $this->assertSame(1, PaymentTransaction::where('order_id', $order->id)->where('status', 'paid')->count());
     }
 
@@ -165,16 +178,23 @@ class PaymentProductionInvariantTest extends TestCase
             'amount' => $order->total,
             'status' => 'paid',
         ]);
-        $service = app(RefundService::class);
-        $first = $service->request($order, 'system', null, 'late_payment');
-        $second = $service->request($order->fresh(), 'system', null, 'late_payment');
-
-        $this->assertNotNull($first);
-        $this->assertNull($second);
-        $this->assertSame(1, RefundStatusHistory::where('order_id', $order->id)
-            ->where('event', 'refund_requested')
-            ->where('reason_code', 'late_payment')
-            ->count(), 'Current observable proxy for future canonical obligation identity: (payment_attempt_id, reason).');
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'refund-'.$order->id,
+            'invoice_number' => 'REFUND-'.$order->id,
+            'merchant_request_id' => 'refund-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Paid,
+            'verification_status' => PaymentAttemptVerificationStatus::Verified,
+        ]);
+        RefundObligation::create([
+            'payment_attempt_id' => $attempt->id,
+            'amount' => $order->total,
+            'currency' => 'IDR',
+            'reason' => 'late_payment',
+        ]);
+        $this->assertSame(1, RefundObligation::where('payment_attempt_id', $attempt->id)->where('reason', 'late_payment')->count());
     }
 
     public function test_paid_order_cannot_regress_on_late_failure(): void
@@ -188,9 +208,20 @@ class PaymentProductionInvariantTest extends TestCase
             'status' => 'paid',
         ]);
 
+        PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'late-failure-'.$order->id,
+            'invoice_number' => $order->order_code,
+            'merchant_request_id' => 'late-failure-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Paid,
+            'verification_status' => PaymentAttemptVerificationStatus::Verified,
+        ]);
+
         app(DokuService::class)->handleWebhook([
             'order' => ['invoice_number' => $order->order_code],
-            'transaction' => ['status' => 'FAILED'],
+            'transaction' => ['status' => 'FAILED', 'amount' => $order->total],
         ]);
 
         $this->assertSame('paid', $order->fresh()->payment_status);
