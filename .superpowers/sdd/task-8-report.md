@@ -4,7 +4,9 @@
 Canonical DOKU payment creation, retry, reconciliation, leases, immutable snapshots, and active-attempt projection.
 
 ## Verification
-- Focused Task 8 creation/retry/boundary tests: 27 passed, 71 assertions.
+- Focused Task 8 creation/retry/boundary tests: 28 passed, 72 assertions.
+- Polling resolves failed-creation attempts with pending/unknown settlement, allowing ambiguous payments to reconcile instead of reporting unavailable.
+- `composer run lint:check`: passed (`pint --parallel --test`).
 - Transient status-sync failures preserve payment_status/doku_order_id; only definitive failed/expired statuses clear retry routing fields.
 - Polling resolves existing canonical attempts only; absent attempts do not prepare rows or consume quota and return `payment_available=false`.
 - `composer run lint:check`: passed (`pint --parallel --test`).

@@ -323,7 +323,10 @@ class OrderController extends Controller
 
         // Always sync from DOKU API to ensure accurate status
         // This handles cases where webhook hasn't arrived yet
-        $attempt = PaymentAttempt::where('order_id', $order->id)->whereIn('creation_state', ['initiated', 'pending', 'created', 'unknown'])->latest('id')->first();
+        $attempt = PaymentAttempt::where('order_id', $order->id)->where(function ($query): void {
+            $query->whereIn('creation_state', ['initiated', 'pending', 'created', 'unknown'])
+                ->orWhereIn('settlement_status', ['pending', 'unknown']);
+        })->latest('id')->first();
         if ($attempt) {
             try {
                 $doku = app(DokuService::class);
