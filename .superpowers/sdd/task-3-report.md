@@ -1,16 +1,15 @@
 # Task 3 Report
 
-## Review fixes
-- Order `order_code` is canonical invoice identity whenever available; provider ID remains gateway transaction identity.
-- Missing order/provider identities synthesize deterministic invoice, attempt, and request values.
-- `session_id` and `token_id` are preserved separately; `session_token` remains compatibility fallback.
-- Legacy `raw_response` is stored in canonical `payment_attempts.raw_response`.
-- Migration preflight checks duplicate non-null legacy links before applying unique/FK constraints and fails explicitly with duplicate IDs.
+## Final review fixes
+- Backfill verifies referenced order exists before creating attempts; orphan transactions are reported as unmappable and do not abort later rows.
+- Per-row insert failures are caught, reported, and batch processing continues; exception report remains durable at `storage/app/payment-attempt-backfill-exceptions.txt`.
+- Migration preflights duplicate and orphan legacy links before schema mutation.
+- Migration guards existing columns and remains safe to retry after partial schema application; existing preflight failures occur before mutation.
 
 ## Verification
-- `php artisan test tests/Feature/PaymentAttemptBackfillTest.php` — PASS, 4 tests, 27 assertions.
-- `composer run lint:check` — pending after final migration formatting.
-- `git diff --check` — pending after final migration formatting.
+- `php artisan test tests/Feature/PaymentAttemptBackfillTest.php` — PASS, 6 tests, 33 assertions.
+- `composer run lint:check` — PASS.
+- `git diff --check` — PASS.
 
 ## Scope
-Task 3 files only. Existing unrelated uncommitted files preserved.
+Task 3 files only. Unrelated uncommitted files preserved.

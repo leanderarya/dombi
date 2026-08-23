@@ -9,26 +9,47 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('payment_transactions', function (Blueprint $table): void {
-            $table->string('status')->change();
-        });
+        if (Schema::hasColumn('payment_attempts', 'legacy_payment_transaction_id')) {
+            $duplicates = DB::table('payment_attempts')
+                ->select('legacy_payment_transaction_id')
+                ->whereNotNull('legacy_payment_transaction_id')
+                ->groupBy('legacy_payment_transaction_id')
+                ->havingRaw('COUNT(*) > 1')
+                ->pluck('legacy_payment_transaction_id');
+            if ($duplicates->isNotEmpty()) {
+                throw new RuntimeException('Duplicate legacy payment attempt links: '.$duplicates->implode(', '));
+            }
+
+            $orphans = DB::table('payment_attempts as attempts')
+                ->leftJoin('payment_transactions as transactions', 'transactions.id', '=', 'attempts.legacy_payment_transaction_id')
+                ->whereNotNull('attempts.legacy_payment_transaction_id')
+                ->whereNull('transactions.id')
+                ->pluck('attempts.legacy_payment_transaction_id');
+            if ($orphans->isNotEmpty()) {
+                throw new RuntimeException('Orphan legacy payment attempt links: '.$orphans->implode(', '));
+            }
+        }
+
+        if (Schema::hasColumn('payment_transactions', 'status')) {
+            Schema::table('payment_transactions', function (Blueprint $table): void {
+                $table->string('status')->change();
+            });
+        }
 
         Schema::table('payment_attempts', function (Blueprint $table): void {
-            $table->unsignedBigInteger('legacy_payment_transaction_id')->nullable()->after('order_id');
-            $table->string('session_id')->nullable()->after('session_token');
-            $table->string('token_id')->nullable()->after('session_id');
-            $table->json('raw_response')->nullable()->after('metadata');
+            if (! Schema::hasColumn('payment_attempts', 'legacy_payment_transaction_id')) {
+                $table->unsignedBigInteger('legacy_payment_transaction_id')->nullable()->after('order_id');
+            }
+            if (! Schema::hasColumn('payment_attempts', 'session_id')) {
+                $table->string('session_id')->nullable()->after('session_token');
+            }
+            if (! Schema::hasColumn('payment_attempts', 'token_id')) {
+                $table->string('token_id')->nullable()->after('session_id');
+            }
+            if (! Schema::hasColumn('payment_attempts', 'raw_response')) {
+                $table->json('raw_response')->nullable()->after('metadata');
+            }
         });
-
-        $duplicates = DB::table('payment_attempts')
-            ->select('legacy_payment_transaction_id')
-            ->whereNotNull('legacy_payment_transaction_id')
-            ->groupBy('legacy_payment_transaction_id')
-            ->havingRaw('COUNT(*) > 1')
-            ->pluck('legacy_payment_transaction_id');
-        if ($duplicates->isNotEmpty()) {
-            throw new RuntimeException('Duplicate legacy payment attempt links: '.$duplicates->implode(', '));
-        }
 
         Schema::table('payment_attempts', function (Blueprint $table): void {
             $table->unique('legacy_payment_transaction_id');
@@ -38,13 +59,12 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('payment_transactions', function (Blueprint $table): void {
-            $table->enum('status', ['pending', 'paid', 'settled', 'expired', 'failed'])->change();
-        });
-
         Schema::table('payment_attempts', function (Blueprint $table): void {
             $table->dropForeign(['legacy_payment_transaction_id']);
             $table->dropColumn(['legacy_payment_transaction_id', 'session_id', 'token_id', 'raw_response']);
+        });
+        Schema::table('payment_transactions', function (Blueprint $table): void {
+            $table->enum('status', ['pending', 'paid', 'settled', 'expired', 'failed'])->change();
         });
     }
 };
