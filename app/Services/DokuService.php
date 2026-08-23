@@ -122,12 +122,22 @@ class DokuService
     public function reconcilePaymentAttempt(PaymentAttempt $attempt): PaymentAttempt
     {
         $attempt = PaymentAttempt::query()->whereKey($attempt->id)->with('order')->firstOrFail();
+        $metadata = $attempt->metadata ?? [];
+        $reconciliationAttempts = (int) ($metadata['reconciliation_attempts'] ?? 0);
+        $nextReconciliationAt = data_get($metadata, 'next_reconciliation_at');
+        if ($reconciliationAttempts >= 5 || ($nextReconciliationAt && now()->lt($nextReconciliationAt))) {
+            return $attempt;
+        }
         $requestId = 'REC-'.$attempt->id.'-'.bin2hex(random_bytes(4));
         $endpoint = '/checkout/v1/payment/'.$attempt->invoice_number;
         $timestamp = now('UTC')->format('Y-m-d\\TH:i:s\\Z');
-        $response = Http::withHeaders($this->generateHeaders($requestId, $timestamp, $endpoint, ''))->timeout(10)->get($this->baseUrl.$endpoint);
+        try {
+            $response = Http::withHeaders($this->generateHeaders($requestId, $timestamp, $endpoint, ''))->timeout(10)->get($this->baseUrl.$endpoint);
+        } catch (ConnectionException $exception) {
+            return $this->recordReconciliationFailure($attempt, null, $exception->getMessage());
+        }
         if (! $response->successful()) {
-            return $attempt;
+            return $this->recordReconciliationFailure($attempt, $response->status(), $response->body());
         }
         $data = $response->json();
         $status = strtoupper(data_get($data, 'transaction.status', ''));
@@ -151,6 +161,24 @@ class DokuService
         } elseif ($status === 'PENDING') {
             $attempt->update(['creation_state' => 'created', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now()]);
         }
+
+        return $attempt->fresh();
+    }
+
+    private function recordReconciliationFailure(PaymentAttempt $attempt, ?int $status, string $error): PaymentAttempt
+    {
+        $metadata = $attempt->metadata ?? [];
+        $count = (int) ($metadata['reconciliation_attempts'] ?? 0) + 1;
+        $delay = min(2 ** ($count - 1), 16);
+        $attempt->update([
+            'creation_state' => 'unknown',
+            'metadata' => array_merge($metadata, [
+                'reconciliation_attempts' => $count,
+                'last_reconciliation_status' => $status,
+                'last_reconciliation_error' => $error,
+                'next_reconciliation_at' => now()->addMinutes($delay)->toIso8601String(),
+            ]),
+        ]);
 
         return $attempt->fresh();
     }

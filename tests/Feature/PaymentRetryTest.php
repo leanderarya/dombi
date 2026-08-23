@@ -42,6 +42,23 @@ class PaymentRetryTest extends TestCase
         $this->assertNotNull($order->fresh()->paid_at);
     }
 
+    public function test_reconciliation_failure_persists_bounded_backoff_state(): void
+    {
+        Http::fake(['*/checkout/v1/payment/reconcile-failure' => Http::response('', 503)]);
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'reconcile-failure', 'invoice_number' => 'reconcile-failure', 'merchant_request_id' => 'reconcile-failure-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Unknown]);
+
+        $result = app(DokuService::class)->reconcilePaymentAttempt($attempt);
+
+        $this->assertSame(PaymentAttemptCreationState::Unknown, $result->creation_state);
+        $metadata = $result->fresh()->metadata;
+        $this->assertSame(1, $metadata['reconciliation_attempts']);
+        $this->assertSame(503, $metadata['last_reconciliation_status']);
+        $this->assertNotNull($metadata['last_reconciliation_error']);
+        $this->assertNotNull($metadata['next_reconciliation_at']);
+        $this->assertLessThanOrEqual(5, $metadata['reconciliation_attempts']);
+    }
+
     public function test_ambiguous_5xx_marks_attempt_unknown(): void
     {
         Http::fake(['*' => Http::response('', 504)]);
