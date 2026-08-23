@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
 use App\Models\PaymentWebhookLog;
+use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -50,7 +51,7 @@ class DokuService
             throw new DokuPaymentException('Payment attempt requires reconciliation before retry.');
         }
         $lease = data_get($attempt->metadata ?? [], 'creation_lease');
-        if ($lease && data_get($lease, 'expires_at') <= now()->toIso8601String()) {
+        if ($lease && Carbon::parse(data_get($lease, 'expires_at'))->utc()->isPast()) {
             $expired = DB::transaction(function () use ($attempt, $lease): bool {
                 $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
                 if (data_get($locked->metadata ?? [], 'creation_lease.token') !== data_get($lease, 'token')) {
@@ -76,7 +77,7 @@ class DokuService
                 return false;
             }
             $lease = data_get($locked->metadata ?? [], 'creation_lease');
-            if ($lease && data_get($lease, 'expires_at') > now()->toIso8601String()) {
+            if ($lease && Carbon::parse(data_get($lease, 'expires_at'))->utc()->isFuture()) {
                 return false;
             }
             $locked->update(['metadata' => array_merge($locked->metadata ?? [], ['creation_lease' => ['token' => $claimToken, 'expires_at' => now()->addMinutes(2)->toIso8601String()]])]);
@@ -101,7 +102,7 @@ class DokuService
             throw $exception;
         }
         if (! $response->successful()) {
-            $ambiguous = $response->status() === 408 || $response->status() >= 500;
+            $ambiguous = in_array($response->status(), [408, 429], true) || $response->status() >= 500;
             $this->persistCreationOutcome($attempt, $claimToken, $ambiguous ? 'unknown' : 'failed', $response->json(), []);
             throw new DokuPaymentException('DOKU payment creation failed', $response->status(), $response->json('error_messages', []), $response);
         }
@@ -157,7 +158,7 @@ class DokuService
             $count = (int) ($metadata['reconciliation_attempts'] ?? 0);
             $next = data_get($metadata, 'next_reconciliation_at');
             $lease = data_get($metadata, 'reconciliation_lease');
-            if ($count >= 5 || ($next && now()->lt($next)) || ($lease && data_get($lease, 'expires_at') > now()->toIso8601String())) {
+            if ($count >= 5 || ($next && now()->lt($next)) || ($lease && Carbon::parse(data_get($lease, 'expires_at'))->utc()->isFuture())) {
                 return false;
             }
             $locked->update(['metadata' => array_merge($metadata, ['reconciliation_attempts' => $count + 1, 'reconciliation_lease' => ['token' => $claimToken, 'expires_at' => now()->addMinutes(2)->toIso8601String()]]), 'creation_state' => 'unknown']);
@@ -176,6 +177,30 @@ class DokuService
             return $this->recordReconciliationFailure($attempt, $claimToken, null, $exception->getMessage());
         }
         if (! $response->successful()) {
+            if ($response->status() === 404) {
+                $persisted = DB::transaction(function () use ($attempt, $claimToken): bool {
+                    $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
+                    $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+                    if (data_get($locked->metadata ?? [], 'reconciliation_lease.token') !== $claimToken) {
+                        return false;
+                    }
+                    app(CanonicalPaymentTransitionService::class)->apply($locked, new NormalizedPaymentEvent(
+                        source: 'doku-reconciliation',
+                        gatewayStatus: 'FAILED',
+                        amount: null,
+                        currency: $locked->currency_snapshot,
+                        gatewayReference: $locked->invoice_number,
+                        receivedAt: now(),
+                        rawEvidence: ['order' => ['invoice_number' => $locked->invoice_number], 'transaction' => ['status' => 'FAILED', 'reason' => 'invoice_not_found']],
+                    ));
+                    $locked->update(['creation_state' => 'failed', 'raw_response' => ['reason' => 'invoice_not_found'], 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
+
+                    return true;
+                });
+
+                return $attempt->fresh();
+            }
+
             return $this->recordReconciliationFailure($attempt, $claimToken, $response->status(), $response->body());
         }
         $data = $response->json();

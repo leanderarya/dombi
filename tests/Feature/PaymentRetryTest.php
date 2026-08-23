@@ -29,6 +29,19 @@ class PaymentRetryTest extends TestCase
         $this->assertSame('failed', $order->fresh()->payment_status);
     }
 
+    public function test_reconcile_404_maps_to_definitive_failed_transition(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'reconcile-404', 'invoice_number' => 'reconcile-404', 'merchant_request_id' => 'reconcile-404-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown', 'settlement_status' => 'unknown']);
+        Http::fake(['*/checkout/v1/payment/reconcile-404' => Http::response('', 404)]);
+
+        $result = app(DokuService::class)->reconcilePaymentAttempt($attempt);
+
+        $this->assertSame('failed', $result->settlement_status?->value);
+        $this->assertSame('failed', $result->creation_state?->value);
+        $this->assertSame('failed', $order->fresh()->payment_status);
+    }
+
     public function test_definitive_reconciliation_failure_becomes_retryable(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
