@@ -2,13 +2,13 @@
 
 ## P0 fix
 
-- Delivery wrapper now exposes cooperative heartbeat callable during side-effect execution.
-- Heartbeat renews consumer and outer claim tokens with token checks; ownership loss aborts delivery.
-- Hard 240-second delivery timeout resets retry state instead of completing delivery.
-- Long-delivery regression proves lease remains owned during mid-effect heartbeat.
+- Removed listener-callback heartbeat dependency from production delivery path.
+- Delivery runs as bounded queue job with `$timeout = 240` and `failOnTimeout = true`; queue worker terminates overlong PHP execution and retry state remains durable.
+- Durable consumer processing/completed marker and token-fenced completion/failure preserve event-key idempotency across crash-after-effect retries.
+- Long-delivery regression verifies bounded worker contract and successful normal delivery.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentOutboxTest.php` — 14 tests, 14 passed, 47 assertions.
+- `php artisan test tests/Feature/PaymentOutboxTest.php` — 14 tests, 14 passed, 48 assertions.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed; graph rebuilt with 7173 nodes, 18228 edges, 487 communities.
+- `graphify update .` — passed; graph rebuilt with 7173 nodes, 18228 edges, 486 communities.

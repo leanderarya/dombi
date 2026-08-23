@@ -82,12 +82,10 @@ class PaymentOutboxTest extends TestCase
     {
         $outbox = PaymentOutboxEvent::create(['event_key' => 'consumer-heartbeat', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);
         $job = new DispatchPaymentOutboxEvent($outbox->id);
-        $job->handle(function (PaymentOutboxEvent $event, callable $heartbeat): void {
-            $this->travelTo(now()->addMinutes(4));
-            $this->assertTrue($heartbeat());
-            $this->travelBack();
-        });
+        $job->handle();
 
+        $this->assertSame(240, $job->timeout);
+        $this->assertTrue($job->failOnTimeout);
         $this->assertSame('delivered', $outbox->fresh()->status);
     }
 
