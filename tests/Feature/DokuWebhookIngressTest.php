@@ -83,6 +83,20 @@ class DokuWebhookIngressTest extends TestCase
         $this->assertSame(1, PaymentWebhookLog::query()->where('request_id', 'REQ-CONFLICT')->count());
     }
 
+    public function test_received_duplicate_claims_and_processes_durable_row(): void
+    {
+        $body = '{"transaction":{"status":"SUCCESS"}}';
+        $headers = $this->signed('REQ-CLAIM', $body);
+        PaymentWebhookLog::create([
+            'request_id' => 'REQ-CLAIM', 'source' => 'notify', 'status' => 'received',
+            'signature_valid' => false, 'payload' => json_decode($body, true),
+            'raw_body' => $body, 'body_digest' => base64_encode(hash('sha256', $body, true)),
+        ]);
+
+        $this->call('POST', route('doku.notify'), [], [], [], $headers, $body)->assertStatus(500);
+        $this->assertSame('retryable', PaymentWebhookLog::where('request_id', 'REQ-CLAIM')->value('status'));
+    }
+
     public function test_retryable_duplicate_is_reprocessed(): void
     {
         $body = '{"transaction":{"status":"SUCCESS"}}';

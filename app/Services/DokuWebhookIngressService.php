@@ -8,9 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 final class DokuWebhookIngressService
 {
-    public function __construct(private readonly DokuService $doku)
-    {
-    }
+    public function __construct(private readonly DokuService $doku) {}
 
     public function receive(string $rawBody, array $headers): WebhookReceipt
     {
@@ -72,19 +70,43 @@ final class DokuWebhookIngressService
         );
         if (! $valid) {
             $log->update(['status' => 'signature_invalid']);
+
             return new WebhookReceipt($log, 401, 'Invalid signature');
         }
 
-        $log->update(['signature_valid' => true]);
+        $claim = DB::transaction(function () use ($digest, $log): ?WebhookReceipt {
+            $locked = PaymentWebhookLog::query()->whereKey($log->id)->lockForUpdate()->firstOrFail();
+            if (! hash_equals((string) $locked->body_digest, $digest)) {
+                return new WebhookReceipt($locked, 409, 'Request-Id body conflict');
+            }
+            if ($locked->status === 'processed') {
+                return new WebhookReceipt($locked, 200, 'OK');
+            }
+            if ($locked->status === 'signature_invalid') {
+                return new WebhookReceipt($locked, 401, 'Invalid signature');
+            }
+            if ($locked->status === 'processing') {
+                return new WebhookReceipt($locked, 202, 'Processing');
+            }
+            $locked->update(['status' => 'processing', 'signature_valid' => true]);
+
+            return null;
+        });
+        if ($claim !== null) {
+            return $claim;
+        }
+
         try {
             if ($invoice === null) {
                 throw new \UnexpectedValueException('missing_invoice_number');
             }
             $this->doku->handleWebhook($payload);
             $log->update(['status' => 'processed']);
+
             return new WebhookReceipt($log, 200, 'OK');
         } catch (\Throwable $exception) {
-            $log->update(['status' => 'retryable', 'error' => $exception->getMessage()]);
+            PaymentWebhookLog::query()->whereKey($log->id)->update(['status' => 'retryable', 'error' => $exception->getMessage()]);
+
             return new WebhookReceipt($log, 500, 'Internal error');
         }
     }
