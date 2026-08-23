@@ -4,7 +4,10 @@
 Canonical DOKU payment creation, retry, reconciliation, leases, immutable snapshots, and active-attempt projection.
 
 ## Verification
-- Focused Task 8 creation/retry/boundary tests: 29 passed, 73 assertions.
+- Focused Task 8 creation/retry/boundary tests: 30 passed, 74 assertions.
+- Removed final DokuService webhook `paid_at` mutation; canonical transition exclusively owns timestamp.
+- Duplicate webhook timestamp regression: passed.
+- `composer run lint:check`: passed (`pint --parallel --test`).
 - All DokuService post-transition `paid_at` mutations removed; canonical transition sets timestamp only on valid settlement transition and preserves duplicates.
 - Duplicate webhook/reconciliation paid_at regression: passed.
 - `composer run lint:check`: passed (`pint --parallel --test`).
