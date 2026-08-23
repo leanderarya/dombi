@@ -279,7 +279,7 @@ class OrderController extends Controller
             if ($attempt->creation_state?->value === 'unknown') {
                 $attempt = $doku->reconcilePaymentAttempt($attempt);
                 $order->refresh();
-                if ($attempt->creation_state?->value === 'unknown') {
+                if ($attempt->creation_state?->value === 'unknown' || ($attempt->creation_state?->value === 'failed' && $attempt->settlement_status?->value === 'unknown')) {
                     return back()->with('error', 'Pembayaran sedang dipastikan. Silakan tunggu hasil rekonsiliasi.');
                 }
                 if ($attempt->creation_state?->value === 'failed') {

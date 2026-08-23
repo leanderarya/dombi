@@ -16,6 +16,17 @@ class PaymentRetryTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_failed_unknown_attempt_requires_reconciliation_before_creation(): void
+    {
+        $order = Order::factory()->create();
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'failed-unknown', 'invoice_number' => 'failed-unknown', 'merchant_request_id' => 'failed-unknown-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'failed', 'settlement_status' => 'unknown']);
+        Http::fake();
+
+        $this->expectException(DokuPaymentException::class);
+        app(DokuService::class)->createPayment($attempt);
+        Http::assertNothingSent();
+    }
+
     public function test_retry_creates_fresh_identity_and_preserves_failed_attempt(): void
     {
         $order = Order::factory()->create();
