@@ -16,13 +16,15 @@ Review findings fixed.
 - Candidate attempts are locked first, then selected using exact two-decimal minor-unit comparisons; service rejects non-positive/non-canonical amounts.
 - Existing and synthesized currency must be exactly three uppercase letters; missing/invalid values record `missing_currency` without creating an orphan attempt or defaulting to IDR.
 - Constraint/trigger setup and rollback are rerun-safe; rollback removes only exact-run obligations and unreferenced synthesized attempts.
+- Duplicate creation races use bounded retry/requery and canonical-field validation; conflicting synthesized attempts/obligations become tagged exceptions.
 - Duplicate detection matches narrow SQLSTATE/driver duplicate codes; FK/schema errors propagate or become tagged mapping exceptions where applicable.
+- Existing-table migration reruns repair required constraints/triggers/indexes.
 - Backfill uses duplicate-only handling for synthesized attempts, exception rows, and obligations; reruns remain idempotent.
 - Synthesized attempts lock the order row, use unique legacy keys, and safely recover from concurrent insertion races.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (19 tests, 38 assertions; 24.724s)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (19 tests, 38 assertions; 23.226s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 

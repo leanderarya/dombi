@@ -149,6 +149,11 @@ return new class extends Migration
                             }
                         }
                         $attempt = DB::table('payment_attempts')->where('attempt_key', $values['attempt_key'])->first();
+                        if (! $attempt || $attempt->order_id !== $values['order_id'] || $this->toMinorUnits($attempt->amount_snapshot) !== $this->toMinorUnits($values['amount_snapshot']) || $attempt->currency_snapshot !== $values['currency_snapshot'] || ! str_contains((string) $attempt->metadata, self::RUN_KEY)) {
+                            $this->recordException($refund, 'conflicting_synthesized_attempt');
+
+                            return;
+                        }
                     }
                 }
 
@@ -212,6 +217,10 @@ return new class extends Migration
                 } catch (QueryException $queryException) {
                     if (! $this->isDuplicateKey($queryException)) {
                         throw $queryException;
+                    }
+                    $existing = DB::table('refund_obligations')->where('payment_attempt_id', $attempt->id)->where('reason', $obligation['reason'])->first();
+                    if (! $existing || $this->toMinorUnits($existing->amount) !== $this->toMinorUnits($obligation['amount']) || $existing->currency !== $obligation['currency']) {
+                        $this->recordException($refund, 'conflicting_refund_obligation');
                     }
                 }
             });
