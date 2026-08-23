@@ -4,7 +4,7 @@
 
 `php artisan test tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
-PASS — 25 tests, 55 assertions, 5.0 seconds.
+PASS — 25 tests, 57 assertions, 4.9 seconds.
 
 `vendor/bin/pint --test app/Services/CanonicalPaymentTransitionService.php app/Services/OrderPaymentProjectionService.php app/Services/DokuService.php app/Services/NormalizedPaymentEvent.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php`
 
@@ -12,7 +12,7 @@ PASS.
 
 ## Review fixes
 
-- DOKU webhook resolves and locks canonical attempt first, then locks order.
-- Unknown invoice/no-attempt events persist durable `PaymentWebhookLog` evidence and cannot settle.
-- Canonical transition remains source of state changes; legacy transaction projection follows successful apply.
-- Existing monotonic, stale, duplicate-success, late-success, one-winner, duplicate-refund, and mismatch assertions remain green.
+- Settlement precedence is monotonic: lower-priority pending/unknown/failed/expired events cannot downgrade stronger state; evidence still persists.
+- Malformed webhooks without invoice persist `PaymentWebhookLog` evidence before return.
+- Amount-mismatch feature coverage now uses canonical `PaymentAttempt` and asserts paid settlement plus needs_review, with pending order projection.
+- Existing stale, duplicate, late-success, winner, and refund invariants remain green.

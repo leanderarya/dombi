@@ -161,6 +161,10 @@ class DokuService
         $paymentStatus = $payload['transaction']['status'] ?? null;
 
         if (! $invoiceNumber) {
+            PaymentWebhookLog::create([
+                'source' => 'doku', 'status' => $paymentStatus,
+                'payload' => $payload, 'error' => 'missing_invoice_number',
+            ]);
             Log::warning('DOKU webhook: missing invoice_number');
 
             return;
