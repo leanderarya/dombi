@@ -16,6 +16,20 @@ class PaymentRetryTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_definitive_reconciliation_failure_becomes_retryable(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'definitive-failure', 'invoice_number' => 'definitive-failure', 'merchant_request_id' => 'definitive-failure-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'failed', 'settlement_status' => 'unknown']);
+        Http::fake(['*/checkout/v1/payment/definitive-failure' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'REJECTED', 'amount' => $order->total]], 200)]);
+
+        $result = app(DokuService::class)->reconcilePaymentAttempt($attempt);
+
+        $this->assertSame('failed', $result->settlement_status?->value);
+        $this->assertSame('failed', $result->creation_state?->value);
+        $this->assertSame('failed', $order->fresh()->payment_status);
+        $this->assertNull(data_get($result->metadata, 'reconciliation_lease'));
+    }
+
     public function test_failed_unknown_attempt_requires_reconciliation_before_creation(): void
     {
         $order = Order::factory()->create();
