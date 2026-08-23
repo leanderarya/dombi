@@ -2,10 +2,10 @@
 
 ## Findings Fixed
 
-- Production-driver race test now executes reconciliation and webhook in separate `pcntl_fork` children against MySQL/PostgreSQL, with independent DB connections.
-- Race test asserts exactly one DOKU status request, one transition outcome, one no-op outcome, paid final state, and successful exit status for every child.
-- CI gate is mandatory: CI fails when `RUN_PRODUCTION_DRIVER_TESTS=true`, MySQL/PostgreSQL, or `pcntl` is unavailable. Local runs explicitly skip only when gate prerequisites are unavailable.
-- Sequential tests are not used as substitute for concurrency coverage.
+- Production-driver race test executes reconciliation and webhook in separate `pcntl_fork` children against MySQL/PostgreSQL, with independent DB connections.
+- Each worker now reports explicit persisted domain outcome: reconciliation `TransitionResult.changed`, or webhook canonical `status_version` delta (`transition` vs `noop`). HTTP status is not used to classify domain outcome.
+- Race test asserts exactly one applied transition, one no-op/ignored result, one DOKU status request, final paid state, and successful exit status for every child.
+- CI gate is mandatory: CI fails when production race prerequisites are unavailable. Local runs explicitly skip only when gate prerequisites are unavailable.
 
 ## Verification
 
