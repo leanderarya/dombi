@@ -47,7 +47,15 @@ class DispatchPaymentOutboxEvent implements ShouldQueue
             if ($this->heartbeat !== null && ! ($this->heartbeat)($event, $consumerToken)) {
                 return;
             }
-            ($deliver ?? static fn (PaymentOutboxEvent $event): mixed => Event::dispatch($event->event_type, [$event->payload]))($event);
+            $heartbeat = fn (): bool => $event->renewConsumerClaim($consumerToken) && $event->renewClaim($token);
+            if ($this->heartbeat !== null && ! ($this->heartbeat)($event, $consumerToken)) {
+                return;
+            }
+            $startedAt = microtime(true);
+            ($deliver ?? static fn (PaymentOutboxEvent $event): mixed => Event::dispatch($event->event_type, [$event->payload]))($event, $heartbeat);
+            if (microtime(true) - $startedAt > 240) {
+                throw new \RuntimeException('Payment outbox delivery exceeded hard timeout.');
+            }
             if (! $event->completeConsumer($consumerToken)) {
                 return;
             }

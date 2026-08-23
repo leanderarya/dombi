@@ -81,12 +81,10 @@ class PaymentOutboxTest extends TestCase
     public function test_long_delivery_heartbeat_keeps_consumer_lease_owned(): void
     {
         $outbox = PaymentOutboxEvent::create(['event_key' => 'consumer-heartbeat', 'event_type' => 'test', 'aggregate_type' => 'payment_attempt', 'aggregate_id' => 1, 'payload' => []]);
-        $heartbeat = null;
         $job = new DispatchPaymentOutboxEvent($outbox->id);
-        $job->handle(function (PaymentOutboxEvent $event) use (&$heartbeat): void {
-            $heartbeat = $event->consumer_claim_token;
-            $this->travelTo(now()->addMinutes(6));
-            $this->assertTrue($event->renewConsumerClaim($heartbeat));
+        $job->handle(function (PaymentOutboxEvent $event, callable $heartbeat): void {
+            $this->travelTo(now()->addMinutes(4));
+            $this->assertTrue($heartbeat());
             $this->travelBack();
         });
 
