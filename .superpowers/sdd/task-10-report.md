@@ -2,12 +2,12 @@
 
 ## Review fix
 
-- Outer claim is renewed immediately before consumer side-effect delivery and revalidated by token.
-- Durable consumer completion marker keyed by event row/event_key suppresses duplicate effects across crash-window retry.
-- Added lease-renewal and crash-after-effect regression coverage.
+- Consumer lease is renewed immediately before side-effect delivery using consumer claim token.
+- Bounded consumer lease prevents slow delivery from silently losing ownership; token mismatch aborts delivery.
+- Added slow-delivery/lease-expiry regression while retaining event-key idempotency.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentOutboxTest.php` — 12 tests, 12 passed, 43 assertions.
+- `php artisan test tests/Feature/PaymentOutboxTest.php` — 13 tests, 13 passed, 45 assertions.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed; graph rebuilt with 7170 nodes, 18223 edges, 488 communities.
+- `graphify update .` — passed; graph rebuilt with 7172 nodes, 18226 edges, 475 communities.

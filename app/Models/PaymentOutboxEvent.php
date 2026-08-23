@@ -69,6 +69,13 @@ class PaymentOutboxEvent extends Model
         return $claimed === 1 ? $token : null;
     }
 
+    public function renewConsumerClaim(string $token): bool
+    {
+        $updated = static::query()->whereKey($this->id)->where('consumer_status', 'processing')->where('consumer_claim_token', $token)->update(['consumer_claimed_at' => now()]);
+
+        return static::query()->whereKey($this->id)->where('consumer_status', 'processing')->where('consumer_claim_token', $token)->exists();
+    }
+
     public function consumerCompleted(): bool
     {
         return static::query()->whereKey($this->id)->where('consumer_status', 'completed')->exists();
