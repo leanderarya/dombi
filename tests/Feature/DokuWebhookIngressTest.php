@@ -40,6 +40,21 @@ class DokuWebhookIngressTest extends TestCase
         $this->assertSame('signature_invalid', PaymentWebhookLog::query()->where('request_id', 'REQ-INVALID')->first()->status);
     }
 
+    public function test_unique_race_recovery_reprocesses_committed_retryable_row(): void
+    {
+        $body = '{"transaction":{"status":"SUCCESS"}}';
+        $log = PaymentWebhookLog::create([
+            'request_id' => 'REQ-RACE', 'source' => 'notify', 'status' => 'retryable',
+            'signature_valid' => true, 'payload' => json_decode($body, true), 'raw_body' => $body,
+            'body_digest' => base64_encode(hash('sha256', $body, true)),
+        ]);
+
+        $response = $this->call('POST', route('doku.notify'), [], [], [], $this->signed('REQ-RACE', $body), $body);
+
+        $response->assertStatus(500);
+        $this->assertSame('retryable', $log->fresh()->status);
+    }
+
     public function test_same_request_id_is_deduplicated_without_cache(): void
     {
         $body = '{"order":{"invoice_number":"INV-2"},"transaction":{"status":"PENDING"}}';

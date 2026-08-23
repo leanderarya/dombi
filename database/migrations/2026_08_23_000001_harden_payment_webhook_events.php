@@ -16,11 +16,12 @@ return new class extends Migration
             ->havingRaw('COUNT(*) > 1')
             ->pluck('request_id');
         foreach ($duplicates as $requestId) {
-            $ids = DB::table('payment_webhook_logs')
+            $rows = DB::table('payment_webhook_logs')
                 ->where('request_id', $requestId)
                 ->orderByDesc('id')
-                ->pluck('id');
-            $deleteIds = $ids->slice(1)->values()->all();
+                ->get(['id', 'status']);
+            $retainId = $rows->firstWhere('status', 'processed')?->id ?? $rows->first()?->id;
+            $deleteIds = $rows->pluck('id')->reject(static fn ($id): bool => $id === $retainId)->values()->all();
             if ($deleteIds !== []) {
                 DB::table('payment_webhook_logs')->whereIn('id', $deleteIds)->delete();
             }
