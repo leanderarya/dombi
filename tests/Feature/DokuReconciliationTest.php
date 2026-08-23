@@ -397,12 +397,19 @@ class DokuReconciliationTest extends TestCase
 
     public function test_production_driver_reconciliation_lease_contention_makes_one_status_request(): void
     {
-        if (env('RUN_PRODUCTION_DRIVER_TESTS') !== true || ! in_array(config('database.default'), ['mysql', 'pgsql'], true) || ! function_exists('pcntl_fork')) {
-            $this->markTestSkipped('CI-gated: set RUN_PRODUCTION_DRIVER_TESTS=true with MySQL/PostgreSQL and pcntl.');
+        $available = env('RUN_PRODUCTION_DRIVER_TESTS') === true
+            && in_array(config('database.default'), ['mysql', 'pgsql'], true)
+            && function_exists('pcntl_fork');
+        if (! $available) {
+            if (env('CI')) {
+                $this->fail('Production-driver race gate required in CI: set RUN_PRODUCTION_DRIVER_TESTS=true with MySQL/PostgreSQL and pcntl.');
+            }
+            $this->markTestSkipped('Local skip: production race gate unavailable (requires RUN_PRODUCTION_DRIVER_TESTS=true, MySQL/PostgreSQL, pcntl).');
         }
 
         $attempt = $this->makeAttempt('pending');
         $requests = tempnam(sys_get_temp_dir(), 'doku-reconcile-');
+        $outcomes = tempnam(sys_get_temp_dir(), 'doku-outcomes-');
         Http::fake([
             '*/checkout/v1/payment/*' => function () use ($attempt, $requests) {
                 file_put_contents($requests, "request\n", FILE_APPEND | LOCK_EX);
@@ -437,9 +444,11 @@ class DokuReconciliationTest extends TestCase
                 DB::disconnect();
                 DB::reconnect();
                 if ($worker === 0) {
-                    app(DokuReconciliationService::class)->reconcile($attempt->fresh());
+                    $result = app(DokuReconciliationService::class)->reconcile($attempt->fresh());
+                    file_put_contents($outcomes, ($result->changed ? 'transition' : 'noop')."\n", FILE_APPEND | LOCK_EX);
                 } else {
-                    app(DokuWebhookIngressService::class)->receive($body, $headers);
+                    $receipt = app(DokuWebhookIngressService::class)->receive($body, $headers);
+                    file_put_contents($outcomes, ($receipt->statusCode === 200 ? 'transition' : 'noop')."\n", FILE_APPEND | LOCK_EX);
                 }
                 exit(0);
             }
@@ -453,8 +462,13 @@ class DokuReconciliationTest extends TestCase
         }
 
         $this->assertCount(1, file($requests, FILE_IGNORE_NEW_LINES));
+        $outcomeLines = file($outcomes, FILE_IGNORE_NEW_LINES);
+        $this->assertCount(2, $outcomeLines);
+        $this->assertSame(1, count(array_filter($outcomeLines, fn ($outcome) => $outcome === 'transition')));
+        $this->assertSame(1, count(array_filter($outcomeLines, fn ($outcome) => $outcome === 'noop')));
         $this->assertSame('paid', $attempt->fresh()->settlement_status?->value);
         unlink($requests);
+        unlink($outcomes);
     }
 
     public function test_command_skips_attempts_with_future_next_reconciliation_at(): void
