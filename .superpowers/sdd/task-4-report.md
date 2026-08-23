@@ -23,12 +23,13 @@ Review findings fixed.
 - Existing-table migration reruns inspect and repair required uniqueness and payment-attempt foreign-key constraints; invalid existing data raises explicit repair errors.
 - Deterministic duplicate-key recovery is covered by canonical-row injection; repository does not provide portable parallel DB harness.
 - Bank/account/e-wallet destination fields use encrypted casts matching `Order`; backfill decrypts legacy Order ciphertext then re-encrypts through `RefundObligation` casts before raw insert, preserving nulls and round-trip reads.
+- Per-row destination decrypt failures are tagged `invalid_refund_destination_ciphertext`, skipped, and do not abort remaining refunds.
 - Backfill uses duplicate-only handling for synthesized attempts, exception rows, and obligations; reruns remain idempotent.
 - Synthesized attempts lock the order row, use unique legacy keys, and safely recover from concurrent insertion races.
 - Added historical mapping, synthesized-attempt, exception-recovery, rerun-idempotency, duplicate-race, and database-boundary regression coverage.
 
 ## Verification
-- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (21 tests, 43 assertions; 29.862s)
+- `php artisan test tests/Feature/RefundObligationTest.php` — PASS (22 tests, 45 assertions; 27.420s)
 - `composer run lint:check` — PASS
 - `git diff --check` — PASS
 

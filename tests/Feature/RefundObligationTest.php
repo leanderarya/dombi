@@ -185,6 +185,21 @@ class RefundObligationTest extends TestCase
         $this->assertDatabaseHas('refund_obligations', ['payment_attempt_id' => $attempt->id, 'amount' => '9999999999.99']);
     }
 
+    public function test_malformed_destination_ciphertext_is_reported_and_skipped(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'refund_pending', 'refund_amount' => 1000]);
+        DB::table('orders')->where('id', $order->id)->update(['refund_bank_name' => 'legacy plaintext']);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'malformed-destination', 'invoice_number' => 'malformed-invoice',
+            'merchant_request_id' => 'malformed-request', 'amount_snapshot' => 1000, 'currency_snapshot' => 'IDR',
+        ]);
+
+        $this->runRefundBackfill();
+
+        $this->assertDatabaseHas('refund_obligation_backfill_exceptions', ['order_id' => $order->id, 'reason' => 'invalid_refund_destination_ciphertext']);
+        $this->assertDatabaseMissing('refund_obligations', ['payment_attempt_id' => $attempt->id]);
+    }
+
     public function test_invalid_candidate_amount_is_reported_without_obligation(): void
     {
         Schema::table('payment_attempts', function ($table): void {
