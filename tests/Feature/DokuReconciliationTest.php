@@ -233,6 +233,18 @@ class DokuReconciliationTest extends TestCase
         $this->assertSame('* * * * *', $event->expression);
     }
 
+    public function test_command_excludes_finalized_settlement_attempts(): void
+    {
+        $this->makeAttempt('pending', ['reconciliation_attempts' => 0])->update(['settlement_status' => 'paid']);
+        $eligible = $this->makeAttempt('pending');
+        Bus::fake();
+
+        Artisan::call('payments:reconcile-doku');
+
+        Bus::assertDispatchedTimes(ReconcileDokuPayment::class, 1);
+        Bus::assertDispatched(ReconcileDokuPayment::class, fn ($job) => $job->attemptId === $eligible->id);
+    }
+
     public function test_command_dispatches_bounded_batch_only(): void
     {
         config(['doku.reconciliation_batch_limit' => 2]);
@@ -288,6 +300,25 @@ class DokuReconciliationTest extends TestCase
 
         $this->assertSame(0, $exit);
         Bus::assertDispatchedTimes(ReconcileDokuPayment::class, 2);
+    }
+
+    public function test_pending_result_preserves_paid_settlement_and_clears_lease(): void
+    {
+        $attempt = $this->makeAttempt('pending', ['reconciliation_attempts' => 1]);
+        Http::fake([
+            '*/checkout/v1/payment/*' => Http::response([
+                'order' => ['invoice_number' => $attempt->invoice_number, 'currency' => 'IDR'],
+                'transaction' => ['status' => 'PENDING'],
+            ], 200),
+        ]);
+        $attempt->update(['settlement_status' => 'paid']);
+
+        $result = $this->reconciliation->reconcile($attempt);
+
+        $this->assertFalse($result->changed);
+        $fresh = $attempt->fresh();
+        $this->assertSame('paid', $fresh->settlement_status?->value);
+        $this->assertNull(data_get($fresh->metadata, 'reconciliation_lease'));
     }
 
     public function test_reconciliation_error_preserves_finalized_state_and_clears_lease(): void
