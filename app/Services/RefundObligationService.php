@@ -13,6 +13,12 @@ class RefundObligationService
 {
     public function createForAttempt(PaymentAttempt $attempt, string $reason): RefundObligation
     {
+        if (! $attempt->exists || ! $attempt->id || ! DB::table('payment_attempts')->where('id', $attempt->id)->whereNotNull('order_id')->whereExists(function ($query): void {
+            $query->select(DB::raw(1))->from('orders')->whereColumn('orders.id', 'payment_attempts.order_id');
+        })->exists()) {
+            throw new DomainException('Refund obligation requires a persisted payment attempt belonging to an order.');
+        }
+
         if ((float) $attempt->amount_snapshot <= 0) {
             throw new DomainException('Refund amount must be positive.');
         }

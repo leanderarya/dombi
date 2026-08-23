@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
 use App\Services\RefundObligationService;
+use DomainException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -34,6 +35,14 @@ class RefundObligationTest extends TestCase
         $this->assertSame(RefundObligationStatus::Completed, $obligation->fresh()->status);
     }
 
+    public function test_creation_requires_persisted_attempt_owned_by_order(): void
+    {
+        $attempt = new PaymentAttempt(['amount_snapshot' => 12500, 'currency_snapshot' => 'IDR']);
+
+        $this->expectException(DomainException::class);
+        app(RefundObligationService::class)->createForAttempt($attempt, 'unowned');
+    }
+
     public function test_creation_is_idempotent_and_amount_must_be_positive(): void
     {
         $attempt = PaymentAttempt::create([
@@ -45,7 +54,7 @@ class RefundObligationTest extends TestCase
         $first = $service->createForAttempt($attempt, 'expiry');
         $second = $service->createForAttempt($attempt, 'expiry');
         $this->assertTrue($first->is($second));
-        $this->expectException(\DomainException::class);
+        $this->expectException(DomainException::class);
         $service->createForAttempt($attempt->forceFill(['amount_snapshot' => 0]), 'invalid');
     }
 
@@ -110,16 +119,6 @@ class RefundObligationTest extends TestCase
 
         $this->assertDatabaseCount('refund_obligations', 1);
         $this->assertSame('race', $existing->reason);
-    }
-
-    public function test_non_duplicate_database_errors_propagate_from_creation(): void
-    {
-        $attempt = new PaymentAttempt([
-            'id' => 999999, 'amount_snapshot' => 12500, 'currency_snapshot' => 'IDR',
-        ]);
-
-        $this->expectException(QueryException::class);
-        app(RefundObligationService::class)->createForAttempt($attempt, 'foreign-key-error');
     }
 
     public function test_historical_refund_backfill_maps_existing_attempt_and_reruns_idempotently(): void

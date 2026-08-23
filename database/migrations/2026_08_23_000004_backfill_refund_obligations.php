@@ -57,7 +57,16 @@ return new class extends Migration
 
     public function up(): void
     {
-        if (! Schema::hasTable('refund_obligations') || ! Schema::hasTable('payment_attempts')) {
+        if (! Schema::hasTable('orders') || ! Schema::hasTable('refund_obligations') || ! Schema::hasTable('payment_attempts')) {
+            return;
+        }
+        $requiredColumns = ['payment_status', 'refund_amount', 'refund_reason', 'refunded_by'];
+        foreach ($requiredColumns as $column) {
+            if (! Schema::hasColumn('orders', $column)) {
+                return;
+            }
+        }
+        if (! Schema::hasTable('users') || ! Schema::hasColumn('refund_obligations', 'processed_by')) {
             return;
         }
         $this->ensureExceptionTable();
@@ -119,6 +128,12 @@ return new class extends Migration
                 $refundAmount = (float) $refund->refund_amount;
                 if ($refundAmount > $attemptAmount) {
                     $this->recordException($refund, 'refund_exceeds_attempt_amount');
+
+                    return;
+                }
+
+                if ($refund->refunded_by !== null && ! DB::table('users')->where('id', $refund->refunded_by)->exists()) {
+                    $this->recordException($refund, 'invalid_refunded_by');
 
                     return;
                 }
