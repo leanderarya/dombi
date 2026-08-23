@@ -45,6 +45,15 @@ return new class extends Migration
         }
     }
 
+    private function toMinorUnits(mixed $amount): int
+    {
+        $value = (string) $amount;
+        [$whole, $fraction] = array_pad(explode('.', $value, 2), 2, '');
+        $fraction = str_pad(substr($fraction, 0, 2), 2, '0');
+
+        return ((int) $whole * 100) + (int) $fraction;
+    }
+
     private function isDuplicateKey(QueryException $exception): bool
     {
         $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
@@ -93,18 +102,18 @@ return new class extends Migration
                 $order = DB::table('orders')->where('id', $refund->id)->lockForUpdate()->first($orderColumns);
                 $attempt = DB::table('payment_attempts')
                     ->where('order_id', $refund->id)
-                    ->where('amount_snapshot', '>=', $refund->refund_amount)
+                    ->where('amount_snapshot', '>=', number_format((float) $refund->refund_amount, 2, '.', ''))
                     ->where('amount_snapshot', '>', 0)
                     ->orderByDesc('id')
                     ->lockForUpdate()
                     ->first();
 
                 if (! $attempt) {
-                    if ($order && (float) $order->total > 0 && (float) $order->total !== (float) $refund->refund_amount) {
+                    if ($order && $this->toMinorUnits($order->total) > 0 && $this->toMinorUnits($order->total) !== $this->toMinorUnits($refund->refund_amount)) {
                         $this->recordException($refund, 'refund_amount_mismatch_order_total');
 
                         return;
-                    } elseif ($order && (float) $order->total > 0) {
+                    } elseif ($order && $this->toMinorUnits($order->total) > 0) {
                         $currency = $orderCurrencyColumn ? $order->{$orderCurrencyColumn} : null;
                         if (! $currency) {
                             $this->recordException($refund, 'missing_currency');
@@ -117,7 +126,7 @@ return new class extends Migration
                             'invoice_number' => 'legacy-refund-invoice-'.$order->id,
                             'merchant_request_id' => 'legacy-refund-request-'.$order->id,
                             'amount_snapshot' => $order->total,
-                            'currency_snapshot' => $orderCurrencyColumn ? $order->{$orderCurrencyColumn} : 'IDR',
+                            'currency_snapshot' => $currency,
                             'creation_state' => 'unknown',
                             'settlement_status' => 'unknown',
                             'verification_status' => 'needs_review',
@@ -142,9 +151,7 @@ return new class extends Migration
                     return;
                 }
 
-                $attemptAmount = (float) $attempt->amount_snapshot;
-                $refundAmount = (float) $refund->refund_amount;
-                if ($refundAmount > $attemptAmount) {
+                if ($this->toMinorUnits($refund->refund_amount) > $this->toMinorUnits($attempt->amount_snapshot)) {
                     $this->recordException($refund, 'refund_exceeds_attempt_amount');
 
                     return;
@@ -213,10 +220,16 @@ return new class extends Migration
         }
 
         if (Schema::hasTable('payment_attempts')) {
-            DB::table('payment_attempts')
+            $attempts = DB::table('payment_attempts')
                 ->where('attempt_key', 'like', 'legacy-refund-%')
                 ->whereJsonContains('metadata->backfill_run_key', self::RUN_KEY)
-                ->delete();
+                ->pluck('id');
+            foreach ($attempts as $attemptId) {
+                $hasObligations = Schema::hasTable('refund_obligations') && DB::table('refund_obligations')->where('payment_attempt_id', $attemptId)->exists();
+                if (! $hasObligations) {
+                    DB::table('payment_attempts')->where('id', $attemptId)->delete();
+                }
+            }
         }
 
         if (Schema::hasTable('refund_obligation_backfill_exceptions')) {
