@@ -216,7 +216,13 @@ class Order extends Model
                         ->join('refund_obligations as newer_obligations', 'newer_obligations.payment_attempt_id', '=', 'newer_attempts.id')
                         ->whereColumn('newer_attempts.order_id', 'orders.id')
                         ->whereColumn('newer_obligations.reason', 'orders.refund_reason')
-                        ->whereColumn('newer_attempts.id', '>', 'payment_attempts.id')
+                        ->where(function ($newerSelection): void {
+                            $newerSelection->whereColumn('newer_attempts.id', '>', 'payment_attempts.id')
+                                ->orWhere(function ($sameAttempt): void {
+                                    $sameAttempt->whereColumn('newer_attempts.id', 'payment_attempts.id')
+                                        ->whereColumn('newer_obligations.id', '>', 'refund_obligations.id');
+                                });
+                        })
                         ->where(function ($metadata): void {
                             $metadata->whereNull('newer_attempts.metadata->provenance')
                                 ->orWhere('newer_attempts.metadata->provenance', '!=', 'synthetic_legacy_refund');
@@ -429,6 +435,7 @@ class Order extends Model
                     ->select('id')
                     ->whereColumn('payment_attempts.id', 'refund_obligations.payment_attempt_id')
             )
+            ->orderByDesc('refund_obligations.id')
             ->first();
 
         $this->setRelation('selectedRefundObligation', $obligation);
