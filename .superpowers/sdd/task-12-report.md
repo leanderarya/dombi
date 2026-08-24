@@ -1,13 +1,14 @@
 # Task 12 Report
 
-## Findings fixed
+## Migration finding fixed
 
-- Matching claimant is checked before terminal late-payment branch; expired/cancelled winner replay remains idempotent and creates no refund.
-- Refund obligation creation remains `firstOrCreate` idempotent and production DB unique `(payment_attempt_id, reason)` constraint is verified by MySQL/PostgreSQL gate. SQLite explicitly skips production constraint metadata checks.
-- Replay regression uses expired status after matching claim.
+- MySQL and PostgreSQL integrity migration now detects duplicate existing `order_completed` keys before index creation.
+- MySQL deterministically backfills `order_completed_key` from `reference_type:reference_id:product_id` before triggers/index creation.
+- Duplicate keys fail migration with actionable `duplicate movement keys require reconciliation` details; no partial uniqueness is silently accepted.
+- Regression test verifies backfill and actionable duplicate detection are present.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php` — passed, 39 tests / 104 assertions.
+- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php` — passed, 40 tests / 106 assertions.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed: 7,211 nodes, 18,390 edges, 477 communities; aggregated graph HTML generated.
+- `graphify update .` — passed: 7,212 nodes, 18,391 edges, 484 communities; aggregated graph HTML generated.

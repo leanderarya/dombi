@@ -25,6 +25,13 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_completion_constraint_migration_backfills_and_reports_duplicates(): void
+    {
+        $migration = file_get_contents(database_path('migrations/2026_08_24_000008_add_fulfilment_integrity_constraints.php'));
+        $this->assertStringContainsString('UPDATE stock_movements SET order_completed_key', $migration);
+        $this->assertStringContainsString('duplicate movement keys require reconciliation', $migration);
+    }
+
     public function test_refund_obligation_uniqueness_is_present_on_production_drivers(): void
     {
         if (DB::connection()->getDriverName() === 'sqlite') {
