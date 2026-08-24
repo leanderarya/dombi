@@ -3,7 +3,7 @@
 ## Findings fixed
 
 - Unknown expiry locks order first, then attempt, matching creation/canonical lock ordering; expiry uses bounded deadlock/serialization retry.
-- PostgreSQL migration only replaces its owned/recognized named completion index; rollback uses `DROP INDEX IF EXISTS` without touching unrelated indexes.
+- PostgreSQL completion-index migration now compares uniqueness, indexed columns, and normalized predicate structurally; equivalent existing indexes avoid CREATE collisions, while differing owned named indexes are recreated.
 
 - Unknown expiry sweep handles terminal orders idempotently and continues batch after per-attempt failures.
 - Definitive provider rejection now records canonical failed/expired settlement, updates order projection, and releases reservation through existing lifecycle.
