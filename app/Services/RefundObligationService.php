@@ -109,11 +109,16 @@ class RefundObligationService
                 RefundObligationStatus::InProgress => ['started_at' => $timestamp],
                 RefundObligationStatus::Completed => ['completed_at' => $timestamp, 'processed_at' => $timestamp],
                 RefundObligationStatus::Rejected => ['rejected_at' => $timestamp],
+                RefundObligationStatus::Pending => ['started_at' => null],
                 default => [],
             };
+            $mergedMetadata = array_merge($locked->metadata ?? [], $metadata);
+            if ($to === RefundObligationStatus::Pending) {
+                unset($mergedMetadata['started_at'], $mergedMetadata['rejection_reason'], $mergedMetadata['rejection_note']);
+            }
             $locked->update(array_merge([
                 'status' => $to,
-                'metadata' => array_merge($locked->metadata ?? [], $metadata),
+                'metadata' => $mergedMetadata,
             ], $timestamps));
 
             return true;
