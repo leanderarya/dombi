@@ -88,8 +88,11 @@ class VerifyPaymentCutover extends Command
         })->each(function (Order $order) use (&$errors): void {
             $legacyAttemptIds = PaymentAttempt::query()->where('order_id', $order->id)->whereNotNull('legacy_payment_transaction_id')->pluck('id');
             $obligations = RefundObligation::query()->whereIn('payment_attempt_id', $legacyAttemptIds)->get();
-            if ($legacyAttemptIds->count() !== 1 || $obligations->count() !== 1) {
+            $hasLegacyTransaction = PaymentTransaction::query()->where('order_id', $order->id)->exists();
+            if ($hasLegacyTransaction && ($legacyAttemptIds->count() !== 1 || $obligations->count() !== 1)) {
                 $errors[] = "refund-bearing legacy order {$order->id} requires exactly one matched obligation";
+            } elseif (! $hasLegacyTransaction && $legacyAttemptIds->isNotEmpty()) {
+                $errors[] = "post-cutover refund order {$order->id} has unexpected legacy linkage";
             }
         });
 

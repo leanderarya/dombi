@@ -97,6 +97,15 @@ final class PaymentObservabilityService
 
     public function event(string $name, array $context = []): void
     {
+        try {
+            $this->writeEvent($name, $context);
+        } catch (\Throwable $exception) {
+            Log::channel('operational')->warning('payment.observability_unavailable', ['error_reason' => $exception->getMessage()]);
+        }
+    }
+
+    private function writeEvent(string $name, array $context): void
+    {
         if (! in_array($name, self::EVENTS, true)) {
             throw new \InvalidArgumentException('Unregistered payment observability event.');
         }
