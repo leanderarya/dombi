@@ -27,7 +27,7 @@ class PaymentRetryTest extends TestCase
 
         $status = app(DokuService::class)->syncStatusFromDoku($attempt);
 
-        $this->assertSame('pending', $status);
+        $this->assertSame('unknown', $status);
         $this->assertSame('unknown', $attempt->fresh()->settlement_status?->value);
         $this->assertSame('pending', $order->fresh()->payment_status);
     }

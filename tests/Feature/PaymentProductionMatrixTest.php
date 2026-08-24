@@ -92,15 +92,28 @@ class PaymentProductionMatrixTest extends TestCase
         $this->artisan('payments:verify-cutover')->assertExitCode(1);
     }
 
-    public function test_unknown_provider_status_emits_allowlisted_bounded_labels(): void
+    public function test_unknown_provider_status_emits_from_canonical_transition_path(): void
     {
-        app(\App\Services\DokuService::class)->mapStatus('provider-new-status');
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'unknown-status-'.$order->id,
+            'invoice_number' => $order->order_code,
+            'merchant_request_id' => 'unknown-status-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'creation_state' => 'created',
+        ]);
+
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'test', 'PROVIDER-NEW-STATUS', $order->total, 'IDR', 'gateway-'.$attempt->id, now(),
+            ['order' => ['invoice_number' => $attempt->invoice_number]],
+        ));
 
         $events = app(PaymentObservabilityService::class)->events();
         $event = end($events);
         $this->assertSame('unknown_status', $event['name']);
-        $this->assertSame('doku', $event['labels']['provider']);
-        $this->assertSame('PROVIDER-NEW-STATUS', $event['labels']['provider_status']);
+        $this->assertSame('unknown', $event['labels']['mapped_status']);
     }
 
     public function test_observability_rejects_unknown_context_labels_and_computes_pending_age(): void
