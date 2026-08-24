@@ -93,7 +93,7 @@ final class PaymentObservabilityService
         try {
             Cache::forever('payment_observability.gauges', $this->gauges);
         } catch (\Throwable $exception) {
-            Log::channel('operational')->warning('payment.observability_unavailable', ['error_reason' => $exception->getMessage()]);
+            $this->safeLog($exception);
         }
         if ($oldest && $this->gauges['payment_pending_age_seconds'] >= (int) config('doku.pending_age_alert_seconds', 900)) {
             $this->event('pending_age', ['order_id' => $oldest->order_id, 'attempt_id' => $oldest->id, 'invoice_number' => $oldest->invoice_number, 'mapped_status' => 'pending', 'processing_result' => 'threshold_breached', 'error_reason' => 'pending_age_threshold']);
@@ -108,13 +108,13 @@ final class PaymentObservabilityService
                     $this->writeEvent($name, $context);
                 } catch (\Throwable $exception) {
                     try {
-                        Log::channel('operational')->warning('payment.observability_unavailable', ['error_reason' => $exception->getMessage()]);
+                        $this->safeLog($exception);
                     } catch (\Throwable) {
                     }
                 }
             });
         } catch (\Throwable $exception) {
-            Log::channel('operational')->warning('payment.observability_unavailable', ['error_reason' => $exception->getMessage()]);
+            $this->safeLog($exception);
         }
     }
 
@@ -139,5 +139,13 @@ final class PaymentObservabilityService
         $cacheKey = 'payment_observability.counter.'.$counter;
         Cache::increment($cacheKey);
         Log::channel('operational')->info('payment.'.$name, $labels);
+    }
+
+    private function safeLog(\Throwable $exception): void
+    {
+        try {
+            Log::channel('operational')->warning('payment.observability_unavailable', ['error_reason' => $exception->getMessage()]);
+        } catch (\Throwable) {
+        }
     }
 }

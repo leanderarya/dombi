@@ -81,8 +81,14 @@ class VerifyPaymentCutover extends Command
                     && $obligation->transfer_reference === $order->doku_refund_id
                     && $obligation->transfer_note === $order->refund_transfer_note
                     && $obligation->processed_by === $order->refunded_by
+                    && $obligation->processed_by === $order->refund_started_by
                     && $this->sameTime($obligation->requested_at, $order->refund_requested_at)
-                    && $this->sameTime($obligation->completed_at, $order->refunded_at)));
+                    && $this->sameTime($obligation->destination_submitted_at, $order->refund_destination_submitted_at)
+                    && $this->sameTime($obligation->started_at, $order->refund_started_at)
+                    && $this->sameTime($obligation->completed_at, $order->refunded_at)
+                    && $this->sameTime($obligation->rejected_at, $order->refund_rejected_at)
+                    && data_get($obligation->metadata, 'rejection_reason') === $order->refund_rejected_reason
+                    && data_get($obligation->metadata, 'rejection_note') === $order->refund_rejection_note));
             if (! $refundFieldsMatch) {
                 $errors[] = "legacy transaction {$transaction->id} refund obligation count/status/reason/amount/destination/proof/reference mismatch";
             }
