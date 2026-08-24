@@ -84,8 +84,9 @@ class VerifyPaymentCutover extends Command
                     && $obligation->proof_image === $order->refund_proof_image
                     && $obligation->transfer_reference === $order->doku_refund_id
                     && $obligation->transfer_note === $order->refund_transfer_note
-                    && $obligation->processed_by === $order->refunded_by
-                    && $obligation->processed_by === $order->refund_started_by
+                    && data_get($obligation->metadata, 'completed_by') === $order->refunded_by
+                    && data_get($obligation->metadata, 'started_by') === $order->refund_started_by
+                    && data_get($obligation->metadata, 'rejected_by') === $order->refund_rejected_by
                     && $this->sameTime($obligation->requested_at, $order->refund_requested_at)
                     && $this->sameTime($obligation->destination_submitted_at, $order->refund_destination_submitted_at)
                     && $this->sameTime($obligation->started_at, $order->refund_started_at)
