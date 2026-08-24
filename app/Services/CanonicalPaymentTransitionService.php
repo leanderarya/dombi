@@ -177,15 +177,9 @@ class CanonicalPaymentTransitionService
 
     private function claimOrRefund(PaymentAttempt $attempt, Order $order): bool
     {
-        if ($this->isTerminalOrder($order)) {
-            $this->createRefundObligation($attempt, 'late_payment');
-
-            return false;
-        }
-
         $claimMatches = $order->fulfilment_claimed_by === $attempt->id
-            && $order->fulfilment_claimed_at !== null
-            && $attempt->fulfilment_claimed_at !== null;
+             && $order->fulfilment_claimed_at !== null
+             && $attempt->fulfilment_claimed_at !== null;
         if ($claimMatches) {
             if ($order->status !== Order::STATUS_COMPLETED) {
                 app(OrderStatusService::class)->completeFromPayment($order->fresh(['items']));
@@ -193,6 +187,13 @@ class CanonicalPaymentTransitionService
 
             return true;
         }
+
+        if ($this->isTerminalOrder($order)) {
+            $this->createRefundObligation($attempt, 'late_payment');
+
+            return false;
+        }
+
         if ($order->fulfilment_claimed_at !== null || $attempt->fulfilment_claimed_at !== null) {
             $this->createRefundObligation($attempt, 'duplicate_paid_attempt');
 
