@@ -213,7 +213,11 @@ class TrackController extends Controller
             return response()->json(['success' => false, 'error' => 'Tidak dapat membatalkan pesanan ini.'], 422);
         }
 
-        // Authenticated callers must own order; guests prove possession through recovery token.
+        if (! $user) {
+            abort(403, 'Guest tidak dapat membatalkan pesanan.');
+        }
+
+        // Authenticated callers must own order.
         $customer = $order->customer;
         if ($user && (! $customer || $customer->user_id !== $user->id)) {
             return response()->json(['success' => false, 'error' => 'Anda tidak memiliki akses ke pesanan ini.'], 403);

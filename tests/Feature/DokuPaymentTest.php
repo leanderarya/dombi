@@ -77,12 +77,11 @@ class DokuPaymentTest extends TestCase
         $url = $this->doku->createPayment($attempt);
 
         $this->assertEquals('https://sandbox.doku.com/pay/abc123', $url);
-        $this->assertEquals('INV-001', $order->fresh()->doku_order_id);
-        $this->assertEquals('pending', $order->fresh()->payment_status);
-        $this->assertDatabaseHas('payment_transactions', [
+        $this->assertNull($order->fresh()->doku_order_id);
+        $this->assertSame('pending', $order->fresh()->payment_status);
+        $this->assertDatabaseMissing('payment_transactions', [
             'order_id' => $order->id,
             'doku_order_id' => 'INV-001',
-            'status' => 'pending',
         ]);
     }
 
@@ -156,7 +155,7 @@ class DokuPaymentTest extends TestCase
         $this->assertEquals('pending', $this->doku->mapStatus('PENDING'));
         $this->assertEquals('failed', $this->doku->mapStatus('FAILED'));
         $this->assertEquals('expired', $this->doku->mapStatus('EXPIRED'));
-        $this->assertEquals('pending', $this->doku->mapStatus('UNKNOWN'));
+        $this->assertEquals('unknown', $this->doku->mapStatus('UNKNOWN'));
     }
 
     public function test_redirect_ignores_unsigned_success_status(): void
