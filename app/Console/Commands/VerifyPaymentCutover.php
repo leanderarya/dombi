@@ -71,6 +71,9 @@ class VerifyPaymentCutover extends Command
                     && $obligation->status?->value === $this->mapRefundStatus($order->payment_status)
                     && $obligation->currency === ($this->legacyCurrency($transaction))
                     && $obligation->destination_type === $order->refund_destination_type
+                    && data_get($obligation->metadata, 'destination_status') === $order->refund_destination_status
+                    && data_get($obligation->metadata, 'rejection_code') === $order->refund_rejection_code
+                    && data_get($obligation->metadata, 'rejected_by') === $order->refund_rejected_by
                     && $this->sameSensitive($obligation->bank_name, $order->refund_bank_name)
                     && $this->sameSensitive($obligation->account_number, $order->refund_account_number)
                     && $this->sameSensitive($obligation->account_holder, $order->refund_account_holder)
