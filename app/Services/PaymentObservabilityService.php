@@ -158,7 +158,7 @@ final class PaymentObservabilityService
     private function safeLog(\Throwable $exception): void
     {
         try {
-            Log::channel('operational')->warning('payment.observability_unavailable', ['error_reason' => $exception->getMessage()]);
+            Log::channel('operational')->warning('payment.observability_unavailable', ['exception_class' => $exception::class, 'exception_code' => (string) $exception->getCode()]);
         } catch (\Throwable) {
         }
     }

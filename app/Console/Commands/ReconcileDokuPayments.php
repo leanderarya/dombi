@@ -22,7 +22,7 @@ class ReconcileDokuPayments extends Command
             return self::INVALID;
         }
 
-        $attempts = PaymentAttempt::whereIn('creation_state', ['pending', 'unknown'])
+        $attempts = PaymentAttempt::whereIn('creation_state', ['created', 'pending', 'unknown'])
             ->where(function ($q) {
                 $q->whereNull('metadata->next_reconciliation_at')
                     ->orWhere('metadata->next_reconciliation_at', '<=', now());
