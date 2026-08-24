@@ -1,9 +1,9 @@
 # Task 11 Report
 
 ## Scope
-- Canonical destination fields are exclusive whenever obligation exists; legacy destination fallback only when obligation absent, including masked customer destination.
-- Finance rows/counts eager-load payment attempts and obligations so payload queue resolution avoids per-order obligation queries.
-- Canonical selection and synthetic exclusion preserved.
+- Rejected destination resubmission routes canonical rejected→pending through `RefundObligationService::transition`, clearing rejection/started metadata and setting canonical timestamp.
+- Rollback routes canonical in_progress→pending through transition, clearing started timestamp/metadata while retaining rollback projection/history.
+- Legacy Order fields remain compatibility projections.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.

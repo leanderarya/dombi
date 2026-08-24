@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\PaymentStatus;
+use App\Enums\RefundObligationStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
@@ -175,12 +176,7 @@ class RefundService
                 ]);
 
                 if ($obligation) {
-                    $metadata = $obligation->metadata ?? [];
-                    unset($metadata['rejection_reason'], $metadata['rejection_note']);
-                    $obligation->update([
-                        'status' => 'pending',
-                        'metadata' => $metadata,
-                    ]);
+                    $this->obligations->transition($obligation, RefundObligationStatus::Pending);
                 }
 
                 $locked->update($updateData);
@@ -395,7 +391,11 @@ class RefundService
             }
 
             if ($obligation) {
-                $obligation->update(['status' => 'pending']);
+                $this->obligations->transition($obligation, RefundObligationStatus::Pending, [
+                    'event' => 'processing_rolled_back',
+                    'rollback_mode' => $mode,
+                    'started_at' => null,
+                ]);
             }
 
             $locked->update([
