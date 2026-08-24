@@ -266,7 +266,9 @@ class RefundService
             if ($obligation?->requested_at?->lte($ageingThreshold)) {
                 app(PaymentObservabilityService::class)->event('refund_ageing', [
                     'order_id' => $locked->id,
+                    'attempt_id' => $obligation?->payment_attempt_id,
                     'invoice_number' => $locked->order_code,
+                    'request_id' => $obligation?->paymentAttempt?->merchant_request_id,
                     'processing_result' => 'refund_processing',
                     'error_reason' => 'age_threshold_breached',
                 ]);
