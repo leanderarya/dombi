@@ -1,15 +1,18 @@
 # Task 12 Report
 
-## Finding fixed
+## Findings fixed
 
-- MySQL down migration now checks `Schema::getIndexes('stock_movements')` before dropping `stock_movements_order_completed_unique`, making partial rollback safe when index is absent.
-- Existing trigger and column guards remain active; PostgreSQL keeps `DROP INDEX IF EXISTS`.
-- Migration regression asserts index metadata guard exists.
+- MySQL `up()` and `down()` each use one `Schema::getIndexes('stock_movements')` metadata guard before dropping `stock_movements_order_completed_unique`; duplicate nested guards removed.
+- CI production matrix explicitly configures MySQL 8.4 and PostgreSQL 16 connection, port, credentials, and extensions.
+- Production concurrency test fails instead of skipping when `CI=true` and SQLite is selected.
+- CI runs expanded payment, Doku, fulfilment, inventory, settlement, and refund suites.
+- Frontend CI uses non-mutating `npm run format:check` and `npm run lint:check`.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentRetryTest.php` — passed, 41 tests / 119 assertions.
+- Expanded PHP suite command covering 25 Task 12-related Feature files — 235 tests, 232 passed, 2 failed, 1 skipped. Failures: `DokuPaymentTest::test_webhook_success_marks_paid` and `DokuPaymentTest::test_redirect_proceeds_on_verified_status_api` expected `paid`, received `pending`.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed; no code-graph topology changes detected.
-- `npm run format:check` — blocked by four pre-existing/unrelated untracked frontend files: `resources/js/components/outlet/assign-courier-sheet.tsx`, `resources/js/pages/guest/cancel.tsx`, `resources/js/pages/owner/product-families/index.tsx`, `resources/js/pages/owner/product-families/show.tsx`.
-- `npm run lint` — not run because format check failed first.
+- `npm run format:check` — failed: 4 files, `assign-courier-sheet.tsx`, `guest/cancel.tsx`, `product-families/index.tsx`, `product-families/show.tsx`.
+- `npm run lint:check` — failed: 29 errors, 1 warning in same untracked frontend files.
+- `graphify update .` — passed: 7,213 nodes, 18,392 edges, 476 communities; graph outputs updated.
+- MySQL/PostgreSQL CI driver suites not runnable locally because no production database services are configured in this environment; workflow explicitly provisions them.
