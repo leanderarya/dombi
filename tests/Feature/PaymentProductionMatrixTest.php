@@ -106,7 +106,7 @@ class PaymentProductionMatrixTest extends TestCase
     public function test_required_matrix_categories_are_registered(): void
     {
         $this->assertSame([
-            'creation_failed', 'creation_timeout', 'invalid_signature', 'signature_invalid', 'unknown_status',
+            'creation_failed', 'creation_timeout', 'signature_invalid', 'unknown_status',
             'amount_mismatch', 'pending_age', 'reconciliation_failure', 'late_payment',
             'duplicate_success', 'refund_ageing', 'needs_review', 'invalid_response', 'webhook_rejected', 'transition', 'reconciliation',
         ], PaymentObservabilityService::registeredEventNames());

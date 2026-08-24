@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\PaymentObservabilityService;
 use App\Support\SchedulerHeartbeat;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -116,6 +117,12 @@ Schedule::command('payments:reconcile-doku')
     ->withoutOverlapping()
     ->onOneServer()
     ->appendOutputTo(storage_path('logs/reconcile-doku.log'));
+
+Schedule::call(fn () => app(PaymentObservabilityService::class)->refreshPendingAgeGauge())
+    ->everyMinute()
+    ->name('payment-observability-pending-age')
+    ->withoutOverlapping()
+    ->onOneServer();
 
 // ─── QUEUE WORKER ────────────────────────────────────────────────────
 
