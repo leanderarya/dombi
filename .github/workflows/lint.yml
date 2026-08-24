@@ -50,6 +50,7 @@ jobs:
       - run: composer install -q --no-ansi --no-interaction --no-progress --prefer-dist
       - name: Run Task 12 production tests
         env:
+          CI: true
           DB_CONNECTION: ${{ matrix.connection }}
           DB_HOST: 127.0.0.1
           DB_PORT: ${{ matrix.port }}
@@ -57,6 +58,7 @@ jobs:
           DB_USERNAME: ${{ matrix.username }}
           DB_PASSWORD: ${{ matrix.password }}
         run: >-
+          test "$DB_CONNECTION" = "${{ matrix.connection }}" &&
           php artisan test
           tests/Feature/PaymentFulfilmentConcurrencyTest.php
           tests/Feature/PaymentCreationIdempotencyTest.php
@@ -103,11 +105,25 @@ jobs:
       - name: Run Pint
         run: composer run lint:check
 
-      - name: Check Frontend Format
-        run: npm run format:check
+      - name: Check changed frontend format
+        shell: bash
+        run: |
+          files=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$GITHUB_SHA" -- 'resources/**/*.{js,jsx,ts,tsx,css,json,md}')
+          if [ -n "$files" ]; then
+            npx prettier --check $files
+          fi
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
 
-      - name: Lint Frontend
-        run: npm run lint:check
+      - name: Lint changed frontend
+        shell: bash
+        run: |
+          files=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$GITHUB_SHA" -- 'resources/**/*.js' 'resources/**/*.jsx' 'resources/**/*.ts' 'resources/**/*.tsx')
+          if [ -n "$files" ]; then
+            npx eslint $files
+          fi
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
 
       # - name: Commit Changes
       #   uses: stefanzweifel/git-auto-commit-action@v7

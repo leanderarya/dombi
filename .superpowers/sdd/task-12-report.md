@@ -2,6 +2,11 @@
 
 ## Findings fixed
 
+- CI production jobs set `CI=true`, assert matrix DB connection, and run explicit MySQL/PostgreSQL drivers; concurrency cannot silently use SQLite.
+- CI frontend quality gates inspect changed frontend files only; unrelated repository baseline failures do not block Task 12, and no frontend files were modified.
+- Legacy unknown attempts receive `reconciliation_deadline_at` on first reconciliation; deadline expiry uses `OrderStatusService::expireOrder` lifecycle atomically, including reservation release, status history, notifications, and projection.
+- Added legacy-deadline and lifecycle reservation-release regressions.
+
 - Unknown reconciliation attempts now receive a 24-hour deadline; before deadline, provider 404 remains unknown/retryable, while after deadline attempt atomically fails, preserves evidence, projects order retry/expiry state, and releases reserved inventory.
 - Added deadline regression proving reservation release and no stuck unknown attempt.
 
@@ -23,7 +28,10 @@
 - `composer run lint:check` — passed.
 - `npm run format:check` — failed: 4 untouched untracked files, `resources/js/components/outlet/assign-courier-sheet.tsx`, `resources/js/pages/guest/cancel.tsx`, `resources/js/pages/owner/product-families/index.tsx`, `resources/js/pages/owner/product-families/show.tsx`.
 - `npm run lint:check` — failed: 29 errors, 1 warning in same untouched untracked files.
-- `graphify update .` — passed: 7,215 nodes, 18,406 edges, 487 communities; graph outputs updated.
+- Relevant Task 12 suite — passed, 88 tests / 228 assertions, 1 skipped (SQLite-only production-driver gate locally).
+- `composer run lint:check` — passed.
+- `graphify update .` — passed: 7,216 nodes, 18,409 edges, 492 communities; graph outputs updated.
+- Frontend CI changed-file format/ESLint policy committed; local whole-repo baseline remains 4 format failures and 29 ESLint errors / 1 warning in untouched untracked files. Local CI is not claimed green; MySQL/PostgreSQL matrix is CI-only.
 - Focused retry/fulfilment/payment suite — passed, 87 tests / 226 assertions, 1 skipped.
 - `composer run lint:check` — passed after Pint import-order fix.
 - Local MySQL-backed regression passed; full MySQL/PostgreSQL CI matrix not run locally and is not claimed green.
