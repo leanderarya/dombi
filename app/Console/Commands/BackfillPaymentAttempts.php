@@ -105,7 +105,9 @@ class BackfillPaymentAttempts extends Command
         });
 
         $report = "Payment attempt backfill exceptions\n".implode("\n", $exceptions)."\n";
-        Storage::disk('local')->put('payment-attempt-backfill-exceptions.txt', $report);
+        if (! $this->option('dry-run')) {
+            Storage::disk('local')->put('payment-attempt-backfill-exceptions.txt', $report);
+        }
         $this->info('Payment attempt backfill complete.');
         $this->info('Exceptions: '.count($exceptions));
 

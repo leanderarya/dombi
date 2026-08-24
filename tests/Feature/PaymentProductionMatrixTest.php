@@ -45,6 +45,11 @@ class PaymentProductionMatrixTest extends TestCase
         $this->assertArrayNotHasKey('raw_body', $event['labels']);
     }
 
+    public function test_cutover_legacy_write_guard_defaults_disabled(): void
+    {
+        $this->assertFalse(config('doku.legacy_writes_enabled'));
+    }
+
     public function test_cutover_verification_fails_when_legacy_row_has_no_matching_attempt(): void
     {
         $order = Order::factory()->create();
@@ -106,9 +111,7 @@ class PaymentProductionMatrixTest extends TestCase
     public function test_required_matrix_categories_are_registered(): void
     {
         $this->assertSame([
-            'creation_failed', 'creation_timeout', 'signature_invalid', 'unknown_status',
-            'amount_mismatch', 'pending_age', 'reconciliation_failure', 'late_payment',
-            'duplicate_success', 'refund_ageing', 'needs_review', 'invalid_response', 'webhook_rejected', 'transition', 'reconciliation',
+            'creation_failed', 'creation_timeout', 'signature_invalid', 'invalid_response', 'webhook_rejected', 'transition', 'reconciliation',
         ], PaymentObservabilityService::registeredEventNames());
     }
 

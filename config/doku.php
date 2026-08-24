@@ -36,5 +36,5 @@ return [
     ],
 
     'enabled_methods' => explode(',', env('DOKU_ENABLED_METHODS', 'qris,transfer,ewallet,credit_card')),
-    'legacy_writes_enabled' => env('PAYMENTS_LEGACY_WRITES_ENABLED', true),
+    'legacy_writes_enabled' => env('PAYMENTS_LEGACY_WRITES_ENABLED', false),
 ];
