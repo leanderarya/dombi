@@ -127,8 +127,9 @@ class DokuService
                 return false;
             }
             $locked->update(['creation_state' => 'created', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data, 'metadata' => array_merge($locked->metadata ?? [], ['payment_url' => $paymentUrl])]);
-            PaymentTransaction::firstOrCreate(['doku_order_id' => $locked->invoice_number], ['order_id' => $order->id, 'doku_order_id' => $locked->invoice_number, 'payment_method' => $locked->payment_method ?? $order->payment_method ?? 'qris', 'amount' => (int) $locked->amount_snapshot, 'status' => 'pending', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data]);
-            $order->update(['doku_order_id' => $locked->invoice_number, 'payment_status' => 'pending']);
+            if (config('doku.legacy_writes_enabled') === true) {
+                PaymentTransaction::firstOrCreate(['doku_order_id' => $locked->invoice_number], ['order_id' => $order->id, 'doku_order_id' => $locked->invoice_number, 'payment_method' => $locked->payment_method ?? $order->payment_method ?? 'qris', 'amount' => (int) $locked->amount_snapshot, 'status' => 'pending', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data]);
+            }
 
             return true;
         });
@@ -410,11 +411,13 @@ class DokuService
         $status = $this->mapStatus($paymentStatus);
 
         DB::transaction(function () use ($invoiceNumber, $status, $paymentStatus, $payload): void {
-            $transaction = PaymentTransaction::where('doku_order_id', $invoiceNumber)->first();
-            $order = $transaction?->order
+            $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->first();
+            $order = $attempt?->order
                 ?? Order::where('order_code', $invoiceNumber)->first()
                 ?? Order::where('doku_order_id', $invoiceNumber)->first();
-            $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->first();
+            $transaction = $attempt?->legacy_payment_transaction_id
+                ? PaymentTransaction::whereKey($attempt->legacy_payment_transaction_id)->first()
+                : null;
             $resolvedOrderId = $order?->id;
             if ($attempt && $resolvedOrderId !== null && $attempt->order_id !== $resolvedOrderId) {
                 PaymentWebhookLog::create([
@@ -451,10 +454,6 @@ class DokuService
             }
 
             $this->processPaymentStatusChange($order, $status, $payload);
-            if ($transaction && ! ($transaction->status === 'paid' && $status !== 'paid')) {
-                $transaction->update(['status' => $status, 'raw_response' => $payload]);
-            }
-
             Log::info('DOKU webhook processed', [
                 'order_id' => $order->id,
                 'invoice_number' => $invoiceNumber,
@@ -635,15 +634,6 @@ class DokuService
         $status = $this->mapStatus($dokuStatus['transaction']['status'] ?? 'PENDING');
 
         return DB::transaction(function () use ($order, $status, $dokuStatus): string {
-            $transaction = PaymentTransaction::where('doku_order_id', $order->doku_order_id)->first();
-            if ($transaction && $transaction->status !== $status
-                && ! (in_array($transaction->status, ['paid', 'settled'], true) && in_array($status, ['failed', 'expired', 'pending'], true))) {
-                $transaction->update([
-                    'status' => $status,
-                    'raw_response' => $dokuStatus,
-                ]);
-            }
-
             $this->processPaymentStatusChange($order, $status, $dokuStatus);
 
             return $status;

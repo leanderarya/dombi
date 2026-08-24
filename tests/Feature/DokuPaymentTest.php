@@ -35,6 +35,22 @@ class DokuPaymentTest extends TestCase
         $this->doku = app(DokuService::class);
     }
 
+    public function test_create_payment_does_not_write_legacy_transaction_after_cutover(): void
+    {
+        config(['doku.legacy_writes_enabled' => false]);
+        $order = Order::factory()->create(['total' => 50000, 'payment_status' => 'pending']);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'cutover-'.$order->id,
+            'invoice_number' => 'CUTOVER-001', 'merchant_request_id' => 'cutover-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
+        Http::fake(['*/checkout/v1/payment' => Http::response(['response' => ['payment' => ['url' => 'https://doku.test/pay']]], 200)]);
+
+        $this->doku->createPayment($attempt);
+
+        $this->assertDatabaseMissing('payment_transactions', ['doku_order_id' => 'CUTOVER-001']);
+    }
+
     public function test_create_payment_returns_url(): void
     {
         $order = Order::factory()->create([

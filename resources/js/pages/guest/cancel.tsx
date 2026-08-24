@@ -27,6 +27,9 @@ export default function GuestCancelPage() {
     const [submitting, setSubmitting] = useState(false);
     const [reason, setReason] = useState('Salah Pesan');
     const [note, setNote] = useState('');
+    const [last4Hp, setLast4Hp] = useState('');
+
+    const isPickup = order.fulfillment_type === 'pickup';
 
     const reasons = [
         'Salah Pesan',
@@ -41,6 +44,7 @@ export default function GuestCancelPage() {
         router.post(`/track/${token}/cancel`, {
             reason,
             note: reason === 'Lainnya' ? note : undefined,
+            ...(isPickup ? { last4_hp: last4Hp } : {}),
         }, {
             preserveScroll: true,
             onFinish: () => setSubmitting(false),
@@ -76,6 +80,23 @@ export default function GuestCancelPage() {
                     </p>
                 </div>
 
+                {isPickup && (
+                    <div className="mb-6 space-y-2">
+                        <label htmlFor="last4_hp" className="font-semibold">4 digit terakhir nomor HP</label>
+                        <input
+                            id="last4_hp"
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={4}
+                            pattern="\\d{4}"
+                            value={last4Hp}
+                            onChange={(e) => setLast4Hp(e.target.value.replace(/\\D/g, '').slice(0, 4))}
+                            placeholder="Contoh: 1234"
+                            className="w-full rounded border p-2 text-sm"
+                        />
+                    </div>
+                )}
+
                 <div className="mb-6 space-y-3">
                     <label className="font-semibold">Alasan Pembatalan</label>
                     {reasons.map((r) => (
@@ -104,7 +125,7 @@ export default function GuestCancelPage() {
 
                 <button
                     onClick={handleCancel}
-                    disabled={submitting || (reason === 'Lainnya' && !note)}
+                    disabled={submitting || (reason === 'Lainnya' && !note) || (isPickup && last4Hp.length !== 4)}
                     className="w-full rounded-lg bg-red-600 py-3 font-bold text-white disabled:opacity-50"
                 >
                     {submitting ? 'Memproses...' : 'Ya, Batalkan Pesanan Saya'}
