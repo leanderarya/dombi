@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\PaymentAttempt;
 use App\Models\PaymentWebhookLog;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,9 @@ final class DokuWebhookIngressService
         $header = static fn (string $name): ?string => isset($headers[strtolower($name)]) ? (string) (is_array($headers[strtolower($name)]) ? ($headers[strtolower($name)][0] ?? '') : $headers[strtolower($name)]) : null;
         $requestId = trim($header('Request-Id') ?? '');
         if ($requestId === '') {
-            app(PaymentObservabilityService::class)->event('webhook_rejected', ['processing_result' => 'rejected', 'error_reason' => 'missing_request_id']);
+            $invoice = data_get($payload, 'order.invoice_number');
+            $attempt = $invoice ? PaymentAttempt::query()->where('invoice_number', $invoice)->first() : null;
+            app(PaymentObservabilityService::class)->event('webhook_rejected', ['order_id' => $attempt?->order_id, 'attempt_id' => $attempt?->id, 'invoice_number' => $invoice, 'processing_result' => 'rejected', 'error_reason' => 'missing_request_id']);
 
             return new WebhookReceipt(new PaymentWebhookLog, 400, 'Request-Id required');
         }

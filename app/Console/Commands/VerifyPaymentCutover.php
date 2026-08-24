@@ -94,8 +94,11 @@ class VerifyPaymentCutover extends Command
         });
 
         PaymentAttempt::query()->whereNotNull('legacy_payment_transaction_id')->each(function (PaymentAttempt $attempt) use (&$errors): void {
+            $count = PaymentAttempt::query()->where('legacy_payment_transaction_id', $attempt->legacy_payment_transaction_id)->count();
             if (! PaymentTransaction::query()->whereKey($attempt->legacy_payment_transaction_id)->exists()) {
                 $errors[] = "canonical attempt {$attempt->id} references missing legacy transaction";
+            } elseif ($count !== 1) {
+                $errors[] = "legacy transaction {$attempt->legacy_payment_transaction_id} maps to {$count} canonical attempts";
             }
         });
         RefundObligation::query()->each(function (RefundObligation $obligation) use (&$errors): void {

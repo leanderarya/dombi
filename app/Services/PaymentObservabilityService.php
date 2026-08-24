@@ -88,8 +88,11 @@ final class PaymentObservabilityService
                 ->orWhereIn('settlement_status', ['pending', 'unknown']);
         })->orderBy('created_at')->first();
         $this->gauges['payment_pending_age_seconds'] = $oldest ? max(0, now()->timestamp - $oldest->created_at->timestamp) : 0;
+        $this->gauges['payment_pending_age_refreshed_at'] = now()->toIso8601String();
         Cache::forever('payment_observability.gauges', $this->gauges);
-        $this->event('pending_age', ['mapped_status' => 'pending', 'processing_result' => 'gauge', 'error_reason' => null]);
+        if ($oldest && $this->gauges['payment_pending_age_seconds'] >= (int) config('doku.pending_age_alert_seconds', 900)) {
+            $this->event('pending_age', ['order_id' => $oldest->order_id, 'attempt_id' => $oldest->id, 'invoice_number' => $oldest->invoice_number, 'mapped_status' => 'pending', 'processing_result' => 'threshold_breached', 'error_reason' => 'pending_age_threshold']);
+        }
     }
 
     public function event(string $name, array $context = []): void
@@ -111,10 +114,11 @@ final class PaymentObservabilityService
         $counter = 'payment_'.$name;
         $this->counters[$counter] = ($this->counters[$counter] ?? 0) + 1;
         $cacheKey = 'payment_observability.counter.'.$counter;
-        if (Cache::get($cacheKey) === null) {
-            Cache::add($cacheKey, 0, now()->addYears(10));
+        try {
+            Cache::increment($cacheKey);
+        } catch (\Throwable) {
+            Cache::put($cacheKey, 1, now()->addYears(10));
         }
-        Cache::increment($cacheKey);
         Log::channel('operational')->info('payment.'.$name, $labels);
     }
 }
