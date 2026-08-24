@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Order;
 use App\Models\Outlet;
+use App\Models\PaymentAttempt;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,17 @@ class ManualRefundTriggerTest extends TestCase
             'payment_status' => 'paid',
             'status' => Order::STATUS_PENDING_CONFIRMATION,
             'total' => 50000,
+        ]);
+
+        PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'test-'.$order->id,
+            'invoice_number' => 'test-'.$order->id,
+            'merchant_request_id' => 'test-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'verification_status' => 'verified',
+            'settlement_status' => 'paid',
         ]);
 
         DB::table('payment_transactions')->insert([
