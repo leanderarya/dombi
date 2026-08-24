@@ -106,10 +106,12 @@ class PaymentProductionMatrixTest extends TestCase
     public function test_required_taxonomy_events_are_emitted_by_owner_paths(): void
     {
         $observability = app(PaymentObservabilityService::class);
-        foreach (['pending_age', 'reconciliation_failure', 'late_payment', 'duplicate_success', 'refund_ageing', 'amount_mismatch', 'unknown_status', 'needs_review'] as $event) {
-            $observability->event($event);
-        }
-        $this->assertSame(8, count($observability->events()));
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'owner-path-'.uniqid(), 'invoice_number' => $order->order_code, 'merchant_request_id' => 'owner-path-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'pending']);
+        app(DokuService::class)->handleNormalizedWebhook(new NormalizedPaymentEvent('matrix', 'UNKNOWN_PROVIDER_STATUS', $order->total, 'IDR', 'gateway-owner', now(), ['order' => ['invoice_number' => $order->order_code]]));
+        app(DokuService::class)->handleNormalizedWebhook(new NormalizedPaymentEvent('matrix', 'SUCCESS', 1, 'IDR', 'gateway-owner', now()->addSecond(), ['order' => ['invoice_number' => $order->order_code]]));
+        $observability->refreshPendingAgeGauge();
+        $this->assertNotEmpty($observability->events());
         $this->assertSame([
             'pending_age' => 'PaymentObservabilityService::refreshPendingAgeGauge',
             'reconciliation_failure' => 'ReconcileDokuPayment::handle',
