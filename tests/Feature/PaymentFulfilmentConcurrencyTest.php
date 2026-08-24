@@ -32,6 +32,7 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
         $this->assertStringContainsString('duplicate movement keys require reconciliation', $migration);
         $this->assertLessThan(strpos($migration, "Schema::table('stock_movements'"), strpos($migration, '$duplicates = DB::table(\'stock_movements\')'));
         $this->assertStringContainsString('DROP TRIGGER IF EXISTS', $migration);
+        $this->assertStringContainsString("Schema::getIndexes('stock_movements')", $migration);
     }
 
     public function test_refund_obligation_uniqueness_is_present_on_production_drivers(): void

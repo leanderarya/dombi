@@ -37,7 +37,10 @@ return new class extends Migration
             DB::statement('DROP TRIGGER IF EXISTS stock_movements_order_completed_key_insert');
             if (collect(Schema::getIndexes('stock_movements'))->contains(fn (array $index): bool => $index['name'] === 'stock_movements_order_completed_unique')) {
                 if (collect(Schema::getIndexes('stock_movements'))->contains(fn (array $index): bool => $index['name'] === 'stock_movements_order_completed_unique')) {
-                    DB::statement('DROP INDEX stock_movements_order_completed_unique ON stock_movements');
+                    if (collect(Schema::getIndexes('stock_movements'))->contains(fn (array $index): bool => $index['name'] === 'stock_movements_order_completed_unique')) {
+                        DB::statement('DROP INDEX stock_movements_order_completed_unique ON stock_movements');
+                    }
+
                 }
 
             }
