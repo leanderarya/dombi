@@ -12,7 +12,7 @@ final class PaymentObservabilityService
 {
     private const LABELS = [
         'order_id', 'attempt_id', 'invoice_number', 'request_id', 'gateway_reference',
-        'mapped_status', 'processing_result', 'error_reason',
+        'mapped_status', 'processing_result', 'error_reason', 'provider', 'provider_status',
     ];
 
     private const EVENTS = [
