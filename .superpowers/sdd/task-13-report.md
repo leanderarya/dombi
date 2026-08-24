@@ -6,8 +6,8 @@ Added owner-only payment recovery reads and safe recovery actions through reconc
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentAdminRecoveryTest.php tests/Feature/DokuProductionConfigTest.php` — 10 tests, 18 assertions passed, including recursive response leakage regression for attempts, webhooks, and refund obligations, plus nested metadata allowlist regression, bounded webhook/rejection error-code regressions, safe provider-failure handling, host normalization, POST authorization regressions, and invalid canonical transition conflict regression.
-- Pint focused check — passed.
+- `php artisan test tests/Feature/PaymentAdminRecoveryTest.php tests/Feature/DokuProductionConfigTest.php` — 16 tests, 40 assertions passed.
+- `composer lint:check` — passed.
 - `npm run types:check` (baseline command: `tsc --noEmit`) — blocked; pre-existing unrelated errors in `resources/js/pages/guest/cancel.tsx:26` (`CancelPageProps` lacks `PageProps` index signature) and `resources/js/pages/guest/cancel.tsx:41` (`route` unresolved).
 - `graphify update .` — passed.
 
