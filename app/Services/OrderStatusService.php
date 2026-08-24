@@ -210,6 +210,33 @@ class OrderStatusService
         });
     }
 
+    public function completeFromPayment(Order $order): Order
+    {
+        if ($order->status === Order::STATUS_COMPLETED) {
+            return $order;
+        }
+
+        if (! in_array($order->status, [Order::STATUS_PENDING_CONFIRMATION, Order::STATUS_CONFIRMED, Order::STATUS_PREPARING, Order::STATUS_READY_FOR_PICKUP], true)) {
+            throw new InvalidOrderTransitionException($order->status, Order::STATUS_COMPLETED);
+        }
+
+        $fromStatus = $order->status;
+        $order->update(['status' => Order::STATUS_COMPLETED, 'completed_at' => now()]);
+        $this->inventoryService->completeOrderStock($order);
+        if ($order->outlet_id) {
+            $this->settlementService->recordSale($order);
+        }
+        $order->statusHistories()->create([
+            'from_status' => $fromStatus,
+            'to_status' => Order::STATUS_COMPLETED,
+            'notes' => 'Pembayaran berhasil, pesanan dipenuhi.',
+            'changed_by_type' => 'system',
+            'created_at' => now(),
+        ]);
+
+        return $order;
+    }
+
     public function expireOrder(Order $order, string $reason = 'Confirmation timeout'): Order
     {
         return $this->transition($order, 'expired', [
