@@ -16,7 +16,7 @@ Payment observability registry, fixed nullable event schema, safe allowlisted la
 | `php artisan payments:verify-cutover` | Historical clean-seed fixture-only output; not release evidence. Production gate remains NO-GO pending real migration parity and runtime evidence |
 | `php artisan payments:backfill-attempts --dry-run` | CURRENT (2026-08-24, run after commit `f45a06e4`): BLOCKED by MySQL `1045 Access denied for user root@localhost`; no current command result |
 | `php artisan payments:reconcile-doku --dry-run` | CURRENT (2026-08-24, run after commit `f45a06e4`): BLOCKED by MySQL `1045 Access denied for user root@localhost`; no current command result |
-| `npm run types:check` | FAIL: `resources/js/pages/guest/cancel.tsx:26` PageProps constraint; `cancel.tsx:41` missing `route` |
+| `npm run types:check` | PASS after fixing guest cancel page props and using existing `/track/{token}/cancel` endpoint |
 | `php artisan test` | SERIAL NO-GO: 1,439 tests, 435 passed, 1 failure, 1,003 errors; MySQL gone away/refused. Prior exact 18 blocker names remain below |
 | `graphify update .` | PASS: 7,284 nodes, 18,544 edges, 507 communities |
 
