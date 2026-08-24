@@ -59,6 +59,9 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
 
     public function test_order_completed_movement_update_cannot_create_duplicate(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            $this->markTestSkipped('SQLite does not provide production completion uniqueness; production-driver gate covers MySQL/PostgreSQL.');
+        }
         $outlet = Outlet::factory()->create();
         $product = Product::factory()->create();
         $movements = [];
@@ -82,6 +85,18 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
         app(InventoryService::class)->completeOrderStock($order->fresh(['items']));
 
         $this->assertSame(1, StockMovement::where('reference_type', Order::class)->where('reference_id', $order->id)->where('type', 'order_completed')->count());
+    }
+
+    public function test_terminal_needs_review_success_creates_late_refund_without_fulfilment(): void
+    {
+        $order = Order::factory()->create(['status' => Order::STATUS_EXPIRED, 'payment_status' => 'pending']);
+        $attempt = $this->attempt($order, 'terminal-review', 'invoice-terminal-review');
+
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent('doku', 'SUCCESS', 49000, 'IDR', 'invoice-terminal-review', now(), []));
+
+        $this->assertSame(1, RefundObligation::where('payment_attempt_id', $attempt->id)->where('reason', 'late_payment')->count());
+        $this->assertNull($order->fresh()->fulfilment_claimed_at);
+        $this->assertSame(Order::STATUS_EXPIRED, $order->fresh()->status);
     }
 
     public function test_payment_fulfilment_rolls_back_claim_order_inventory_and_obligation_on_failure(): void

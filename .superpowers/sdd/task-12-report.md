@@ -2,12 +2,12 @@
 
 ## Findings fixed
 
-- Existing claim now returns fulfilment winner only when order claimant ID and attempt claim timestamp both exist and identify same attempt. If claim metadata is partial/inconsistent, flow creates loser obligation; if matching claim exists but order is incomplete, completion is retried safely.
-- Reservation/release regression uses an actual order item and `InventoryService` lifecycle, not hard-coded movement rows.
-- Production-driver parallel worker gate remains mandatory for MySQL/PostgreSQL; SQLite skips row-lock-dependent concurrency and unsupported integrity DDL safely.
+- Any terminal, cancelled, rejected, or expired order receiving successful payment, including amount-mismatch `NeedsReview`, creates `late_payment` refund obligation and never fulfils.
+- Production-driver parallel race gate remains active for MySQL/PostgreSQL; SQLite explicitly skips row-lock/DDL-dependent assertions.
+- Reservation/release lifecycle uses actual order records and inventory service calls.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentRetryTest.php` — passed, 36 tests / 105 assertions.
+- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php` — 37 tests, 37 passed, 99 assertions.
 - `composer run lint:check` — passed.
-- `graphify update .` — run after implementation.
+- `graphify update .` — passed: 7,209 nodes, 18,385 edges, 473 communities; HTML aggregated view generated.
