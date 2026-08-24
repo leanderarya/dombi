@@ -811,6 +811,13 @@ php artisan doku:mark-paid ORDER_CODE
 
 ## 11. Testing / Audit Checklist
 
+### Task 11 Refund Canonicalization
+
+- [x] Rejected destination resubmit removes undefined metadata writes and performs exactly one canonical `rejected` → `pending` obligation transition.
+- [x] Finance `action_required` filters selected refund reason and non-synthetic payment attempt.
+- [x] Refund payload proof, transfer reference, and note read selected canonical obligation; legacy fields remain fallback only without obligation.
+- [x] Regression coverage in `RefundServiceTest`, `RefundPayloadPrivacyTest`, and refund workspace suite.
+
 ### Unit Tests (`DokuPaymentTest.php`)
 
 - [ ] `test_create_payment_returns_url` — createPayment mengembalikan URL

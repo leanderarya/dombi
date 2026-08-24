@@ -110,11 +110,12 @@ class RefundPayloadService
         $base['customer_phone'] = $order->customer_phone ?? ($order->customer?->phone ?? '');
 
         $base['destination'] = $this->fullDestination($order);
-        $base['proof_url'] = $order->payment_status === 'refunded' && $order->refund_proof_image
+        $obligation = $order->selectedRefundObligation();
+        $base['proof_url'] = ($obligation ? $obligation->status?->value === 'completed' && $obligation->proof_image : $order->payment_status === 'refunded' && $order->refund_proof_image)
             ? "/refunds/{$order->id}/proof"
             : null;
-        $base['transfer_reference'] = $order->refund_transfer_reference;
-        $base['transfer_note'] = $order->refund_transfer_note;
+        $base['transfer_reference'] = $obligation ? $obligation->transfer_reference : $order->refund_transfer_reference;
+        $base['transfer_note'] = $obligation ? $obligation->transfer_note : $order->refund_transfer_note;
 
         $base['can_enter_destination'] = $order->isGuestCustomer()
             && $order->payment_status === 'refund_pending'
@@ -157,11 +158,12 @@ class RefundPayloadService
                 RefundRejectionReason::IncompleteDestination->value,
             ], true);
 
-        $base['proof_url'] = $order->payment_status === 'refunded' && $order->refund_proof_image
+        $obligation = $order->selectedRefundObligation();
+        $base['proof_url'] = ($obligation ? $obligation->status?->value === 'completed' && $obligation->proof_image : $order->payment_status === 'refunded' && $order->refund_proof_image)
             ? "/refunds/{$order->id}/proof"
             : null;
-        $base['transfer_reference'] = $order->refund_transfer_reference;
-        $base['transfer_note'] = $order->refund_transfer_note;
+        $base['transfer_reference'] = $obligation ? $obligation->transfer_reference : $order->refund_transfer_reference;
+        $base['transfer_note'] = $obligation ? $obligation->transfer_note : $order->refund_transfer_note;
 
         return $base;
     }

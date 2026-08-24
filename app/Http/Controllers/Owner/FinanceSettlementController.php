@@ -261,6 +261,13 @@ class FinanceSettlementController extends Controller
                 }))->where('status', RefundObligationStatus::InProgress->value)->where('updated_at', '>', now()->subHours(24))),
             'action_required' => $query
                 ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation
+                    ->whereColumn('refund_obligations.reason', 'orders.refund_reason')
+                    ->whereHas('paymentAttempt', fn ($attempt) => $attempt
+                        ->whereColumn('payment_attempts.order_id', 'orders.id')
+                        ->where(function ($metadata): void {
+                            $metadata->whereNull('metadata->provenance')
+                                ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                        }))
                     ->where(fn ($q) => $q
                         ->where('status', RefundObligationStatus::InProgress->value)->where('updated_at', '<=', now()->subHours(24))
                         ->orWhereIn('status', [RefundObligationStatus::Failed->value, RefundObligationStatus::NeedsReview->value])

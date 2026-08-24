@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\PaymentAttempt;
+use App\Models\RefundObligation;
 use App\Models\RefundStatusHistory;
 use App\Models\User;
 use App\Services\RefundPayloadService;
@@ -14,6 +16,41 @@ use Tests\TestCase;
 class RefundPayloadPrivacyTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_payload_uses_selected_obligation_proof_and_transfer_fields(): void
+    {
+        $order = $this->createOrderWithDestination('refunded', 'valid');
+        $order->update([
+            'refund_proof_image' => 'legacy-proof.jpg',
+            'refund_transfer_reference' => 'legacy-reference',
+            'refund_transfer_note' => 'legacy-note',
+            'refund_reason' => 'customer_cancellation',
+        ]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'payload-canonical',
+            'invoice_number' => 'payload-canonical',
+            'merchant_request_id' => 'payload-canonical',
+            'amount_snapshot' => 50000,
+            'currency_snapshot' => 'IDR',
+        ]);
+        RefundObligation::create([
+            'payment_attempt_id' => $attempt->id,
+            'amount' => 50000,
+            'currency' => 'IDR',
+            'reason' => 'customer_cancellation',
+            'status' => 'completed',
+            'proof_image' => 'canonical-proof.jpg',
+            'transfer_reference' => 'canonical-reference',
+            'transfer_note' => 'canonical-note',
+        ]);
+
+        $payload = app(RefundPayloadService::class)->forOwner($order);
+
+        $this->assertSame('canonical-reference', $payload['transfer_reference']);
+        $this->assertSame('canonical-note', $payload['transfer_note']);
+        $this->assertSame("/refunds/{$order->id}/proof", $payload['proof_url']);
+    }
 
     public function test_owner_payload_contains_full_destination(): void
     {
