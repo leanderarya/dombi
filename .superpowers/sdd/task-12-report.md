@@ -2,6 +2,10 @@
 
 ## Findings fixed
 
+- CI changed-file frontend checks use separate Git pathspecs (no brace expansion); intended changed files are passed to Prettier/ESLint and failures propagate.
+- Added scheduled `payments:expire-unknown` sweep for all unknown attempts, using same atomic `OrderStatusService::expireOrder` lifecycle as reconciliation.
+- Production race setup now explicitly commits with failure reporting and verifies both attempts are visible before fork.
+
 - CI production jobs set `CI=true`, assert matrix DB connection, and run explicit MySQL/PostgreSQL drivers; concurrency cannot silently use SQLite.
 - CI frontend quality gates inspect changed frontend files only; unrelated repository baseline failures do not block Task 12, and no frontend files were modified.
 - Legacy unknown attempts receive `reconciliation_deadline_at` on first reconciliation; deadline expiry uses `OrderStatusService::expireOrder` lifecycle atomically, including reservation release, status history, notifications, and projection.
@@ -30,7 +34,10 @@
 - `npm run lint:check` — failed: 29 errors, 1 warning in same untouched untracked files.
 - Relevant Task 12 suite — passed, 88 tests / 228 assertions, 1 skipped (SQLite-only production-driver gate locally).
 - `composer run lint:check` — passed.
-- `graphify update .` — passed: 7,216 nodes, 18,409 edges, 492 communities; graph outputs updated.
+- Relevant Task 12 suite — passed, 87 tests / 229 assertions, 1 skipped (SQLite-only production-driver gate locally).
+- `composer run lint:check` — passed.
+- `graphify update .` — passed: 7,221 nodes, 18,423 edges, 503 communities; graph outputs updated.
+- Frontend CI checks changed files only with separate pathspecs; local whole-repo baseline remains 4 format failures and 29 ESLint errors / 1 warning in untouched untracked files. Local CI is not claimed green; MySQL/PostgreSQL matrix is CI-only.
 - Frontend CI changed-file format/ESLint policy committed; local whole-repo baseline remains 4 format failures and 29 ESLint errors / 1 warning in untouched untracked files. Local CI is not claimed green; MySQL/PostgreSQL matrix is CI-only.
 - Focused retry/fulfilment/payment suite — passed, 87 tests / 226 assertions, 1 skipped.
 - `composer run lint:check` — passed after Pint import-order fix.

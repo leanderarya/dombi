@@ -168,31 +168,37 @@ class DokuService
         });
     }
 
-    public function reconcilePaymentAttempt(PaymentAttempt $attempt): PaymentAttempt
+    public function expireDueUnknownAttempts(int $limit = 100): int
     {
-        $attempt = PaymentAttempt::query()->whereKey($attempt->id)->with('order')->firstOrFail();
-        $claimToken = bin2hex(random_bytes(16));
-        $expired = DB::transaction(function () use ($attempt): bool {
-            $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+        $ids = PaymentAttempt::query()->where('creation_state', 'unknown')->orderBy('id')->limit($limit)->pluck('id');
+        $expired = 0;
+        foreach ($ids as $id) {
+            $expired += $this->expireUnknownAttemptIfDue((int) $id) ? 1 : 0;
+        }
+
+        return $expired;
+    }
+
+    private function expireUnknownAttemptIfDue(int $attemptId): bool
+    {
+        return DB::transaction(function () use ($attemptId): bool {
+            $locked = PaymentAttempt::query()->whereKey($attemptId)->lockForUpdate()->firstOrFail();
             $deadline = data_get($locked->metadata ?? [], 'reconciliation_deadline_at');
             if (! $deadline || ! now()->gte(Carbon::parse($deadline)) || $locked->creation_state?->value !== 'unknown') {
                 return false;
             }
-            $locked->update([
-                'creation_state' => 'failed',
-                'settlement_status' => 'failed',
-                'gateway_status' => 'RECONCILIATION_DEADLINE_EXPIRED',
-                'reconciled_at' => now(),
-                'metadata' => array_merge($locked->metadata ?? [], [
-                    'reconciliation_deadline_expired_at' => now()->toIso8601String(),
-                    'reconciliation_lease' => null,
-                ]),
-            ]);
-            $order = Order::query()->whereKey($locked->order_id)->lockForUpdate()->firstOrFail();
-            app(OrderStatusService::class)->expireOrder($order, 'Payment reconciliation deadline expired');
+            $locked->update(['creation_state' => 'failed', 'settlement_status' => 'failed', 'gateway_status' => 'RECONCILIATION_DEADLINE_EXPIRED', 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_deadline_expired_at' => now()->toIso8601String(), 'reconciliation_lease' => null])]);
+            app(OrderStatusService::class)->expireOrder(Order::query()->whereKey($locked->order_id)->lockForUpdate()->firstOrFail(), 'Payment reconciliation deadline expired');
 
             return true;
         });
+    }
+
+    public function reconcilePaymentAttempt(PaymentAttempt $attempt): PaymentAttempt
+    {
+        $attempt = PaymentAttempt::query()->whereKey($attempt->id)->with('order')->firstOrFail();
+        $claimToken = bin2hex(random_bytes(16));
+        $expired = $this->expireUnknownAttemptIfDue($attempt->id);
         if ($expired) {
             return $attempt->fresh();
         }

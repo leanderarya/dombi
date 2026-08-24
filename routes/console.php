@@ -105,6 +105,12 @@ Schedule::command('payments:dispatch-outbox')
     ->onOneServer()
     ->appendOutputTo(storage_path('logs/payment-outbox.log'));
 
+Schedule::command('payments:expire-unknown')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/expire-unknown-payments.log'));
+
 Schedule::command('payments:reconcile-doku')
     ->everyMinute()
     ->withoutOverlapping()

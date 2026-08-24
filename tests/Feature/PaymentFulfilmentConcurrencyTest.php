@@ -202,7 +202,12 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
         $second = $this->attempt($order, 'parallel-second', 'invoice-parallel-second');
         $results = tempnam(sys_get_temp_dir(), 'task12-results-');
         file_put_contents($results, '');
-        DB::commit();
+        try {
+            DB::commit();
+        } catch (\Throwable $exception) {
+            $this->fail('Production race setup transaction commit failed: '.$exception->getMessage());
+        }
+        $this->assertSame(2, PaymentAttempt::whereIn('id', [$first->id, $second->id])->count());
         $parentSockets = [];
         $children = [];
 

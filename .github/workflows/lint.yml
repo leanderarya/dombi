@@ -108,7 +108,7 @@ jobs:
       - name: Check changed frontend format
         shell: bash
         run: |
-          files=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$GITHUB_SHA" -- 'resources/**/*.{js,jsx,ts,tsx,css,json,md}')
+          files=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$GITHUB_SHA" -- 'resources/**/*.js' 'resources/**/*.jsx' 'resources/**/*.ts' 'resources/**/*.tsx' 'resources/**/*.css' 'resources/**/*.json' 'resources/**/*.md')
           if [ -n "$files" ]; then
             npx prettier --check $files
           fi
