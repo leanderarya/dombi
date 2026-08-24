@@ -10,4 +10,6 @@
 
 - `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentRetryTest.php` — passed, 41 tests / 119 assertions.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed: 7,213 nodes, 18,392 edges, 473 communities; aggregated graph HTML generated.
+- `graphify update .` — passed; no code-graph topology changes detected.
+- `npm run format:check` — blocked by four pre-existing/unrelated untracked frontend files: `resources/js/components/outlet/assign-courier-sheet.tsx`, `resources/js/pages/guest/cancel.tsx`, `resources/js/pages/owner/product-families/index.tsx`, `resources/js/pages/owner/product-families/show.tsx`.
+- `npm run lint` — not run because format check failed first.
