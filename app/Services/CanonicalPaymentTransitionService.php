@@ -177,6 +177,12 @@ class CanonicalPaymentTransitionService
 
     private function claimOrRefund(PaymentAttempt $attempt, Order $order): bool
     {
+        if ($this->isTerminalOrder($order)) {
+            $this->createRefundObligation($attempt, 'late_payment');
+
+            return false;
+        }
+
         $claimMatches = $order->fulfilment_claimed_by === $attempt->id
             && $order->fulfilment_claimed_at !== null
             && $attempt->fulfilment_claimed_at !== null;
