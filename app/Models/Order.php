@@ -194,6 +194,16 @@ class Order extends Model
         return $query->where('payment_status', $status->value);
     }
 
+    public function scopeWithCanonicalRefund(Builder $query): Builder
+    {
+        return $query->whereHas('paymentAttempts.refundObligations', function ($obligation): void {
+            $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')
+                ->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
+                    $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                }));
+        });
+    }
+
     public function scopeRefundable(Builder $query): Builder
     {
         return $query->whereIn('payment_status', [

@@ -224,7 +224,7 @@ class FinanceSettlementController extends Controller
             $filter = 'ready';
         }
 
-        $query = Order::whereHas('paymentAttempts.refundObligations', function ($obligation) {
+        $query = Order::withCanonicalRefund()->whereHas('paymentAttempts.refundObligations', function ($obligation) {
             $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')
                 ->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
                     $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
@@ -297,7 +297,7 @@ class FinanceSettlementController extends Controller
         foreach ($validQueues as $queue) {
             $refundCounts[$queue] = 0;
         }
-        Order::whereHas('paymentAttempts.refundObligations', function ($obligation): void {
+        Order::withCanonicalRefund()->whereHas('paymentAttempts.refundObligations', function ($obligation): void {
             $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')
                 ->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
                     $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');

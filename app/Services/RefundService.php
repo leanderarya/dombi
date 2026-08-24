@@ -495,13 +495,22 @@ class RefundService
     {
         return DB::transaction(function () use ($order, $actorId, $proofPath, $transferRef, $transferNote) {
             $locked = Order::lockForUpdate()->findOrFail($order->id);
+            $obligation = $this->canonicalObligation($locked, true);
 
-            if ($locked->payment_status === PaymentStatus::RefundPending->value) {
+            if ($obligation && $obligation->status?->value === 'pending') {
+                $this->start($order, $actorId);
+                $locked->refresh();
+            } elseif (! $obligation && $locked->payment_status === PaymentStatus::RefundPending->value) {
                 $this->start($order, $actorId);
                 $locked->refresh();
             }
 
-            if ($locked->payment_status !== PaymentStatus::RefundInProgress->value) {
+            if ($obligation) {
+                $obligation = $this->canonicalObligation($locked, true);
+                if ($obligation?->status?->value !== 'in_progress') {
+                    throw new DomainException('Order ini tidak dalam status refund yang bisa diselesaikan.');
+                }
+            } elseif ($locked->payment_status !== PaymentStatus::RefundInProgress->value) {
                 throw new DomainException('Order ini tidak dalam status refund yang bisa diselesaikan.');
             }
 
