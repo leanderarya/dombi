@@ -235,7 +235,15 @@ class FinanceSettlementController extends Controller
                 ));
         })
             ->with(['outlet:id,name', 'customer', 'paymentTransactions'])
-            ->orderByDesc('refund_requested_at');
+            ->orderByDesc(
+                RefundObligation::query()
+                    ->select('requested_at')
+                    ->join('payment_attempts', 'payment_attempts.id', '=', 'refund_obligations.payment_attempt_id')
+                    ->whereColumn('payment_attempts.order_id', 'orders.id')
+                    ->whereColumn('refund_obligations.reason', 'orders.refund_reason')
+                    ->latest('payment_attempts.id')
+                    ->limit(1)
+            );
 
         $query = match ($filter) {
             'awaiting_customer' => $query

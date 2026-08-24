@@ -263,7 +263,7 @@ class RefundService
 
             if ($obligation) {
                 $startedAt = now();
-                $obligation->update(['status' => 'in_progress', 'processed_by' => $ownerId, 'metadata' => array_merge($obligation->metadata ?? [], ['started_at' => $startedAt->toISOString()])]);
+                $obligation->update(['status' => 'in_progress', 'processed_by' => $ownerId, 'started_at' => $startedAt]);
             }
 
             $startedAt ??= now();

@@ -1,11 +1,10 @@
 # Task 11 Report
 
 ## Scope
-- Payloads resolve one selected canonical obligation per payload; canonical encrypted destination, amount, proof, transfer data, status, and started timestamp take precedence.
-- Finance ordering/counts remain obligation-backed and selected-attempt constrained.
-- Request binds one non-synthetic selected payment attempt and its `(attempt_id, reason)` obligation; synthetic legacy attempts are excluded.
-- Lifecycle transitions capture canonical timestamps and project matching values to legacy Order fields.
-- No DOKU refund invocation added.
+- Finance ordering uses selected obligation requested timestamp; selected obligation resolution is deterministic and cached per payload/order.
+- Refund payload started timestamp uses canonical datetime cast and safe `toISOString`; canonical destination/proof/transfer remain one selected obligation source.
+- RefundService canonical lifecycle continues binding selected non-synthetic attempt/reason and projects transition timestamps to Order.
+- Synthetic legacy attempts excluded from canonical lifecycle.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.
