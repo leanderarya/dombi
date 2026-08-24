@@ -9,6 +9,7 @@ use App\Services\DokuService;
 use App\Services\NormalizedPaymentEvent;
 use App\Services\PaymentObservabilityService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,14 +20,17 @@ class PaymentProductionMatrixTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_observability_backend_failure_does_not_propagate_after_commit(): void
+    public function test_observability_event_backend_failure_is_swallowed_after_commit_and_financial_write_commits(): void
     {
-        $this->expectNotToPerformAssertions();
-        DB::transaction(function (): void {
-            DB::afterCommit(function (): void {
-                throw new \RuntimeException('backend unavailable');
-            });
+        Cache::shouldReceive('increment')->andThrow(new \RuntimeException('cache unavailable'));
+        Log::shouldReceive('channel')->andThrow(new \RuntimeException('log unavailable'));
+        $orderId = DB::transaction(function (): int {
+            $order = Order::factory()->create(['payment_status' => 'pending']);
+            app(PaymentObservabilityService::class)->event('transition', ['order_id' => $order->id, 'processing_result' => 'committed']);
+
+            return $order->id;
         });
+        $this->assertDatabaseHas('orders', ['id' => $orderId, 'payment_status' => 'pending']);
     }
 
     public function test_observability_registry_exposes_fixed_schema_and_safe_allowlisted_labels(): void
