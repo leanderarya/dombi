@@ -1,10 +1,10 @@
 # Task 11 Report
 
 ## Scope
-- Finance base query now starts from shared `withCanonicalRefund` selector; queue filters/counts remain canonical status constrained.
-- Payload selected obligation is cached per Order, keeping canonical status mapping at response boundary.
-- `startAndComplete` locks and gates canonical obligation status first; legacy payment status only fallback when obligation absent.
-- Synthetic provenance excluded from canonical selector.
+- Added reusable `Order::withCanonicalRefund` selector constrained to selected reason, latest non-synthetic payment attempt, and canonical obligation.
+- Finance base/count queries use canonical selector; queue filters retain canonical lifecycle status constraints.
+- Refund payload status normalization centralized at UI response boundary.
+- Synthetic provenance excluded consistently.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.

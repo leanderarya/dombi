@@ -43,15 +43,9 @@ class RefundPayloadService
         'rollback_mode', 'proof_present', 'reference_present',
     ];
 
-    public function queueState(Order $order): ?string
+    private function uiStatus(?string $status): ?string
     {
-        $obligation = $order->selectedRefundObligation();
-        $status = $obligation?->status?->value ?? $order->payment_status;
-        $destination = $obligation
-            ? ($obligation->destination_type !== null ? Order::REFUND_DESTINATION_VALID : Order::REFUND_DESTINATION_MISSING)
-            : $order->refund_destination_status;
-
-        $status = match ($status) {
+        return match ($status) {
             RefundObligationStatus::Pending->value => 'refund_pending',
             RefundObligationStatus::InProgress->value => 'refund_in_progress',
             RefundObligationStatus::Completed->value => 'refunded',
@@ -59,6 +53,17 @@ class RefundPayloadService
             RefundObligationStatus::Failed->value => 'refund_failed',
             default => $status,
         };
+    }
+
+    public function queueState(Order $order): ?string
+    {
+        $obligation = $order->selectedRefundObligation();
+        $status = $this->uiStatus($obligation?->status?->value ?? $order->payment_status);
+        $destination = $obligation
+            ? ($obligation->destination_type !== null ? Order::REFUND_DESTINATION_VALID : Order::REFUND_DESTINATION_MISSING)
+            : $order->refund_destination_status;
+
+        $status = $this->uiStatus($status);
 
         return match (true) {
             $status === 'refund_pending' && $order->isGuestCustomer() && $destination !== 'valid' => 'awaiting_guest',
