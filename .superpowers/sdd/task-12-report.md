@@ -10,9 +10,10 @@
 ## Verification
 
 - `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php` — passed, 2 tests / 6 assertions.
-- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentOutboxTest.php tests/Feature/DokuReconciliationTest.php tests/Feature/PaymentRetryTest.php` — run before commit.
-- `composer run lint:check` — run before commit.
-- `graphify update .` — run after code changes.
+- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php` — passed, 2 tests / 6 assertions.
+- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentOutboxTest.php tests/Feature/DokuReconciliationTest.php tests/Feature/PaymentRetryTest.php` — 56 passed, 2 existing failures in `PaymentRetryTest` expecting 404 reconciliation state `failed`; current behaviour returns durable `unknown`.
+- `composer run lint:check` — passed.
+- `graphify update .` — passed; graph rebuilt with 7,203 nodes.
 
 ## Files
 
