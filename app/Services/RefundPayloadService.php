@@ -64,7 +64,7 @@ class RefundPayloadService
             $status === 'refund_pending' && $order->isGuestCustomer() && $destination !== 'valid' => 'awaiting_guest',
             $status === 'refund_pending' && ! $order->isGuestCustomer() && $destination !== 'valid' => 'awaiting_customer',
             $status === 'refund_pending' && $destination === 'valid' => 'ready',
-            $status === 'refund_in_progress' && $order->refund_started_at?->gt(now()->subHours(24)) => 'in_progress',
+            $status === 'refund_in_progress' && (($obligation?->metadata['started_at'] ?? $order->refund_started_at)?->gt(now()->subHours(24))) => 'in_progress',
             $status === 'refund_in_progress', $status === 'refund_failed' => 'action_required',
             $status === 'refunded' => 'completed',
             $status === 'refund_rejected' => 'rejected',
@@ -155,8 +155,8 @@ class RefundPayloadService
 
         $base = $this->basePayload($order, $queue);
 
-        $base['destination'] = $this->maskedDestination($order);
         $obligation = $order->selectedRefundObligation();
+        $base['destination'] = $this->maskedDestination($order, $obligation);
         $status = $obligation?->status?->value ?? $order->payment_status;
         $rejectionReason = $obligation ? ($obligation->metadata['rejection_reason'] ?? null) : $order->refund_rejected_reason;
         $base['can_edit_destination'] = $status === 'refund_pending';
@@ -249,7 +249,7 @@ class RefundPayloadService
             'amount' => (float) ($obligation?->amount ?? $order->refund_amount ?? 0),
             'requested_at' => ($obligation ? $obligation->requested_at : $order->refund_requested_at)?->toISOString(),
             'submitted_at' => $order->refund_destination_submitted_at?->toISOString(),
-            'started_at' => ($obligation?->started_at ?? $order->refund_started_at)?->toISOString(),
+            'started_at' => $obligation ? ($obligation->metadata['started_at'] ?? null) : $order->refund_started_at?->toISOString(),
             'completed_at' => ($obligation?->completed_at ?? $order->refunded_at)?->toISOString(),
             'rejection' => $rejection,
             'timeline' => $this->safeTimeline($order),
@@ -304,7 +304,41 @@ class RefundPayloadService
         return null;
     }
 
-    private function maskedDestination(Order $order): ?array
+    private function maskedDestination(Order $order, $obligation = null): ?array
+    {
+        $type = $obligation?->destination_type ?? $order->refund_destination_type;
+        if ($type === null) {
+            return null;
+        }
+
+        if ($type === 'bank') {
+            $number = $obligation?->account_number ?? $order->refund_account_number;
+            $masked = strlen($number) > 4 ? str_repeat('•', max(0, strlen($number) - 4)).substr($number, -4) : $number;
+
+            return [
+                'type' => 'bank',
+                'label' => $obligation?->bank_name ?? $order->refund_bank_name,
+                'holder' => $obligation?->account_holder ?? $order->refund_account_holder,
+                'masked_number' => $masked,
+            ];
+        }
+
+        if ($type === 'ewallet') {
+            $number = $obligation?->ewallet_number ?? $order->refund_ewallet_number;
+            $masked = strlen($number) > 4 ? str_repeat('•', max(0, strlen($number) - 4)).substr($number, -4) : $number;
+
+            return [
+                'type' => 'ewallet',
+                'label' => $obligation?->ewallet_provider ?? $order->refund_ewallet_provider,
+                'holder' => $obligation?->ewallet_holder ?? $order->refund_ewallet_holder,
+                'masked_number' => $masked,
+            ];
+        }
+
+        return null;
+    }
+
+    private function legacyMaskedDestination(Order $order): ?array
     {
         if ($order->refund_destination_type === null) {
             return null;

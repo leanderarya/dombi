@@ -96,6 +96,7 @@ class RefundService
             }
 
             $obligation = $this->obligations->createForAttempt($attempt, $source);
+            $obligation->update(['metadata' => array_merge($obligation->metadata ?? [], ['requested_at' => now()->toISOString()])]);
 
             $locked->update([
                 'payment_status' => PaymentStatus::RefundPending->value,
@@ -262,12 +263,13 @@ class RefundService
 
             if ($obligation) {
                 $startedAt = now();
-                $obligation->update(['status' => 'in_progress', 'processed_by' => $ownerId, 'started_at' => $startedAt]);
+                $obligation->update(['status' => 'in_progress', 'processed_by' => $ownerId, 'metadata' => array_merge($obligation->metadata ?? [], ['started_at' => $startedAt->toISOString()])]);
             }
 
+            $startedAt ??= now();
             $locked->update([
                 'payment_status' => PaymentStatus::RefundInProgress->value,
-                'refund_started_at' => now(),
+                'refund_started_at' => $startedAt,
                 'refund_started_by' => $ownerId,
             ]);
 
