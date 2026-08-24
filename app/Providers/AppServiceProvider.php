@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\DokuConfigurationGuard;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureRateLimiting();
+        app(DokuConfigurationGuard::class)->validate();
     }
 
     protected function configureDefaults(): void

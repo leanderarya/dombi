@@ -57,6 +57,7 @@ use App\Http\Controllers\Owner\OutletHolidayController;
 use App\Http\Controllers\Owner\OutletOperatingHoursController;
 use App\Http\Controllers\Owner\OutletProductController;
 use App\Http\Controllers\Owner\PaymentAccountController;
+use App\Http\Controllers\Owner\PaymentRecoveryController;
 use App\Http\Controllers\Owner\PricingController;
 use App\Http\Controllers\Owner\ProductCategoryController as OwnerProductCategoryController;
 use App\Http\Controllers\Owner\ProductController as OwnerProductController;
@@ -246,6 +247,9 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
     // Owner routes
     Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->name('owner.')->group(function (): void {
         Route::get('/dashboard', OwnerDashboardController::class)->name('dashboard');
+        Route::get('finance/payments', [PaymentRecoveryController::class, 'index'])->name('finance.payments.index');
+        Route::post('finance/payments/{attempt}/check-status', [PaymentRecoveryController::class, 'checkStatus'])->name('finance.payments.check-status');
+        Route::post('finance/refund-obligations/{obligation}/needs-review', [PaymentRecoveryController::class, 'needsReview'])->name('finance.refund-obligations.needs-review');
         Route::get('/analytics', [OwnerAnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('/profile', OwnerProfileController::class)->name('profile');
         Route::resource('outlets', OwnerOutletController::class);
