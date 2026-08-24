@@ -205,10 +205,6 @@ class TrackController extends Controller
     {
         $user = $request->user();
 
-        if (! $user) {
-            abort(403, 'Guest tidak dapat membatalkan pesanan.');
-        }
-
         $order = Order::query()
             ->where('recovery_token', strtoupper($token))
             ->first();
@@ -217,9 +213,9 @@ class TrackController extends Controller
             return response()->json(['success' => false, 'error' => 'Tidak dapat membatalkan pesanan ini.'], 422);
         }
 
-        // Ownership check: pastikan caller adalah pemilik pesanan
+        // Authenticated callers must own order; guests prove possession through recovery token.
         $customer = $order->customer;
-        if (! $customer || $customer->user_id !== $user->id) {
+        if ($user && (! $customer || $customer->user_id !== $user->id)) {
             return response()->json(['success' => false, 'error' => 'Anda tidak memiliki akses ke pesanan ini.'], 403);
         }
 

@@ -512,7 +512,8 @@ class DokuService
             return false;
         }
         $parsed = \DateTime::createFromFormat('Y-m-d\TH:i:s\Z', $timestamp);
-        if (! $parsed) {
+        $errors = \DateTime::getLastErrors();
+        if (! $parsed || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0)) || $parsed->format('Y-m-d\TH:i:s\Z') !== $timestamp) {
             return false;
         }
         $diff = abs(now('UTC')->getTimestamp() - $parsed->getTimestamp());

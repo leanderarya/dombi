@@ -190,6 +190,32 @@ class CancelOrderAuthorizationTest extends TestCase
         $response->assertRedirect();
     }
 
+    public function test_guest_token_holder_can_cancel_order(): void
+    {
+        $outlet = $this->createOutlet();
+        $customerProfile = Customer::forceCreate([
+            'name' => 'Guest Customer', 'phone' => '08333333333', 'email' => 'guest@example.com',
+            'is_registered' => false,
+        ]);
+        $order = $this->createOrderForCustomer($customerProfile, $outlet);
+        $order->update(['recovery_token' => 'GUEST-CANCEL-TOKEN']);
+
+        $response = $this->postJson('/track/GUEST-CANCEL-TOKEN/cancel', ['reason' => 'Tidak Jadi Membeli']);
+
+        $response->assertOk()->assertJson(['success' => true]);
+    }
+
+    public function test_authenticated_owner_can_cancel_through_track_token(): void
+    {
+        $user = $this->createCustomerUser();
+        $order = $this->createOrderForCustomer($user->customer, $this->createOutlet());
+        $order->update(['recovery_token' => 'AUTH-CANCEL-TOKEN']);
+
+        $response = $this->actingAs($user)->postJson('/track/AUTH-CANCEL-TOKEN/cancel', ['reason' => 'Tidak Jadi Membeli']);
+
+        $response->assertOk()->assertJson(['success' => true]);
+    }
+
     public function test_unauthenticated_user_cannot_cancel_order(): void
     {
         $outlet = $this->createOutlet();

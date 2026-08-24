@@ -23,10 +23,19 @@ class VerifyPaymentCutover extends Command
         if ($cutover === null || trim((string) $cutover) === '') {
             $errors[] = 'runtime payment cutover timestamp must explicitly resolve PAYMENT_CUTOVER_AT';
         } else {
+            $normalized = null;
             try {
-                Carbon::parse((string) $cutover);
+                $parsed = Carbon::createFromFormat('Y-m-d\\TH:i:s\\Z', (string) $cutover, 'UTC');
+                $parseErrors = Carbon::getLastErrors();
+                if ($parseErrors !== false && ($parseErrors['warning_count'] > 0 || $parseErrors['error_count'] > 0)) {
+                    throw new \InvalidArgumentException('invalid timestamp');
+                }
+                $normalized = $parsed->format('Y-m-d\\TH:i:s\\Z');
             } catch (\Throwable) {
                 $errors[] = 'runtime payment cutover timestamp must be a valid PAYMENT_CUTOVER_AT timestamp';
+            }
+            if ($normalized !== null && $normalized !== (string) $cutover) {
+                $errors[] = 'runtime payment cutover timestamp must use exact UTC format Y-m-dTH:i:sZ';
             }
         }
         if (config('doku.legacy_writes_enabled', true) || filter_var($evidence, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== false || $evidence === null) {
