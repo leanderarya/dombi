@@ -245,7 +245,7 @@ class RefundService
                 throw new DomainException('Order ini tidak dalam antrean refund.');
             }
 
-            if ($locked->payment_status !== PaymentStatus::RefundPending->value) {
+            if (! $obligation && $locked->payment_status !== PaymentStatus::RefundPending->value) {
                 throw new DomainException('Order ini tidak dalam antrean refund.');
             }
 
@@ -295,11 +295,14 @@ class RefundService
             $locked = Order::lockForUpdate()->findOrFail($order->id);
             $obligation = $this->canonicalObligation($locked, true);
 
-            if ($locked->payment_status === PaymentStatus::RefundInProgress->value) {
+            if ($obligation && $obligation->status?->value !== 'pending') {
+                throw new DomainException('Refund yang sedang diproses harus diselesaikan atau di-rollback.');
+            }
+            if (! $obligation && $locked->payment_status === PaymentStatus::RefundInProgress->value) {
                 throw new DomainException('Refund yang sedang diproses harus diselesaikan atau di-rollback.');
             }
 
-            if ($locked->payment_status !== PaymentStatus::RefundPending->value) {
+            if (! $obligation && $locked->payment_status !== PaymentStatus::RefundPending->value) {
                 throw new DomainException('Order ini tidak dalam antrean refund.');
             }
 
@@ -386,7 +389,7 @@ class RefundService
                 throw new DomainException('Refund sudah tidak dalam status diproses.');
             }
 
-            if ($locked->payment_status !== PaymentStatus::RefundInProgress->value) {
+            if (! $obligation && $locked->payment_status !== PaymentStatus::RefundInProgress->value) {
                 throw new DomainException('Refund sudah tidak dalam status diproses.');
             }
 
@@ -435,7 +438,7 @@ class RefundService
                 throw new DomainException('Refund sudah tidak dalam status diproses.');
             }
 
-            if ($locked->payment_status !== PaymentStatus::RefundInProgress->value) {
+            if (! $obligation && $locked->payment_status !== PaymentStatus::RefundInProgress->value) {
                 throw new DomainException('Refund sudah tidak dalam status diproses.');
             }
 
