@@ -10,14 +10,15 @@ Payment observability registry, fixed nullable event schema, safe allowlisted la
 
 | Command | Result |
 |---|---|
-| `php artisan test tests/Feature/PaymentProductionMatrixTest.php tests/Feature/PaymentProductionInvariantTest.php` | PASS: 22 tests, 22 passed, 49 assertions; required taxonomy events and dry-run failure sentinel covered, but Task 14 remains BLOCKED by full suite |
+| `php artisan test tests/Feature/PaymentProductionMatrixTest.php tests/Feature/PaymentProductionInvariantTest.php` | PASS: 22 tests, 22 passed, 50 assertions; Task 14 remains BLOCKED |
 | `vendor/bin/pint --test Task 14 files` | PASS |
 | `php artisan migrate:fresh --seed` | PASS |
-| `php artisan payments:verify-cutover` | PASS on clean seeded database: `Payment parity clean; legacy writes must be disabled before read-only cutover.` Default `config('doku.legacy_writes_enabled')=false`; production gate remains blocked until explicit production configuration evidence and full-suite blockers clear. Refund parity includes count/status/reason/amount/currency/destination/encrypted values/proof/reference/note/actors/timestamps |
-| `php artisan payments:backfill-attempts --dry-run` | PASS: `Payment attempt backfill complete.` / `Exceptions: 0`; no DB/storage writes; failure test returns nonzero and leaves rollback sentinel unchanged |
+| `php artisan payments:verify-cutover` | PASS on clean seeded database; production gate NO-GO until real parity and explicit legacy-write evidence. Resolved invoice/minor-unit/currency/gateway/refund parity implemented |
+| `php artisan payments:backfill-attempts --dry-run` | PASS: `Payment attempt backfill complete.` / `Exceptions: 0`; no DB/storage writes |
 | `php artisan payments:reconcile-doku --dry-run` | PASS: `No DOKU payments to reconcile.`; no dispatch |
-| `php artisan test` | SERIAL BLOCKER: 1,439 tests, 1,420 passed, 18 failures, 1 skipped. Exact blocker names listed below; no production-ready claim |
-| `graphify update .` | PASS: 7,278 nodes, 18,581 edges, 491 communities |
+| `npm run types:check` | FAIL: `resources/js/pages/guest/cancel.tsx:26` PageProps constraint; `cancel.tsx:41` missing `route` |
+| `php artisan test` | SERIAL NO-GO: 1,439 tests, 435 passed, 1 failure, 1,003 errors; MySQL gone away/refused. Prior exact 18 blocker names remain below |
+| `graphify update .` | PASS: 7,284 nodes, 18,544 edges, 507 communities |
 
 Task 14 status: NO-GO/BLOCKED. Full serial suite failures are release blockers. Production readiness is not claimed.
 

@@ -45,7 +45,7 @@ final class PaymentObservabilityService
 
     public function counters(): array
     {
-        return $this->counters;
+        return array_merge(Cache::get('payment_observability.counters', []), $this->counters);
     }
 
     public function gauges(): array
@@ -96,7 +96,11 @@ final class PaymentObservabilityService
         }
         $event = ['name' => $name, 'labels' => $labels];
         $this->events[] = $event;
-        $this->counters['payment_'.$name] = ($this->counters['payment_'.$name] ?? 0) + 1;
+        $counter = 'payment_'.$name;
+        $this->counters[$counter] = ($this->counters[$counter] ?? 0) + 1;
+        $durableCounters = Cache::get('payment_observability.counters', []);
+        $durableCounters[$counter] = ($durableCounters[$counter] ?? 0) + 1;
+        Cache::forever('payment_observability.counters', $durableCounters);
         Log::channel('operational')->info('payment.'.$name, $labels);
     }
 }

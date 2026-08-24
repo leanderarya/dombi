@@ -42,12 +42,16 @@ class VerifyPaymentCutover extends Command
                 default => $transaction->status,
             };
             $order = $transaction->order;
+            $resolvedInvoice = $transaction->doku_order_id ?: $order?->order_code;
             $fieldsMatch = $attempt->order_id === $transaction->order_id
-                && $attempt->invoice_number === $transaction->doku_order_id
+                && $attempt->invoice_number === $resolvedInvoice
                 && strtoupper($attempt->currency_snapshot) === $this->legacyCurrency($transaction)
-                && (string) $attempt->amount_snapshot === (string) $transaction->amount
+                && $this->minorUnits($attempt->amount_snapshot) === $this->minorUnits($transaction->amount)
+                && $attempt->payment_method === $transaction->payment_method
                 && $attempt->settlement_status?->value === $expected
-                && $attempt->gateway_transaction_id === $transaction->doku_order_id;
+                && $attempt->gateway_transaction_id === $transaction->doku_order_id
+                && $attempt->session_id === $transaction->session_id
+                && $attempt->token_id === $transaction->token_id;
             if (! $fieldsMatch) {
                 $errors[] = "legacy transaction {$transaction->id} attempt/order/invoice/currency/amount/status/gateway identity mismatch";
             }
@@ -61,9 +65,20 @@ class VerifyPaymentCutover extends Command
                     && $obligation->reason === $order->refund_reason
                     && abs((float) $obligation->amount - $legacyRefund) <= 0.01
                     && $obligation->status?->value === $this->mapRefundStatus($order->payment_status)
+                    && $obligation->currency === ($this->legacyCurrency($transaction))
                     && $obligation->destination_type === $order->refund_destination_type
+                    && $this->sameSensitive($obligation->bank_name, $order->refund_bank_name)
+                    && $this->sameSensitive($obligation->account_number, $order->refund_account_number)
+                    && $this->sameSensitive($obligation->account_holder, $order->refund_account_holder)
+                    && $this->sameSensitive($obligation->ewallet_provider, $order->refund_ewallet_provider)
+                    && $this->sameSensitive($obligation->ewallet_number, $order->refund_ewallet_number)
+                    && $this->sameSensitive($obligation->ewallet_holder, $order->refund_ewallet_holder)
                     && $obligation->proof_image === $order->refund_proof_image
-                    && $obligation->transfer_reference === $order->doku_refund_id));
+                    && $obligation->transfer_reference === $order->doku_refund_id
+                    && $obligation->transfer_note === $order->refund_transfer_note
+                    && $obligation->processed_by === $order->refunded_by
+                    && $this->sameTime($obligation->requested_at, $order->refund_requested_at)
+                    && $this->sameTime($obligation->completed_at, $order->refunded_at)));
             if (! $refundFieldsMatch) {
                 $errors[] = "legacy transaction {$transaction->id} refund obligation count/status/reason/amount/destination/proof/reference mismatch";
             }
@@ -89,9 +104,29 @@ class VerifyPaymentCutover extends Command
         return self::SUCCESS;
     }
 
+    private function minorUnits(int|float|string|null $value): ?int
+    {
+        if ($value === null || is_float($value)) {
+            return null;
+        }
+        $parts = array_pad(explode('.', (string) $value, 2), 2, '');
+
+        return ((int) $parts[0] * 100) + (int) str_pad($parts[1], 2, '0');
+    }
+
     private function legacyCurrency(PaymentTransaction $transaction): string
     {
         return strtoupper((string) (data_get($transaction->raw_response, 'order.currency') ?? data_get($transaction->raw_response, 'transaction.currency') ?? config('doku.currency', 'IDR')));
+    }
+
+    private function sameSensitive(?string $canonical, ?string $legacy): bool
+    {
+        return hash('sha256', (string) $canonical) === hash('sha256', (string) $legacy);
+    }
+
+    private function sameTime($canonical, $legacy): bool
+    {
+        return ($canonical?->toIso8601String() ?? null) === ($legacy?->toIso8601String() ?? null);
     }
 
     private function mapRefundStatus(?string $status): ?string
