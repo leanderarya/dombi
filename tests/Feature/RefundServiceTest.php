@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
+use App\Models\RefundObligation;
 use App\Models\RefundStatusHistory;
 use App\Models\User;
 use App\Services\RefundService;
@@ -286,6 +288,42 @@ class RefundServiceTest extends TestCase
         $this->assertSame('refund_pending', $history->to_status);
 
         $this->assertDatabaseCount('refund_status_histories', 2);
+    }
+
+    public function test_canonical_rejected_correction_transitions_obligation_once_without_undefined_metadata(): void
+    {
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_rejected',
+            'refund_reason' => 'customer_cancellation',
+            'refund_destination_status' => 'invalid',
+            'refund_amount' => 50000,
+        ]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'canonical-correction',
+            'invoice_number' => 'canonical-correction',
+            'merchant_request_id' => 'canonical-correction',
+            'amount_snapshot' => 50000,
+            'currency_snapshot' => 'IDR',
+        ]);
+        $obligation = RefundObligation::create([
+            'payment_attempt_id' => $attempt->id,
+            'amount' => 50000,
+            'currency' => 'IDR',
+            'reason' => 'customer_cancellation',
+            'status' => 'rejected',
+            'metadata' => ['rejection_reason' => 'invalid_destination', 'rejection_note' => 'Old note'],
+        ]);
+
+        app(RefundService::class)->submitDestination($order, 'bank', 'owner', 1, [
+            'bank_name' => 'BCA',
+            'account_number' => '1234567890',
+            'account_holder' => 'Arya',
+        ]);
+
+        $this->assertSame('pending', $obligation->fresh()->status->value);
+        $this->assertSame([], $obligation->fresh()->metadata);
+        $this->assertSame(1, RefundStatusHistory::where('event', RefundStatusHistory::EVENT_REFUND_REOPENED)->count());
     }
 
     public function test_final_rejected_destination_update_fails_without_mutation(): void

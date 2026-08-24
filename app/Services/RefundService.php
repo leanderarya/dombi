@@ -182,19 +182,11 @@ class RefundService
                 ]);
 
                 if ($obligation) {
+                    $metadata = $obligation->metadata ?? [];
+                    unset($metadata['rejection_reason'], $metadata['rejection_note']);
                     $obligation->update([
                         'status' => 'pending',
-                        'metadata' => $obligation->metadata ?? [],
-                    ]);
-                }
-
-                if ($obligation) {
-                    $obligation->update([
-                        'status' => 'rejected',
-                        'metadata' => array_merge($obligation->metadata ?? [], [
-                            'rejection_reason' => $reason,
-                            'rejection_note' => $note,
-                        ]),
+                        'metadata' => $metadata,
                     ]);
                 }
 
