@@ -151,6 +151,24 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $this->assertSame(['event' => 'unknown'], $attempt->raw_response);
     }
 
+    public function test_unmapped_provider_status_emits_unknown_status_and_persists_canonical_unknown(): void
+    {
+        [, $attempt] = $this->attempt();
+
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'doku', 'PENDING_REVIEW_BY_PROVIDER', null, 'IDR', 'invoice-first', now(), ['event' => 'unmapped']
+        ));
+
+        $attempt = $attempt->fresh();
+        $this->assertSame(PaymentAttemptSettlementStatus::Unknown, $attempt->settlement_status);
+        $this->assertSame('PENDING_REVIEW_BY_PROVIDER', $attempt->gateway_status);
+        $this->assertSame(['event' => 'unmapped'], $attempt->raw_response);
+        $this->assertDatabaseHas('payment_observability_events', [
+            'event_name' => 'unknown_status',
+            'attempt_id' => $attempt->id,
+        ]);
+    }
+
     public function test_transaction_reference_is_evidence_not_identity_rejection(): void
     {
         [, $attempt] = $this->attempt();
