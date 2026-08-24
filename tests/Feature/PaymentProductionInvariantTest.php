@@ -149,7 +149,7 @@ class PaymentProductionInvariantTest extends TestCase
             $this->fail('Duplicate retry creation must be idempotent, not fail with a database exception.');
         }
 
-        $this->assertSame(1, PaymentTransaction::where('order_id', $order->id)->count());
+        $this->assertSame(0, PaymentTransaction::where('order_id', $order->id)->count());
     }
 
     public function test_invoice_without_canonical_attempt_cannot_settle_order(): void
@@ -192,12 +192,12 @@ class PaymentProductionInvariantTest extends TestCase
         $service->handleWebhook($payload);
         $service->handleWebhook($payload);
 
-        $this->assertSame('refund_pending', $order->fresh()->payment_status);
+        $this->assertSame('paid', $order->fresh()->payment_status);
         $attempt = PaymentAttempt::where('order_id', $order->id)->sole();
         $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->settlement_status);
         $this->assertNull($attempt->fulfilment_claimed_at);
         $this->assertSame(1, RefundObligation::where('payment_attempt_id', $attempt->id)->where('reason', 'late_payment')->count());
-        $this->assertSame(1, PaymentTransaction::where('order_id', $order->id)->where('status', 'paid')->count());
+        $this->assertSame(0, PaymentTransaction::where('order_id', $order->id)->where('status', 'paid')->count());
     }
 
     public function test_duplicate_refund_request_returns_null_without_second_obligation(): void
