@@ -185,19 +185,27 @@ class DokuService
 
     private function expireUnknownAttemptIfDue(int $attemptId): bool
     {
-        return DB::transaction(function () use ($attemptId): bool {
-            $locked = PaymentAttempt::query()->whereKey($attemptId)->lockForUpdate()->firstOrFail();
-            $deadline = data_get($locked->metadata ?? [], 'reconciliation_deadline_at');
-            if (! $deadline || ! now()->gte(Carbon::parse($deadline)) || $locked->creation_state?->value !== 'unknown') {
-                return false;
-            }
-            $locked->update(['creation_state' => 'failed', 'settlement_status' => 'failed', 'gateway_status' => 'RECONCILIATION_DEADLINE_EXPIRED', 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_deadline_expired_at' => now()->toIso8601String(), 'reconciliation_lease' => null])]);
-            $order = Order::query()->whereKey($locked->order_id)->lockForUpdate()->firstOrFail();
-            if (! in_array($order->status, [Order::STATUS_COMPLETED, Order::STATUS_EXPIRED, Order::STATUS_CANCELLED_BY_CUSTOMER, Order::STATUS_CANCELLED_BY_OUTLET, Order::STATUS_REJECTED_BY_OUTLET], true)) {
-                app(OrderStatusService::class)->expireOrder($order, 'Payment reconciliation deadline expired');
-            }
+        return retry(3, function () use ($attemptId): bool {
+            return DB::transaction(function () use ($attemptId): bool {
+                $attemptOrderId = PaymentAttempt::query()->whereKey($attemptId)->value('order_id');
+                $order = Order::query()->whereKey($attemptOrderId)->lockForUpdate()->firstOrFail();
+                $locked = PaymentAttempt::query()->whereKey($attemptId)->lockForUpdate()->firstOrFail();
+                $deadline = data_get($locked->metadata ?? [], 'reconciliation_deadline_at');
+                if (! $deadline || ! now()->gte(Carbon::parse($deadline)) || $locked->creation_state?->value !== 'unknown') {
+                    return false;
+                }
+                $locked->update(['creation_state' => 'failed', 'settlement_status' => 'failed', 'gateway_status' => 'RECONCILIATION_DEADLINE_EXPIRED', 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_deadline_expired_at' => now()->toIso8601String(), 'reconciliation_lease' => null])]);
+                $order = Order::query()->whereKey($locked->order_id)->lockForUpdate()->firstOrFail();
+                if (! in_array($order->status, [Order::STATUS_COMPLETED, Order::STATUS_EXPIRED, Order::STATUS_CANCELLED_BY_CUSTOMER, Order::STATUS_CANCELLED_BY_OUTLET, Order::STATUS_REJECTED_BY_OUTLET], true)) {
+                    app(OrderStatusService::class)->expireOrder($order, 'Payment reconciliation deadline expired');
+                }
 
-            return true;
+                return true;
+            });
+        }, 3, function (\Throwable $exception): bool {
+            $message = strtolower($exception->getMessage());
+
+            return str_contains($message, 'deadlock') || str_contains($message, 'serialization') || str_contains($message, 'lock wait timeout');
         });
     }
 
