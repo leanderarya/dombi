@@ -239,26 +239,38 @@ class FinanceSettlementController extends Controller
 
         $query = match ($filter) {
             'awaiting_customer' => $query
-                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::Pending->value)->whereNull('destination_type'))
+                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
+                    $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                }))->where('status', RefundObligationStatus::Pending->value)->whereNull('destination_type'))
                 ->where(fn ($q) => $q
                     ->whereHas('customer', fn ($cq) => $cq->whereNotNull('user_id'))
                     ->orDoesntHave('customer')
                 ),
             'awaiting_guest' => $query
-                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::Pending->value)->whereNull('destination_type'))
+                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
+                    $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                }))->where('status', RefundObligationStatus::Pending->value)->whereNull('destination_type'))
                 ->whereHas('customer', fn ($cq) => $cq->whereNull('user_id')),
             'ready' => $query
-                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::Pending->value)->whereNotNull('destination_type')),
+                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
+                    $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                }))->where('status', RefundObligationStatus::Pending->value)->whereNotNull('destination_type')),
             'in_progress' => $query
-                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::InProgress->value)->where('updated_at', '>', now()->subHours(24))),
+                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
+                    $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                }))->where('status', RefundObligationStatus::InProgress->value)->where('updated_at', '>', now()->subHours(24))),
             'action_required' => $query
                 ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation
                     ->where(fn ($q) => $q
                         ->where('status', RefundObligationStatus::InProgress->value)->where('updated_at', '<=', now()->subHours(24))
                         ->orWhereIn('status', [RefundObligationStatus::Failed->value, RefundObligationStatus::NeedsReview->value])
                     )),
-            'completed' => $query->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::Completed->value)),
-            'rejected' => $query->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::Rejected->value)),
+            'completed' => $query->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
+                $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+            }))->where('status', RefundObligationStatus::Completed->value)),
+            'rejected' => $query->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
+                $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+            }))->where('status', RefundObligationStatus::Rejected->value)),
             default => $query,
         };
 
@@ -274,7 +286,8 @@ class FinanceSettlementController extends Controller
             $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')
                 ->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
                     $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
-                }));
+                }))
+                ->whereIn('status', array_map(static fn (RefundObligationStatus $status): string => $status->value, RefundObligationStatus::cases()));
         })->chunk(200, function ($orders) use (&$refundCounts): void {
             foreach ($orders as $order) {
                 $queue = $this->refundPayloads->queueState($order);

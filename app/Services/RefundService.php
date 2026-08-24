@@ -511,7 +511,12 @@ class RefundService
     {
         $query = RefundObligation::query()
             ->where('reason', $order->refund_reason)
-            ->whereHas('paymentAttempt', fn ($attempt) => $attempt->where('order_id', $order->id));
+            ->whereHas('paymentAttempt', fn ($attempt) => $attempt
+                ->where('order_id', $order->id)
+                ->where(function ($metadata): void {
+                    $metadata->whereNull('metadata->provenance')
+                        ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                }));
 
         if ($lock) {
             $query->lockForUpdate();
