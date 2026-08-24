@@ -54,7 +54,6 @@ Exact result:
 
 ```text
 Tests:    16 passed (40 assertions)
-Duration: 5.549s
 ```
 
 Command:
@@ -78,8 +77,8 @@ graphify update .
 Exact result:
 
 ```text
-[graphify watch] Rebuilt: 7261 nodes, 18521 edges, 479 communities
-graph.html written (aggregated: 479 community nodes, 1348 cross-community edges)
+[graphify watch] No code-graph topology changes detected; outputs left untouched.
+Code graph updated.
 ```
 
 `npm run types:check` remains blocked by the two baseline errors listed above. No Task 12 files were changed.
@@ -87,7 +86,7 @@ graph.html written (aggregated: 479 community nodes, 1348 cross-community edges)
 ## Fixes
 
 - `PaymentRecoveryController::checkStatus` now flashes `error` on provider failure and never flashes `success` for that path.
-- `DokuConfigurationGuard` rejects localhost variants, loopback, RFC1918/private, link-local, reserved IPs, and DNS hosts resolving to any private/reserved address. Unresolvable public hostnames remain allowed for deployment configuration validation.
+- `DokuConfigurationGuard` rejects localhost variants, loopback, RFC1918/private, link-local, reserved IPs, unresolvable hosts, and DNS hosts resolving to any private/reserved address. Only resolvable public addresses are permitted.
 
 ## Commit Scope
 
