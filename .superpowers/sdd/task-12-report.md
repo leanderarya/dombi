@@ -3,8 +3,7 @@
 ## Findings fixed
 
 - Unknown expiry locks order first, then attempt, matching creation/canonical lock ordering; expiry uses bounded deadlock/serialization retry.
-- Production DOKU guard independently rejects non-HTTPS or localhost application URLs before callback validation.
-- PostgreSQL completion-index migration compares catalog uniqueness, indexed columns, and normalized predicate; equivalent indexes avoid CREATE, while differing named indexes are dropped only when owned, with duplicate preflight before replacement.
+- PostgreSQL migration only replaces its owned/recognized named completion index; rollback uses `DROP INDEX IF EXISTS` without touching unrelated indexes.
 
 - Unknown expiry sweep handles terminal orders idempotently and continues batch after per-attempt failures.
 - Definitive provider rejection now records canonical failed/expired settlement, updates order projection, and releases reservation through existing lifecycle.

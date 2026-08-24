@@ -52,26 +52,11 @@ return new class extends Migration
                 $details = $duplicates->map(fn ($duplicate): string => "{$duplicate->movement_key} ({$duplicate->movement_count})")->implode(', ');
                 throw new RuntimeException("Cannot add order_completed uniqueness; duplicate movement keys require reconciliation: {$details}");
             }
-            $expectedColumns = ['reference_type', 'reference_id', 'product_id'];
-            $normalizePredicate = static fn (?string $predicate): string => preg_replace('/\\s+|::[a-zA-Z0-9_\\s]+/', '', strtolower($predicate ?? '')) ?? '';
-            $indexes = DB::select("SELECT index_class.relname AS index_name, index_class.relowner, index_info.indisunique, array_to_json(array_agg(attribute.attname ORDER BY key_position.ordinality)) AS indexed_columns, pg_get_expr(index_info.indpred, index_info.indrelid) AS predicate FROM pg_index index_info JOIN pg_class index_class ON index_class.oid = index_info.indexrelid JOIN pg_namespace index_schema ON index_schema.oid = index_class.relnamespace CROSS JOIN LATERAL unnest(index_info.indkey) WITH ORDINALITY AS key_position(attnum, ordinality) JOIN pg_attribute attribute ON attribute.attrelid = index_info.indrelid AND attribute.attnum = key_position.attnum WHERE index_info.indrelid = 'stock_movements'::regclass AND index_schema.nspname = current_schema() GROUP BY index_class.relname, index_class.relowner, index_info.indisunique, index_info.indpred, index_info.indrelid");
-            $equivalent = collect($indexes)->first(fn ($index): bool => $index->indisunique && json_decode($index->indexed_columns, true, flags: JSON_THROW_ON_ERROR) === $expectedColumns && $normalizePredicate($index->predicate) === $normalizePredicate("type = 'order_completed'"));
-            $named = collect($indexes)->first(fn ($index): bool => $index->index_name === 'stock_movements_order_completed_unique');
-            $namedIsOwned = $named !== null && (bool) DB::selectOne("SELECT index_class.relowner::regrole::text = current_user AS owned FROM pg_class index_class JOIN pg_namespace index_schema ON index_schema.oid = index_class.relnamespace WHERE index_schema.nspname = current_schema() AND index_class.relname = 'stock_movements_order_completed_unique'")->owned;
-            if ($equivalent === null) {
-                if ($named !== null && ! $namedIsOwned) {
-                    throw new RuntimeException('Cannot replace non-owned stock movement completion index.');
-                }
-                if ($named !== null) {
-                    DB::statement('DROP INDEX stock_movements_order_completed_unique');
-                }
-                DB::statement("CREATE UNIQUE INDEX stock_movements_order_completed_unique ON stock_movements (reference_type, reference_id, product_id) WHERE type = 'order_completed'");
-            } elseif ($named !== null && $named->index_name !== $equivalent->index_name) {
-                if (! $namedIsOwned) {
-                    throw new RuntimeException('Cannot remove non-owned duplicate stock movement completion index.');
-                }
-                DB::statement('DROP INDEX stock_movements_order_completed_unique');
+            $existing = DB::selectOne("SELECT indexdef FROM pg_indexes WHERE schemaname = current_schema() AND indexname = 'stock_movements_order_completed_unique'");
+            if ($existing !== null && str_contains($existing->indexdef, 'WHERE (type = \'order_completed\')')) {
+                DB::statement('DROP INDEX IF EXISTS stock_movements_order_completed_unique');
             }
+            DB::statement("CREATE UNIQUE INDEX stock_movements_order_completed_unique ON stock_movements (reference_type, reference_id, product_id) WHERE type = 'order_completed'");
         }
 
         if (DB::getDriverName() === 'mysql') {
