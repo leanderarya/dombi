@@ -36,7 +36,10 @@ return new class extends Migration
             DB::statement('DROP TRIGGER IF EXISTS stock_movements_order_completed_key_update');
             DB::statement('DROP TRIGGER IF EXISTS stock_movements_order_completed_key_insert');
             if (collect(Schema::getIndexes('stock_movements'))->contains(fn (array $index): bool => $index['name'] === 'stock_movements_order_completed_unique')) {
-                DB::statement('DROP INDEX stock_movements_order_completed_unique ON stock_movements');
+                if (collect(Schema::getIndexes('stock_movements'))->contains(fn (array $index): bool => $index['name'] === 'stock_movements_order_completed_unique')) {
+                    DB::statement('DROP INDEX stock_movements_order_completed_unique ON stock_movements');
+                }
+
             }
             DB::statement("CREATE TRIGGER stock_movements_order_completed_key_insert BEFORE INSERT ON stock_movements FOR EACH ROW SET NEW.order_completed_key = IF(NEW.type = 'order_completed', CONCAT(NEW.reference_type, ':', NEW.reference_id, ':', NEW.product_id), NULL)");
             DB::statement("CREATE TRIGGER stock_movements_order_completed_key_update BEFORE UPDATE ON stock_movements FOR EACH ROW SET NEW.order_completed_key = IF(NEW.type = 'order_completed', CONCAT(NEW.reference_type, ':', NEW.reference_id, ':', NEW.product_id), NULL)");
@@ -73,7 +76,7 @@ return new class extends Migration
                 });
             }
         } elseif (DB::getDriverName() === 'pgsql') {
-            DB::statement('DROP INDEX stock_movements_order_completed_unique');
+            DB::statement('DROP INDEX IF EXISTS stock_movements_order_completed_unique');
         }
 
         if (DB::getDriverName() === 'pgsql') {

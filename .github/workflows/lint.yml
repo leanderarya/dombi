@@ -46,7 +46,7 @@ jobs:
           DB_DATABASE: dombi_test
           DB_USERNAME: ${{ matrix.database == 'mysql' && 'root' || 'postgres' }}
           DB_PASSWORD: ${{ matrix.database == 'mysql' && 'root' || 'postgres' }}
-        run: php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php
+        run: php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentRetryTest.php tests/Feature/PaymentOutboxTest.php tests/Feature/DokuReconciliationTest.php tests/Feature/PaymentProductionInvariantTest.php
 
   quality:
     runs-on: ubuntu-latest
@@ -66,8 +66,8 @@ jobs:
       - name: Run Pint
         run: composer lint
 
-      - name: Format Frontend
-        run: npm run format
+      - name: Check Frontend Format
+        run: npm run format:check
 
       - name: Lint Frontend
         run: npm run lint
