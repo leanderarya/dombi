@@ -106,7 +106,7 @@ class CanonicalPaymentTransitionService
             $this->recordOutboxEvents($lockedAttempt, $order, $status, $changed, $winner, $needsReview);
 
             return new TransitionResult($changed, $winner, $needsReview);
-        });
+        }, 3);
     }
 
     private function normalizeReference(PaymentAttempt $attempt, NormalizedPaymentEvent $event): ?string

@@ -124,21 +124,21 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
         OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'current_stock' => 3, 'reserved_stock' => 1, 'minimum_stock' => 0]);
         $first = $this->attempt($order, 'parallel-first', 'invoice-parallel-first');
         $second = $this->attempt($order, 'parallel-second', 'invoice-parallel-second');
-        $barrier = tempnam(sys_get_temp_dir(), 'task12-barrier-');
         $results = tempnam(sys_get_temp_dir(), 'task12-results-');
-        file_put_contents($barrier, '2');
         file_put_contents($results, '');
         DB::commit();
+        $parentSockets = [];
         $children = [];
 
         foreach ([$first, $second] as $attempt) {
+            [$parentSocket, $childSocket] = stream_socket_pair(AF_UNIX, SOCK_STREAM, 0);
             $pid = pcntl_fork();
             if ($pid === 0) {
                 try {
                     DB::purge();
                     DB::reconnect();
-                    while ((int) trim(file_get_contents($barrier)) < 2) {
-                        file_put_contents($barrier, (string) ((int) trim(file_get_contents($barrier)) + 1));
+                    fwrite($childSocket, "ready\n");
+                    while (fgets($childSocket) === false) {
                         usleep(10000);
                     }
                     app(CanonicalPaymentTransitionService::class)->apply(PaymentAttempt::findOrFail($attempt->id), new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', $attempt->invoice_number, now(), []));
@@ -150,7 +150,17 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
                 }
             }
             $this->assertGreaterThan(0, $pid);
+            fclose($childSocket);
+            $parentSockets[] = $parentSocket;
             $children[] = $pid;
+        }
+
+        foreach ($parentSockets as $socket) {
+            $this->assertSame('ready', trim(fgets($socket)));
+        }
+        foreach ($parentSockets as $socket) {
+            fwrite($socket, "go\n");
+            fclose($socket);
         }
 
         foreach ($children as $pid) {
@@ -164,7 +174,6 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
         $this->assertSame(1, StockMovement::where('reference_id', $order->id)->where('type', 'order_completed')->count());
         $this->assertSame(Order::STATUS_COMPLETED, $order->fresh()->status);
         $this->assertSame(2, OutletInventory::whereKey(OutletInventory::query()->where('outlet_id', $outlet->id)->where('product_id', $product->id)->value('id'))->value('current_stock'));
-        @unlink($barrier);
         @unlink($results);
     }
 
