@@ -34,6 +34,24 @@ class DokuProductionConfigTest extends TestCase
         app(DokuConfigurationGuard::class)->validate();
     }
 
+    public function test_production_doku_configuration_normalizes_surrounding_credential_whitespace(): void
+    {
+        config([
+            'app.env' => 'production',
+            'doku.client_id' => '  client  ',
+            'doku.api_key' => "\tsecret\n",
+            'doku.sandbox' => false,
+            'doku.base_url' => 'https://api.doku.com',
+            'app.url' => 'https://shop.example.com',
+            'doku.callback_url' => 'https://shop.example.com/payment/doku/notify',
+        ]);
+
+        app(DokuConfigurationGuard::class)->validate();
+
+        $this->assertSame('client', config('doku.client_id'));
+        $this->assertSame('secret', config('doku.api_key'));
+    }
+
     public function test_production_doku_configuration_rejects_http_callback_and_localhost(): void
     {
         config([

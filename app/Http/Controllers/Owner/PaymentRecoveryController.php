@@ -21,8 +21,25 @@ class PaymentRecoveryController extends Controller
 
     public function index(): JsonResponse
     {
+        $attempts = PaymentAttempt::query()
+            ->select([
+                'id', 'attempt_key', 'invoice_number', 'payment_method', 'amount_snapshot', 'currency_snapshot',
+                'gateway_amount', 'gateway_currency', 'gateway_transaction_id', 'gateway_status', 'creation_state',
+                'settlement_status', 'verification_status', 'reconciliation_status', 'reconciled_at',
+                'fulfilment_claimed_at', 'metadata', 'created_at', 'updated_at',
+            ])
+            ->latest()
+            ->paginate(25);
+        $attempts->getCollection()->transform(function (PaymentAttempt $attempt): array {
+            $safeMetadata = collect($attempt->metadata ?? [])
+                ->except(['customer_snapshot', 'customer', 'raw_response', 'session_token', 'token_id', 'secrets'])
+                ->all();
+
+            return array_merge($attempt->toArray(), ['metadata' => $safeMetadata]);
+        });
+
         return response()->json([
-            'attempts' => PaymentAttempt::query()->with('refundObligations')->latest()->paginate(25),
+            'attempts' => $attempts,
             'webhooks' => PaymentWebhookLog::query()->latest()->paginate(25),
             'refund_obligations' => RefundObligation::query()->with('paymentAttempt')->latest()->paginate(25),
         ]);
