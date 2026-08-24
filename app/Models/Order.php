@@ -380,7 +380,11 @@ class Order extends Model
             return null;
         }
 
-        return RefundObligation::query()
+        if ($this->relationLoaded('selectedRefundObligation')) {
+            return $this->getRelation('selectedRefundObligation');
+        }
+
+        $obligation = RefundObligation::query()
             ->where('reason', $reason)
             ->whereHas('paymentAttempt', function ($query) {
                 $query->where('order_id', $this->id)
@@ -395,6 +399,10 @@ class Order extends Model
                     ->whereColumn('payment_attempts.id', 'refund_obligations.payment_attempt_id')
             )
             ->first();
+
+        $this->setRelation('selectedRefundObligation', $obligation);
+
+        return $obligation;
     }
 
     public function refundStatusHistories(): HasMany
