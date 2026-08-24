@@ -113,11 +113,13 @@ class PaymentProductionMatrixTest extends TestCase
     {
         $order = Order::factory()->create();
         PaymentTransaction::create(['order_id' => $order->id, 'doku_order_id' => 'DRY-BAD', 'payment_method' => 'qris', 'amount' => 100, 'status' => 'unsupported']);
-        $before = DB::table('payment_attempts')->count();
+        $tables = ['payment_attempts', 'payment_transactions', 'refund_obligations', 'payment_outbox_events', 'payment_webhook_logs', 'orders', 'outlet_inventories', 'stock_movements'];
+        $before = collect($tables)->mapWithKeys(fn (string $table): array => [$table => DB::table($table)->count()])->all();
         $storagePath = storage_path('app/payment-attempt-backfill-exceptions.txt');
         @unlink($storagePath);
         $this->artisan('payments:backfill-attempts --dry-run')->assertExitCode(1);
-        $this->assertSame($before, DB::table('payment_attempts')->count());
+        $after = collect($tables)->mapWithKeys(fn (string $table): array => [$table => DB::table($table)->count()])->all();
+        $this->assertSame($before, $after);
         $this->assertFileDoesNotExist($storagePath);
     }
 
