@@ -147,11 +147,6 @@ class RefundService
 
             $this->validateDestinationData($destinationType, $data);
 
-            $updateData = $this->buildDestinationUpdateData($destinationType, $data);
-            if ($obligation) {
-                $obligation->update($this->obligationDestinationData($destinationType, $data));
-            }
-
             $rejectionReason = $obligation?->metadata['rejection_reason'] ?? null;
             $eligibleRejection = $obligation
                 ? $obligation->status?->value === 'rejected'
@@ -164,6 +159,15 @@ class RefundService
                         RefundRejectionReason::InvalidDestination->value,
                         RefundRejectionReason::IncompleteDestination->value,
                     ], true);
+
+            if ($obligation && $obligation->status?->value !== 'pending' && ! $eligibleRejection) {
+                throw new DomainException('Tujuan refund tidak dapat diubah pada status ini.');
+            }
+
+            $updateData = $this->buildDestinationUpdateData($destinationType, $data);
+            if ($obligation) {
+                $obligation->update($this->obligationDestinationData($destinationType, $data));
+            }
 
             if ($eligibleRejection) {
                 $updateData = array_merge($updateData, [

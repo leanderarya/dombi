@@ -1,8 +1,8 @@
 # Task 11 Report
 
 ## Scope
-- Canonical action_required selector includes stale in_progress (`started_at <= 24h`) and failed obligations.
-- Legacy action_required fallback includes stale legacy in_progress and refund_failed only when no matching canonical obligation exists.
+- `submitDestination` validates locked canonical obligation status before destination mutation.
+- Only pending obligations or rejected obligations with eligible destination rejection metadata may mutate; completed, in-progress, and non-resubmittable rejected obligations remain unchanged.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.
