@@ -1,8 +1,8 @@
 # Task 11 Report
 
 ## Scope
-- Legacy fallback now ignores synthetic legacy obligations; only non-synthetic canonical obligations suppress legacy visibility.
-- Canonical selected obligation remains authoritative when present.
+- Legacy fallback suppression now requires non-synthetic canonical obligation matching `orders.refund_reason`.
+- Obligations for unrelated refund reasons cannot hide legacy refund rows.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.
