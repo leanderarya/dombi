@@ -229,8 +229,13 @@ class TrackController extends Controller
             return response()->json(['success' => false, 'error' => 'Tidak dapat membatalkan pesanan ini.'], 422);
         }
 
-        // Step-up verification for pickup orders: require last4 HP
-        if ($order->fulfillment_type === Order::FULFILLMENT_PICKUP) {
+        // Recovery tokens are bearer credentials. Guests require phone step-up for pickup and delivery;
+        // authenticated owners retain existing ownership policy and do not need step-up.
+        $requiresStepUp = ! $user && in_array($order->fulfillment_type, [
+            Order::FULFILLMENT_PICKUP,
+            ...Order::DELIVERY_FULFILLMENT_TYPES,
+        ], true);
+        if ($requiresStepUp) {
             $last4Validator = Validator::make($request->all(), [
                 'last4_hp' => 'required|string|size:4|regex:/^\d{4}$/',
             ]);

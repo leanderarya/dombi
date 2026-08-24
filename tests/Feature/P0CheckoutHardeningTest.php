@@ -251,7 +251,7 @@ class P0CheckoutHardeningTest extends TestCase
         $response = $this->post("/track/{$order->recovery_token}/cancel", [
             'reason' => 'Tidak Jadi Membeli',
         ]);
-        $this->assertTrue(in_array($response->status(), [403, 404], true), 'Expected 403 or 404, got '.$response->status());
+        $this->assertTrue(in_array($response->status(), [403, 404, 422], true), 'Expected 403, 404, or 422, got '.$response->status());
         $response->assertDontSee('Exception', false);
     }
 
