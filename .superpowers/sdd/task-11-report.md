@@ -1,9 +1,8 @@
 # Task 11 Report
 
 ## Scope
-- Rejected destination resubmission routes canonical rejected→pending through `RefundObligationService::transition`, clearing rejection/started metadata and setting canonical timestamp.
-- Rollback routes canonical in_progress→pending through transition, clearing started timestamp/metadata while retaining rollback projection/history.
-- Legacy Order fields remain compatibility projections.
+- Canonical rejected→pending transition clears `rejected_at`, rejection metadata, and started metadata.
+- Finance action_required now selects only canonical in_progress obligations older than 24 hours, matching queueState.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.
