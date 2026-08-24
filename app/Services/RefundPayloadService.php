@@ -289,10 +289,10 @@ class RefundPayloadService
 
     private function fullDestination(Order $order, $obligation = null): ?array
     {
-        $type = $obligation?->destination_type ?? $order->refund_destination_type;
-        $label = $obligation?->bank_name ?? $obligation?->ewallet_provider ?? $order->refund_bank_name ?? $order->refund_ewallet_provider;
-        $holder = $obligation?->account_holder ?? $obligation?->ewallet_holder ?? $order->refund_account_holder ?? $order->refund_ewallet_holder;
-        $number = $obligation?->account_number ?? $obligation?->ewallet_number ?? $order->refund_account_number ?? $order->refund_ewallet_number;
+        $type = $obligation ? $obligation->destination_type : $order->refund_destination_type;
+        $label = $obligation ? ($obligation->bank_name ?? $obligation->ewallet_provider) : ($order->refund_bank_name ?? $order->refund_ewallet_provider);
+        $holder = $obligation ? ($obligation->account_holder ?? $obligation->ewallet_holder) : ($order->refund_account_holder ?? $order->refund_ewallet_holder);
+        $number = $obligation ? ($obligation->account_number ?? $obligation->ewallet_number) : ($order->refund_account_number ?? $order->refund_ewallet_number);
 
         if ($type === null) {
             return null;
@@ -311,13 +311,13 @@ class RefundPayloadService
 
     private function maskedDestination(Order $order, $obligation = null): ?array
     {
-        $type = $obligation?->destination_type ?? $order->refund_destination_type;
+        $type = $obligation ? $obligation->destination_type : $order->refund_destination_type;
         if ($type === null) {
             return null;
         }
 
         if ($type === 'bank') {
-            $number = $obligation?->account_number ?? $order->refund_account_number;
+            $number = $obligation ? $obligation->account_number : $order->refund_account_number;
             $masked = strlen($number) > 4 ? str_repeat('•', max(0, strlen($number) - 4)).substr($number, -4) : $number;
 
             return [

@@ -1,9 +1,9 @@
 # Task 11 Report
 
 ## Scope
-- All Finance queue filters use `Order::withCanonicalRefund` selected-obligation scope; no queue any-obligation predicates remain.
-- Finance counts use same canonical scope and lifecycle status set as rows.
-- Selected reason, latest non-synthetic attempt, and obligation tie-break remain centralized in Order selector.
+- Canonical destination fields are exclusive whenever obligation exists; legacy destination fallback only when obligation absent, including masked customer destination.
+- Finance rows/counts eager-load payment attempts and obligations so payload queue resolution avoids per-order obligation queries.
+- Canonical selection and synthetic exclusion preserved.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.
