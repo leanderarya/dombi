@@ -88,9 +88,20 @@ class RefundObligationTest extends TestCase
         $obligation = $service->createForAttempt($attempt, 'customer_cancellation');
         $this->assertSame(RefundObligationStatus::Pending, $obligation->status);
         $this->assertSame('12500.00', $obligation->amount);
+        $this->assertNotNull($obligation->requested_at);
+        $this->assertNull($obligation->started_at);
+        $this->assertNull($obligation->completed_at);
+        $this->assertNull($obligation->rejected_at);
         $this->assertTrue($service->transition($obligation, RefundObligationStatus::InProgress));
-        $this->assertTrue($service->transition($obligation->fresh(), RefundObligationStatus::Completed, ['reference' => 'REF-1']));
-        $this->assertSame(RefundObligationStatus::Completed, $obligation->fresh()->status);
+        $inProgress = $obligation->fresh();
+        $this->assertNotNull($inProgress->started_at);
+        $this->assertNull($inProgress->completed_at);
+        $this->assertTrue($service->transition($inProgress, RefundObligationStatus::Completed, ['reference' => 'REF-1']));
+        $completed = $obligation->fresh();
+        $this->assertSame(RefundObligationStatus::Completed, $completed->status);
+        $this->assertNotNull($completed->completed_at);
+        $this->assertTrue($completed->started_at->lessThanOrEqualTo($completed->completed_at));
+        $this->assertSame($completed->completed_at->toISOString(), $completed->processed_at->toISOString());
     }
 
     public function test_creation_requires_persisted_attempt_owned_by_order(): void

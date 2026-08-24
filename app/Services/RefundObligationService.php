@@ -27,7 +27,7 @@ class RefundObligationService
         }
 
         $attributes = ['payment_attempt_id' => $attempt->id, 'reason' => $reason];
-        $values = ['amount' => $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'status' => RefundObligationStatus::Pending];
+        $values = ['amount' => $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'status' => RefundObligationStatus::Pending, 'requested_at' => now()];
         for ($retry = 0; $retry < 3; $retry++) {
             try {
                 $obligation = RefundObligation::firstOrCreate($attributes, $values);
@@ -104,7 +104,17 @@ class RefundObligationService
             if (! in_array($to->value, $allowedStatuses, true)) {
                 return false;
             }
-            $locked->update(['status' => $to, 'metadata' => array_merge($locked->metadata ?? [], $metadata), 'processed_at' => $to === RefundObligationStatus::Completed ? now() : $locked->processed_at]);
+            $timestamp = now();
+            $timestamps = match ($to) {
+                RefundObligationStatus::InProgress => ['started_at' => $timestamp],
+                RefundObligationStatus::Completed => ['completed_at' => $timestamp, 'processed_at' => $timestamp],
+                RefundObligationStatus::Rejected => ['rejected_at' => $timestamp],
+                default => [],
+            };
+            $locked->update(array_merge([
+                'status' => $to,
+                'metadata' => array_merge($locked->metadata ?? [], $metadata),
+            ], $timestamps));
 
             return true;
         });

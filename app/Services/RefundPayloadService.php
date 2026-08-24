@@ -247,10 +247,10 @@ class RefundPayloadService
             'queue_state' => $queue,
             'status_label' => $this->statusLabel($order),
             'amount' => (float) ($obligation?->amount ?? $order->refund_amount ?? 0),
-            'requested_at' => $order->refund_requested_at?->toISOString(),
+            'requested_at' => ($obligation ? $obligation->requested_at : $order->refund_requested_at)?->toISOString(),
             'submitted_at' => $order->refund_destination_submitted_at?->toISOString(),
-            'started_at' => $obligation?->processed_at?->toISOString() ?? $order->refund_started_at?->toISOString(),
-            'completed_at' => $order->refunded_at?->toISOString(),
+            'started_at' => ($obligation?->started_at ?? $order->refund_started_at)?->toISOString(),
+            'completed_at' => ($obligation?->completed_at ?? $order->refunded_at)?->toISOString(),
             'rejection' => $rejection,
             'timeline' => $this->safeTimeline($order),
         ];
