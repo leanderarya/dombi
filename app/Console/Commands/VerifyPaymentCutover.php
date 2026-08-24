@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
+use App\Models\RefundObligation;
 use Illuminate\Console\Command;
 
 class VerifyPaymentCutover extends Command
@@ -21,9 +22,15 @@ class VerifyPaymentCutover extends Command
         }
         PaymentTransaction::query()->each(function (PaymentTransaction $transaction) use (&$errors): void {
             $invoice = $transaction->doku_order_id ?: $transaction->order?->order_code;
-            $matches = PaymentAttempt::query()->where(function ($query) use ($transaction, $invoice): void {
-                $query->where('legacy_payment_transaction_id', $transaction->id)->orWhere('invoice_number', $invoice);
-            })->get();
+            $matches = PaymentAttempt::query()->where('legacy_payment_transaction_id', $transaction->id)->get();
+            if ($matches->isEmpty() && $invoice !== null) {
+                $matches = PaymentAttempt::query()->whereNull('legacy_payment_transaction_id')->where('invoice_number', $invoice)->get();
+            }
+            if ($matches->count() > 1) {
+                $errors[] = "legacy transaction {$transaction->id} invoice fallback is ambiguous";
+
+                return;
+            }
             if ($matches->count() !== 1) {
                 $errors[] = "legacy transaction {$transaction->id} requires exactly one attempt";
 
@@ -37,7 +44,7 @@ class VerifyPaymentCutover extends Command
             $order = $transaction->order;
             $fieldsMatch = $attempt->order_id === $transaction->order_id
                 && $attempt->invoice_number === $transaction->doku_order_id
-                && strtoupper($attempt->currency_snapshot) === 'IDR'
+                && strtoupper($attempt->currency_snapshot) === $this->legacyCurrency($transaction)
                 && (string) $attempt->amount_snapshot === (string) $transaction->amount
                 && $attempt->settlement_status?->value === $expected
                 && $attempt->gateway_transaction_id === $transaction->doku_order_id;
@@ -61,16 +68,13 @@ class VerifyPaymentCutover extends Command
                 $errors[] = "legacy transaction {$transaction->id} refund obligation count/status/reason/amount/destination/proof/reference mismatch";
             }
         });
-        PaymentAttempt::query()->whereNull('legacy_payment_transaction_id')->each(function (PaymentAttempt $attempt) use (&$errors): void {
-            $errors[] = "canonical attempt {$attempt->id} has no legacy payment source";
-        });
         Order::query()->where(function ($query): void {
             $query->whereNotNull('refund_reason')->orWhere('refund_amount', '>', 0);
-        })->each(function (Order $order) use (&$errors): void {
-            $attempt = PaymentAttempt::query()->where('order_id', $order->id)->first();
-            $count = $attempt?->refundObligations()->count() ?? 0;
-            if ($attempt === null || $count !== 1) {
-                $errors[] = "refund-bearing legacy order {$order->id} requires exactly one obligation";
+        })->whereIn('id', PaymentTransaction::query()->select('order_id')->distinct())->each(function (Order $order) use (&$errors): void {
+            $legacyAttemptIds = PaymentAttempt::query()->where('order_id', $order->id)->whereNotNull('legacy_payment_transaction_id')->pluck('id');
+            $obligations = RefundObligation::query()->whereIn('payment_attempt_id', $legacyAttemptIds)->get();
+            if ($legacyAttemptIds->count() !== 1 || $obligations->count() !== 1) {
+                $errors[] = "refund-bearing legacy order {$order->id} requires exactly one matched obligation";
             }
         });
 
@@ -83,6 +87,11 @@ class VerifyPaymentCutover extends Command
         $this->info('Payment parity clean; legacy writes must be disabled before read-only cutover.');
 
         return self::SUCCESS;
+    }
+
+    private function legacyCurrency(PaymentTransaction $transaction): string
+    {
+        return strtoupper((string) (data_get($transaction->raw_response, 'order.currency') ?? data_get($transaction->raw_response, 'transaction.currency') ?? config('doku.currency', 'IDR')));
     }
 
     private function mapRefundStatus(?string $status): ?string

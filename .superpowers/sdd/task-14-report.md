@@ -19,7 +19,11 @@ Payment observability registry, fixed nullable event schema, safe allowlisted la
 | `php artisan test` | SERIAL BLOCKER: 1,439 tests, 1,420 passed, 18 failures, 1 skipped. Exact blocker names listed below; no production-ready claim |
 | `graphify update .` | PASS: 7,278 nodes, 18,581 edges, 491 communities |
 
-Task 14 status: BLOCKED. Full serial suite failures are release blockers. Production readiness is not claimed.
+Task 14 status: NO-GO/BLOCKED. Full serial suite failures are release blockers. Production readiness is not claimed.
+
+Latest verification: scoped matrix 22/22 pass, 50 assertions; migration fresh/seed pass; dry runs PASS with `Payment attempt backfill complete. Exceptions: 0` and `No DOKU payments to reconcile.`; graphify PASS at 7,281 nodes, 18,538 edges, 476 communities. Serial full suite: 1,439 tests, 1,420 passed, 18 failures, 1 skipped. Cutover parity command clean seeded result is PASS only because legacy writes default false and seeded parity is empty; production cutover remains NO-GO until real migration parity, explicit production legacy-write evidence, and all blockers clear.
+
+Late payment requires non-null trusted event timestamp and event time strictly after authoritative terminal transition timestamp. Taxonomy path assertions cover all required event owners; direct registry-only coverage is not treated as production behavior proof.
 
 Latest verification: scoped matrix 22/22 pass, 50 assertions; migration fresh/seed pass; both dry-runs pass with `Payment attempt backfill complete. Exceptions: 0` and `No DOKU payments to reconcile.`; cutover command returned 0 in clean seeded database because config default is false and parity was clean. Production cutover remains blocked until explicit production legacy-write configuration is verified and full suite blockers are resolved.
 
