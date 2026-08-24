@@ -31,8 +31,13 @@ class PaymentRecoveryController extends Controller
             ->latest()
             ->paginate(25);
         $attempts->getCollection()->transform(function (PaymentAttempt $attempt): array {
+            $safeMetadataKeys = [
+                'reconciliation_attempts', 'last_reconciliation_status', 'last_reconciliation_error',
+                'next_reconciliation_at', 'reconciliation_deadline_at', 'last_event_anomaly',
+            ];
             $safeMetadata = collect($attempt->metadata ?? [])
-                ->except(['customer_snapshot', 'customer', 'raw_response', 'session_token', 'token_id', 'secrets'])
+                ->only($safeMetadataKeys)
+                ->filter(static fn (mixed $value): bool => is_scalar($value) || $value === null)
                 ->all();
 
             return array_merge($attempt->toArray(), ['metadata' => $safeMetadata]);

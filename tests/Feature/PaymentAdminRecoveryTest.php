@@ -50,7 +50,7 @@ class PaymentAdminRecoveryTest extends TestCase
             'session_token' => 'session-secret',
             'token_id' => 'token-secret',
             'gateway_transaction_id' => 'gateway-safe',
-            'metadata' => ['reconciliation_attempts' => 2, 'customer_snapshot' => ['phone' => 'secret']],
+            'metadata' => ['reconciliation_attempts' => 2, 'evidence' => ['raw_response' => ['token_id' => 'secret']]],
         ]);
 
         $attempt = $this->actingAs($owner)->getJson('/owner/finance/payments')->json('attempts.data.0');
@@ -99,7 +99,7 @@ class PaymentAdminRecoveryTest extends TestCase
         ]);
 
         $response = $this->actingAs($owner)->getJson('/owner/finance/payments')->json();
-        $forbidden = ['payload', 'raw_body', 'body_digest', 'claim_token', 'bank_name', 'account_number', 'proof_image', 'notes', 'ewallet_number'];
+        $forbidden = ['payload', 'raw_body', 'body_digest', 'claim_token', 'bank_name', 'account_number', 'proof_image', 'notes', 'ewallet_number', 'raw_response', 'token_id', 'customer', 'secrets'];
 
         $this->assertFalse($this->containsForbiddenKey($response, $forbidden));
     }
