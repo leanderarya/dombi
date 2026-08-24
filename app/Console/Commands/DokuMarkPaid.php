@@ -53,7 +53,10 @@ class DokuMarkPaid extends Command
 
                 $transaction->update(['status' => 'paid']);
 
-                app(DokuService::class)->processPaymentStatusChange($locked, 'paid');
+                app(DokuService::class)->processPaymentStatusChange($locked, 'paid', [
+                    'order' => ['invoice_number' => $transaction->doku_order_id],
+                    'transaction' => ['status' => 'SUCCESS', 'amount' => $transaction->amount],
+                ]);
 
                 $locked->refresh();
 

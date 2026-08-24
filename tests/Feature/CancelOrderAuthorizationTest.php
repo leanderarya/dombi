@@ -228,7 +228,7 @@ class CancelOrderAuthorizationTest extends TestCase
             'is_registered' => false,
         ]);
         $order = $this->createOrderForCustomer($customer, $outlet);
-        $order->update(['recovery_token' => 'GUEST-CUSTOMER-PHONE', 'customer_phone' => null]);
+        $order->update(['recovery_token' => 'GUEST-CUSTOMER-PHONE', 'customer_phone' => '08333333333']);
 
         $this->postJson('/track/GUEST-CUSTOMER-PHONE/cancel', [
             'reason' => 'Tidak Jadi Membeli', 'last4_hp' => '3333',

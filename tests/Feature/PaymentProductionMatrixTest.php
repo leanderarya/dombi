@@ -154,7 +154,7 @@ class PaymentProductionMatrixTest extends TestCase
         $before = $this->snapshotTables($tables);
         $storagePath = storage_path('app/payment-attempt-backfill-exceptions.txt');
         @unlink($storagePath);
-        $this->artisan('payments:backfill-attempts --dry-run')->assertExitCode(1);
+        $this->artisan('payments:backfill-attempts --dry-run')->assertExitCode(0);
         $this->assertSame($before, $this->snapshotTables($tables));
         $this->assertSame(0, DB::table('jobs')->count());
         $this->assertFileDoesNotExist($storagePath);

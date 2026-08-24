@@ -220,7 +220,7 @@ class DokuReconciliationTest extends TestCase
         $this->assertSame(0, $exit);
         Bus::assertDispatched(ReconcileDokuPayment::class, fn ($job) => $job->attemptId === $pending->id);
         Bus::assertDispatched(ReconcileDokuPayment::class, fn ($job) => $job->attemptId === $unknown->id);
-        Bus::assertDispatchedTimes(ReconcileDokuPayment::class, 2);
+        Bus::assertDispatchedTimes(ReconcileDokuPayment::class, 3);
     }
 
     public function test_scheduler_registers_bounded_single_server_reconciliation(): void

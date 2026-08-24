@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
+use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -19,12 +20,24 @@ class DokuMarkPaidCommandTest extends TestCase
             'payment_status' => 'pending',
             'total' => 50000,
         ]);
-        PaymentTransaction::create([
+        $transaction = PaymentTransaction::create([
             'order_id' => $order->id,
             'doku_order_id' => $order->order_code,
             'payment_method' => 'qris',
             'amount' => 50000,
             'status' => 'pending',
+        ]);
+        PaymentAttempt::create([
+            'order_id' => $order->id,
+            'legacy_payment_transaction_id' => $transaction->id,
+            'attempt_key' => 'mark-paid-attempt',
+            'invoice_number' => $order->order_code,
+            'merchant_request_id' => 'mark-paid-request',
+            'amount_snapshot' => 50000,
+            'currency_snapshot' => 'IDR',
+            'creation_state' => 'unknown',
+            'settlement_status' => 'pending',
+            'verification_status' => 'needs_review',
         ]);
 
         $exit = Artisan::call('doku:mark-paid', ['order_code' => $order->order_code]);
