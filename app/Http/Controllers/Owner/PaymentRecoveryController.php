@@ -38,10 +38,41 @@ class PaymentRecoveryController extends Controller
             return array_merge($attempt->toArray(), ['metadata' => $safeMetadata]);
         });
 
+        $webhooks = PaymentWebhookLog::query()->latest()->paginate(25);
+        $webhooks->getCollection()->transform(static fn (PaymentWebhookLog $webhook): array => [
+            'id' => $webhook->id,
+            'request_id' => $webhook->request_id,
+            'source' => $webhook->source,
+            'invoice_number' => $webhook->invoice_number,
+            'status' => $webhook->status,
+            'signature_valid' => $webhook->signature_valid,
+            'mapped_status' => $webhook->mapped_status,
+            'received_at' => $webhook->created_at,
+            'processed_at' => $webhook->updated_at,
+            'error_code' => $webhook->error ? str($webhook->error)->before(':')->toString() : null,
+        ]);
+
+        $refundObligations = RefundObligation::query()->with('paymentAttempt:id,order_id')->latest()->paginate(25);
+        $refundObligations->getCollection()->transform(static fn (RefundObligation $obligation): array => [
+            'id' => $obligation->id,
+            'order_id' => $obligation->paymentAttempt?->order_id,
+            'attempt_id' => $obligation->payment_attempt_id,
+            'reason' => $obligation->reason,
+            'amount' => $obligation->amount,
+            'currency' => $obligation->currency,
+            'status' => $obligation->status,
+            'requested_at' => $obligation->requested_at,
+            'started_at' => $obligation->started_at,
+            'completed_at' => $obligation->completed_at,
+            'rejected_at' => $obligation->rejected_at,
+            'processed_at' => $obligation->processed_at,
+            'rejection_code' => data_get($obligation->metadata, 'rejection_code'),
+        ]);
+
         return response()->json([
             'attempts' => $attempts,
-            'webhooks' => PaymentWebhookLog::query()->latest()->paginate(25),
-            'refund_obligations' => RefundObligation::query()->with('paymentAttempt')->latest()->paginate(25),
+            'webhooks' => $webhooks,
+            'refund_obligations' => $refundObligations,
         ]);
     }
 
