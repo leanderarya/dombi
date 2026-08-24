@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\PaymentAttempt;
 use App\Services\DokuReconciliationService;
+use App\Services\PaymentObservabilityService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
@@ -31,6 +32,14 @@ class ReconcileDokuPayment implements ShouldQueue
             return;
         }
 
-        $reconciliation->reconcile($attempt);
+        $result = $reconciliation->reconcile($attempt);
+        app(PaymentObservabilityService::class)->event('reconciliation', [
+            'order_id' => $attempt->order_id,
+            'attempt_id' => $attempt->id,
+            'invoice_number' => $attempt->invoice_number,
+            'request_id' => $attempt->merchant_request_id,
+            'processing_result' => $result->changed ? 'transitioned' : 'unchanged',
+            'error_reason' => $result->changed ? null : 'no_transition',
+        ]);
     }
 }

@@ -104,6 +104,13 @@ class CanonicalPaymentTransitionService
             app(OrderPaymentProjectionService::class)->recompute($order);
 
             $this->recordOutboxEvents($lockedAttempt, $order, $status, $changed, $winner, $needsReview);
+            app(PaymentObservabilityService::class)->transition(
+                $lockedAttempt,
+                $order,
+                $status,
+                $needsReview ? 'needs_review' : ($winner ? 'fulfilled' : ($changed ? 'transitioned' : 'duplicate')),
+                $needsReview ? 'amount_mismatch' : null,
+            );
 
             return new TransitionResult($changed, $winner, $needsReview);
         }, 3);
