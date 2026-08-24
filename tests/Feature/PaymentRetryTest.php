@@ -5,8 +5,11 @@ namespace Tests\Feature;
 use App\Enums\PaymentAttemptCreationState;
 use App\Exceptions\DokuPaymentException;
 use App\Models\Order;
+use App\Models\Outlet;
+use App\Models\OutletInventory;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
+use App\Models\Product;
 use App\Services\DokuService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -27,6 +30,24 @@ class PaymentRetryTest extends TestCase
         $this->assertSame('pending', $status);
         $this->assertSame('unknown', $attempt->fresh()->settlement_status?->value);
         $this->assertSame('pending', $order->fresh()->payment_status);
+    }
+
+    public function test_unknown_reconciliation_deadline_fails_attempt_and_releases_reservation(): void
+    {
+        $outlet = Outlet::factory()->create();
+        $product = Product::factory()->create();
+        $order = Order::factory()->create(['outlet_id' => $outlet->id, 'payment_status' => 'pending']);
+        $order->items()->create(['product_id' => $product->id, 'product_name' => $product->name, 'quantity' => 1, 'price' => 100, 'subtotal' => 100]);
+        OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'current_stock' => 9, 'reserved_stock' => 1, 'minimum_stock' => 0]);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'deadline', 'invoice_number' => 'deadline', 'merchant_request_id' => 'deadline-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown', 'settlement_status' => 'unknown', 'metadata' => ['reconciliation_deadline_at' => now()->subMinute()->toIso8601String(), 'evidence' => 'retained']]);
+
+        $result = app(DokuService::class)->reconcilePaymentAttempt($attempt);
+
+        $this->assertSame('failed', $result->fresh()->creation_state?->value);
+        $this->assertSame('failed', $result->fresh()->settlement_status?->value);
+        $this->assertSame('RECONCILIATION_DEADLINE_EXPIRED', $result->fresh()->gateway_status);
+        $this->assertSame('retained', data_get($result->fresh()->metadata, 'evidence'));
+        $this->assertSame(0, OutletInventory::whereKey(OutletInventory::where('outlet_id', $outlet->id)->where('product_id', $product->id)->value('id'))->value('reserved_stock'));
     }
 
     public function test_reconcile_404_preserves_unknown_for_later_reconciliation(): void
