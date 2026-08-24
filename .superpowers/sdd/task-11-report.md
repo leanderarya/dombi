@@ -1,10 +1,9 @@
 # Task 11 Report
 
 ## Scope
-- Finance controller imports canonical RefundObligation model.
-- Payload owner/customer capability flags normalize canonical enum status through shared UI mapping.
-- Payload destination submitted timestamp reads canonical datetime cast with legacy fallback.
-- RefundService canonical selector ordering matches latest eligible payment attempt, then obligation ID tie-break.
+- Canonical selected-obligation selector now uses latest eligible non-synthetic payment attempt, then highest obligation ID tie-break for same attempt.
+- Order scope, selected relation, Finance canonical filters/counts/order, RefundService, and payload resolution use canonical selection; synthetic attempts cannot reorder lifecycle.
+- Older obligations cannot surface when newer selected obligation exists.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.
