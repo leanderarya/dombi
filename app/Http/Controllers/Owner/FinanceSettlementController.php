@@ -250,11 +250,7 @@ class FinanceSettlementController extends Controller
                 ->whereHas('customer', fn ($cq) => $cq->whereNull('user_id')),
             'ready' => $query->withCanonicalRefund([RefundObligationStatus::Pending->value], true),
             'in_progress' => $query->withCanonicalRefund([RefundObligationStatus::InProgress->value]),
-            'action_required' => $query->withCanonicalRefund([
-                RefundObligationStatus::InProgress->value,
-                RefundObligationStatus::Failed->value,
-                RefundObligationStatus::NeedsReview->value,
-            ]),
+            'action_required' => $query->withCanonicalRefund(null, null, true),
             'completed' => $query->withCanonicalRefund([RefundObligationStatus::Completed->value]),
             'rejected' => $query->withCanonicalRefund([RefundObligationStatus::Rejected->value]),
             default => $query,

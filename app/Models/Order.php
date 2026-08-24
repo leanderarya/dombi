@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PaymentStatus;
+use App\Enums\RefundObligationStatus;
 use App\Enums\RefundRejectionReason;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -194,7 +195,7 @@ class Order extends Model
         return $query->where('payment_status', $status->value);
     }
 
-    public function scopeWithCanonicalRefund(Builder $query, ?array $statuses = null, ?bool $hasDestination = null): Builder
+    public function scopeWithCanonicalRefund(Builder $query, ?array $statuses = null, ?bool $hasDestination = null, bool $staleInProgressOnly = false): Builder
     {
         return $query->whereExists(function ($selected) use ($statuses, $hasDestination): void {
             $selected->selectRaw('1')
@@ -210,6 +211,7 @@ class Order extends Model
                 ->when($hasDestination !== null, fn ($query) => $hasDestination
                     ? $query->whereNotNull('refund_obligations.destination_type')
                     : $query->whereNull('refund_obligations.destination_type'))
+                ->when($staleInProgressOnly, fn ($query) => $query->where('refund_obligations.status', RefundObligationStatus::InProgress->value)->where('refund_obligations.updated_at', '<=', now()->subHours(24)))
                 ->whereNotExists(function ($newer) {
                     $newer->selectRaw('1')
                         ->from('payment_attempts as newer_attempts')
