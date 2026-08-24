@@ -113,6 +113,7 @@ class DokuService
         $paymentUrl = $data['response']['payment']['url'] ?? $data['payment']['url'] ?? null;
         if (! $paymentUrl) {
             $this->persistCreationOutcome($attempt, $claimToken, 'unknown', $data, []);
+            app(PaymentObservabilityService::class)->event('invalid_response', ['order_id' => $attempt->order_id, 'attempt_id' => $attempt->id, 'invoice_number' => $attempt->invoice_number, 'request_id' => $attempt->merchant_request_id, 'processing_result' => 'unknown', 'error_reason' => 'missing_payment_url']);
             throw new DokuPaymentException('Invalid DOKU response structure');
         }
         $sessionId = $data['response']['order']['session_id'] ?? null;
