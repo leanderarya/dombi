@@ -119,7 +119,8 @@ class CanonicalPaymentTransitionService
             if ($status === 'unknown') {
                 $observability->event('unknown_status', ['order_id' => $order->id, 'attempt_id' => $lockedAttempt->id, 'invoice_number' => $lockedAttempt->invoice_number, 'mapped_status' => $status, 'processing_result' => 'review', 'error_reason' => 'unmapped_provider_status']);
             }
-            if ($status === 'success' && $order->status && $this->isTerminalOrder($order)) {
+            $terminalAt = $this->terminalTransitionAt($order);
+            if ($status === 'success' && $terminalAt !== null && $event->receivedAt->greaterThan($terminalAt)) {
                 $observability->event('late_payment', ['order_id' => $order->id, 'attempt_id' => $lockedAttempt->id, 'invoice_number' => $lockedAttempt->invoice_number, 'mapped_status' => $status, 'processing_result' => 'refund']);
             }
             if ($status === 'success' && ! $winner && $changed) {
@@ -157,6 +158,16 @@ class CanonicalPaymentTransitionService
             PaymentAttemptSettlementStatus::Failed => 30,
             PaymentAttemptSettlementStatus::Expired => 40,
             PaymentAttemptSettlementStatus::Paid => 50,
+        };
+    }
+
+    private function terminalTransitionAt(Order $order): ?Carbon
+    {
+        return match ($order->status) {
+            Order::STATUS_CANCELLED_BY_CUSTOMER, Order::STATUS_CANCELLED_BY_OUTLET => $order->cancelled_at,
+            Order::STATUS_REJECTED_BY_OUTLET => $order->rejected_at,
+            Order::STATUS_EXPIRED => $order->expired_at,
+            default => null,
         };
     }
 
