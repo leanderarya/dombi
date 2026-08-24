@@ -54,7 +54,8 @@ class RefundObligationTest extends TestCase
         app(RefundService::class)->request($order, 'customer', null, 'customer_cancellation');
 
         $this->assertDatabaseHas('refund_obligations', [
-            'payment_attempt_id' => PaymentAttempt::where('order_id', $order->id)->value('id'),
+            'payment_attempt_id' => PaymentAttempt::where('order_id', $order->id)
+                ->where('metadata->provenance', 'legacy_manual_refund')->value('id'),
             'amount' => 12500,
             'reason' => 'customer_cancellation',
             'status' => 'pending',
