@@ -17,10 +17,23 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('orders', function (Blueprint $table): void {
-            $table->dropForeign(['fulfilment_claimed_by']);
-            $table->dropIndex(['fulfilment_claimed_at']);
-            $table->dropColumn(['fulfilment_claimed_at', 'fulfilment_claimed_by']);
+        if (! Schema::hasTable('orders')) {
+            return;
+        }
+
+        $foreignKeys = collect(Schema::getForeignKeys('orders'));
+        $indexes = collect(Schema::getIndexes('orders'));
+        Schema::table('orders', function (Blueprint $table) use ($foreignKeys, $indexes): void {
+            if ($foreignKeys->contains(fn (array $foreign): bool => in_array('fulfilment_claimed_by', $foreign['columns'], true))) {
+                $table->dropForeign(['fulfilment_claimed_by']);
+            }
+            if ($indexes->contains(fn (array $index): bool => in_array('fulfilment_claimed_at', $index['columns'], true))) {
+                $table->dropIndex(['fulfilment_claimed_at']);
+            }
+            $columns = array_values(array_filter(['fulfilment_claimed_at', 'fulfilment_claimed_by'], fn (string $column): bool => Schema::hasColumn('orders', $column)));
+            if ($columns !== []) {
+                $table->dropColumn($columns);
+            }
         });
     }
 };
