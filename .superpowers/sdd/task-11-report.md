@@ -1,18 +1,17 @@
 # Task 11 Report
 
 ## Scope
-- Refund payloads read selected canonical obligations first, with legacy Order fields as compatibility fallback.
-- Finance refund queue filters use canonical obligation statuses and destination presence.
-- Proof delivery resolves completed canonical obligation proof, then legacy proof fallback.
-- RefundService locks canonical obligation during lifecycle entry where present; legacy Order checks remain compatibility safeguards.
-- Synthetic legacy attempts carry `synthetic_legacy_refund` provenance and `verified=false`; verified attempt selection excludes them.
-- Order selected obligation resolution is reason-scoped and deterministic by selected non-synthetic payment attempt.
+- `RefundService` now writes destination data to locked canonical obligations, transitions pending→in_progress, pending→rejected, in_progress→pending, and in_progress→completed, including proof/reference/note; Order fields remain compatibility projections.
+- Canonical obligation amount binds refund projection and lifecycle validation to selected payment attempt.
+- Payload, finance filters, and proof delivery read canonical obligation state/data with legacy fallback only for compatibility.
+- Synthetic legacy attempts carry provenance and verified=false and are excluded from trusted attempt selection.
+- Order selected obligation resolution is reason-scoped and deterministic by non-synthetic payment attempt.
 - No DOKU refund invocation added.
 
 ## Verification
-- Refund suite: `php artisan test tests/Feature/RefundServiceTest.php tests/Feature/RefundRouteContractTest.php tests/Feature/CustomerRefundExperienceTest.php tests/Feature/RefundObligationTest.php tests/Feature/RefundPayloadPrivacyTest.php tests/Feature/RefundProofAccessTest.php --compact` — 99 passed, 247 assertions.
-- `composer run lint:check` — passed.
-- `graphify update .` — passed.
+- Refund suite: 99 passed, 247 assertions.
+- `composer run lint:check`: passed.
+- `graphify update .`: passed.
 
 ## Changed files
 - `app/Services/RefundService.php`
