@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! in_array(DB::getDriverName(), ['mysql', 'pgsql'], true)) {
+            throw new RuntimeException('Task 12 requires MySQL or PostgreSQL for order_completed uniqueness.');
+        }
+
         if (DB::getDriverName() === 'mysql') {
             Schema::table('stock_movements', function (Blueprint $table): void {
                 $table->string('order_completed_key')->nullable();
