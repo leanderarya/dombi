@@ -32,6 +32,18 @@ class PaymentRetryTest extends TestCase
         $this->assertSame('pending', $order->fresh()->payment_status);
     }
 
+    public function test_legacy_unknown_reconciliation_receives_deadline(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'legacy-deadline', 'invoice_number' => 'legacy-deadline', 'merchant_request_id' => 'legacy-deadline-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown', 'settlement_status' => 'unknown']);
+        Http::fake(['*/checkout/v1/payment/legacy-deadline' => Http::response('', 404)]);
+
+        $result = app(DokuService::class)->reconcilePaymentAttempt($attempt);
+
+        $this->assertNotNull(data_get($result->fresh()->metadata, 'reconciliation_deadline_at'));
+        $this->assertSame('unknown', $result->fresh()->creation_state?->value);
+    }
+
     public function test_unknown_reconciliation_deadline_fails_attempt_and_releases_reservation(): void
     {
         $outlet = Outlet::factory()->create();
