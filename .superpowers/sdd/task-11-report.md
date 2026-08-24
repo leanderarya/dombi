@@ -1,10 +1,10 @@
 # Task 11 Report
 
 ## Scope
-- Finance ordering uses selected obligation requested timestamp; selected obligation resolution is deterministic and cached per payload/order.
-- Refund payload started timestamp uses canonical datetime cast and safe `toISOString`; canonical destination/proof/transfer remain one selected obligation source.
-- RefundService canonical lifecycle continues binding selected non-synthetic attempt/reason and projects transition timestamps to Order.
-- Synthetic legacy attempts excluded from canonical lifecycle.
+- Deterministic selected canonical obligation remains shared by payload behavior and selected-attempt/reason resolution; synthetic provenance excluded.
+- UI statuses map canonical lifecycle values to legacy capability values only at payload boundary.
+- RefundService lifecycle gates canonical obligation status exclusively when present; legacy payment status is fallback only when absent.
+- Canonical started datetime cast is used for payload queue/capability timestamps.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.
