@@ -104,13 +104,27 @@ class CanonicalPaymentTransitionService
             app(OrderPaymentProjectionService::class)->recompute($order);
 
             $this->recordOutboxEvents($lockedAttempt, $order, $status, $changed, $winner, $needsReview);
-            app(PaymentObservabilityService::class)->transition(
+            $observability = app(PaymentObservabilityService::class);
+            $observability->transition(
                 $lockedAttempt,
                 $order,
                 $status,
                 $needsReview ? 'needs_review' : ($winner ? 'fulfilled' : ($changed ? 'transitioned' : 'duplicate')),
                 $needsReview ? 'amount_mismatch' : null,
             );
+            if ($needsReview) {
+                $observability->event('amount_mismatch', ['order_id' => $order->id, 'attempt_id' => $lockedAttempt->id, 'invoice_number' => $lockedAttempt->invoice_number, 'mapped_status' => $status, 'processing_result' => 'needs_review', 'error_reason' => 'amount_mismatch']);
+                $observability->event('needs_review', ['order_id' => $order->id, 'attempt_id' => $lockedAttempt->id, 'invoice_number' => $lockedAttempt->invoice_number, 'mapped_status' => $status, 'processing_result' => 'blocked', 'error_reason' => 'amount_mismatch']);
+            }
+            if ($status === 'unknown') {
+                $observability->event('unknown_status', ['order_id' => $order->id, 'attempt_id' => $lockedAttempt->id, 'invoice_number' => $lockedAttempt->invoice_number, 'mapped_status' => $status, 'processing_result' => 'review', 'error_reason' => 'unmapped_provider_status']);
+            }
+            if ($status === 'success' && $order->status && $this->isTerminalOrder($order)) {
+                $observability->event('late_payment', ['order_id' => $order->id, 'attempt_id' => $lockedAttempt->id, 'invoice_number' => $lockedAttempt->invoice_number, 'mapped_status' => $status, 'processing_result' => 'refund']);
+            }
+            if ($status === 'success' && ! $winner && $changed) {
+                $observability->event('duplicate_success', ['order_id' => $order->id, 'attempt_id' => $lockedAttempt->id, 'invoice_number' => $lockedAttempt->invoice_number, 'mapped_status' => $status, 'processing_result' => 'refund']);
+            }
 
             return new TransitionResult($changed, $winner, $needsReview);
         }, 3);
