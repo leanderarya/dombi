@@ -38,7 +38,7 @@ class VerifyPaymentCutover extends Command
                 $errors[] = 'runtime payment cutover timestamp must use exact UTC format Y-m-dTH:i:sZ';
             }
         }
-        if (config('doku.legacy_writes_enabled', true) || filter_var($evidence, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== false || $evidence === null) {
+        if (config('doku.legacy_writes_enabled', true) !== false || $evidence !== 'false') {
             $errors[] = 'runtime deployment evidence must explicitly resolve PAYMENTS_LEGACY_WRITES_ENABLED=false';
         }
         PaymentTransaction::query()->each(function (PaymentTransaction $transaction) use (&$errors): void {
