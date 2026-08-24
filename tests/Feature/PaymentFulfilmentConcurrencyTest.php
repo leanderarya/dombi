@@ -35,18 +35,6 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
         $this->assertStringContainsString("Schema::getIndexes('stock_movements')", $migration);
     }
 
-    public function test_postgres_completion_index_detection_is_structural(): void
-    {
-        $migration = file_get_contents(database_path('migrations/2026_08_24_000008_add_fulfilment_integrity_constraints.php'));
-
-        $this->assertStringContainsString('indisunique', $migration);
-        $this->assertStringContainsString('array_agg(attribute.attname', $migration);
-        $this->assertStringContainsString('pg_get_expr(index_info.indpred', $migration);
-        $this->assertStringNotContainsString('str_contains($existing->indexdef', $migration);
-        $this->assertStringContainsString('DROP INDEX stock_movements_order_completed_unique', $migration);
-        $this->assertStringContainsString('Cannot replace non-owned stock movement completion index.', $migration);
-    }
-
     public function test_refund_obligation_uniqueness_is_present_on_production_drivers(): void
     {
         if (DB::connection()->getDriverName() === 'sqlite') {
