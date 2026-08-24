@@ -19,6 +19,8 @@ class CanonicalPaymentTransitionService
     {
         return DB::transaction(function () use ($attempt, $event): TransitionResult {
             $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
+            $terminalAtBeforeTransition = $this->terminalTransitionAt($order);
+            $terminalStatusBeforeTransition = $order->status;
             $lockedAttempt = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             $lastReceivedAt = data_get($lockedAttempt->metadata ?? [], 'last_event_received_at');
             if ($lastReceivedAt !== null && $event->receivedAt->lessThanOrEqualTo(Carbon::parse($lastReceivedAt)->utc())) {
@@ -119,8 +121,8 @@ class CanonicalPaymentTransitionService
             if ($status === 'unknown') {
                 $observability->event('unknown_status', ['order_id' => $order->id, 'attempt_id' => $lockedAttempt->id, 'invoice_number' => $lockedAttempt->invoice_number, 'mapped_status' => $status, 'processing_result' => 'review', 'error_reason' => 'unmapped_provider_status']);
             }
-            $terminalAt = $this->terminalTransitionAt($order);
-            if ($status === 'success' && $event->receivedAt !== null && $terminalAt !== null && $event->receivedAt->greaterThan($terminalAt)) {
+            $terminalAt = $terminalAtBeforeTransition;
+            if ($status === 'success' && $event->receivedAt !== null && $terminalStatusBeforeTransition !== null && $terminalAt !== null && $event->receivedAt->greaterThan($terminalAt)) {
                 $observability->event('late_payment', ['order_id' => $order->id, 'attempt_id' => $lockedAttempt->id, 'invoice_number' => $lockedAttempt->invoice_number, 'mapped_status' => $status, 'processing_result' => 'refund']);
             }
             if ($status === 'success' && ! $winner && $changed) {

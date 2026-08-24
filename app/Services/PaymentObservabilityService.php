@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 final class PaymentObservabilityService
@@ -98,7 +99,7 @@ final class PaymentObservabilityService
     public function event(string $name, array $context = []): void
     {
         try {
-            $this->writeEvent($name, $context);
+            DB::afterCommit(fn () => $this->writeEvent($name, $context));
         } catch (\Throwable $exception) {
             Log::channel('operational')->warning('payment.observability_unavailable', ['error_reason' => $exception->getMessage()]);
         }
@@ -123,11 +124,7 @@ final class PaymentObservabilityService
         $counter = 'payment_'.$name;
         $this->counters[$counter] = ($this->counters[$counter] ?? 0) + 1;
         $cacheKey = 'payment_observability.counter.'.$counter;
-        try {
-            Cache::increment($cacheKey);
-        } catch (\Throwable) {
-            Cache::put($cacheKey, 1, now()->addYears(10));
-        }
+        Cache::increment($cacheKey);
         Log::channel('operational')->info('payment.'.$name, $labels);
     }
 }
