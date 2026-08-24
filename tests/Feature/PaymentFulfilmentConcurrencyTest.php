@@ -38,13 +38,15 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
             $this->markTestSkipped('SQLite constraint gate is not production-driver coverage.');
         }
 
-        $indexes = collect(DB::select('SHOW INDEX FROM refund_obligations'));
-        if (DB::connection()->getDriverName() === 'pgsql') {
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'pgsql') {
             $indexes = collect(DB::select("SELECT indexdef FROM pg_indexes WHERE tablename = 'refund_obligations'"));
             $this->assertTrue($indexes->contains(fn ($index) => str_contains($index->indexdef, 'payment_attempt_id') && str_contains($index->indexdef, 'reason')));
 
             return;
         }
+        $this->assertSame('mysql', $driver);
+        $indexes = collect(DB::select('SHOW INDEX FROM refund_obligations'));
         $this->assertTrue($indexes->contains(fn ($index) => $index->Key_name === 'refund_obligations_payment_attempt_id_reason_unique'));
     }
 
