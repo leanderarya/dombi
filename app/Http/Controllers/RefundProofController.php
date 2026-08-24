@@ -30,7 +30,11 @@ class RefundProofController extends Controller
         $obligation = $order->selectedRefundObligation();
         $path = $obligation?->proof_image;
 
-        if ($obligation?->status?->value !== 'completed' || ! $path) {
+        if ($obligation) {
+            if ($obligation->status?->value !== 'completed' || ! $path) {
+                abort(404);
+            }
+        } else {
             $path = $order->payment_status === 'refunded' ? $order->refund_proof_image : null;
         }
 

@@ -225,10 +225,14 @@ class FinanceSettlementController extends Controller
         }
 
         $query = Order::whereHas('paymentAttempts.refundObligations', function ($obligation) {
-            $obligation->whereIn('status', array_map(
-                static fn (RefundObligationStatus $status): string => $status->value,
-                RefundObligationStatus::cases(),
-            ));
+            $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')
+                ->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
+                    $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                }))
+                ->whereIn('status', array_map(
+                    static fn (RefundObligationStatus $status): string => $status->value,
+                    RefundObligationStatus::cases(),
+                ));
         })
             ->with(['outlet:id,name', 'customer', 'paymentTransactions'])
             ->orderByDesc('refund_requested_at');
@@ -266,7 +270,12 @@ class FinanceSettlementController extends Controller
         foreach ($validQueues as $queue) {
             $refundCounts[$queue] = 0;
         }
-        Order::whereHas('paymentAttempts.refundObligations')->chunk(200, function ($orders) use (&$refundCounts): void {
+        Order::whereHas('paymentAttempts.refundObligations', function ($obligation): void {
+            $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')
+                ->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
+                    $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                }));
+        })->chunk(200, function ($orders) use (&$refundCounts): void {
             foreach ($orders as $order) {
                 $queue = $this->refundPayloads->queueState($order);
                 if ($queue !== null && isset($refundCounts[$queue])) {
