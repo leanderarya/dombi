@@ -47,12 +47,16 @@ final class PaymentObservabilityService
     public function counters(): array
     {
         $counters = $this->counters;
-        foreach (self::EVENTS as $event) {
-            $key = 'payment_observability.counter.payment_'.$event;
-            $value = Cache::get($key);
-            if ($value !== null) {
-                $counters['payment_'.$event] = (int) $value;
+        try {
+            foreach (self::EVENTS as $event) {
+                $key = 'payment_observability.counter.payment_'.$event;
+                $value = Cache::get($key);
+                if ($value !== null) {
+                    $counters['payment_'.$event] = (int) $value;
+                }
             }
+        } catch (\Throwable $exception) {
+            $this->safeLog($exception);
         }
 
         return $counters;
@@ -60,7 +64,13 @@ final class PaymentObservabilityService
 
     public function gauges(): array
     {
-        return array_merge($this->gauges, Cache::get('payment_observability.gauges', []));
+        try {
+            return array_merge($this->gauges, Cache::get('payment_observability.gauges', []));
+        } catch (\Throwable $exception) {
+            $this->safeLog($exception);
+
+            return $this->gauges;
+        }
     }
 
     public function events(): array

@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
 use App\Models\RefundObligation;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 class VerifyPaymentCutover extends Command
@@ -127,8 +128,12 @@ class VerifyPaymentCutover extends Command
         });
         RefundObligation::query()->each(function (RefundObligation $obligation) use (&$errors): void {
             $attempt = $obligation->paymentAttempt;
-            if ($attempt === null || ($attempt->legacy_payment_transaction_id !== null && ! PaymentTransaction::query()->whereKey($attempt->legacy_payment_transaction_id)->exists())) {
-                $errors[] = "refund obligation {$obligation->id} has no valid legacy-linked attempt";
+            if ($attempt === null || ! Order::query()->whereKey($attempt->order_id)->exists()) {
+                $errors[] = "refund obligation {$obligation->id} has invalid attempt/order FK";
+            } elseif ($attempt->legacy_payment_transaction_id !== null && ! PaymentTransaction::query()->whereKey($attempt->legacy_payment_transaction_id)->exists()) {
+                $errors[] = "refund obligation {$obligation->id} has missing legacy source";
+            } elseif ($attempt->legacy_payment_transaction_id === null && ! $this->isPostCutover($attempt)) {
+                $errors[] = "refund obligation {$obligation->id} lacks pre-cutover legacy provenance";
             }
         });
 
@@ -141,6 +146,13 @@ class VerifyPaymentCutover extends Command
         $this->info('READY: payment parity clean and runtime legacy-write evidence explicitly disabled.');
 
         return self::SUCCESS;
+    }
+
+    private function isPostCutover(PaymentAttempt $attempt): bool
+    {
+        $cutover = config('doku.payment_cutover_at');
+
+        return $cutover !== null && $attempt->created_at !== null && $attempt->created_at->greaterThan(Carbon::parse($cutover));
     }
 
     private function minorUnits(int|float|string|null $value): ?int
