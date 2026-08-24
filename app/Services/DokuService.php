@@ -100,11 +100,13 @@ class DokuService
             $response = Http::withHeaders($headers)->timeout(30)->withBody($bodyJson, 'application/json')->post($this->baseUrl.$endpoint);
         } catch (ConnectionException $exception) {
             $this->persistCreationOutcome($attempt, $claimToken, 'unknown', null, ['creation_error' => $exception->getMessage()]);
+            app(PaymentObservabilityService::class)->event('creation_timeout', ['order_id' => $attempt->order_id, 'attempt_id' => $attempt->id, 'invoice_number' => $attempt->invoice_number, 'request_id' => $attempt->merchant_request_id, 'processing_result' => 'unknown', 'error_reason' => 'connection_timeout']);
             throw $exception;
         }
         if (! $response->successful()) {
             $ambiguous = in_array($response->status(), [408, 429], true) || $response->status() >= 500;
             $this->persistCreationOutcome($attempt, $claimToken, $ambiguous ? 'unknown' : 'failed', $response->json(), []);
+            app(PaymentObservabilityService::class)->event($ambiguous ? 'creation_timeout' : 'creation_failed', ['order_id' => $attempt->order_id, 'attempt_id' => $attempt->id, 'invoice_number' => $attempt->invoice_number, 'request_id' => $attempt->merchant_request_id, 'processing_result' => $ambiguous ? 'unknown' : 'failed', 'error_reason' => 'http_'.$response->status()]);
             throw new DokuPaymentException('DOKU payment creation failed', $response->status(), $response->json('error_messages', []), $response);
         }
         $data = $response->json();

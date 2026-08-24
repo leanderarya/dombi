@@ -17,11 +17,15 @@ final class DokuWebhookIngressService
         $header = static fn (string $name): ?string => isset($headers[strtolower($name)]) ? (string) (is_array($headers[strtolower($name)]) ? ($headers[strtolower($name)][0] ?? '') : $headers[strtolower($name)]) : null;
         $requestId = trim($header('Request-Id') ?? '');
         if ($requestId === '') {
+            app(PaymentObservabilityService::class)->event('webhook_rejected', ['processing_result' => 'rejected', 'error_reason' => 'missing_request_id']);
+
             return new WebhookReceipt(new PaymentWebhookLog, 400, 'Request-Id required');
         }
         $digest = base64_encode(hash('sha256', $rawBody, true));
         $invoice = data_get($payload, 'order.invoice_number');
         if (! $this->doku->verifySignature($payload, $requestId, $rawBody, $header('Request-Timestamp'), $header('Signature'), $header('Client-Id'))) {
+            app(PaymentObservabilityService::class)->event('signature_invalid', ['request_id' => $requestId, 'invoice_number' => $invoice, 'processing_result' => 'rejected', 'error_reason' => 'invalid_signature']);
+
             return new WebhookReceipt(new PaymentWebhookLog, 401, 'Invalid signature');
         }
 
