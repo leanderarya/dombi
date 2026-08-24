@@ -170,6 +170,16 @@ class InventoryService
                 continue;
             }
 
+            $alreadyCompleted = StockMovement::query()
+                ->where('reference_type', Order::class)
+                ->where('reference_id', $order->id)
+                ->where('product_id', $productId)
+                ->where('type', 'order_completed')
+                ->exists();
+            if ($alreadyCompleted) {
+                continue;
+            }
+
             $inventory = OutletInventory::query()
                 ->where('outlet_id', $order->outlet_id)
                 ->where('product_id', $productId)

@@ -99,6 +99,8 @@ class Order extends Model
     public const REFUND_DESTINATION_INVALID = 'invalid';
 
     protected $fillable = [
+        'fulfilment_claimed_at',
+        'fulfilment_claimed_by',
         'customer_id', 'outlet_id', 'recommended_outlet_id', 'order_code', 'recovery_token', 'guest_token', 'status', 'fulfillment_type',
         'subtotal', 'delivery_fee', 'payment_method', 'payment_fee', 'total', 'customer_name', 'customer_phone',
         'payment_status', 'doku_order_id', 'paid_at',
@@ -143,6 +145,7 @@ class Order extends Model
     protected function casts(): array
     {
         return [
+            'fulfilment_claimed_at' => 'datetime',
             'subtotal' => 'decimal:2',
             'delivery_fee' => 'decimal:2',
             'delivery_distance_km' => 'decimal:2',

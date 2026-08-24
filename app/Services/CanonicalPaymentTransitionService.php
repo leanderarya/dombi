@@ -177,7 +177,13 @@ class CanonicalPaymentTransitionService
 
     private function claimOrRefund(PaymentAttempt $attempt, Order $order): bool
     {
-        if ($attempt->fulfilment_claimed_at !== null) {
+        if ($attempt->fulfilment_claimed_at !== null || $order->fulfilment_claimed_at !== null) {
+            if ($order->fulfilment_claimed_by !== $attempt->id && $attempt->fulfilment_claimed_at === null) {
+                $this->createRefundObligation($attempt, 'duplicate_paid_attempt');
+
+                return false;
+            }
+
             return true;
         }
 
@@ -192,13 +198,14 @@ class CanonicalPaymentTransitionService
             return false;
         }
 
-        $winner = PaymentAttempt::query()->where('order_id', $order->id)
-            ->where('settlement_status', PaymentAttemptSettlementStatus::Paid)
-            ->where('verification_status', PaymentAttemptVerificationStatus::Verified)
-            ->whereNotNull('fulfilment_claimed_at')->exists();
-        if (! $winner) {
+        $claimed = Order::query()->whereKey($order->id)
+            ->whereNull('fulfilment_claimed_at')
+            ->update(['fulfilment_claimed_at' => now(), 'fulfilment_claimed_by' => $attempt->id]);
+        if ($claimed === 1) {
             $attempt->fulfilment_claimed_at = now();
             $attempt->save();
+            $order->fulfilment_claimed_at = $attempt->fulfilment_claimed_at;
+            $order->fulfilment_claimed_by = $attempt->id;
 
             return true;
         }
