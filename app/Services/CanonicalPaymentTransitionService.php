@@ -206,6 +206,7 @@ class CanonicalPaymentTransitionService
             $attempt->save();
             $order->fulfilment_claimed_at = $attempt->fulfilment_claimed_at;
             $order->fulfilment_claimed_by = $attempt->id;
+            app(OrderStatusService::class)->completeFromPayment($order->fresh(['items']));
 
             return true;
         }

@@ -175,6 +175,7 @@ class InventoryService
                 ->where('reference_id', $order->id)
                 ->where('product_id', $productId)
                 ->where('type', 'order_completed')
+                ->lockForUpdate()
                 ->exists();
             if ($alreadyCompleted) {
                 continue;
