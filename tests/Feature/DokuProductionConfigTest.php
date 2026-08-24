@@ -96,20 +96,26 @@ class DokuProductionConfigTest extends TestCase
         app(DokuConfigurationGuard::class)->validate();
     }
 
-    public function test_production_doku_configuration_rejects_http_callback_and_localhost(): void
+    public function test_production_doku_configuration_rejects_reserved_application_hosts(): void
     {
-        config([
-            'app.env' => 'production',
-            'doku.client_id' => 'client',
-            'doku.api_key' => 'secret',
-            'doku.sandbox' => false,
-            'doku.base_url' => 'https://api.doku.com',
-            'app.url' => 'https://shop.example.com',
-            'doku.callback_url' => 'http://localhost/payment/doku/notify',
-        ]);
+        foreach (['localhost', 'localhost.', '127.0.0.1', '[::1]', '192.168.1.10', '169.254.10.20', '[fc00::1]'] as $host) {
+            config([
+                'app.env' => 'production',
+                'doku.client_id' => 'client',
+                'doku.api_key' => 'secret',
+                'doku.sandbox' => false,
+                'doku.base_url' => 'https://api.doku.com',
+                'app.url' => "https://{$host}",
+                'doku.callback_url' => "https://{$host}/payment/doku/notify",
+            ]);
 
-        $this->expectException(\RuntimeException::class);
-        app(DokuConfigurationGuard::class)->validate();
+            try {
+                app(DokuConfigurationGuard::class)->validate();
+                $this->fail("Expected reserved host {$host} to be rejected.");
+            } catch (\RuntimeException) {
+                $this->assertTrue(true);
+            }
+        }
     }
 
     public function test_non_production_configuration_is_not_blocked(): void

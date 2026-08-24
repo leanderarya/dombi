@@ -142,8 +142,9 @@ class PaymentAdminRecoveryTest extends TestCase
         $response = $this->actingAs($owner)->post("/owner/finance/payments/{$attempt->id}/check-status");
 
         $response->assertRedirect();
-        $this->assertSame('Payment status check failed.', session('success'));
-        $this->assertStringNotContainsString('provider secret', session('success'));
+        $this->assertSame('Payment status check failed.', session('error'));
+        $this->assertNull(session('success'));
+        $this->assertStringNotContainsString('provider secret', session('error'));
     }
 
     public function test_owner_needs_review_rejects_invalid_transition_without_success(): void
