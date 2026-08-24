@@ -85,7 +85,7 @@ class StockValidationRaceConditionTest extends TestCase
             $adjustCount++;
         }
 
-        // Current endpoint test is sequential, not concurrent; reservation race requires parallel requests.
+        // Endpoint calls are sequential; parallel race requires separate workers.
         $this->assertSame(2, $successCount, 'Sequential checkout requests both succeed');
 
         // Verify no overselling

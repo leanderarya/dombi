@@ -2,7 +2,6 @@
 
 namespace Tests\Unit;
 
-use Illuminate\Support\Facades\DB;
 use App\Enums\PaymentAttemptSettlementStatus;
 use App\Enums\PaymentAttemptVerificationStatus;
 use App\Models\Order;
@@ -11,6 +10,7 @@ use App\Models\RefundObligation;
 use App\Services\CanonicalPaymentTransitionService;
 use App\Services\NormalizedPaymentEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CanonicalPaymentTransitionServiceTest extends TestCase
