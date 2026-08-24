@@ -12,7 +12,7 @@
 
 - `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentRetryTest.php tests/Feature/PaymentOutboxTest.php tests/Feature/DokuReconciliationTest.php` — passed, 61 tests / 174 assertions, 1 skipped.
 - `composer run lint:check` — passed.
-- `graphify update .` — pending after this report update.
+- `graphify update .` — passed; graph rebuilt with 7,206 nodes.
 
 ## Files
 
