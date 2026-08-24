@@ -2,18 +2,17 @@
 
 ## Findings fixed
 
-- Canonical verified payment success now claims order fulfilment and completes order/inventory/settlement in same database transaction. Duplicate paid attempts receive durable `duplicate_paid_attempt` obligations and never fulfil.
-- Inventory completion performs a row-locked duplicate check and has a database unique key on `(reference_type, reference_id, product_id, type)`.
-- PostgreSQL receives claimant consistency check `(claimed_at, claimed_by)`; MySQL constraint is omitted because MySQL rejects checks referencing columns participating in foreign-key referential actions.
-- Unknown DOKU creation remains durable and reconciliation-driven; existing tests cover unknown creation, expiry/reconciliation, definitive 404 failure, pending results, and successful reconciliation. No automatic DOKU refund was added.
+- Duplicate order lines are aggregated by product before completion; total quantity decrements once and reserved stock releases once.
+- Completion uniqueness is scoped to `order_completed`: MySQL uses nullable key plus trigger/index; PostgreSQL uses partial unique index. Reservation and release movements remain unrestricted.
+- Idempotency retains row-lock check and database uniqueness guard.
+- 404 reconciliation expectations now preserve `unknown` settlement/creation state and pending order status per Task 8; definitive rejection preserves failed creation state while settlement remains unknown.
+- Canonical success retains atomic claim, order completion, inventory completion, settlement, and loser refund obligation behavior.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php` — passed, 2 tests / 6 assertions.
-- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php` — passed, 2 tests / 6 assertions.
-- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentOutboxTest.php tests/Feature/DokuReconciliationTest.php tests/Feature/PaymentRetryTest.php` — 56 passed, 2 existing failures in `PaymentRetryTest` expecting 404 reconciliation state `failed`; current behaviour returns durable `unknown`.
+- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentRetryTest.php tests/Feature/PaymentOutboxTest.php tests/Feature/DokuReconciliationTest.php` — passed, 60 tests / 168 assertions, 1 skipped.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed; graph rebuilt with 7,203 nodes.
+- `graphify update .` — passed; graph rebuilt with 7,205 nodes.
 
 ## Files
 
@@ -24,3 +23,4 @@
 - `app/Services/OrderStatusService.php`
 - `app/Services/InventoryService.php`
 - `tests/Feature/PaymentFulfilmentConcurrencyTest.php`
+- `tests/Feature/PaymentRetryTest.php`
