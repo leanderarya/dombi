@@ -180,7 +180,11 @@ class PaymentProductionMatrixTest extends TestCase
         $order = Order::factory()->create();
         PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'DRY-ATTEMPT', 'invoice_number' => 'DRY-2', 'merchant_request_id' => 'DRY-REQ', 'amount_snapshot' => 100, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown', 'settlement_status' => 'unknown']);
         Queue::fake();
-        $this->artisan('payments:reconcile-doku --dry-run')->assertExitCode(0);
+        $this->artisan('payments:reconcile-doku --dry-run')
+            ->expectsOutputToContain('No DOKU payments to reconcile.')
+            ->assertExitCode(0);
+        $this->assertSame('DRY-2', PaymentAttempt::query()->sole()->invoice_number);
+        $this->assertSame('unknown', PaymentAttempt::query()->sole()->settlement_status?->value);
         Queue::assertNothingPushed();
     }
 
