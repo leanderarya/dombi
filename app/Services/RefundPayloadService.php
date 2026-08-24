@@ -235,7 +235,7 @@ class RefundPayloadService
             'destination_status' => $destinationStatus,
             'queue_state' => $queue,
             'status_label' => $this->statusLabel($order),
-            'amount' => (float) ($order->refund_amount ?? 0),
+            'amount' => (float) ($obligation?->amount ?? $order->refund_amount ?? 0),
             'requested_at' => $order->refund_requested_at?->toISOString(),
             'submitted_at' => $order->refund_destination_submitted_at?->toISOString(),
             'started_at' => $order->refund_started_at?->toISOString(),

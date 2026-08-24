@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
 use App\Services\RefundObligationService;
+use App\Services\RefundPayloadService;
 use App\Services\RefundService;
 use DomainException;
 use Illuminate\Database\QueryException;
@@ -58,6 +59,20 @@ class RefundObligationTest extends TestCase
             'reason' => 'customer_cancellation',
             'status' => 'pending',
         ]);
+    }
+
+    public function test_payload_uses_canonical_obligation_amount_over_legacy_order_amount(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'refund_pending', 'refund_reason' => 'customer_cancellation', 'refund_amount' => 999]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'payload-amount', 'invoice_number' => 'payload-invoice',
+            'merchant_request_id' => 'payload-request', 'amount_snapshot' => 12500, 'currency_snapshot' => 'IDR',
+        ]);
+        RefundObligation::create(['payment_attempt_id' => $attempt->id, 'amount' => 12500, 'currency' => 'IDR', 'reason' => 'customer_cancellation']);
+
+        $payload = app(RefundPayloadService::class)->forOutlet($order->fresh());
+
+        $this->assertSame(12500.0, $payload['amount']);
     }
 
     public function test_schema_and_canonical_lifecycle(): void
