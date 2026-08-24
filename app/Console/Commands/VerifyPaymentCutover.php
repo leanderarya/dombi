@@ -22,6 +22,12 @@ class VerifyPaymentCutover extends Command
         $cutover = config('doku.payment_cutover_at');
         if ($cutover === null || trim((string) $cutover) === '') {
             $errors[] = 'runtime payment cutover timestamp must explicitly resolve PAYMENT_CUTOVER_AT';
+        } else {
+            try {
+                Carbon::parse((string) $cutover);
+            } catch (\Throwable) {
+                $errors[] = 'runtime payment cutover timestamp must be a valid PAYMENT_CUTOVER_AT timestamp';
+            }
         }
         if (config('doku.legacy_writes_enabled', true) || filter_var($evidence, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== false || $evidence === null) {
             $errors[] = 'runtime deployment evidence must explicitly resolve PAYMENTS_LEGACY_WRITES_ENABLED=false';
@@ -156,8 +162,15 @@ class VerifyPaymentCutover extends Command
     private function isPostCutover(PaymentAttempt $attempt): bool
     {
         $cutover = config('doku.payment_cutover_at');
+        if ($cutover === null || trim((string) $cutover) === '' || $attempt->created_at === null) {
+            return false;
+        }
 
-        return $cutover !== null && trim((string) $cutover) !== '' && $attempt->created_at !== null && $attempt->created_at->greaterThanOrEqualTo(Carbon::parse($cutover));
+        try {
+            return $attempt->created_at->greaterThanOrEqualTo(Carbon::parse((string) $cutover));
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     private function minorUnits(int|float|string|null $value): ?int

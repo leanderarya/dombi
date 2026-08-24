@@ -8,6 +8,7 @@ use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
@@ -247,14 +248,22 @@ class P0CheckoutHardeningTest extends TestCase
             'status' => 'completed',
         ]);
 
-        // Old /track/{token}/cancel route removed.
-        // Guest cancel is disabled — should return 404 (route absent) or 403, never leak exception
-        $response = $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
+        $response = $this->post("/track/{$order->recovery_token}/cancel", [
             'reason' => 'Tidak Jadi Membeli',
         ]);
         $this->assertTrue(in_array($response->status(), [403, 404], true), 'Expected 403 or 404, got '.$response->status());
-        // Ensure no raw exception message leaked in body when 500 would occur
         $response->assertDontSee('Exception', false);
+    }
+
+    public function test_track_cancel_route_reaches_controller_and_preserves_token_ownership(): void
+    {
+        $order = $this->createOrder([
+            'status' => Order::STATUS_PENDING_CONFIRMATION,
+        ]);
+
+        $this->actingAs($order->customer->user ?? User::factory()->create())
+            ->post("/track/{$order->recovery_token}/cancel")
+            ->assertForbidden();
     }
 
     private function createOrder(array $overrides = []): Order

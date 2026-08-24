@@ -101,6 +101,7 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
     }
 
     Route::get('/track/{token}', TrackController::class)->middleware('throttle:track')->name('track');
+    Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware('throttle:track-cancel')->name('track.cancel');
     Route::get('/offline', [CustomerOfflineController::class, 'index'])->name('offline');
 
     // Customer routes
