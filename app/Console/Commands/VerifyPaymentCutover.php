@@ -17,8 +17,9 @@ class VerifyPaymentCutover extends Command
     public function handle(): int
     {
         $errors = [];
-        if (config('doku.legacy_writes_enabled', true) || config('doku.legacy_writes_deployment_evidence') !== 'false') {
-            $errors[] = 'runtime deployment evidence must resolve PAYMENTS_LEGACY_WRITES_ENABLED=false';
+        $evidence = config('doku.legacy_writes_deployment_evidence');
+        if (config('doku.legacy_writes_enabled', true) || filter_var($evidence, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== false || $evidence === null) {
+            $errors[] = 'runtime deployment evidence must explicitly resolve PAYMENTS_LEGACY_WRITES_ENABLED=false';
         }
         PaymentTransaction::query()->each(function (PaymentTransaction $transaction) use (&$errors): void {
             $invoice = $transaction->doku_order_id ?: $transaction->order?->order_code;
@@ -117,7 +118,7 @@ class VerifyPaymentCutover extends Command
             return self::FAILURE;
         }
 
-        $this->info('Payment parity clean; legacy writes must be disabled before read-only cutover.');
+        $this->info('READY: payment parity clean and runtime legacy-write evidence explicitly disabled.');
 
         return self::SUCCESS;
     }
