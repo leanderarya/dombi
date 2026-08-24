@@ -2,12 +2,12 @@
 
 ## Findings fixed
 
-- Canonical payment fulfilment transaction now retries up to three times for deadlock/serialization failures, preserving idempotent claim, completion, inventory, settlement, projection, refund, and outbox effects.
-- Integrity migration returns safely on SQLite before unsupported DDL; MySQL/PostgreSQL production uniqueness remains enforced.
-- Parallel production-driver test uses parent-controlled UNIX socket handshakes: both children signal ready, parent releases both, child exit statuses and final state are asserted.
+- Existing claim now returns fulfilment winner only when order claimant ID and attempt claim timestamp both exist and identify same attempt. If claim metadata is partial/inconsistent, flow creates loser obligation; if matching claim exists but order is incomplete, completion is retried safely.
+- Reservation/release regression uses an actual order item and `InventoryService` lifecycle, not hard-coded movement rows.
+- Production-driver parallel worker gate remains mandatory for MySQL/PostgreSQL; SQLite skips row-lock-dependent concurrency and unsupported integrity DDL safely.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php` — passed, 7 tests / 31 assertions; SQLite migration/concurrency behavior is explicitly skipped where applicable.
+- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentRetryTest.php` — passed, 36 tests / 105 assertions.
 - `composer run lint:check` — passed.
 - `graphify update .` — run after implementation.
