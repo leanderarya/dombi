@@ -120,7 +120,7 @@ class CanonicalPaymentTransitionService
                 $observability->event('unknown_status', ['order_id' => $order->id, 'attempt_id' => $lockedAttempt->id, 'invoice_number' => $lockedAttempt->invoice_number, 'mapped_status' => $status, 'processing_result' => 'review', 'error_reason' => 'unmapped_provider_status']);
             }
             $terminalAt = $this->terminalTransitionAt($order);
-            if ($status === 'success' && $terminalAt !== null && $event->receivedAt->greaterThan($terminalAt)) {
+            if ($status === 'success' && $event->receivedAt !== null && $terminalAt !== null && $event->receivedAt->greaterThan($terminalAt)) {
                 $observability->event('late_payment', ['order_id' => $order->id, 'attempt_id' => $lockedAttempt->id, 'invoice_number' => $lockedAttempt->invoice_number, 'mapped_status' => $status, 'processing_result' => 'refund']);
             }
             if ($status === 'success' && ! $winner && $changed) {

@@ -262,12 +262,15 @@ class RefundService
                 throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
             }
 
-            app(PaymentObservabilityService::class)->event('refund_ageing', [
-                'order_id' => $locked->id,
-                'invoice_number' => $locked->order_code,
-                'processing_result' => 'refund_processing',
-                'error_reason' => null,
-            ]);
+            $ageingThreshold = now()->subHours((int) config('doku.refund_ageing_hours', 24));
+            if ($obligation?->requested_at?->lte($ageingThreshold)) {
+                app(PaymentObservabilityService::class)->event('refund_ageing', [
+                    'order_id' => $locked->id,
+                    'invoice_number' => $locked->order_code,
+                    'processing_result' => 'refund_processing',
+                    'error_reason' => 'age_threshold_breached',
+                ]);
+            }
             if ($obligation) {
                 $startedAt = now();
                 $obligation->update(['status' => 'in_progress', 'processed_by' => $ownerId, 'started_at' => $startedAt]);
