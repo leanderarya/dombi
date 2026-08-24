@@ -8,9 +8,46 @@ use Illuminate\Support\Facades\Log;
 
 final class PaymentObservabilityService
 {
+    private const LABELS = [
+        'order_id', 'attempt_id', 'invoice_number', 'request_id', 'gateway_reference',
+        'mapped_status', 'processing_result', 'error_reason',
+    ];
+
+    private const EVENTS = [
+        'creation_failed', 'creation_timeout', 'invalid_signature', 'unknown_status',
+        'amount_mismatch', 'pending_age', 'reconciliation_failure', 'late_payment',
+        'duplicate_success', 'refund_ageing', 'needs_review', 'invalid_response',
+    ];
+
+    private array $counters = [];
+
+    private array $gauges = ['payment_pending_age_seconds' => 0];
+
+    private array $events = [];
+
+    public static function registeredEventNames(): array
+    {
+        return self::EVENTS;
+    }
+
+    public function counters(): array
+    {
+        return $this->counters;
+    }
+
+    public function gauges(): array
+    {
+        return $this->gauges;
+    }
+
+    public function events(): array
+    {
+        return $this->events;
+    }
+
     public function transition(PaymentAttempt $attempt, Order $order, string $status, string $result, ?string $reason = null): void
     {
-        Log::channel('operational')->info('payment.transition', array_filter([
+        $this->event('transition', [
             'order_id' => $order->id,
             'attempt_id' => $attempt->id,
             'invoice_number' => $attempt->invoice_number,
@@ -19,11 +56,22 @@ final class PaymentObservabilityService
             'mapped_status' => $status,
             'processing_result' => $result,
             'error_reason' => $reason,
-        ], static fn ($value): bool => $value !== null));
+        ]);
     }
 
-    public function event(string $metric, array $context = []): void
+    public function event(string $name, array $context = []): void
     {
-        Log::channel('operational')->info('payment.'.$metric, $context);
+        if (! in_array($name, self::EVENTS, true) && $name !== 'transition' && $name !== 'reconciliation') {
+            throw new \InvalidArgumentException('Unregistered payment observability event.');
+        }
+
+        $labels = [];
+        foreach (self::LABELS as $label) {
+            $labels[$label] = array_key_exists($label, $context) ? $context[$label] : null;
+        }
+        $event = ['name' => $name, 'labels' => $labels];
+        $this->events[] = $event;
+        $this->counters['payment_'.$name] = ($this->counters['payment_'.$name] ?? 0) + 1;
+        Log::channel('operational')->info('payment.'.$name, $labels);
     }
 }
