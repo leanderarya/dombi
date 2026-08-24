@@ -10,6 +10,7 @@ use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
 use App\Models\PaymentWebhookLog;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -154,7 +155,10 @@ class DokuService
             });
         }, 100, function (\Throwable $exception): bool {
             $code = (string) $exception->getCode();
-            $sqlState = (string) ($exception->errorInfo[0] ?? '');
+            $sqlState = '';
+            if ($exception instanceof QueryException) {
+                $sqlState = (string) ($exception->errorInfo[0] ?? '');
+            }
             $message = strtolower($exception->getMessage());
 
             return in_array($code, ['40001', '40P01', '1213', '1205'], true)
