@@ -211,7 +211,7 @@ class Order extends Model
                 ->when($hasDestination !== null, fn ($query) => $hasDestination
                     ? $query->whereNotNull('refund_obligations.destination_type')
                     : $query->whereNull('refund_obligations.destination_type'))
-                ->when($staleInProgressOnly, fn ($query) => $query->where('refund_obligations.status', RefundObligationStatus::InProgress->value)->where('refund_obligations.updated_at', '<=', now()->subHours(24)))
+                ->when($staleInProgressOnly, fn ($query) => $query->where('refund_obligations.status', RefundObligationStatus::InProgress->value)->where('refund_obligations.started_at', '<=', now()->subHours(24)))
                 ->whereNotExists(function ($newer) {
                     $newer->selectRaw('1')
                         ->from('payment_attempts as newer_attempts')

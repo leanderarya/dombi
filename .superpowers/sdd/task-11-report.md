@@ -1,8 +1,7 @@
 # Task 11 Report
 
 ## Scope
-- Canonical rejected→pending transition clears `rejected_at`, rejection metadata, and started metadata.
-- Finance action_required now selects only canonical in_progress obligations older than 24 hours, matching queueState.
+- Canonical action_required stale selector now compares obligation `started_at` against 24-hour cutoff, matching queueState; `updated_at` cannot alter classification.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.
