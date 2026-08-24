@@ -137,7 +137,6 @@ class PaymentProductionMatrixTest extends TestCase
         $this->assertContains('amount_mismatch', $names);
         $this->assertContains('needs_review', $names);
         $this->assertContains('pending_age', $names);
-        $this->markTestIncomplete('Late, duplicate, reconciliation, and refund-ageing owner paths require available MySQL fixtures.');
         $this->assertSame([
             'pending_age' => 'PaymentObservabilityService::refreshPendingAgeGauge',
             'reconciliation_failure' => 'ReconcileDokuPayment::handle',
@@ -148,6 +147,7 @@ class PaymentProductionMatrixTest extends TestCase
             'unknown_status' => 'CanonicalPaymentTransitionService::apply',
             'needs_review' => 'CanonicalPaymentTransitionService::apply',
         ], PaymentObservabilityService::taxonomyOwners());
+        $this->markTestIncomplete('Late, duplicate, reconciliation, and refund-ageing owner paths require available MySQL fixtures.');
     }
 
     public function test_backfill_dry_run_reports_without_writing(): void

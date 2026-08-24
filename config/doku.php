@@ -38,4 +38,5 @@ return [
     'enabled_methods' => explode(',', env('DOKU_ENABLED_METHODS', 'qris,transfer,ewallet,credit_card')),
     'legacy_writes_enabled' => env('PAYMENTS_LEGACY_WRITES_ENABLED', false),
     'legacy_writes_deployment_evidence' => env('PAYMENTS_LEGACY_WRITES_DEPLOYMENT_EVIDENCE'),
+    'payment_cutover_at' => env('PAYMENT_CUTOVER_AT'),
 ];

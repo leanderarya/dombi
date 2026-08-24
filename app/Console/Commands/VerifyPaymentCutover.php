@@ -19,6 +19,10 @@ class VerifyPaymentCutover extends Command
     {
         $errors = [];
         $evidence = config('doku.legacy_writes_deployment_evidence');
+        $cutover = config('doku.payment_cutover_at');
+        if ($cutover === null || trim((string) $cutover) === '') {
+            $errors[] = 'runtime payment cutover timestamp must explicitly resolve PAYMENT_CUTOVER_AT';
+        }
         if (config('doku.legacy_writes_enabled', true) || filter_var($evidence, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) !== false || $evidence === null) {
             $errors[] = 'runtime deployment evidence must explicitly resolve PAYMENTS_LEGACY_WRITES_ENABLED=false';
         }
@@ -153,7 +157,7 @@ class VerifyPaymentCutover extends Command
     {
         $cutover = config('doku.payment_cutover_at');
 
-        return $cutover !== null && $attempt->created_at !== null && $attempt->created_at->greaterThanOrEqualTo(Carbon::parse($cutover));
+        return $cutover !== null && trim((string) $cutover) !== '' && $attempt->created_at !== null && $attempt->created_at->greaterThanOrEqualTo(Carbon::parse($cutover));
     }
 
     private function minorUnits(int|float|string|null $value): ?int
