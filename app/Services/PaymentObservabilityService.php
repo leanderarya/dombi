@@ -74,7 +74,10 @@ final class PaymentObservabilityService
 
     public function refreshPendingAgeGauge(): void
     {
-        $oldest = PaymentAttempt::query()->whereIn('creation_state', ['pending', 'unknown'])->orderBy('created_at')->first();
+        $oldest = PaymentAttempt::query()->where(function ($query): void {
+            $query->whereIn('creation_state', ['initiated', 'created', 'pending', 'unknown'])
+                ->orWhereIn('settlement_status', ['pending', 'unknown']);
+        })->orderBy('created_at')->first();
         $this->gauges['payment_pending_age_seconds'] = $oldest ? max(0, now()->timestamp - $oldest->created_at->timestamp) : 0;
         Cache::forever('payment_observability.gauges', $this->gauges);
         $this->event('pending_age', ['mapped_status' => 'pending', 'processing_result' => 'gauge', 'error_reason' => null]);
@@ -98,9 +101,12 @@ final class PaymentObservabilityService
         $this->events[] = $event;
         $counter = 'payment_'.$name;
         $this->counters[$counter] = ($this->counters[$counter] ?? 0) + 1;
-        $durableCounters = Cache::get('payment_observability.counters', []);
-        $durableCounters[$counter] = ($durableCounters[$counter] ?? 0) + 1;
-        Cache::forever('payment_observability.counters', $durableCounters);
+        $cacheKey = 'payment_observability.counter.'.$counter;
+        if (Cache::get($cacheKey) === null) {
+            Cache::add($cacheKey, 0, now()->addYears(10));
+        }
+        Cache::increment($cacheKey);
+        Cache::forever('payment_observability.counters', array_merge(Cache::get('payment_observability.counters', []), [$counter => Cache::get($cacheKey)]));
         Log::channel('operational')->info('payment.'.$name, $labels);
     }
 }

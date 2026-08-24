@@ -17,8 +17,8 @@ class VerifyPaymentCutover extends Command
     public function handle(): int
     {
         $errors = [];
-        if (config('doku.legacy_writes_enabled', true)) {
-            $errors[] = 'legacy payment writes are enabled';
+        if (config('doku.legacy_writes_enabled', true) || env('PAYMENTS_LEGACY_WRITES_ENABLED') !== 'false') {
+            $errors[] = 'explicit PAYMENTS_LEGACY_WRITES_ENABLED=false deployment evidence is required';
         }
         PaymentTransaction::query()->each(function (PaymentTransaction $transaction) use (&$errors): void {
             $invoice = $transaction->doku_order_id ?: $transaction->order?->order_code;
@@ -85,11 +85,23 @@ class VerifyPaymentCutover extends Command
         });
         Order::query()->where(function ($query): void {
             $query->whereNotNull('refund_reason')->orWhere('refund_amount', '>', 0);
-        })->whereIn('id', PaymentTransaction::query()->select('order_id')->distinct())->each(function (Order $order) use (&$errors): void {
+        })->each(function (Order $order) use (&$errors): void {
             $legacyAttemptIds = PaymentAttempt::query()->where('order_id', $order->id)->whereNotNull('legacy_payment_transaction_id')->pluck('id');
             $obligations = RefundObligation::query()->whereIn('payment_attempt_id', $legacyAttemptIds)->get();
             if ($legacyAttemptIds->count() !== 1 || $obligations->count() !== 1) {
                 $errors[] = "refund-bearing legacy order {$order->id} requires exactly one matched obligation";
+            }
+        });
+
+        PaymentAttempt::query()->whereNotNull('legacy_payment_transaction_id')->each(function (PaymentAttempt $attempt) use (&$errors): void {
+            if (! PaymentTransaction::query()->whereKey($attempt->legacy_payment_transaction_id)->exists()) {
+                $errors[] = "canonical attempt {$attempt->id} references missing legacy transaction";
+            }
+        });
+        RefundObligation::query()->each(function (RefundObligation $obligation) use (&$errors): void {
+            $attempt = $obligation->paymentAttempt;
+            if ($attempt === null || ($attempt->legacy_payment_transaction_id !== null && ! PaymentTransaction::query()->whereKey($attempt->legacy_payment_transaction_id)->exists())) {
+                $errors[] = "refund obligation {$obligation->id} has no valid legacy-linked attempt";
             }
         });
 

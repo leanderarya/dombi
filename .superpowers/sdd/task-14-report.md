@@ -20,7 +20,9 @@ Payment observability registry, fixed nullable event schema, safe allowlisted la
 | `php artisan test` | SERIAL NO-GO: 1,439 tests, 435 passed, 1 failure, 1,003 errors; MySQL gone away/refused. Prior exact 18 blocker names remain below |
 | `graphify update .` | PASS: 7,284 nodes, 18,544 edges, 507 communities |
 
-Task 14 status: NO-GO/BLOCKED. Full serial suite failures are release blockers. Production readiness is not claimed.
+Task 14 status: NO-GO/BLOCKED.
+
+Latest run: scoped tests could not execute because MySQL test database rejected credentials (`1045 Access denied for user root@localhost`); 22 tests errored before assertions. This is environment-blocked, not a pass. Previous verified scoped result was 22/22 pass, 50 assertions. Typecheck remains NO-GO with `resources/js/pages/guest/cancel.tsx:26` PageProps constraint and `cancel.tsx:41` missing `route`. Full suite remains NO-GO with exact 18 named failures listed below plus current MySQL credential failure. Production readiness is not claimed. Full serial suite failures are release blockers. Production readiness is not claimed.
 
 Latest verification: scoped matrix 22/22 pass, 50 assertions; migration fresh/seed pass; dry runs PASS with `Payment attempt backfill complete. Exceptions: 0` and `No DOKU payments to reconcile.`; graphify PASS at 7,281 nodes, 18,538 edges, 476 communities. Serial full suite: 1,439 tests, 1,420 passed, 18 failures, 1 skipped. Cutover parity command clean seeded result is PASS only because legacy writes default false and seeded parity is empty; production cutover remains NO-GO until real migration parity, explicit production legacy-write evidence, and all blockers clear.
 
