@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
 use Illuminate\Console\Command;
@@ -19,7 +20,10 @@ class VerifyPaymentCutover extends Command
             $errors[] = 'legacy payment writes are enabled';
         }
         PaymentTransaction::query()->each(function (PaymentTransaction $transaction) use (&$errors): void {
-            $matches = PaymentAttempt::query()->where('legacy_payment_transaction_id', $transaction->id)->get();
+            $invoice = $transaction->doku_order_id ?: $transaction->order?->order_code;
+            $matches = PaymentAttempt::query()->where(function ($query) use ($transaction, $invoice): void {
+                $query->where('legacy_payment_transaction_id', $transaction->id)->orWhere('invoice_number', $invoice);
+            })->get();
             if ($matches->count() !== 1) {
                 $errors[] = "legacy transaction {$transaction->id} requires exactly one attempt";
 
@@ -55,6 +59,18 @@ class VerifyPaymentCutover extends Command
                     && $obligation->transfer_reference === $order->doku_refund_id));
             if (! $refundFieldsMatch) {
                 $errors[] = "legacy transaction {$transaction->id} refund obligation count/status/reason/amount/destination/proof/reference mismatch";
+            }
+        });
+        PaymentAttempt::query()->whereNull('legacy_payment_transaction_id')->each(function (PaymentAttempt $attempt) use (&$errors): void {
+            $errors[] = "canonical attempt {$attempt->id} has no legacy payment source";
+        });
+        Order::query()->where(function ($query): void {
+            $query->whereNotNull('refund_reason')->orWhere('refund_amount', '>', 0);
+        })->each(function (Order $order) use (&$errors): void {
+            $attempt = PaymentAttempt::query()->where('order_id', $order->id)->first();
+            $count = $attempt?->refundObligations()->count() ?? 0;
+            if ($attempt === null || $count !== 1) {
+                $errors[] = "refund-bearing legacy order {$order->id} requires exactly one obligation";
             }
         });
 

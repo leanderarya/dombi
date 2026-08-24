@@ -29,6 +29,20 @@ final class PaymentObservabilityService
         return self::EVENTS;
     }
 
+    public static function taxonomyOwners(): array
+    {
+        return [
+            'pending_age' => 'PaymentObservabilityService::refreshPendingAgeGauge',
+            'reconciliation_failure' => 'ReconcileDokuPayment::handle',
+            'late_payment' => 'CanonicalPaymentTransitionService::apply',
+            'duplicate_success' => 'CanonicalPaymentTransitionService::apply',
+            'refund_ageing' => 'RefundService::startRefund',
+            'amount_mismatch' => 'CanonicalPaymentTransitionService::apply',
+            'unknown_status' => 'CanonicalPaymentTransitionService::apply',
+            'needs_review' => 'CanonicalPaymentTransitionService::apply',
+        ];
+    }
+
     public function counters(): array
     {
         return $this->counters;

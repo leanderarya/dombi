@@ -110,6 +110,16 @@ class PaymentProductionMatrixTest extends TestCase
             $observability->event($event);
         }
         $this->assertSame(8, count($observability->events()));
+        $this->assertSame([
+            'pending_age' => 'PaymentObservabilityService::refreshPendingAgeGauge',
+            'reconciliation_failure' => 'ReconcileDokuPayment::handle',
+            'late_payment' => 'CanonicalPaymentTransitionService::apply',
+            'duplicate_success' => 'CanonicalPaymentTransitionService::apply',
+            'refund_ageing' => 'RefundService::startRefund',
+            'amount_mismatch' => 'CanonicalPaymentTransitionService::apply',
+            'unknown_status' => 'CanonicalPaymentTransitionService::apply',
+            'needs_review' => 'CanonicalPaymentTransitionService::apply',
+        ], PaymentObservabilityService::taxonomyOwners());
     }
 
     public function test_backfill_dry_run_reports_without_writing(): void
