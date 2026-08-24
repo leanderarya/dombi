@@ -64,13 +64,30 @@ class VerifyPaymentCutover extends Command
             };
             $order = $transaction->order;
             $resolvedInvoice = $transaction->doku_order_id ?: $order?->order_code;
-            $fieldsMatch = $attempt->order_id === $transaction->order_id
+            $canonicalMerchantRequestId = data_get($transaction->raw_response, 'merchant_request_id')
+                ?? data_get($transaction->raw_response, 'request.merchant_request_id');
+            $canonicalAttemptKey = data_get($transaction->raw_response, 'attempt_key')
+                ?? data_get($transaction->raw_response, 'order.attempt_key');
+            $hasCanonicalProvenance = filled($canonicalMerchantRequestId) || filled($canonicalAttemptKey);
+            if (! $hasCanonicalProvenance) {
+                $errors[] = "legacy transaction {$transaction->id} lacks canonical merchant_request_id/attempt_key provenance";
+            }
+            $identityMatch = (! filled($canonicalMerchantRequestId) || $attempt->merchant_request_id === $canonicalMerchantRequestId)
+                && (! filled($canonicalAttemptKey) || $attempt->attempt_key === $canonicalAttemptKey);
+            $gatewayIdentityEvidence = data_get($transaction->raw_response, 'transaction.id')
+                ?? data_get($transaction->raw_response, 'transaction.original_request_id');
+            $gatewayIdentityMatch = $gatewayIdentityEvidence !== null
+                ? $attempt->gateway_transaction_id === $gatewayIdentityEvidence
+                : true;
+            $fieldsMatch = $hasCanonicalProvenance
+                && $identityMatch
+                && $gatewayIdentityMatch
+                && $attempt->order_id === $transaction->order_id
                 && $attempt->invoice_number === $resolvedInvoice
                 && strtoupper($attempt->currency_snapshot) === $this->legacyCurrency($transaction)
                 && $this->minorUnits($attempt->amount_snapshot) === $this->minorUnits($transaction->amount)
                 && $attempt->payment_method === $transaction->payment_method
                 && $attempt->settlement_status?->value === $expected
-                && $attempt->gateway_transaction_id === $transaction->doku_order_id
                 && $attempt->session_id === $transaction->session_id
                 && $attempt->token_id === $transaction->token_id;
             if (! $fieldsMatch) {
