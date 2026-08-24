@@ -123,7 +123,7 @@ class RefundPayloadService
         $base['transfer_note'] = $obligation ? $obligation->transfer_note : $order->refund_transfer_note;
 
         $obligation = $order->selectedRefundObligation();
-        $status = $obligation?->status?->value ?? $order->payment_status;
+        $status = $this->uiStatus($obligation?->status?->value ?? $order->payment_status);
         $destinationStatus = $obligation
             ? ($obligation->destination_type !== null ? Order::REFUND_DESTINATION_VALID : Order::REFUND_DESTINATION_MISSING)
             : $order->refund_destination_status;
@@ -162,7 +162,7 @@ class RefundPayloadService
 
         $obligation = $order->selectedRefundObligation();
         $base['destination'] = $this->maskedDestination($order, $obligation);
-        $status = $obligation?->status?->value ?? $order->payment_status;
+        $status = $this->uiStatus($obligation?->status?->value ?? $order->payment_status);
         $rejectionReason = $obligation ? ($obligation->metadata['rejection_reason'] ?? null) : $order->refund_rejected_reason;
         $base['can_edit_destination'] = $status === 'refund_pending';
         $base['can_resubmit'] = $status === 'refund_rejected'
@@ -253,7 +253,7 @@ class RefundPayloadService
             'status_label' => $this->statusLabel($order),
             'amount' => (float) ($obligation?->amount ?? $order->refund_amount ?? 0),
             'requested_at' => ($obligation ? $obligation->requested_at : $order->refund_requested_at)?->toISOString(),
-            'submitted_at' => $order->refund_destination_submitted_at?->toISOString(),
+            'submitted_at' => ($obligation?->destination_submitted_at ?? $order->refund_destination_submitted_at)?->toISOString(),
             'started_at' => ($obligation?->started_at ?? $order->refund_started_at)?->toISOString(),
             'completed_at' => ($obligation?->completed_at ?? $order->refunded_at)?->toISOString(),
             'rejection' => $rejection,

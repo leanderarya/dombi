@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\PaymentStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Order;
+use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
 use App\Models\RefundStatusHistory;
 use Carbon\Carbon;
@@ -533,7 +534,10 @@ class RefundService
             $query->lockForUpdate();
         }
 
-        return $query->latest('id')->first();
+        return $query
+            ->orderByDesc(PaymentAttempt::query()->select('id')->whereColumn('payment_attempts.id', 'refund_obligations.payment_attempt_id'))
+            ->orderByDesc('refund_obligations.id')
+            ->first();
     }
 
     private function isObligationDestinationComplete(RefundObligation $obligation): bool
