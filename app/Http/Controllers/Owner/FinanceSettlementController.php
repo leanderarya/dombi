@@ -225,16 +225,10 @@ class FinanceSettlementController extends Controller
             $filter = 'ready';
         }
 
-        $query = Order::withCanonicalRefund()->whereHas('paymentAttempts.refundObligations', function ($obligation) {
-            $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')
-                ->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
-                    $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
-                }))
-                ->whereIn('status', array_map(
-                    static fn (RefundObligationStatus $status): string => $status->value,
-                    RefundObligationStatus::cases(),
-                ));
-        })
+        $query = Order::withCanonicalRefund(array_map(
+            static fn (RefundObligationStatus $status): string => $status->value,
+            RefundObligationStatus::cases(),
+        ))
             ->with(['outlet:id,name', 'customer', 'paymentTransactions'])
             ->orderByDesc(
                 RefundObligation::query()
@@ -247,10 +241,7 @@ class FinanceSettlementController extends Controller
             );
 
         $query = match ($filter) {
-            'awaiting_customer' => $query
-                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')->whereHas('paymentAttempt', fn ($attempt) => $attempt->whereColumn('payment_attempts.order_id', 'orders.id')->where(function ($metadata): void {
-                    $metadata->whereNull('metadata->provenance')->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
-                }))->where('status', RefundObligationStatus::Pending->value)->whereNull('destination_type'))
+            'awaiting_customer' => $query->withCanonicalRefund([RefundObligationStatus::Pending->value], false)
                 ->where(fn ($q) => $q
                     ->whereHas('customer', fn ($cq) => $cq->whereNotNull('user_id'))
                     ->orDoesntHave('customer')
