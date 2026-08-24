@@ -14,7 +14,9 @@ use App\Models\StockMovement;
 use App\Services\CanonicalPaymentTransitionService;
 use App\Services\InventoryService;
 use App\Services\NormalizedPaymentEvent;
+use App\Services\SettlementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery;
 use Tests\TestCase;
 
 class PaymentFulfilmentConcurrencyTest extends TestCase
@@ -61,6 +63,32 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
         app(InventoryService::class)->completeOrderStock($order->fresh(['items']));
 
         $this->assertSame(1, StockMovement::where('reference_type', Order::class)->where('reference_id', $order->id)->where('type', 'order_completed')->count());
+    }
+
+    public function test_payment_fulfilment_rolls_back_claim_order_inventory_and_obligation_on_failure(): void
+    {
+        $outlet = Outlet::factory()->create();
+        $order = Order::factory()->create(['outlet_id' => $outlet->id, 'total' => 50000, 'payment_status' => 'pending', 'status' => Order::STATUS_CONFIRMED]);
+        $product = Product::factory()->create();
+        $order->items()->create(['product_id' => $product->id, 'product_name' => $product->name, 'quantity' => 1, 'price' => 50000, 'subtotal' => 50000]);
+        OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'current_stock' => 3, 'reserved_stock' => 1, 'minimum_stock' => 0]);
+        $attempt = $this->attempt($order, 'rollback', 'invoice-rollback');
+        $settlement = Mockery::mock(app(SettlementService::class));
+        $settlement->shouldReceive('recordSale')->andThrow(new \RuntimeException('settlement failed'));
+        $this->app->instance(SettlementService::class, $settlement);
+
+        try {
+            app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-rollback', now(), []));
+            $this->fail('Expected settlement failure.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('settlement failed', $exception->getMessage());
+        }
+
+        $this->assertNull($order->fresh()->fulfilment_claimed_at);
+        $this->assertSame(Order::STATUS_CONFIRMED, $order->fresh()->status);
+        $this->assertSame(3, OutletInventory::where('outlet_id', $outlet->id)->where('product_id', $product->id)->value('current_stock'));
+        $this->assertSame(0, RefundObligation::count());
+        $this->assertSame(0, StockMovement::where('type', 'order_completed')->count());
     }
 
     public function test_only_one_successful_attempt_claims_order_fulfilment(): void
