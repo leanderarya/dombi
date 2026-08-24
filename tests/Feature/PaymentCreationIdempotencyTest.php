@@ -59,7 +59,7 @@ class PaymentCreationIdempotencyTest extends TestCase
                 && $body['payment']['payment_method_types'][0] === 'QRIS'
                 && $body['customer'] === $snapshot;
         });
-        $this->assertDatabaseHas('payment_transactions', ['doku_order_id' => 'INV-SNAPSHOT', 'amount' => 50000, 'payment_method' => 'qris']);
+        $this->assertDatabaseMissing('payment_transactions', ['doku_order_id' => 'INV-SNAPSHOT']);
     }
 
     public function test_fresh_initiated_attempt_is_claimed_and_created(): void
