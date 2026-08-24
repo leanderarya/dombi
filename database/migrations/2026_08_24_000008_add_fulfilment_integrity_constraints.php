@@ -67,15 +67,17 @@ return new class extends Migration
             DB::statement('DROP TRIGGER IF EXISTS stock_movements_order_completed_key_update');
             DB::statement('DROP TRIGGER IF EXISTS stock_movements_order_completed_key_insert');
             DB::statement('DROP INDEX stock_movements_order_completed_unique ON stock_movements');
-            Schema::table('stock_movements', function (Blueprint $table): void {
-                $table->dropColumn('order_completed_key');
-            });
+            if (Schema::hasColumn('stock_movements', 'order_completed_key')) {
+                Schema::table('stock_movements', function (Blueprint $table): void {
+                    $table->dropColumn('order_completed_key');
+                });
+            }
         } elseif (DB::getDriverName() === 'pgsql') {
             DB::statement('DROP INDEX stock_movements_order_completed_unique');
         }
 
         if (DB::getDriverName() === 'pgsql') {
-            DB::statement('ALTER TABLE orders DROP CONSTRAINT orders_fulfilment_claim_consistency');
+            DB::statement('ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_fulfilment_claim_consistency');
         }
     }
 };
