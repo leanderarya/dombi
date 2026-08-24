@@ -152,7 +152,16 @@ class DokuService
 
                 return true;
             });
-        }, 100, fn (\Throwable $exception): bool => str_contains(strtolower($exception->getMessage()), 'deadlock') || str_contains(strtolower($exception->getMessage()), 'serialization'));
+        }, 100, function (\Throwable $exception): bool {
+            $code = (string) $exception->getCode();
+            $sqlState = (string) ($exception->errorInfo[0] ?? '');
+            $message = strtolower($exception->getMessage());
+
+            return in_array($code, ['40001', '40P01', '1213', '1205'], true)
+                || in_array($sqlState, ['40001', '40P01', '1213', '1205'], true)
+                || str_contains($message, 'deadlock')
+                || str_contains($message, 'serialization');
+        });
     }
 
     public function reconcilePaymentAttempt(PaymentAttempt $attempt): PaymentAttempt
