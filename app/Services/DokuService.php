@@ -143,6 +143,12 @@ class DokuService
                 return false;
             }
             $locked->update(['creation_state' => $state, 'raw_response' => $rawResponse, 'metadata' => array_merge($locked->metadata ?? [], $metadata, ['creation_lease' => null])]);
+            if ($state === 'failed') {
+                $order = Order::query()->whereKey($locked->order_id)->lockForUpdate()->with('items')->first();
+                if ($order) {
+                    app(InventoryService::class)->releaseReservedStock($order);
+                }
+            }
 
             return true;
         });

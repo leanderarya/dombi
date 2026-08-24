@@ -177,6 +177,12 @@ class InventoryService
                 continue;
             }
 
+            $inventory = OutletInventory::query()
+                ->where('outlet_id', $order->outlet_id)
+                ->where('product_id', $productId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
             $alreadyCompleted = StockMovement::query()
                 ->where('reference_type', Order::class)
                 ->where('reference_id', $order->id)
@@ -187,12 +193,6 @@ class InventoryService
             if ($alreadyCompleted) {
                 continue;
             }
-
-            $inventory = OutletInventory::query()
-                ->where('outlet_id', $order->outlet_id)
-                ->where('product_id', $productId)
-                ->lockForUpdate()
-                ->firstOrFail();
 
             if ($inventory->current_stock < $item->quantity) {
                 OperationalLog::inventoryException($order->outlet_id, $item->product_id, 'current_stock', $item->quantity, $inventory->current_stock);
