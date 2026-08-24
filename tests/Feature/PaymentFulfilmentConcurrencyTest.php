@@ -115,16 +115,16 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
         $this->assertSame(1, StockMovement::where('reference_type', Order::class)->where('reference_id', $order->id)->where('type', 'order_completed')->count());
     }
 
-    public function test_orphan_order_claim_is_reconciled_without_refund(): void
+    public function test_matching_order_claim_repairs_missing_attempt_timestamp_without_refund(): void
     {
-        $order = Order::factory()->create(['status' => Order::STATUS_CONFIRMED, 'payment_status' => 'pending', 'fulfilment_claimed_at' => now()]);
-        $attempt = $this->attempt($order, 'orphan-claim', 'invoice-orphan-claim');
+        $order = Order::factory()->create(['status' => Order::STATUS_CONFIRMED, 'payment_status' => 'pending']);
+        $attempt = $this->attempt($order, 'matching-claim', 'invoice-matching-claim');
+        $order->update(['fulfilment_claimed_at' => now(), 'fulfilment_claimed_by' => $attempt->id]);
 
-        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-orphan-claim', now(), []));
+        $result = app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-matching-claim', now(), []));
 
-        $fresh = $order->fresh();
-        $this->assertSame($attempt->id, $fresh->fulfilment_claimed_by);
-        $this->assertNotNull($fresh->fulfilment_claimed_at);
+        $this->assertTrue($result->fulfilmentWinner);
+        $this->assertNotNull($attempt->fresh()->fulfilment_claimed_at);
         $this->assertSame(0, RefundObligation::count());
     }
 

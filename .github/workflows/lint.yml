@@ -101,7 +101,7 @@ jobs:
           npm install
 
       - name: Run Pint
-        run: composer lint
+        run: composer run lint:check
 
       - name: Check Frontend Format
         run: npm run format:check
