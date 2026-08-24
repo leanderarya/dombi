@@ -56,7 +56,7 @@ class DokuConfigurationGuard
 
         $records = dns_get_record($host, DNS_A | DNS_AAAA);
         if ($records === false || $records === []) {
-            return true;
+            return false;
         }
 
         foreach ($records as $record) {

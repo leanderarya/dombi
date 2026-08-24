@@ -26,8 +26,8 @@ class DokuProductionConfigTest extends TestCase
             'doku.api_key' => "\n ",
             'doku.sandbox' => false,
             'doku.base_url' => 'https://api.doku.com',
-            'app.url' => 'https://shop.example.com',
-            'doku.callback_url' => 'https://shop.example.com/payment/doku/notify',
+            'app.url' => 'https://example.com',
+            'doku.callback_url' => 'https://example.com/payment/doku/notify',
         ]);
 
         $this->expectException(\RuntimeException::class);
@@ -42,8 +42,8 @@ class DokuProductionConfigTest extends TestCase
             'doku.api_key' => "\tsecret\n",
             'doku.sandbox' => false,
             'doku.base_url' => 'https://api.doku.com',
-            'app.url' => 'https://shop.example.com',
-            'doku.callback_url' => 'https://shop.example.com/payment/doku/notify',
+            'app.url' => 'https://example.com',
+            'doku.callback_url' => 'https://example.com/payment/doku/notify',
         ]);
 
         app(DokuConfigurationGuard::class)->validate();
@@ -57,7 +57,7 @@ class DokuProductionConfigTest extends TestCase
         config([
             'app.env' => 'production', 'doku.client_id' => 'client', 'doku.api_key' => 'secret',
             'doku.sandbox' => false, 'doku.base_url' => 'https://api.doku.com',
-            'app.url' => 'https://Shop.Example.com', 'doku.callback_url' => 'https://shop.example.com/payment/doku/notify',
+            'app.url' => 'https://Example.com', 'doku.callback_url' => 'https://example.com/payment/doku/notify',
         ]);
 
         app(DokuConfigurationGuard::class)->validate();
