@@ -72,7 +72,9 @@ return new class extends Migration
         if (DB::getDriverName() === 'mysql') {
             DB::statement('DROP TRIGGER IF EXISTS stock_movements_order_completed_key_update');
             DB::statement('DROP TRIGGER IF EXISTS stock_movements_order_completed_key_insert');
-            DB::statement('DROP INDEX stock_movements_order_completed_unique ON stock_movements');
+            if (collect(Schema::getIndexes('stock_movements'))->contains(fn (array $index): bool => $index['name'] === 'stock_movements_order_completed_unique')) {
+                DB::statement('DROP INDEX stock_movements_order_completed_unique ON stock_movements');
+            }
             if (Schema::hasColumn('stock_movements', 'order_completed_key')) {
                 Schema::table('stock_movements', function (Blueprint $table): void {
                     $table->dropColumn('order_completed_key');
