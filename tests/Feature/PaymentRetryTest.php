@@ -19,7 +19,7 @@ class PaymentRetryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_status_check_404_marks_exact_attempt_failed_and_retryable(): void
+    public function test_status_check_404_returns_unknown_and_keeps_order_pending(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending', 'doku_order_id' => 'invoice-404']);
         $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'invoice-404', 'invoice_number' => 'invoice-404', 'merchant_request_id' => 'invoice-404-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown', 'settlement_status' => 'unknown']);

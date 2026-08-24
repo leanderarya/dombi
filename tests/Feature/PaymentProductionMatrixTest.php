@@ -63,9 +63,11 @@ class PaymentProductionMatrixTest extends TestCase
         $event = end($events);
         $this->assertSame([
             'order_id', 'attempt_id', 'invoice_number', 'request_id', 'gateway_reference',
-            'mapped_status', 'processing_result', 'error_reason',
+            'mapped_status', 'processing_result', 'error_reason', 'provider', 'provider_status',
         ], array_keys($event['labels']));
         $this->assertSame('invalid_response', $event['name']);
+        $this->assertNull($event['labels']['provider']);
+        $this->assertNull($event['labels']['provider_status']);
         $this->assertSame(1, $observability->counters()['payment_invalid_response']);
         $this->assertArrayHasKey('payment_pending_age_seconds', $observability->gauges());
         $this->assertArrayNotHasKey('raw_body', $event['labels']);
@@ -88,6 +90,17 @@ class PaymentProductionMatrixTest extends TestCase
         ]);
 
         $this->artisan('payments:verify-cutover')->assertExitCode(1);
+    }
+
+    public function test_unknown_provider_status_emits_allowlisted_bounded_labels(): void
+    {
+        app(\App\Services\DokuService::class)->mapStatus('provider-new-status');
+
+        $events = app(PaymentObservabilityService::class)->events();
+        $event = end($events);
+        $this->assertSame('unknown_status', $event['name']);
+        $this->assertSame('doku', $event['labels']['provider']);
+        $this->assertSame('PROVIDER-NEW-STATUS', $event['labels']['provider_status']);
     }
 
     public function test_observability_rejects_unknown_context_labels_and_computes_pending_age(): void
