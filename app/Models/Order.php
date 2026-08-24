@@ -208,8 +208,8 @@ class Order extends Model
             default => $status,
         })->all();
 
-        return $query->where(function (Builder $scope) use ($statuses, $hasDestination, $staleInProgressOnly): void {
-            $scope->whereExists(function ($selected) use ($statuses, $hasDestination): void {
+        return $query->where(function (Builder $scope) use ($statuses, $hasDestination, $staleInProgressOnly, $legacyStatuses): void {
+            $scope->whereExists(function ($selected) use ($statuses, $hasDestination, $staleInProgressOnly): void {
                 $selected->selectRaw('1')
                     ->from('refund_obligations')
                     ->join('payment_attempts', 'payment_attempts.id', '=', 'refund_obligations.payment_attempt_id')
@@ -247,8 +247,8 @@ class Order extends Model
                                     ->orWhere('newer_attempts.metadata->provenance', '!=', 'synthetic_legacy_refund');
                             });
                     });
-            })->orWhere(function (Builder $legacy): void {
-                $legacy->where(function ($status) use ($staleInProgressOnly): void {
+            })->orWhere(function (Builder $legacy) use ($staleInProgressOnly, $legacyStatuses): void {
+                $legacy->where(function ($status) use ($staleInProgressOnly, $legacyStatuses): void {
                     if ($staleInProgressOnly) {
                         $status->where('payment_status', PaymentStatus::RefundFailed->value)
                             ->orWhere(fn ($stale) => $stale->where('payment_status', PaymentStatus::RefundInProgress->value)->where('refund_started_at', '<=', now()->subHours(24)));
