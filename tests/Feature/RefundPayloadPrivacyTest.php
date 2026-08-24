@@ -52,6 +52,40 @@ class RefundPayloadPrivacyTest extends TestCase
         $this->assertSame("/refunds/{$order->id}/proof", $payload['proof_url']);
     }
 
+    public function test_owner_payload_uses_canonical_obligation_state_and_destination(): void
+    {
+        $order = $this->createOrderWithDestination('refund_pending', 'valid');
+        $order->update(['payment_status' => 'refund_rejected', 'refund_reason' => 'customer_cancellation', 'refund_rejected_reason' => 'other']);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'payload-state',
+            'invoice_number' => 'payload-state',
+            'merchant_request_id' => 'payload-state',
+            'amount_snapshot' => 50000,
+            'currency_snapshot' => 'IDR',
+        ]);
+        RefundObligation::create([
+            'payment_attempt_id' => $attempt->id,
+            'amount' => 50000,
+            'currency' => 'IDR',
+            'reason' => 'customer_cancellation',
+            'status' => 'rejected',
+            'destination_type' => 'bank',
+            'bank_name' => 'CANONICAL',
+            'account_number' => '9999',
+            'account_holder' => 'Canonical',
+            'metadata' => ['rejection_reason' => 'invalid_destination', 'rejection_note' => 'Fix it'],
+        ]);
+
+        $payload = app(RefundPayloadService::class)->forOwner($order);
+
+        $this->assertFalse($payload['can_start']);
+        $this->assertTrue($payload['can_reject'] === false);
+        $this->assertSame('invalid_destination', $payload['rejection']['code']);
+        $this->assertSame('CANONICAL', $payload['destination']['label']);
+        $this->assertSame('9999', $payload['destination']['number']);
+    }
+
     public function test_owner_payload_contains_full_destination(): void
     {
         $order = $this->createOrderWithDestination('refund_pending', 'valid');

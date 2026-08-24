@@ -109,31 +109,37 @@ class RefundPayloadService
         $base['customer_name'] = $order->customer_name ?? ($order->customer?->name ?? '');
         $base['customer_phone'] = $order->customer_phone ?? ($order->customer?->phone ?? '');
 
-        $base['destination'] = $this->fullDestination($order);
         $obligation = $order->selectedRefundObligation();
+        $base['destination'] = $this->fullDestination($order, $obligation);
         $base['proof_url'] = ($obligation ? $obligation->status?->value === 'completed' && $obligation->proof_image : $order->payment_status === 'refunded' && $order->refund_proof_image)
             ? "/refunds/{$order->id}/proof"
             : null;
         $base['transfer_reference'] = $obligation ? $obligation->transfer_reference : $order->refund_transfer_reference;
         $base['transfer_note'] = $obligation ? $obligation->transfer_note : $order->refund_transfer_note;
 
-        $base['can_enter_destination'] = $order->isGuestCustomer()
-            && $order->payment_status === 'refund_pending'
-            && $order->refund_destination_status !== 'valid';
+        $obligation = $order->selectedRefundObligation();
+        $status = $obligation?->status?->value ?? $order->payment_status;
+        $destinationStatus = $obligation
+            ? ($obligation->destination_type !== null ? Order::REFUND_DESTINATION_VALID : Order::REFUND_DESTINATION_MISSING)
+            : $order->refund_destination_status;
 
-        $base['can_legacy_repair'] = $order->payment_status === 'refund_pending'
-            && $order->refund_destination_status !== 'valid'
+        $base['can_enter_destination'] = $order->isGuestCustomer()
+            && $status === 'refund_pending'
+            && $destinationStatus !== Order::REFUND_DESTINATION_VALID;
+
+        $base['can_legacy_repair'] = $status === 'refund_pending'
+            && $destinationStatus !== Order::REFUND_DESTINATION_VALID
             && $order->refund_requested_at !== null
             && $order->refund_requested_at->lt(Carbon::create(2026, 7, 24, 1, 0, 0, config('app.timezone')));
 
-        $base['can_start'] = $order->payment_status === 'refund_pending'
-            && $order->refund_destination_status === 'valid';
+        $base['can_start'] = $status === 'refund_pending'
+            && $destinationStatus === Order::REFUND_DESTINATION_VALID;
 
-        $base['can_reject'] = $order->payment_status === 'refund_pending';
+        $base['can_reject'] = $status === 'refund_pending';
 
-        $base['can_rollback'] = $order->payment_status === 'refund_in_progress';
+        $base['can_rollback'] = $status === 'refund_in_progress';
 
-        $base['can_complete'] = $order->payment_status === 'refund_in_progress';
+        $base['can_complete'] = $status === 'refund_in_progress';
 
         return $base;
     }
@@ -150,10 +156,13 @@ class RefundPayloadService
         $base = $this->basePayload($order, $queue);
 
         $base['destination'] = $this->maskedDestination($order);
-        $base['can_edit_destination'] = $order->payment_status === 'refund_pending';
-        $base['can_resubmit'] = $order->payment_status === 'refund_rejected'
-            && $order->refund_rejected_reason !== null
-            && in_array($order->refund_rejected_reason, [
+        $obligation = $order->selectedRefundObligation();
+        $status = $obligation?->status?->value ?? $order->payment_status;
+        $rejectionReason = $obligation ? ($obligation->metadata['rejection_reason'] ?? null) : $order->refund_rejected_reason;
+        $base['can_edit_destination'] = $status === 'refund_pending';
+        $base['can_resubmit'] = $status === 'refund_rejected'
+            && $rejectionReason !== null
+            && in_array($rejectionReason, [
                 RefundRejectionReason::InvalidDestination->value,
                 RefundRejectionReason::IncompleteDestination->value,
             ], true);
@@ -218,8 +227,8 @@ class RefundPayloadService
         $destinationStatus = $obligation
             ? ($obligation->destination_type !== null ? Order::REFUND_DESTINATION_VALID : Order::REFUND_DESTINATION_MISSING)
             : $order->refund_destination_status;
-        $rejectionReason = $obligation?->metadata['rejection_reason'] ?? $order->refund_rejected_reason;
-        $rejectionNote = $obligation?->metadata['rejection_note'] ?? $order->refund_rejection_note;
+        $rejectionReason = $obligation ? ($obligation->metadata['rejection_reason'] ?? null) : $order->refund_rejected_reason;
+        $rejectionNote = $obligation ? ($obligation->metadata['rejection_note'] ?? null) : $order->refund_rejection_note;
         $rejection = null;
         if ($rejectionReason !== null) {
             $reasonEnum = RefundRejectionReason::tryFrom($rejectionReason);
@@ -240,7 +249,7 @@ class RefundPayloadService
             'amount' => (float) ($obligation?->amount ?? $order->refund_amount ?? 0),
             'requested_at' => $order->refund_requested_at?->toISOString(),
             'submitted_at' => $order->refund_destination_submitted_at?->toISOString(),
-            'started_at' => $order->refund_started_at?->toISOString(),
+            'started_at' => $obligation?->processed_at?->toISOString() ?? $order->refund_started_at?->toISOString(),
             'completed_at' => $order->refunded_at?->toISOString(),
             'rejection' => $rejection,
             'timeline' => $this->safeTimeline($order),
@@ -273,28 +282,23 @@ class RefundPayloadService
         })->all();
     }
 
-    private function fullDestination(Order $order): ?array
+    private function fullDestination(Order $order, $obligation = null): ?array
     {
-        if ($order->refund_destination_type === null) {
+        $type = $obligation?->destination_type ?? $order->refund_destination_type;
+        $label = $obligation?->bank_name ?? $obligation?->ewallet_provider ?? $order->refund_bank_name ?? $order->refund_ewallet_provider;
+        $holder = $obligation?->account_holder ?? $obligation?->ewallet_holder ?? $order->refund_account_holder ?? $order->refund_ewallet_holder;
+        $number = $obligation?->account_number ?? $obligation?->ewallet_number ?? $order->refund_account_number ?? $order->refund_ewallet_number;
+
+        if ($type === null) {
             return null;
         }
 
-        if ($order->refund_destination_type === 'bank') {
-            return [
-                'type' => 'bank',
-                'label' => $order->refund_bank_name,
-                'holder' => $order->refund_account_holder,
-                'number' => $order->refund_account_number,
-            ];
+        if ($type === 'bank') {
+            return ['type' => 'bank', 'label' => $label, 'holder' => $holder, 'number' => $number];
         }
 
-        if ($order->refund_destination_type === 'ewallet') {
-            return [
-                'type' => 'ewallet',
-                'label' => $order->refund_ewallet_provider,
-                'holder' => $order->refund_ewallet_holder,
-                'number' => $order->refund_ewallet_number,
-            ];
+        if ($type === 'ewallet') {
+            return ['type' => 'ewallet', 'label' => $label, 'holder' => $holder, 'number' => $number];
         }
 
         return null;

@@ -72,16 +72,7 @@ class RefundService
 
             $fromStatus = $locked->payment_status;
             $attempt = $locked->paymentAttempts()
-                ->where(function ($query): void {
-                    $query->where('settlement_status', 'paid')
-                        ->orWhere('verification_status', 'verified');
-                })
-                ->where(function ($query): void {
-                    $query->whereNull('metadata->provenance')
-                        ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
-                })
-                ->latest('id')
-                ->first() ?? $locked->paymentAttempts()
+                ->where('verification_status', 'verified')
                 ->where(function ($query): void {
                     $query->whereNull('metadata->provenance')
                         ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
@@ -96,7 +87,7 @@ class RefundService
                     'merchant_request_id' => 'legacy-manual-refund-'.$locked->id,
                     'amount_snapshot' => $locked->total,
                     'currency_snapshot' => 'IDR',
-                    'metadata' => ['provenance' => 'synthetic_legacy_refund', 'verified' => false],
+                    'metadata' => ['provenance' => 'legacy_manual_refund', 'verified' => false],
                 ]);
             }
 
@@ -270,7 +261,7 @@ class RefundService
             }
 
             if ($obligation) {
-                $obligation->update(['status' => 'in_progress', 'processed_by' => $ownerId]);
+                $obligation->update(['status' => 'in_progress', 'processed_by' => $ownerId, 'processed_at' => now()]);
             }
 
             $locked->update([

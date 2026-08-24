@@ -85,14 +85,27 @@ class RefundServiceTest extends TestCase
         app(RefundService::class)->request($order, 'customer', null, 'customer_cancellation');
     }
 
-    public function test_request_allows_legacy_paid_at_row_without_payment_transaction(): void
+    public function test_request_creates_included_legacy_manual_attempt_without_verified_payment(): void
     {
         $order = Order::factory()->paid()->create(['total' => 50000, 'paid_at' => now()->subDay()]);
 
         $history = app(RefundService::class)->request($order, 'customer', null, 'customer_cancellation');
 
+        $attempt = PaymentAttempt::query()->where('order_id', $order->id)->sole();
         $this->assertNotNull($history);
+        $this->assertSame('legacy_manual_refund', $attempt->metadata['provenance']);
         $this->assertSame('refund_pending', $order->fresh()->payment_status);
+        $this->assertDatabaseHas('refund_obligations', ['payment_attempt_id' => $attempt->id]);
+    }
+
+    public function test_request_rejects_paid_order_without_paid_at_or_verified_attempt(): void
+    {
+        $order = Order::factory()->paid()->create(['total' => 50000, 'paid_at' => null]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Refund amount melebihi pembayaran terverifikasi.');
+
+        app(RefundService::class)->request($order, 'customer', null, 'customer_cancellation');
     }
 
     public function test_request_accepts_settled_collection_and_records_settled_from_status(): void
