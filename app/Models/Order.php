@@ -241,7 +241,14 @@ class Order extends Model
                     });
             })->orWhere(function (Builder $legacy) use ($legacyStatuses): void {
                 $legacy->whereIn('payment_status', $legacyStatuses)
-                    ->whereDoesntHave('paymentAttempts.refundObligations');
+                    ->whereDoesntHave('paymentAttempts.refundObligations', function ($obligation): void {
+                        $obligation->whereHas('paymentAttempt', function ($attempt): void {
+                            $attempt->where(function ($metadata): void {
+                                $metadata->whereNull('metadata->provenance')
+                                    ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                            });
+                        });
+                    });
             });
         });
     }

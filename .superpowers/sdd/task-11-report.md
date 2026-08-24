@@ -1,9 +1,8 @@
 # Task 11 Report
 
 ## Scope
-- `withCanonicalRefund` preserves legacy refund visibility only when no payment-attempt obligation exists.
-- Non-synthetic canonical obligations remain authoritative and suppress legacy Order projection status.
-- Canonical selected obligation continues deterministic reason/attempt selection.
+- Legacy fallback now ignores synthetic legacy obligations; only non-synthetic canonical obligations suppress legacy visibility.
+- Canonical selected obligation remains authoritative when present.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.
