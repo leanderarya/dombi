@@ -108,7 +108,7 @@ class RefundService
 
             $locked->update([
                 'payment_status' => PaymentStatus::RefundPending->value,
-                'refund_amount' => (float) $locked->total,
+                'refund_amount' => (float) $obligation->amount,
                 'refund_requested_at' => now(),
                 'refund_reason' => $source,
                 'refund_destination_status' => Order::REFUND_DESTINATION_MISSING,
@@ -122,7 +122,7 @@ class RefundService
                 'actor_type' => $actorType,
                 'actor_id' => $actorId,
                 'metadata' => [
-                    'refund_amount' => (float) $locked->total,
+                    'refund_amount' => (float) $obligation->amount,
                     'source_entry_point' => $source,
                 ],
             ]);
@@ -154,6 +154,9 @@ class RefundService
             $this->validateDestinationData($destinationType, $data);
 
             $updateData = $this->buildDestinationUpdateData($destinationType, $data);
+            if ($obligation) {
+                $obligation->update($this->obligationDestinationData($destinationType, $data));
+            }
 
             $eligibleRejection = $locked->refund_destination_status === Order::REFUND_DESTINATION_INVALID
                 && $locked->refund_rejected_reason !== null
@@ -171,6 +174,13 @@ class RefundService
                     'refund_rejected_at' => null,
                     'refund_rejected_by' => null,
                 ]);
+
+                if ($obligation) {
+                    $obligation->update([
+                        'status' => 'rejected',
+                        'metadata' => array_merge($obligation->metadata ?? [], ['rejection_reason' => $reason, 'rejection_note' => $note]),
+                    ]);
+                }
 
                 $locked->update($updateData);
 
@@ -239,6 +249,10 @@ class RefundService
                 throw new DomainException('Order ini tidak dalam antrean refund.');
             }
 
+            if ($obligation && $obligation->destination_type === null) {
+                throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
+            }
+
             if ($locked->refund_destination_status !== Order::REFUND_DESTINATION_VALID) {
                 throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
             }
@@ -249,6 +263,10 @@ class RefundService
 
             if ((float) $locked->refund_amount <= 0) {
                 throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
+            }
+
+            if ($obligation) {
+                $obligation->update(['status' => 'in_progress', 'processed_by' => $ownerId]);
             }
 
             $locked->update([
@@ -277,6 +295,7 @@ class RefundService
     {
         return DB::transaction(function () use ($order, $reason, $note, $actorType, $actorId, $legacyRepair) {
             $locked = Order::lockForUpdate()->findOrFail($order->id);
+            $obligation = $this->canonicalObligation($locked, true);
 
             if ($locked->payment_status === PaymentStatus::RefundInProgress->value) {
                 throw new DomainException('Refund yang sedang diproses harus diselesaikan atau di-rollback.');
@@ -349,9 +368,18 @@ class RefundService
 
         return DB::transaction(function () use ($order, $ownerId, $mode, $trimmed) {
             $locked = Order::lockForUpdate()->findOrFail($order->id);
+            $obligation = $this->canonicalObligation($locked, true);
+
+            if ($obligation && $obligation->status?->value !== 'in_progress') {
+                throw new DomainException('Refund sudah tidak dalam status diproses.');
+            }
 
             if ($locked->payment_status !== PaymentStatus::RefundInProgress->value) {
                 throw new DomainException('Refund sudah tidak dalam status diproses.');
+            }
+
+            if ($obligation) {
+                $obligation->update(['status' => 'pending']);
             }
 
             $locked->update([
@@ -389,6 +417,11 @@ class RefundService
 
         return DB::transaction(function () use ($order, $ownerId, $proofPath, $transferReference, $transferNote) {
             $locked = Order::lockForUpdate()->findOrFail($order->id);
+            $obligation = $this->canonicalObligation($locked, true);
+
+            if ($obligation && $obligation->status?->value !== 'in_progress') {
+                throw new DomainException('Refund sudah tidak dalam status diproses.');
+            }
 
             if ($locked->payment_status !== PaymentStatus::RefundInProgress->value) {
                 throw new DomainException('Refund sudah tidak dalam status diproses.');
@@ -396,6 +429,17 @@ class RefundService
 
             if ((float) $locked->refund_amount <= 0) {
                 throw new DomainException('Jumlah refund tidak valid.');
+            }
+
+            if ($obligation) {
+                $obligation->update([
+                    'status' => 'completed',
+                    'proof_image' => $proofPath,
+                    'transfer_reference' => $transferReference,
+                    'transfer_note' => $transferNote,
+                    'processed_by' => $ownerId,
+                    'processed_at' => now(),
+                ]);
             }
 
             $locked->update([
@@ -503,6 +547,25 @@ class RefundService
         } else {
             throw new DomainException('Tujuan refund tidak dapat diubah pada status ini.');
         }
+    }
+
+    private function obligationDestinationData(string $destinationType, array $data): array
+    {
+        if ($destinationType === 'bank') {
+            return [
+                'destination_type' => 'bank', 'bank_name' => $data['bank_name'],
+                'account_number' => $data['account_number'], 'account_holder' => $data['account_holder'],
+                'ewallet_provider' => null, 'ewallet_number' => null, 'ewallet_holder' => null,
+                'destination_submitted_at' => now(),
+            ];
+        }
+
+        return [
+            'destination_type' => 'ewallet', 'bank_name' => null,
+            'account_number' => null, 'account_holder' => null,
+            'ewallet_provider' => $data['ewallet_provider'], 'ewallet_number' => $data['ewallet_number'],
+            'ewallet_holder' => $data['ewallet_holder'], 'destination_submitted_at' => now(),
+        ];
     }
 
     private function buildDestinationUpdateData(string $destinationType, array $data): array
