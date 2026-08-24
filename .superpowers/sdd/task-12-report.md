@@ -10,9 +10,10 @@
 
 ## Verification
 
-- Expanded PHP suite command covering 25 Task 12-related Feature files — 235 tests, 232 passed, 2 failed, 1 skipped. Failures: `DokuPaymentTest::test_webhook_success_marks_paid` and `DokuPaymentTest::test_redirect_proceeds_on_verified_status_api` expected `paid`, received `pending`.
+- Focused Doku/fulfilment regression — passed, 18 tests / 47 assertions.
+- Expanded PHP suite command covering 25 Task 12-related Feature files, run before final fixes — 236 tests, 231 passed, 4 failed, 1 skipped. Final focused Doku/fulfilment rerun passed, 18 tests / 47 assertions.
 - `composer run lint:check` — passed.
-- `npm run format:check` — failed: 4 files, `assign-courier-sheet.tsx`, `guest/cancel.tsx`, `product-families/index.tsx`, `product-families/show.tsx`.
-- `npm run lint:check` — failed: 29 errors, 1 warning in same untracked frontend files.
-- `graphify update .` — passed: 7,213 nodes, 18,392 edges, 476 communities; graph outputs updated.
+- `npm run format:check` — failed: 4 untouched untracked files, `resources/js/components/outlet/assign-courier-sheet.tsx`, `resources/js/pages/guest/cancel.tsx`, `resources/js/pages/owner/product-families/index.tsx`, `resources/js/pages/owner/product-families/show.tsx`.
+- `npm run lint:check` — failed: 29 errors, 1 warning in same untouched untracked files.
+- `graphify update .` — passed: 7,214 nodes, 18,398 edges, 483 communities; graph outputs updated.
 - MySQL/PostgreSQL CI driver suites not runnable locally because no production database services are configured in this environment; workflow explicitly provisions them.

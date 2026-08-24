@@ -75,7 +75,10 @@ return new class extends Migration
                 });
             }
         } elseif (DB::getDriverName() === 'pgsql') {
-            DB::statement('DROP INDEX IF EXISTS stock_movements_order_completed_unique');
+            $index = DB::selectOne("SELECT 1 FROM pg_class index_class JOIN pg_namespace index_schema ON index_schema.oid = index_class.relnamespace JOIN pg_roles index_owner ON index_owner.oid = index_class.relowner WHERE index_schema.nspname = current_schema() AND index_class.relname = 'stock_movements_order_completed_unique' AND index_class.relkind = 'i' AND index_owner.rolname = current_user");
+            if ($index !== null) {
+                DB::statement('DROP INDEX stock_movements_order_completed_unique');
+            }
         }
 
         if (DB::getDriverName() === 'pgsql') {

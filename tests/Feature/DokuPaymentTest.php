@@ -80,10 +80,18 @@ class DokuPaymentTest extends TestCase
             'amount' => $order->total,
             'status' => 'pending',
         ]);
+        PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'webhook-'.$order->id,
+            'invoice_number' => 'INV-001',
+            'merchant_request_id' => 'webhook-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+        ]);
 
         $payload = [
             'order' => ['invoice_number' => 'INV-001'],
-            'transaction' => ['status' => 'SUCCESS'],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
         ];
 
         $this->doku->handleWebhook($payload);
@@ -118,7 +126,7 @@ class DokuPaymentTest extends TestCase
 
         $payload = [
             'order' => ['invoice_number' => 'INV-001'],
-            'transaction' => ['status' => 'SUCCESS'],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
         ];
 
         $this->doku->handleWebhook($payload);
@@ -183,11 +191,19 @@ class DokuPaymentTest extends TestCase
             'amount' => $order->total,
             'status' => 'pending',
         ]);
+        PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'redirect-'.$order->id,
+            'invoice_number' => 'INV-003',
+            'merchant_request_id' => 'redirect-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+        ]);
 
         Http::fake([
             '*/checkout/v1/payment/INV-003' => Http::response([
                 'order' => ['invoice_number' => 'INV-003'],
-                'transaction' => ['status' => 'SUCCESS'],
+                'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
             ], 200),
         ]);
 
