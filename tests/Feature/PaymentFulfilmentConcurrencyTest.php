@@ -170,6 +170,9 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
     {
         $driver = config('database.default') === 'sqlite' ? 'sqlite' : DB::connection()->getDriverName();
         if ($driver === 'sqlite') {
+            if (filter_var(getenv('CI'), FILTER_VALIDATE_BOOLEAN)) {
+                $this->fail('Production-driver concurrency gate cannot skip in CI.');
+            }
             $this->markTestSkipped('SQLite does not provide production-driver row-lock concurrency.');
         }
         $this->assertContains($driver, ['mysql', 'pgsql']);

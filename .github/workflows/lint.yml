@@ -14,7 +14,17 @@ jobs:
   task12-production:
     strategy:
       matrix:
-        database: [mysql, postgres]
+        include:
+          - database: mysql
+            connection: mysql
+            port: 3306
+            username: root
+            password: root
+          - database: postgres
+            connection: pgsql
+            port: 5432
+            username: postgres
+            password: postgres
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -40,13 +50,40 @@ jobs:
       - run: composer install -q --no-ansi --no-interaction --no-progress --prefer-dist
       - name: Run Task 12 production tests
         env:
-          DB_CONNECTION: ${{ matrix.database }}
+          DB_CONNECTION: ${{ matrix.connection }}
           DB_HOST: 127.0.0.1
-          DB_PORT: ${{ matrix.database == 'mysql' && 3306 || 5432 }}
+          DB_PORT: ${{ matrix.port }}
           DB_DATABASE: dombi_test
-          DB_USERNAME: ${{ matrix.database == 'mysql' && 'root' || 'postgres' }}
-          DB_PASSWORD: ${{ matrix.database == 'mysql' && 'root' || 'postgres' }}
-        run: php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentRetryTest.php tests/Feature/PaymentOutboxTest.php tests/Feature/DokuReconciliationTest.php tests/Feature/PaymentProductionInvariantTest.php
+          DB_USERNAME: ${{ matrix.username }}
+          DB_PASSWORD: ${{ matrix.password }}
+        run: >-
+          php artisan test
+          tests/Feature/PaymentFulfilmentConcurrencyTest.php
+          tests/Feature/PaymentCreationIdempotencyTest.php
+          tests/Feature/PaymentRetryTest.php
+          tests/Feature/PaymentRetryBoundaryTest.php
+          tests/Feature/PaymentFailureFlowTest.php
+          tests/Feature/PaymentOutboxTest.php
+          tests/Feature/DokuReconciliationTest.php
+          tests/Feature/DokuPaymentAtomicTest.php
+          tests/Feature/DokuPaymentTest.php
+          tests/Feature/DokuWebhookIngressTest.php
+          tests/Feature/PaymentProductionInvariantTest.php
+          tests/Feature/RefundLifecycleSchemaTest.php
+          tests/Feature/RefundServiceTest.php
+          tests/Feature/CompleteManualRefundRequestTest.php
+          tests/Feature/RefundDestinationRequestTest.php
+          tests/Feature/CustomerRefundDestinationTest.php
+          tests/Feature/GuestRefundExperienceTest.php
+          tests/Feature/ManualRefundMigrationTest.php
+          tests/Feature/RefundEntryMatrixTest.php
+          tests/Feature/RollbackRefundRequestTest.php
+          tests/Feature/RefundRouteContractTest.php
+          tests/Feature/PaymentAttemptSchemaTest.php
+          tests/Feature/PaymentReliabilityTest.php
+          tests/Feature/PaymentFeeIntegrationTest.php
+          tests/Feature/SettlementPaymentFormatFixTest.php
+          tests/Feature/PaymentAccountTest.php
 
   quality:
     runs-on: ubuntu-latest
@@ -70,7 +107,7 @@ jobs:
         run: npm run format:check
 
       - name: Lint Frontend
-        run: npm run lint
+        run: npm run lint:check
 
       # - name: Commit Changes
       #   uses: stefanzweifel/git-auto-commit-action@v7
