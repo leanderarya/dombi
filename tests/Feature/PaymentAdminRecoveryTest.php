@@ -85,6 +85,7 @@ class PaymentAdminRecoveryTest extends TestCase
             'raw_body' => 'secret-body',
             'body_digest' => 'secret-digest',
             'claim_token' => 'secret-claim',
+            'error' => 'provider secret raw failure details',
         ]);
         RefundObligation::create([
             'payment_attempt_id' => $attempt->id,
@@ -95,13 +96,15 @@ class PaymentAdminRecoveryTest extends TestCase
             'bank_name' => 'Secret Bank',
             'account_number' => '123',
             'proof_image' => 'secret-proof',
-            'metadata' => ['secret' => 'metadata'],
+            'metadata' => ['rejection_code' => ['secret' => 'nested']],
         ]);
 
         $response = $this->actingAs($owner)->getJson('/owner/finance/payments')->json();
         $forbidden = ['payload', 'raw_body', 'body_digest', 'claim_token', 'bank_name', 'account_number', 'proof_image', 'notes', 'ewallet_number', 'raw_response', 'token_id', 'customer', 'secrets'];
 
         $this->assertFalse($this->containsForbiddenKey($response, $forbidden));
+        $this->assertNull($response['webhooks']['data'][0]['error_code']);
+        $this->assertNull($response['refund_obligations']['data'][0]['rejection_code']);
     }
 
     private function containsForbiddenKey(mixed $value, array $forbidden): bool
