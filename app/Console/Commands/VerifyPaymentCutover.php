@@ -152,15 +152,19 @@ class VerifyPaymentCutover extends Command
     {
         $cutover = config('doku.payment_cutover_at');
 
-        return $cutover !== null && $attempt->created_at !== null && $attempt->created_at->greaterThan(Carbon::parse($cutover));
+        return $cutover !== null && $attempt->created_at !== null && $attempt->created_at->greaterThanOrEqualTo(Carbon::parse($cutover));
     }
 
     private function minorUnits(int|float|string|null $value): ?int
     {
-        if ($value === null || is_float($value)) {
+        if ($value === null) {
             return null;
         }
-        $parts = array_pad(explode('.', (string) $value, 2), 2, '');
+        $text = is_float($value) ? number_format($value, 2, '.', '') : trim((string) $value);
+        if (! preg_match('/^\d+(?:\.\d{1,2})?$/', $text)) {
+            return null;
+        }
+        $parts = array_pad(explode('.', $text, 2), 2, '');
 
         return ((int) $parts[0] * 100) + (int) str_pad($parts[1], 2, '0');
     }

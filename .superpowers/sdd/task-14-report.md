@@ -13,7 +13,7 @@ Payment observability registry, fixed nullable event schema, safe allowlisted la
 | `php artisan test tests/Feature/PaymentProductionMatrixTest.php tests/Feature/PaymentProductionInvariantTest.php` | PASS: 22 tests, 22 passed, 50 assertions; Task 14 remains BLOCKED |
 | `vendor/bin/pint --test Task 14 files` | PASS |
 | `php artisan migrate:fresh --seed` | PASS |
-| `php artisan payments:verify-cutover` | PASS on clean seeded database; production gate NO-GO until real parity and explicit legacy-write evidence. Resolved invoice/minor-unit/currency/gateway/refund parity implemented |
+| `php artisan payments:verify-cutover` | Historical clean-seed fixture-only output; not release evidence. Production gate remains NO-GO pending real migration parity and runtime evidence |
 | `php artisan payments:backfill-attempts --dry-run` | CURRENT (2026-08-24, run after commit `f45a06e4`): BLOCKED by MySQL `1045 Access denied for user root@localhost`; no current command result |
 | `php artisan payments:reconcile-doku --dry-run` | CURRENT (2026-08-24, run after commit `f45a06e4`): BLOCKED by MySQL `1045 Access denied for user root@localhost`; no current command result |
 | `npm run types:check` | FAIL: `resources/js/pages/guest/cancel.tsx:26` PageProps constraint; `cancel.tsx:41` missing `route` |
@@ -24,7 +24,7 @@ Task 14 status: NO-GO/BLOCKED.
 
 Latest run: scoped tests could not execute because MySQL test database rejected credentials (`1045 Access denied for user root@localhost`); 22 tests errored before assertions. This is environment-blocked, not a pass. Current dry-run commands are also environment-blocked by the same `1045 Access denied` on `dombi`; no PASS claim is made. Latest historical successful outputs are retained only as history, not current evidence. Typecheck remains NO-GO with `resources/js/pages/guest/cancel.tsx:26` PageProps constraint and `cancel.tsx:41` missing `route`. Full suite remains NO-GO with exact 18 named failures listed below plus current MySQL credential failure. Cutover requires runtime-resolved `config('doku.legacy_writes_deployment_evidence') === 'false'`; default config is not evidence. Production readiness is not claimed. Full serial suite failures are release blockers. Production readiness is not claimed.
 
-Historical run (2026-08-24, pre-MySQL credential failure): scoped matrix 22/22 pass, 50 assertions; migration/graphify passed. Its dry-run outputs are historical only. Current status is environment-blocked and NO-GO.
+Historical matrix run (2026-08-24, pre-MySQL credential failure): 22/22 pass, 50 assertions; not latest evidence. Latest scoped run is MySQL-blocked before assertions and is the only current result. Task 14 is NO-GO.
 
 Late payment requires non-null trusted event timestamp and event time strictly after authoritative terminal transition timestamp. Taxonomy path assertions cover all required event owners; direct registry-only coverage is not treated as production behavior proof.
 
