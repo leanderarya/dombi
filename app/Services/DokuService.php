@@ -146,7 +146,7 @@ class DokuService
                 if (data_get($locked->metadata ?? [], 'creation_lease.token') !== $claimToken) {
                     return false;
                 }
-                $locked->update(['creation_state' => $state, 'raw_response' => $rawResponse, 'metadata' => array_merge($locked->metadata ?? [], $metadata, ['creation_lease' => null])]);
+                $locked->update(['creation_state' => $state, 'raw_response' => $rawResponse, 'metadata' => array_merge($locked->metadata ?? [], $metadata, ['creation_lease' => null], $state === 'unknown' ? ['reconciliation_deadline_at' => now()->addHours(24)->toIso8601String()] : [])]);
                 if ($state === 'failed') {
                     app(InventoryService::class)->releaseReservedStock($order);
                 }
@@ -172,6 +172,32 @@ class DokuService
     {
         $attempt = PaymentAttempt::query()->whereKey($attempt->id)->with('order')->firstOrFail();
         $claimToken = bin2hex(random_bytes(16));
+        $expired = DB::transaction(function () use ($attempt): bool {
+            $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+            $deadline = data_get($locked->metadata ?? [], 'reconciliation_deadline_at');
+            if (! $deadline || ! now()->gte(Carbon::parse($deadline)) || $locked->creation_state?->value !== 'unknown') {
+                return false;
+            }
+            $locked->update([
+                'creation_state' => 'failed',
+                'settlement_status' => 'failed',
+                'gateway_status' => 'RECONCILIATION_DEADLINE_EXPIRED',
+                'reconciled_at' => now(),
+                'metadata' => array_merge($locked->metadata ?? [], [
+                    'reconciliation_deadline_expired_at' => now()->toIso8601String(),
+                    'reconciliation_lease' => null,
+                ]),
+            ]);
+            $order = Order::query()->whereKey($locked->order_id)->lockForUpdate()->firstOrFail();
+            app(InventoryService::class)->releaseReservedStock($order);
+            $order->update(['confirmation_expires_at' => now()]);
+            app(OrderPaymentProjectionService::class)->recompute($order);
+
+            return true;
+        });
+        if ($expired) {
+            return $attempt->fresh();
+        }
         $claimed = DB::transaction(function () use ($attempt, $claimToken): bool {
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             if (! in_array($locked->creation_state?->value, ['pending', 'unknown'], true)

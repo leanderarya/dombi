@@ -2,6 +2,9 @@
 
 ## Findings fixed
 
+- Unknown reconciliation attempts now receive a 24-hour deadline; before deadline, provider 404 remains unknown/retryable, while after deadline attempt atomically fails, preserves evidence, projects order retry/expiry state, and releases reserved inventory.
+- Added deadline regression proving reservation release and no stuck unknown attempt.
+
 - Matching order/attempt fulfilment claim now repairs missing attempt claim timestamp and returns idempotent winner without refund.
 - DOKU status-check 404 remains unresolved/unknown as approved ambiguous provider-session lookup; definitive reconciliation outcomes still transition failed and release reservation through creation cleanup.
 - MySQL fulfilment claim consistency is enforced with guarded insert/update triggers; PostgreSQL keeps the CHECK constraint.
@@ -20,7 +23,10 @@
 - `composer run lint:check` — passed.
 - `npm run format:check` — failed: 4 untouched untracked files, `resources/js/components/outlet/assign-courier-sheet.tsx`, `resources/js/pages/guest/cancel.tsx`, `resources/js/pages/owner/product-families/index.tsx`, `resources/js/pages/owner/product-families/show.tsx`.
 - `npm run lint:check` — failed: 29 errors, 1 warning in same untouched untracked files.
-- `graphify update .` — passed: 7,214 nodes, 18,398 edges, 481 communities; graph outputs updated.
+- `graphify update .` — passed: 7,215 nodes, 18,406 edges, 487 communities; graph outputs updated.
+- Focused retry/fulfilment/payment suite — passed, 87 tests / 226 assertions, 1 skipped.
+- `composer run lint:check` — passed after Pint import-order fix.
+- Local MySQL-backed regression passed; full MySQL/PostgreSQL CI matrix not run locally and is not claimed green.
 - Frontend baseline policy: unrelated untracked frontend files remain untouched; `npm run format:check` and `npm run lint:check` are CI gates, not locally green. Local frontend baseline remains 4 format failures and 29 ESLint errors / 1 warning.
 - Local MySQL tests were used for claim and 404 regressions; full MySQL/PostgreSQL CI matrix was not run locally and is not claimed green.
 - MySQL/PostgreSQL CI driver suites not runnable locally because no production database services are configured in this environment; workflow explicitly provisions them.
