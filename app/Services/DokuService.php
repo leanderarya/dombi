@@ -173,7 +173,11 @@ class DokuService
         $ids = PaymentAttempt::query()->where('creation_state', 'unknown')->orderBy('id')->limit($limit)->pluck('id');
         $expired = 0;
         foreach ($ids as $id) {
-            $expired += $this->expireUnknownAttemptIfDue((int) $id) ? 1 : 0;
+            try {
+                $expired += $this->expireUnknownAttemptIfDue((int) $id) ? 1 : 0;
+            } catch (\Throwable $exception) {
+                Log::error('Failed to expire unknown DOKU attempt', ['attempt_id' => $id, 'error' => $exception->getMessage()]);
+            }
         }
 
         return $expired;
@@ -188,7 +192,10 @@ class DokuService
                 return false;
             }
             $locked->update(['creation_state' => 'failed', 'settlement_status' => 'failed', 'gateway_status' => 'RECONCILIATION_DEADLINE_EXPIRED', 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_deadline_expired_at' => now()->toIso8601String(), 'reconciliation_lease' => null])]);
-            app(OrderStatusService::class)->expireOrder(Order::query()->whereKey($locked->order_id)->lockForUpdate()->firstOrFail(), 'Payment reconciliation deadline expired');
+            $order = Order::query()->whereKey($locked->order_id)->lockForUpdate()->firstOrFail();
+            if (! in_array($order->status, [Order::STATUS_COMPLETED, Order::STATUS_EXPIRED, Order::STATUS_CANCELLED_BY_CUSTOMER, Order::STATUS_CANCELLED_BY_OUTLET, Order::STATUS_REJECTED_BY_OUTLET], true)) {
+                app(OrderStatusService::class)->expireOrder($order, 'Payment reconciliation deadline expired');
+            }
 
             return true;
         });
@@ -204,8 +211,8 @@ class DokuService
         }
         $claimed = DB::transaction(function () use ($attempt, $claimToken): bool {
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
-            if (! in_array($locked->creation_state?->value, ['pending', 'unknown'], true)
-                || ($locked->settlement_status !== null && ! in_array($locked->settlement_status?->value, ['pending', 'unknown'], true))) {
+            if (! in_array($locked->creation_state?->value, ['pending', 'unknown', 'failed'], true)
+                 || ($locked->settlement_status !== null && ! in_array($locked->settlement_status?->value, ['pending', 'unknown'], true))) {
                 return false;
             }
             $metadata = $locked->metadata ?? [];
@@ -281,7 +288,8 @@ class DokuService
                     receivedAt: now(),
                     rawEvidence: $data,
                 ));
-                $locked->update(['creation_state' => 'failed', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
+                $locked->update(['creation_state' => 'failed', 'settlement_status' => in_array($status, ['EXPIRED'], true) ? 'expired' : 'failed', 'gateway_status' => $status, 'raw_response' => $data, 'reconciled_at' => now(), 'metadata' => array_merge($locked->metadata ?? [], ['reconciliation_lease' => null])]);
+                app(OrderPaymentProjectionService::class)->recompute($locked->order);
 
                 return true;
             });
