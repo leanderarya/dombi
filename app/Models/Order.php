@@ -208,7 +208,7 @@ class Order extends Model
             default => $status,
         })->all();
 
-        return $query->where(function (Builder $scope) use ($statuses, $hasDestination): void {
+        return $query->where(function (Builder $scope) use ($statuses, $hasDestination, $staleInProgressOnly): void {
             $scope->whereExists(function ($selected) use ($statuses, $hasDestination): void {
                 $selected->selectRaw('1')
                     ->from('refund_obligations')
