@@ -194,10 +194,18 @@ class CanonicalPaymentTransitionService
             return false;
         }
 
-        if ($order->fulfilment_claimed_at !== null || $attempt->fulfilment_claimed_at !== null) {
-            $this->createRefundObligation($attempt, 'duplicate_paid_attempt');
+        if ($order->fulfilment_claimed_at !== null || $order->fulfilment_claimed_by !== null || $attempt->fulfilment_claimed_at !== null) {
+            $claimant = $order->fulfilment_claimed_by
+                ? PaymentAttempt::query()->whereKey($order->fulfilment_claimed_by)->lockForUpdate()->first()
+                : null;
+            if ($claimant === null) {
+                $order->update(['fulfilment_claimed_at' => null, 'fulfilment_claimed_by' => null]);
+                $attempt->update(['fulfilment_claimed_at' => null]);
+            } elseif ($order->fulfilment_claimed_by !== $attempt->id || $attempt->fulfilment_claimed_at === null) {
+                $this->createRefundObligation($attempt, 'duplicate_paid_attempt');
 
-            return false;
+                return false;
+            }
         }
 
         if (in_array($order->status, [
