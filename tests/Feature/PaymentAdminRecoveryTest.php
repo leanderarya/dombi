@@ -146,6 +146,18 @@ class PaymentAdminRecoveryTest extends TestCase
         $this->assertStringNotContainsString('provider secret', session('success'));
     }
 
+    public function test_owner_needs_review_rejects_invalid_transition_without_success(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        $attempt = PaymentAttempt::create(['order_id' => Order::factory()->create()->id, 'attempt_key' => 'completed', 'invoice_number' => 'INV-COMPLETED', 'merchant_request_id' => 'REQ-COMPLETED', 'amount_snapshot' => 100, 'currency_snapshot' => 'IDR', 'creation_state' => 'pending', 'settlement_status' => 'pending']);
+        $obligation = RefundObligation::create(['payment_attempt_id' => $attempt->id, 'amount' => 100, 'currency' => 'IDR', 'reason' => 'duplicate', 'status' => 'completed']);
+
+        $response = $this->actingAs($owner)->post("/owner/finance/refund-obligations/{$obligation->id}/needs-review");
+
+        $response->assertStatus(409);
+        $this->assertNull(session('success'));
+    }
+
     public function test_owner_payment_recovery_routes_are_registered(): void
     {
         $this->assertSame('/owner/finance/payments', route('owner.finance.payments.index', [], false));

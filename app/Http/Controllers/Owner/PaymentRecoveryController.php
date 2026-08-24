@@ -98,9 +98,16 @@ class PaymentRecoveryController extends Controller
         return redirect()->back()->with('success', $result->changed ? 'Payment status reconciled.' : 'Payment status unchanged.');
     }
 
-    public function needsReview(RefundObligation $obligation): RedirectResponse
+    public function needsReview(RefundObligation $obligation): RedirectResponse|JsonResponse
     {
-        $this->refunds->transition($obligation, RefundObligationStatus::NeedsReview);
+        try {
+            $changed = $this->refunds->transition($obligation, RefundObligationStatus::NeedsReview);
+        } catch (\Throwable) {
+            return response()->json(['error' => 'Refund transition failed.'], 409);
+        }
+        if (! $changed) {
+            return response()->json(['error' => 'Refund transition unavailable.'], 409);
+        }
 
         return redirect()->back()->with('success', 'Refund obligation marked for review.');
     }
