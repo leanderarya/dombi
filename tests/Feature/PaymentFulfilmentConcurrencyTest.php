@@ -99,6 +99,19 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
         $this->assertSame(Order::STATUS_EXPIRED, $order->fresh()->status);
     }
 
+    public function test_completed_winner_replay_on_terminal_order_is_idempotent_without_refund(): void
+    {
+        $order = Order::factory()->create(['status' => Order::STATUS_EXPIRED, 'payment_status' => 'pending']);
+        $attempt = $this->attempt($order, 'winner-replay', 'invoice-winner-replay');
+        $order->update(['fulfilment_claimed_at' => now(), 'fulfilment_claimed_by' => $attempt->id, 'status' => Order::STATUS_COMPLETED]);
+        $attempt->update(['fulfilment_claimed_at' => now(), 'settlement_status' => PaymentAttemptSettlementStatus::Paid, 'verification_status' => PaymentAttemptVerificationStatus::Verified]);
+
+        $result = app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-winner-replay', now(), []));
+
+        $this->assertTrue($result->fulfilmentWinner);
+        $this->assertSame(0, RefundObligation::count());
+    }
+
     public function test_payment_fulfilment_rolls_back_claim_order_inventory_and_obligation_on_failure(): void
     {
         $outlet = Outlet::factory()->create();
