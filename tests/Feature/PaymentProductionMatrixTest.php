@@ -15,6 +15,7 @@ use App\Services\NormalizedPaymentEvent;
 use App\Services\PaymentObservabilityService;
 use App\Services\RefundService;
 use App\Services\TransitionResult;
+use Illuminate\Database\DatabaseTransactionsManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Date;
@@ -107,7 +108,7 @@ class PaymentProductionMatrixTest extends TestCase
 
         $observability = app(PaymentObservabilityService::class);
         $connection = DB::connection();
-        $transactions = app(\Illuminate\Database\DatabaseTransactionsManager::class);
+        $transactions = app(DatabaseTransactionsManager::class);
         $connection->setTransactionManager(null);
         app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
             'test', 'PROVIDER-NEW-STATUS', $order->total, 'IDR', 'gateway-'.$attempt->id, now(),
@@ -115,7 +116,7 @@ class PaymentProductionMatrixTest extends TestCase
         ));
         $connection->setTransactionManager($transactions);
         $this->assertSame('PROVIDER-NEW-STATUS', $attempt->fresh()->gateway_status);
-        $this->assertSame('unknown_status', PaymentObservabilityService::taxonomyOwners()['unknown_status']);
+        $this->assertSame('CanonicalPaymentTransitionService::apply', PaymentObservabilityService::taxonomyOwners()['unknown_status']);
     }
 
     public function test_observability_rejects_unknown_context_labels_and_computes_pending_age(): void
