@@ -56,7 +56,12 @@ return new class extends Migration
             DB::statement("CREATE UNIQUE INDEX stock_movements_order_completed_unique ON stock_movements (reference_type, reference_id, product_id) WHERE type = 'order_completed'");
         }
 
-        if (DB::getDriverName() === 'pgsql') {
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('DROP TRIGGER IF EXISTS orders_fulfilment_claim_consistency_insert');
+            DB::statement('DROP TRIGGER IF EXISTS orders_fulfilment_claim_consistency_update');
+            DB::statement("CREATE TRIGGER orders_fulfilment_claim_consistency_insert BEFORE INSERT ON orders FOR EACH ROW BEGIN IF (NEW.fulfilment_claimed_at IS NULL) <> (NEW.fulfilment_claimed_by IS NULL) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid fulfilment claim'; END IF; END");
+            DB::statement("CREATE TRIGGER orders_fulfilment_claim_consistency_update BEFORE UPDATE ON orders FOR EACH ROW BEGIN IF (NEW.fulfilment_claimed_at IS NULL) <> (NEW.fulfilment_claimed_by IS NULL) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid fulfilment claim'; END IF; END");
+        } elseif (DB::getDriverName() === 'pgsql') {
             DB::statement('ALTER TABLE orders ADD CONSTRAINT orders_fulfilment_claim_consistency CHECK ((fulfilment_claimed_at IS NULL AND fulfilment_claimed_by IS NULL) OR (fulfilment_claimed_at IS NOT NULL AND fulfilment_claimed_by IS NOT NULL))');
         }
     }
@@ -81,7 +86,10 @@ return new class extends Migration
             }
         }
 
-        if (DB::getDriverName() === 'pgsql') {
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('DROP TRIGGER IF EXISTS orders_fulfilment_claim_consistency_insert');
+            DB::statement('DROP TRIGGER IF EXISTS orders_fulfilment_claim_consistency_update');
+        } elseif (DB::getDriverName() === 'pgsql') {
             DB::statement('ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_fulfilment_claim_consistency');
         }
     }

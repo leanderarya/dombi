@@ -2,6 +2,11 @@
 
 ## Findings fixed
 
+- Matching order/attempt fulfilment claim now repairs missing attempt claim timestamp and returns idempotent winner without refund.
+- DOKU status-check 404 remains unresolved/unknown as approved ambiguous provider-session lookup; definitive reconciliation outcomes still transition failed and release reservation through creation cleanup.
+- MySQL fulfilment claim consistency is enforced with guarded insert/update triggers; PostgreSQL keeps the CHECK constraint.
+- CI quality job now runs `composer run lint:check`; frontend format/ESLint remain non-mutating baseline gates.
+
 - MySQL `up()` and `down()` each use one `Schema::getIndexes('stock_movements')` metadata guard before dropping `stock_movements_order_completed_unique`; duplicate nested guards removed.
 - CI production matrix explicitly configures MySQL 8.4 and PostgreSQL 16 connection, port, credentials, and extensions.
 - Production concurrency test fails instead of skipping when `CI=true` and SQLite is selected.
@@ -15,5 +20,7 @@
 - `composer run lint:check` — passed.
 - `npm run format:check` — failed: 4 untouched untracked files, `resources/js/components/outlet/assign-courier-sheet.tsx`, `resources/js/pages/guest/cancel.tsx`, `resources/js/pages/owner/product-families/index.tsx`, `resources/js/pages/owner/product-families/show.tsx`.
 - `npm run lint:check` — failed: 29 errors, 1 warning in same untouched untracked files.
-- `graphify update .` — passed: 7,214 nodes, 18,398 edges, 483 communities; graph outputs updated.
+- `graphify update .` — passed: 7,214 nodes, 18,398 edges, 481 communities; graph outputs updated.
+- Frontend baseline policy: unrelated untracked frontend files remain untouched; `npm run format:check` and `npm run lint:check` are CI gates, not locally green. Local frontend baseline remains 4 format failures and 29 ESLint errors / 1 warning.
+- Local MySQL tests were used for claim and 404 regressions; full MySQL/PostgreSQL CI matrix was not run locally and is not claimed green.
 - MySQL/PostgreSQL CI driver suites not runnable locally because no production database services are configured in this environment; workflow explicitly provisions them.

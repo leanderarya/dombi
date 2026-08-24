@@ -520,7 +520,7 @@ class DokuService
                     'doku_order_id' => $order->doku_order_id,
                 ]);
 
-                return ['order' => ['invoice_number' => $order->doku_order_id], 'transaction' => ['status' => 'FAILED', 'reason' => 'invoice_not_found']];
+                return ['order' => ['invoice_number' => $order->doku_order_id], 'transaction' => ['status' => 'UNKNOWN', 'reason' => 'provider_session_lookup_ambiguous']];
             }
 
             Log::warning('DOKU status check failed (will retry)', [

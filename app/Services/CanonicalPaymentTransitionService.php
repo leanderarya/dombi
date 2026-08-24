@@ -178,9 +178,12 @@ class CanonicalPaymentTransitionService
     private function claimOrRefund(PaymentAttempt $attempt, Order $order): bool
     {
         $claimMatches = $order->fulfilment_claimed_by === $attempt->id
-             && $order->fulfilment_claimed_at !== null
-             && $attempt->fulfilment_claimed_at !== null;
+             && $order->fulfilment_claimed_at !== null;
         if ($claimMatches) {
+            if ($attempt->fulfilment_claimed_at === null) {
+                $attempt->update(['fulfilment_claimed_at' => $order->fulfilment_claimed_at]);
+            }
+
             if ($order->status !== Order::STATUS_COMPLETED) {
                 app(OrderStatusService::class)->completeFromPayment($order->fresh(['items']));
             }
