@@ -208,6 +208,8 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
             $this->fail('Production race setup transaction commit failed: '.$exception->getMessage());
         }
         $this->assertSame(2, PaymentAttempt::whereIn('id', [$first->id, $second->id])->count());
+        $this->assertNotNull(DB::connection()->getPdo());
+        DB::disconnect();
         $parentSockets = [];
         $children = [];
 
@@ -218,6 +220,9 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
                 try {
                     DB::purge();
                     DB::reconnect();
+                    if (DB::connection()->getPdo() === null) {
+                        throw new \RuntimeException('Child database reconnect failed.');
+                    }
                     fwrite($childSocket, "ready\n");
                     while (fgets($childSocket) === false) {
                         usleep(10000);
@@ -244,6 +249,9 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
             fclose($socket);
         }
 
+        DB::purge();
+        DB::reconnect();
+        $this->assertNotNull(DB::connection()->getPdo());
         foreach ($children as $pid) {
             pcntl_waitpid($pid, $status);
             $this->assertTrue(pcntl_wifexited($status));

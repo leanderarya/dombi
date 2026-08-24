@@ -83,9 +83,9 @@ class PaymentRetryTest extends TestCase
 
         $result = app(DokuService::class)->reconcilePaymentAttempt($attempt);
 
-        $this->assertSame('unknown', $result->settlement_status?->value);
+        $this->assertSame('failed', $result->settlement_status?->value);
         $this->assertSame('failed', $result->creation_state?->value);
-        $this->assertSame('pending', $order->fresh()->payment_status);
+        $this->assertSame('failed', $order->fresh()->payment_status);
         $this->assertNull(data_get($result->metadata, 'reconciliation_lease'));
     }
 

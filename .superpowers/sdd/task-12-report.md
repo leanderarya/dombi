@@ -2,6 +2,10 @@
 
 ## Findings fixed
 
+- Unknown expiry sweep handles terminal orders idempotently and continues batch after per-attempt failures.
+- Definitive provider rejection now records canonical failed/expired settlement, updates order projection, and releases reservation through existing lifecycle.
+- Fork race test closes parent transaction, purges/reconnects child connections, and asserts child/parent PDO readiness before work.
+
 - CI changed-file frontend checks use separate Git pathspecs (no brace expansion); intended changed files are passed to Prettier/ESLint and failures propagate.
 - Added scheduled `payments:expire-unknown` sweep for all unknown attempts, using same atomic `OrderStatusService::expireOrder` lifecycle as reconciliation.
 - Production race setup now explicitly commits with failure reporting and verifies both attempts are visible before fork.
@@ -34,7 +38,7 @@
 - `npm run lint:check` — failed: 29 errors, 1 warning in same untouched untracked files.
 - Relevant Task 12 suite — passed, 88 tests / 228 assertions, 1 skipped (SQLite-only production-driver gate locally).
 - `composer run lint:check` — passed.
-- Relevant Task 12 suite — passed, 87 tests / 229 assertions, 1 skipped (SQLite-only production-driver gate locally).
+- Relevant Task 12 suite — passed, 87 tests / 231 assertions, 1 skipped (SQLite-only production-driver gate locally).
 - `composer run lint:check` — passed.
 - `graphify update .` — passed: 7,221 nodes, 18,423 edges, 503 communities; graph outputs updated.
 - Frontend CI checks changed files only with separate pathspecs; local whole-repo baseline remains 4 format failures and 29 ESLint errors / 1 warning in untouched untracked files. Local CI is not claimed green; MySQL/PostgreSQL matrix is CI-only.
