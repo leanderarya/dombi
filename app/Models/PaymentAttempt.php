@@ -53,4 +53,9 @@ class PaymentAttempt extends Model
     {
         return $this->hasMany(RefundObligation::class);
     }
+
+    public function refundObligationFor(string $reason): ?RefundObligation
+    {
+        return $this->refundObligations()->where('reason', $reason)->first();
+    }
 }

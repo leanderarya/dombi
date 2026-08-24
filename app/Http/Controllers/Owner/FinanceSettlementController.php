@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Owner;
 
+use App\Enums\RefundObligationStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Outlet;
@@ -223,36 +224,37 @@ class FinanceSettlementController extends Controller
             $filter = 'ready';
         }
 
-        $query = Order::refundable()
+        $query = Order::whereHas('paymentAttempts.refundObligations', function ($obligation) {
+            $obligation->whereIn('status', array_map(
+                static fn (RefundObligationStatus $status): string => $status->value,
+                RefundObligationStatus::cases(),
+            ));
+        })
             ->with(['outlet:id,name', 'customer', 'paymentTransactions'])
             ->orderByDesc('refund_requested_at');
 
         $query = match ($filter) {
             'awaiting_customer' => $query
-                ->where('payment_status', 'refund_pending')
-                ->where('refund_destination_status', '!=', 'valid')
+                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::Pending->value)->whereNull('destination_type'))
                 ->where(fn ($q) => $q
                     ->whereHas('customer', fn ($cq) => $cq->whereNotNull('user_id'))
                     ->orDoesntHave('customer')
                 ),
             'awaiting_guest' => $query
-                ->where('payment_status', 'refund_pending')
-                ->where('refund_destination_status', '!=', 'valid')
+                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::Pending->value)->whereNull('destination_type'))
                 ->whereHas('customer', fn ($cq) => $cq->whereNull('user_id')),
             'ready' => $query
-                ->where('payment_status', 'refund_pending')
-                ->where('refund_destination_status', 'valid'),
+                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::Pending->value)->whereNotNull('destination_type')),
             'in_progress' => $query
-                ->where('payment_status', 'refund_in_progress')
-                ->where('refund_started_at', '>', now()->subHours(24)),
+                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::InProgress->value)->where('updated_at', '>', now()->subHours(24))),
             'action_required' => $query
-                ->where(fn ($q) => $q
-                    ->where('payment_status', 'refund_in_progress')
-                    ->where('refund_started_at', '<=', now()->subHours(24))
-                    ->orWhere('payment_status', 'refund_failed')
-                ),
-            'completed' => $query->where('payment_status', 'refunded'),
-            'rejected' => $query->where('payment_status', 'refund_rejected'),
+                ->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation
+                    ->where(fn ($q) => $q
+                        ->where('status', RefundObligationStatus::InProgress->value)->where('updated_at', '<=', now()->subHours(24))
+                        ->orWhereIn('status', [RefundObligationStatus::Failed->value, RefundObligationStatus::NeedsReview->value])
+                    )),
+            'completed' => $query->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::Completed->value)),
+            'rejected' => $query->whereHas('paymentAttempts.refundObligations', fn ($obligation) => $obligation->where('status', RefundObligationStatus::Rejected->value)),
             default => $query,
         };
 

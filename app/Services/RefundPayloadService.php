@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\RefundObligationStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Order;
 use App\Models\RefundStatusHistory;
@@ -44,8 +45,20 @@ class RefundPayloadService
 
     public function queueState(Order $order): ?string
     {
-        $status = $order->payment_status;
-        $destination = $order->refund_destination_status;
+        $obligation = $order->selectedRefundObligation();
+        $status = $obligation?->status?->value ?? $order->payment_status;
+        $destination = $obligation
+            ? ($obligation->destination_type !== null ? Order::REFUND_DESTINATION_VALID : Order::REFUND_DESTINATION_MISSING)
+            : $order->refund_destination_status;
+
+        $status = match ($status) {
+            RefundObligationStatus::Pending->value => 'refund_pending',
+            RefundObligationStatus::InProgress->value => 'refund_in_progress',
+            RefundObligationStatus::Completed->value => 'refunded',
+            RefundObligationStatus::Rejected->value => 'refund_rejected',
+            RefundObligationStatus::Failed->value => 'refund_failed',
+            default => $status,
+        };
 
         return match (true) {
             $status === 'refund_pending' && $order->isGuestCustomer() && $destination !== 'valid' => 'awaiting_guest',
@@ -61,7 +74,17 @@ class RefundPayloadService
 
     public function statusLabel(Order $order): string
     {
-        return self::STATUS_LABELS[$order->payment_status] ?? $order->payment_status ?? '';
+        $status = $order->selectedRefundObligation()?->status?->value;
+        $status = match ($status) {
+            RefundObligationStatus::Pending->value => 'refund_pending',
+            RefundObligationStatus::InProgress->value => 'refund_in_progress',
+            RefundObligationStatus::Completed->value => 'refunded',
+            RefundObligationStatus::Rejected->value => 'refund_rejected',
+            RefundObligationStatus::Failed->value => 'refund_failed',
+            default => $order->payment_status,
+        };
+
+        return self::STATUS_LABELS[$status] ?? $status ?? '';
     }
 
     public function queueLabel(string $queue): string
@@ -180,21 +203,36 @@ class RefundPayloadService
 
     private function basePayload(Order $order, string $queue): array
     {
+        $obligation = $order->selectedRefundObligation();
+        $status = $obligation?->status?->value;
+        $status = match ($status) {
+            RefundObligationStatus::Pending->value => 'refund_pending',
+            RefundObligationStatus::InProgress->value => 'refund_in_progress',
+            RefundObligationStatus::Completed->value => 'refunded',
+            RefundObligationStatus::Rejected->value => 'refund_rejected',
+            RefundObligationStatus::Failed->value => 'refund_failed',
+            default => $order->payment_status,
+        };
+        $destinationStatus = $obligation
+            ? ($obligation->destination_type !== null ? Order::REFUND_DESTINATION_VALID : Order::REFUND_DESTINATION_MISSING)
+            : $order->refund_destination_status;
+        $rejectionReason = $obligation?->metadata['rejection_reason'] ?? $order->refund_rejected_reason;
+        $rejectionNote = $obligation?->metadata['rejection_note'] ?? $order->refund_rejection_note;
         $rejection = null;
-        if ($order->refund_rejected_reason !== null) {
-            $reasonEnum = RefundRejectionReason::tryFrom($order->refund_rejected_reason);
+        if ($rejectionReason !== null) {
+            $reasonEnum = RefundRejectionReason::tryFrom($rejectionReason);
             $rejection = [
-                'code' => $order->refund_rejected_reason,
-                'label' => $reasonEnum?->label() ?? $order->refund_rejected_reason,
-                'note' => $order->refund_rejection_note,
+                'code' => $rejectionReason,
+                'label' => $reasonEnum?->label() ?? $rejectionReason,
+                'note' => $rejectionNote,
                 'can_resubmit' => $reasonEnum?->canResubmit() ?? false,
             ];
         }
 
         return [
             'order_id' => $order->id,
-            'payment_status' => $order->payment_status,
-            'destination_status' => $order->refund_destination_status,
+            'payment_status' => $status,
+            'destination_status' => $destinationStatus,
             'queue_state' => $queue,
             'status_label' => $this->statusLabel($order),
             'amount' => (float) ($order->refund_amount ?? 0),
