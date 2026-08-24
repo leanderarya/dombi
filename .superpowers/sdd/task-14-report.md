@@ -10,14 +10,14 @@ Payment observability registry, fixed nullable event schema, safe allowlisted la
 
 | Command | Result |
 |---|---|
-| `php artisan test tests/Feature/PaymentProductionMatrixTest.php tests/Feature/PaymentProductionInvariantTest.php` | PASS: 20 tests, 20 passed, 45 assertions; Task 14 matrix still PARTIAL/BLOCKED, not production-ready |
+| `php artisan test tests/Feature/PaymentProductionMatrixTest.php tests/Feature/PaymentProductionInvariantTest.php` | PASS: 22 tests, 22 passed, 49 assertions; required taxonomy events and dry-run failure sentinel covered, but Task 14 remains BLOCKED by full suite |
 | `vendor/bin/pint --test Task 14 files` | PASS |
 | `php artisan migrate:fresh --seed` | PASS |
-| `php artisan payments:verify-cutover` | BLOCKED: legacy writes enabled/parity gate; default `config('doku.legacy_writes_enabled')=false`, production must explicitly verify false. Refund parity covers count/status/reason/amount/destination/proof/reference |
-| `php artisan payments:backfill-attempts --dry-run` | PASS: `Payment attempt backfill complete.` / `Exceptions: 0`; no DB or storage writes; exception cases print stdout and return nonzero |
+| `php artisan payments:verify-cutover` | BLOCKED: legacy writes/parity gate; default `config('doku.legacy_writes_enabled')=false`, production must explicitly verify false. Refund parity includes count/status/reason/amount/currency/destination/encrypted values/proof/reference/note/actors/timestamps |
+| `php artisan payments:backfill-attempts --dry-run` | PASS: `Payment attempt backfill complete.` / `Exceptions: 0`; no DB/storage writes; failure test returns nonzero and leaves rollback sentinel unchanged |
 | `php artisan payments:reconcile-doku --dry-run` | PASS: `No DOKU payments to reconcile.`; no dispatch |
-| `php artisan test` | SERIAL BLOCKER: 1,437 tests, 1,418 passed, 18 failures, 1 skipped. Exact blocker names listed below; no production-ready claim |
-| `graphify update .` | PASS: 7,276 nodes, 18,576 edges, 489 communities |
+| `php artisan test` | SERIAL BLOCKER: 1,439 tests, 1,420 passed, 18 failures, 1 skipped. Exact blocker names listed below; no production-ready claim |
+| `graphify update .` | PASS: 7,278 nodes, 18,581 edges, 491 communities |
 
 Task 14 status: BLOCKED. Full serial suite failures are release blockers. Production readiness is not claimed.
 

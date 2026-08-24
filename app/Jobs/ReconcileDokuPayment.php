@@ -41,5 +41,15 @@ class ReconcileDokuPayment implements ShouldQueue
             'processing_result' => $result->changed ? 'transitioned' : 'unchanged',
             'error_reason' => $result->changed ? null : 'no_transition',
         ]);
+        if (! $result->changed) {
+            app(PaymentObservabilityService::class)->event('reconciliation_failure', [
+                'order_id' => $attempt->order_id,
+                'attempt_id' => $attempt->id,
+                'invoice_number' => $attempt->invoice_number,
+                'request_id' => $attempt->merchant_request_id,
+                'processing_result' => 'unchanged',
+                'error_reason' => 'no_transition',
+            ]);
+        }
     }
 }

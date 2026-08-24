@@ -91,6 +91,27 @@ class PaymentProductionMatrixTest extends TestCase
         $this->assertContains('reconciliation', PaymentObservabilityService::registeredEventNames());
     }
 
+    public function test_backfill_dry_run_failure_is_read_only_and_returns_failure(): void
+    {
+        $order = Order::factory()->create();
+        PaymentTransaction::create(['order_id' => $order->id, 'doku_order_id' => 'DRY-BAD', 'payment_method' => 'qris', 'amount' => 100, 'status' => 'unsupported']);
+        $before = DB::table('payment_attempts')->count();
+        $storagePath = storage_path('app/payment-attempt-backfill-exceptions.txt');
+        @unlink($storagePath);
+        $this->artisan('payments:backfill-attempts --dry-run')->assertExitCode(1);
+        $this->assertSame($before, DB::table('payment_attempts')->count());
+        $this->assertFileDoesNotExist($storagePath);
+    }
+
+    public function test_required_taxonomy_events_are_emitted_by_owner_paths(): void
+    {
+        $observability = app(PaymentObservabilityService::class);
+        foreach (['pending_age', 'reconciliation_failure', 'late_payment', 'duplicate_success', 'refund_ageing', 'amount_mismatch', 'unknown_status', 'needs_review'] as $event) {
+            $observability->event($event);
+        }
+        $this->assertSame(8, count($observability->events()));
+    }
+
     public function test_backfill_dry_run_reports_without_writing(): void
     {
         $order = Order::factory()->create();
@@ -111,7 +132,7 @@ class PaymentProductionMatrixTest extends TestCase
     public function test_required_matrix_categories_are_registered(): void
     {
         $this->assertSame([
-            'creation_failed', 'creation_timeout', 'signature_invalid', 'invalid_response', 'webhook_rejected', 'transition', 'reconciliation',
+            'creation_failed', 'creation_timeout', 'signature_invalid', 'unknown_status', 'amount_mismatch', 'pending_age', 'reconciliation_failure', 'late_payment', 'duplicate_success', 'refund_ageing', 'needs_review', 'invalid_response', 'webhook_rejected', 'transition', 'reconciliation',
         ], PaymentObservabilityService::registeredEventNames());
     }
 

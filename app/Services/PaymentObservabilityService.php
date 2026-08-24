@@ -15,7 +15,7 @@ final class PaymentObservabilityService
     ];
 
     private const EVENTS = [
-        'creation_failed', 'creation_timeout', 'signature_invalid', 'invalid_response', 'webhook_rejected', 'transition', 'reconciliation',
+        'creation_failed', 'creation_timeout', 'signature_invalid', 'unknown_status', 'amount_mismatch', 'pending_age', 'reconciliation_failure', 'late_payment', 'duplicate_success', 'refund_ageing', 'needs_review', 'invalid_response', 'webhook_rejected', 'transition', 'reconciliation',
     ];
 
     private array $counters = [];
@@ -63,6 +63,7 @@ final class PaymentObservabilityService
         $oldest = PaymentAttempt::query()->whereIn('creation_state', ['pending', 'unknown'])->orderBy('created_at')->first();
         $this->gauges['payment_pending_age_seconds'] = $oldest ? max(0, now()->timestamp - $oldest->created_at->timestamp) : 0;
         Cache::forever('payment_observability.gauges', $this->gauges);
+        $this->event('pending_age', ['mapped_status' => 'pending', 'processing_result' => 'gauge', 'error_reason' => null]);
     }
 
     public function event(string $name, array $context = []): void
