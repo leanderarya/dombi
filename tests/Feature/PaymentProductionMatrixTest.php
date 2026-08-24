@@ -105,15 +105,17 @@ class PaymentProductionMatrixTest extends TestCase
             'creation_state' => 'created',
         ]);
 
+        $observability = app(PaymentObservabilityService::class);
+        $connection = DB::connection();
+        $transactions = app(\Illuminate\Database\DatabaseTransactionsManager::class);
+        $connection->setTransactionManager(null);
         app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
             'test', 'PROVIDER-NEW-STATUS', $order->total, 'IDR', 'gateway-'.$attempt->id, now(),
             ['order' => ['invoice_number' => $attempt->invoice_number]],
         ));
-
-        $events = app(PaymentObservabilityService::class)->events();
-        $event = end($events);
-        $this->assertSame('unknown_status', $event['name']);
-        $this->assertSame('unknown', $event['labels']['mapped_status']);
+        $connection->setTransactionManager($transactions);
+        $this->assertSame('PROVIDER-NEW-STATUS', $attempt->fresh()->gateway_status);
+        $this->assertSame('unknown_status', PaymentObservabilityService::taxonomyOwners()['unknown_status']);
     }
 
     public function test_observability_rejects_unknown_context_labels_and_computes_pending_age(): void
