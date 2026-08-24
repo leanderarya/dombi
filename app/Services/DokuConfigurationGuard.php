@@ -14,6 +14,7 @@ class DokuConfigurationGuard
 
         $clientId = trim((string) config('doku.client_id'));
         $apiKey = trim((string) config('doku.api_key'));
+        config(['doku.client_id' => $clientId, 'doku.api_key' => $apiKey]);
         $baseUrl = (string) config('doku.base_url');
         $callback = (string) config('doku.callback_url');
         $sandbox = (bool) config('doku.sandbox');
