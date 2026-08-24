@@ -2,11 +2,12 @@
 
 ## Finding fixed
 
-- Refund obligation uniqueness test now branches on database driver before metadata SQL: PostgreSQL uses `pg_indexes`, MySQL uses `SHOW INDEX`; SQLite remains explicit production-constraint skip.
-- No MySQL-specific query runs on PostgreSQL.
+- Definitive creation cleanup now acquires order lock before payment-attempt lock, matching canonical aggregate lock order.
+- Cleanup retries up to three times for deadlock/serialization failures and remains idempotent via lease-token validation.
+- Lock-order regression test added.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php` — passed, 40 tests / 107 assertions.
+- `php artisan test tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentRetryTest.php` — passed, 41 tests / 116 assertions.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed: 7,212 nodes, 18,391 edges, 489 communities; aggregated graph HTML generated.
+- `graphify update .` — passed: 7,213 nodes, 18,392 edges, 476 communities; aggregated graph HTML generated.

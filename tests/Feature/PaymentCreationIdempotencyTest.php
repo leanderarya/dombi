@@ -80,6 +80,14 @@ class PaymentCreationIdempotencyTest extends TestCase
         $this->assertDatabaseHas('payment_attempts', ['id' => $attempt->id, 'creation_state' => 'created']);
     }
 
+    public function test_creation_cleanup_locks_order_before_attempt(): void
+    {
+        $service = file_get_contents(app_path('Services/DokuService.php'));
+        $cleanup = strstr($service, 'private function persistCreationOutcome');
+        $this->assertLessThan(strpos($cleanup, 'PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()'), strpos($cleanup, 'Order::query()->whereKey($orderId)->lockForUpdate()'));
+        $this->assertStringContainsString('retry(3', $cleanup);
+    }
+
     public function test_stale_creation_response_becomes_unknown_without_persisting_payment(): void
     {
         $order = Order::factory()->create();
