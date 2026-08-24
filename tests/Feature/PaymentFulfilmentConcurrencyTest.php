@@ -16,6 +16,7 @@ use App\Services\InventoryService;
 use App\Services\NormalizedPaymentEvent;
 use App\Services\SettlementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Mockery;
 use Tests\TestCase;
 
@@ -89,6 +90,68 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
         $this->assertSame(3, OutletInventory::where('outlet_id', $outlet->id)->where('product_id', $product->id)->value('current_stock'));
         $this->assertSame(0, RefundObligation::count());
         $this->assertSame(0, StockMovement::where('type', 'order_completed')->count());
+    }
+
+    public function test_production_driver_parallel_workers_have_one_fulfilment_winner(): void
+    {
+        $driver = config('database.default') === 'sqlite' ? 'sqlite' : DB::connection()->getDriverName();
+        if ($driver === 'sqlite') {
+            $this->markTestSkipped('SQLite does not provide production-driver row-lock concurrency.');
+        }
+        $this->assertContains($driver, ['mysql', 'pgsql']);
+        if (! function_exists('pcntl_fork')) {
+            $this->fail('pcntl is required for production-driver concurrency gate.');
+        }
+
+        $outlet = Outlet::factory()->create();
+        $order = Order::factory()->create(['outlet_id' => $outlet->id, 'total' => 50000, 'payment_status' => 'pending', 'status' => Order::STATUS_CONFIRMED]);
+        $product = Product::factory()->create();
+        $order->items()->create(['product_id' => $product->id, 'product_name' => $product->name, 'quantity' => 1, 'price' => 50000, 'subtotal' => 50000]);
+        OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'current_stock' => 3, 'reserved_stock' => 1, 'minimum_stock' => 0]);
+        $first = $this->attempt($order, 'parallel-first', 'invoice-parallel-first');
+        $second = $this->attempt($order, 'parallel-second', 'invoice-parallel-second');
+        $barrier = tempnam(sys_get_temp_dir(), 'task12-barrier-');
+        $results = tempnam(sys_get_temp_dir(), 'task12-results-');
+        file_put_contents($barrier, '2');
+        file_put_contents($results, '');
+        DB::commit();
+        $children = [];
+
+        foreach ([$first, $second] as $attempt) {
+            $pid = pcntl_fork();
+            if ($pid === 0) {
+                try {
+                    DB::purge();
+                    DB::reconnect();
+                    while ((int) trim(file_get_contents($barrier)) < 2) {
+                        file_put_contents($barrier, (string) ((int) trim(file_get_contents($barrier)) + 1));
+                        usleep(10000);
+                    }
+                    app(CanonicalPaymentTransitionService::class)->apply(PaymentAttempt::findOrFail($attempt->id), new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', $attempt->invoice_number, now(), []));
+                    file_put_contents($results, "success\n", FILE_APPEND | LOCK_EX);
+                    exit(0);
+                } catch (\Throwable $exception) {
+                    file_put_contents($results, "error: {$exception->getMessage()}\n", FILE_APPEND | LOCK_EX);
+                    exit(1);
+                }
+            }
+            $this->assertGreaterThan(0, $pid);
+            $children[] = $pid;
+        }
+
+        foreach ($children as $pid) {
+            pcntl_waitpid($pid, $status);
+            $this->assertTrue(pcntl_wifexited($status));
+            $this->assertSame(0, pcntl_wexitstatus($status), file_get_contents($results));
+        }
+
+        $this->assertSame(1, PaymentAttempt::whereNotNull('fulfilment_claimed_at')->count());
+        $this->assertSame(1, RefundObligation::where('reason', 'duplicate_paid_attempt')->count());
+        $this->assertSame(1, StockMovement::where('reference_id', $order->id)->where('type', 'order_completed')->count());
+        $this->assertSame(Order::STATUS_COMPLETED, $order->fresh()->status);
+        $this->assertSame(2, OutletInventory::whereKey(OutletInventory::query()->where('outlet_id', $outlet->id)->where('product_id', $product->id)->value('id'))->value('current_stock'));
+        @unlink($barrier);
+        @unlink($results);
     }
 
     public function test_only_one_successful_attempt_claims_order_fulfilment(): void
