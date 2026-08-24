@@ -164,8 +164,15 @@ class InventoryService
 
     public function completeOrderStock(Order $order): void
     {
-        foreach ($order->items as $item) {
-            $productId = (int) ($item->product_id ?? $item->product_variant_id ?? 0);
+        $items = collect($order->items)
+            ->groupBy(fn ($item) => (int) ($item->product_id ?? $item->product_variant_id ?? 0))
+            ->map(fn ($lines) => (object) [
+                'product_id' => $lines->first()->product_id ?? $lines->first()->product_variant_id,
+                'quantity' => $lines->sum('quantity'),
+            ]);
+
+        foreach ($items as $item) {
+            $productId = (int) $item->product_id;
             if (! $productId) {
                 continue;
             }

@@ -29,7 +29,7 @@ class PaymentRetryTest extends TestCase
         $this->assertSame('failed', $order->fresh()->payment_status);
     }
 
-    public function test_reconcile_404_maps_to_definitive_failed_transition(): void
+    public function test_reconcile_404_preserves_unknown_for_later_reconciliation(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
         $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'reconcile-404', 'invoice_number' => 'reconcile-404', 'merchant_request_id' => 'reconcile-404-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown', 'settlement_status' => 'unknown']);
@@ -37,9 +37,9 @@ class PaymentRetryTest extends TestCase
 
         $result = app(DokuService::class)->reconcilePaymentAttempt($attempt);
 
-        $this->assertSame('failed', $result->settlement_status?->value);
-        $this->assertSame('failed', $result->creation_state?->value);
-        $this->assertSame('failed', $order->fresh()->payment_status);
+        $this->assertSame('unknown', $result->settlement_status?->value);
+        $this->assertSame('unknown', $result->creation_state?->value);
+        $this->assertSame('pending', $order->fresh()->payment_status);
     }
 
     public function test_definitive_reconciliation_failure_becomes_retryable(): void
@@ -50,9 +50,9 @@ class PaymentRetryTest extends TestCase
 
         $result = app(DokuService::class)->reconcilePaymentAttempt($attempt);
 
-        $this->assertSame('failed', $result->settlement_status?->value);
+        $this->assertSame('unknown', $result->settlement_status?->value);
         $this->assertSame('failed', $result->creation_state?->value);
-        $this->assertSame('failed', $order->fresh()->payment_status);
+        $this->assertSame('pending', $order->fresh()->payment_status);
         $this->assertNull(data_get($result->metadata, 'reconciliation_lease'));
     }
 
