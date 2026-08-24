@@ -90,7 +90,11 @@ final class PaymentObservabilityService
         })->orderBy('created_at')->first();
         $this->gauges['payment_pending_age_seconds'] = $oldest ? max(0, now()->timestamp - $oldest->created_at->timestamp) : 0;
         $this->gauges['payment_pending_age_refreshed_at'] = now()->toIso8601String();
-        Cache::forever('payment_observability.gauges', $this->gauges);
+        try {
+            Cache::forever('payment_observability.gauges', $this->gauges);
+        } catch (\Throwable $exception) {
+            Log::channel('operational')->warning('payment.observability_unavailable', ['error_reason' => $exception->getMessage()]);
+        }
         if ($oldest && $this->gauges['payment_pending_age_seconds'] >= (int) config('doku.pending_age_alert_seconds', 900)) {
             $this->event('pending_age', ['order_id' => $oldest->order_id, 'attempt_id' => $oldest->id, 'invoice_number' => $oldest->invoice_number, 'mapped_status' => 'pending', 'processing_result' => 'threshold_breached', 'error_reason' => 'pending_age_threshold']);
         }
@@ -99,7 +103,16 @@ final class PaymentObservabilityService
     public function event(string $name, array $context = []): void
     {
         try {
-            DB::afterCommit(fn () => $this->writeEvent($name, $context));
+            DB::afterCommit(function () use ($name, $context): void {
+                try {
+                    $this->writeEvent($name, $context);
+                } catch (\Throwable $exception) {
+                    try {
+                        Log::channel('operational')->warning('payment.observability_unavailable', ['error_reason' => $exception->getMessage()]);
+                    } catch (\Throwable) {
+                    }
+                }
+            });
         } catch (\Throwable $exception) {
             Log::channel('operational')->warning('payment.observability_unavailable', ['error_reason' => $exception->getMessage()]);
         }
