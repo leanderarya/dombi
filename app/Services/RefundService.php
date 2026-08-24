@@ -178,7 +178,7 @@ class RefundService
                 if ($obligation) {
                     $obligation->update([
                         'status' => 'rejected',
-                        'metadata' => array_merge($obligation->metadata ?? [], ['rejection_reason' => $reason, 'rejection_note' => $note]),
+                        'metadata' => $obligation->metadata ?? [],
                     ]);
                 }
 
