@@ -244,7 +244,7 @@ class TrackController extends Controller
                 return response()->json(['success' => false, 'error' => 'Tidak dapat membatalkan pesanan ini.'], 422);
             }
 
-            $storedDigits = preg_replace('/[^0-9]/', '', $order->customer_phone);
+            $storedDigits = preg_replace('/[^0-9]/', '', $order->customer_phone ?? $order->customer?->phone);
             $expectedLast4 = substr($storedDigits, -4);
 
             if ($request->input('last4_hp') !== $expectedLast4) {

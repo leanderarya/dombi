@@ -220,6 +220,21 @@ class CancelOrderAuthorizationTest extends TestCase
         ])->assertOk()->assertJson(['success' => true]);
     }
 
+    public function test_guest_delivery_cancellation_uses_authoritative_customer_phone_relation(): void
+    {
+        $outlet = $this->createOutlet();
+        $customer = Customer::forceCreate([
+            'name' => 'Guest Customer', 'phone' => '08333333333', 'email' => 'guest@example.com',
+            'is_registered' => false,
+        ]);
+        $order = $this->createOrderForCustomer($customer, $outlet);
+        $order->update(['recovery_token' => 'GUEST-CUSTOMER-PHONE', 'customer_phone' => null]);
+
+        $this->postJson('/track/GUEST-CUSTOMER-PHONE/cancel', [
+            'reason' => 'Tidak Jadi Membeli', 'last4_hp' => '3333',
+        ])->assertOk()->assertJson(['success' => true]);
+    }
+
     public function test_duplicate_cancellation_is_idempotent(): void
     {
         $outlet = $this->createOutlet();
