@@ -1,13 +1,13 @@
 # Task 12 Report
 
-## P0 fix
+## Findings fixed
 
-- Successful replay by same claimant now returns idempotent fulfilment success before terminal-order late-payment handling.
-- Regression covers completed winner replay on expired order and verifies no refund obligation.
-- Terminal successful attempts without matching claim continue to create `late_payment` obligations and never fulfil.
+- Matching claimant is checked before terminal late-payment branch; expired/cancelled winner replay remains idempotent and creates no refund.
+- Refund obligation creation remains `firstOrCreate` idempotent and production DB unique `(payment_attempt_id, reason)` constraint is verified by MySQL/PostgreSQL gate. SQLite explicitly skips production constraint metadata checks.
+- Replay regression uses expired status after matching claim.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php` — passed, 38 tests / 103 assertions.
+- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Unit/CanonicalPaymentTransitionServiceTest.php tests/Feature/PaymentProductionInvariantTest.php` — passed, 39 tests / 104 assertions.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed: 7,210 nodes, 18,389 edges, 486 communities; aggregated graph HTML generated.
+- `graphify update .` — passed: 7,211 nodes, 18,390 edges, 477 communities; aggregated graph HTML generated.
