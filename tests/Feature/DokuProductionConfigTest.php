@@ -52,6 +52,18 @@ class DokuProductionConfigTest extends TestCase
         $this->assertSame('secret', config('doku.api_key'));
     }
 
+    public function test_production_doku_configuration_accepts_callback_host_case_difference(): void
+    {
+        config([
+            'app.env' => 'production', 'doku.client_id' => 'client', 'doku.api_key' => 'secret',
+            'doku.sandbox' => false, 'doku.base_url' => 'https://api.doku.com',
+            'app.url' => 'https://Shop.Example.com', 'doku.callback_url' => 'https://shop.example.com/payment/doku/notify',
+        ]);
+
+        app(DokuConfigurationGuard::class)->validate();
+        $this->assertTrue(true);
+    }
+
     public function test_production_doku_configuration_rejects_http_callback_and_localhost(): void
     {
         config([

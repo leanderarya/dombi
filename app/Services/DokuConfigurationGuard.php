@@ -29,7 +29,7 @@ class DokuConfigurationGuard
         if (($callbackUrl['scheme'] ?? null) !== 'https' || in_array(strtolower($callbackUrl['host'] ?? ''), ['localhost', '127.0.0.1', '::1'], true)) {
             throw new RuntimeException('Production DOKU callback must use public HTTPS.');
         }
-        if (($callbackUrl['host'] ?? null) !== parse_url((string) config('app.url'), PHP_URL_HOST)) {
+        if (strtolower((string) ($callbackUrl['host'] ?? '')) !== strtolower((string) parse_url((string) config('app.url'), PHP_URL_HOST))) {
             throw new RuntimeException('Production DOKU callback domain must match application domain.');
         }
     }
