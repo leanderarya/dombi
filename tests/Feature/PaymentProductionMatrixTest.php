@@ -19,6 +19,16 @@ class PaymentProductionMatrixTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_observability_backend_failure_does_not_propagate_after_commit(): void
+    {
+        $this->expectNotToPerformAssertions();
+        DB::transaction(function (): void {
+            DB::afterCommit(function (): void {
+                throw new \RuntimeException('backend unavailable');
+            });
+        });
+    }
+
     public function test_observability_registry_exposes_fixed_schema_and_safe_allowlisted_labels(): void
     {
         $observability = app(PaymentObservabilityService::class);

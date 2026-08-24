@@ -57,6 +57,9 @@ class VerifyPaymentCutover extends Command
                 $errors[] = "legacy transaction {$transaction->id} attempt/order/invoice/currency/amount/status/gateway identity mismatch";
             }
             $obligations = $attempt->refundObligations()->get();
+            if ($obligations->contains(fn (RefundObligation $obligation): bool => $obligation->paymentAttempt?->order_id !== $transaction->order_id)) {
+                $errors[] = "legacy transaction {$transaction->id} obligation order/attempt mismatch";
+            }
             $legacyRefund = (float) ($order?->refund_amount ?? 0);
             $obligationAmount = (float) $obligations->sum('amount');
             $obligation = $obligations->sortByDesc('id')->first();
@@ -85,7 +88,15 @@ class VerifyPaymentCutover extends Command
             }
         });
         Order::query()->where(function ($query): void {
-            $query->whereNotNull('refund_reason')->orWhere('refund_amount', '>', 0);
+            $query->whereNotNull('refund_reason')
+                ->orWhere('refund_amount', '>', 0)
+                ->orWhereNotNull('doku_refund_id')
+                ->orWhereNotNull('refund_destination_type')
+                ->orWhereNotNull('refund_proof_image')
+                ->orWhereNotNull('refund_requested_at')
+                ->orWhereNotNull('refund_started_at')
+                ->orWhereNotNull('refunded_at')
+                ->orWhereNotNull('refund_rejected_at');
         })->each(function (Order $order) use (&$errors): void {
             $legacyAttemptIds = PaymentAttempt::query()->where('order_id', $order->id)->whereNotNull('legacy_payment_transaction_id')->pluck('id');
             $obligations = RefundObligation::query()->whereIn('payment_attempt_id', $legacyAttemptIds)->get();
