@@ -18,6 +18,7 @@ return new class extends Migration
                 $table->string('order_completed_key')->nullable();
             });
             DB::statement("CREATE TRIGGER stock_movements_order_completed_key_insert BEFORE INSERT ON stock_movements FOR EACH ROW SET NEW.order_completed_key = IF(NEW.type = 'order_completed', CONCAT(NEW.reference_type, ':', NEW.reference_id, ':', NEW.product_id), NULL)");
+            DB::statement("CREATE TRIGGER stock_movements_order_completed_key_update BEFORE UPDATE ON stock_movements FOR EACH ROW SET NEW.order_completed_key = IF(NEW.type = 'order_completed', CONCAT(NEW.reference_type, ':', NEW.reference_id, ':', NEW.product_id), NULL)");
             DB::statement('CREATE UNIQUE INDEX stock_movements_order_completed_unique ON stock_movements (order_completed_key)');
         } elseif (DB::getDriverName() === 'pgsql') {
             DB::statement("CREATE UNIQUE INDEX stock_movements_order_completed_unique ON stock_movements (reference_type, reference_id, product_id) WHERE type = 'order_completed'");
@@ -31,6 +32,8 @@ return new class extends Migration
     public function down(): void
     {
         if (DB::getDriverName() === 'mysql') {
+            DB::statement('DROP TRIGGER IF EXISTS stock_movements_order_completed_key_update');
+            DB::statement('DROP TRIGGER IF EXISTS stock_movements_order_completed_key_insert');
             DB::statement('DROP INDEX stock_movements_order_completed_unique ON stock_movements');
             Schema::table('stock_movements', function (Blueprint $table): void {
                 $table->dropColumn('order_completed_key');

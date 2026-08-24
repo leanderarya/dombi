@@ -15,6 +15,7 @@ use App\Services\CanonicalPaymentTransitionService;
 use App\Services\InventoryService;
 use App\Services\NormalizedPaymentEvent;
 use App\Services\SettlementService;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Mockery;
@@ -50,6 +51,19 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
         $this->assertSame(2, $inventory->current_stock);
         $this->assertSame(0, $inventory->reserved_stock);
         $this->assertSame(1, StockMovement::where('type', 'order_completed')->count());
+    }
+
+    public function test_order_completed_movement_update_cannot_create_duplicate(): void
+    {
+        $outlet = Outlet::factory()->create();
+        $product = Product::factory()->create();
+        $movements = [];
+        foreach (range(1, 2) as $referenceId) {
+            $movements[] = StockMovement::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'type' => 'order_completed', 'quantity' => -1, 'reference_type' => Order::class, 'reference_id' => $referenceId]);
+        }
+
+        $this->expectException(QueryException::class);
+        $movements[1]->update(['reference_id' => $movements[0]->reference_id]);
     }
 
     public function test_order_completion_movement_is_idempotent(): void
