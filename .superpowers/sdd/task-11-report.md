@@ -1,11 +1,11 @@
 # Task 11 Report
 
 ## Scope
-- Rejected destination resubmission transitions canonical obligation rejected→pending after valid encrypted destination write.
-- Start/reject/rollback/complete validate canonical obligation destination and amount when obligation exists; legacy checks remain compatibility fallback only.
-- Selected obligation query is constrained by reason/order/non-synthetic payment attempt and deterministically ordered by selected attempt.
-- Payload amount uses canonical obligation amount; finance counts use obligation-backed query.
-- No DOKU refund invocation added.
+- Finance refund query and counts constrain selected refund reason, non-synthetic payment attempts, and deterministic canonical obligation relation.
+- Proof controller falls back to legacy proof only when no canonical obligation exists; canonical incomplete proof is unavailable.
+- RefundService canonical obligation lookup excludes synthetic attempts and matches order-selected reason/attempt.
+- Canonical status gates lifecycle operations; legacy status checks remain fallback only when obligation is absent.
+- Rejected destination resubmission eligibility uses canonical rejected status and rejection metadata, then transitions to pending.
 
 ## Verification
 - Refund suite: 100 passed, 248 assertions.

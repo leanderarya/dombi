@@ -158,12 +158,18 @@ class RefundService
                 $obligation->update($this->obligationDestinationData($destinationType, $data));
             }
 
-            $eligibleRejection = $locked->refund_destination_status === Order::REFUND_DESTINATION_INVALID
-                && $locked->refund_rejected_reason !== null
-                && in_array($locked->refund_rejected_reason, [
-                    RefundRejectionReason::InvalidDestination->value,
-                    RefundRejectionReason::IncompleteDestination->value,
-                ], true);
+            $rejectionReason = $obligation?->metadata['rejection_reason'] ?? null;
+            $eligibleRejection = $obligation
+                ? $obligation->status?->value === 'rejected'
+                    && in_array($rejectionReason, [
+                        RefundRejectionReason::InvalidDestination->value,
+                        RefundRejectionReason::IncompleteDestination->value,
+                    ], true)
+                : $locked->refund_destination_status === Order::REFUND_DESTINATION_INVALID
+                    && in_array($locked->refund_rejected_reason, [
+                        RefundRejectionReason::InvalidDestination->value,
+                        RefundRejectionReason::IncompleteDestination->value,
+                    ], true);
 
             if ($eligibleRejection) {
                 $updateData = array_merge($updateData, [
@@ -179,6 +185,16 @@ class RefundService
                     $obligation->update([
                         'status' => 'pending',
                         'metadata' => $obligation->metadata ?? [],
+                    ]);
+                }
+
+                if ($obligation) {
+                    $obligation->update([
+                        'status' => 'rejected',
+                        'metadata' => array_merge($obligation->metadata ?? [], [
+                            'rejection_reason' => $reason,
+                            'rejection_note' => $note,
+                        ]),
                     ]);
                 }
 
