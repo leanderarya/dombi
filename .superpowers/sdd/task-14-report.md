@@ -14,15 +14,15 @@ Payment observability registry, fixed nullable event schema, safe allowlisted la
 | `vendor/bin/pint --test Task 14 files` | PASS |
 | `php artisan migrate:fresh --seed` | PASS |
 | `php artisan payments:verify-cutover` | PASS on clean seeded database; production gate NO-GO until real parity and explicit legacy-write evidence. Resolved invoice/minor-unit/currency/gateway/refund parity implemented |
-| `php artisan payments:backfill-attempts --dry-run` | PASS: `Payment attempt backfill complete.` / `Exceptions: 0`; no DB/storage writes |
-| `php artisan payments:reconcile-doku --dry-run` | PASS: `No DOKU payments to reconcile.`; no dispatch |
+| `php artisan payments:backfill-attempts --dry-run` | BLOCKED: MySQL `1045 Access denied for user root@localhost`; no current result |
+| `php artisan payments:reconcile-doku --dry-run` | BLOCKED: MySQL `1045 Access denied for user root@localhost`; no current result |
 | `npm run types:check` | FAIL: `resources/js/pages/guest/cancel.tsx:26` PageProps constraint; `cancel.tsx:41` missing `route` |
 | `php artisan test` | SERIAL NO-GO: 1,439 tests, 435 passed, 1 failure, 1,003 errors; MySQL gone away/refused. Prior exact 18 blocker names remain below |
 | `graphify update .` | PASS: 7,284 nodes, 18,544 edges, 507 communities |
 
 Task 14 status: NO-GO/BLOCKED.
 
-Latest run: scoped tests could not execute because MySQL test database rejected credentials (`1045 Access denied for user root@localhost`); 22 tests errored before assertions. This is environment-blocked, not a pass. Previous verified scoped result was 22/22 pass, 50 assertions. Typecheck remains NO-GO with `resources/js/pages/guest/cancel.tsx:26` PageProps constraint and `cancel.tsx:41` missing `route`. Full suite remains NO-GO with exact 18 named failures listed below plus current MySQL credential failure. Production readiness is not claimed. Full serial suite failures are release blockers. Production readiness is not claimed.
+Latest run: scoped tests could not execute because MySQL test database rejected credentials (`1045 Access denied for user root@localhost`); 22 tests errored before assertions. This is environment-blocked, not a pass. Current dry-run commands are also environment-blocked by the same `1045 Access denied` on `dombi`; no PASS claim is made. Latest historical successful outputs are retained only as history, not current evidence. Typecheck remains NO-GO with `resources/js/pages/guest/cancel.tsx:26` PageProps constraint and `cancel.tsx:41` missing `route`. Full suite remains NO-GO with exact 18 named failures listed below plus current MySQL credential failure. Cutover requires runtime-resolved `config('doku.legacy_writes_deployment_evidence') === 'false'`; default config is not evidence. Production readiness is not claimed. Full serial suite failures are release blockers. Production readiness is not claimed.
 
 Latest verification: scoped matrix 22/22 pass, 50 assertions; migration fresh/seed pass; dry runs PASS with `Payment attempt backfill complete. Exceptions: 0` and `No DOKU payments to reconcile.`; graphify PASS at 7,281 nodes, 18,538 edges, 476 communities. Serial full suite: 1,439 tests, 1,420 passed, 18 failures, 1 skipped. Cutover parity command clean seeded result is PASS only because legacy writes default false and seeded parity is empty; production cutover remains NO-GO until real migration parity, explicit production legacy-write evidence, and all blockers clear.
 

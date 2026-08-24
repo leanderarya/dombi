@@ -45,7 +45,16 @@ final class PaymentObservabilityService
 
     public function counters(): array
     {
-        return array_merge(Cache::get('payment_observability.counters', []), $this->counters);
+        $counters = $this->counters;
+        foreach (self::EVENTS as $event) {
+            $key = 'payment_observability.counter.payment_'.$event;
+            $value = Cache::get($key);
+            if ($value !== null) {
+                $counters['payment_'.$event] = (int) $value;
+            }
+        }
+
+        return $counters;
     }
 
     public function gauges(): array
@@ -106,7 +115,6 @@ final class PaymentObservabilityService
             Cache::add($cacheKey, 0, now()->addYears(10));
         }
         Cache::increment($cacheKey);
-        Cache::forever('payment_observability.counters', array_merge(Cache::get('payment_observability.counters', []), [$counter => Cache::get($cacheKey)]));
         Log::channel('operational')->info('payment.'.$name, $labels);
     }
 }

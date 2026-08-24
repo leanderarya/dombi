@@ -17,8 +17,8 @@ class VerifyPaymentCutover extends Command
     public function handle(): int
     {
         $errors = [];
-        if (config('doku.legacy_writes_enabled', true) || env('PAYMENTS_LEGACY_WRITES_ENABLED') !== 'false') {
-            $errors[] = 'explicit PAYMENTS_LEGACY_WRITES_ENABLED=false deployment evidence is required';
+        if (config('doku.legacy_writes_enabled', true) || config('doku.legacy_writes_deployment_evidence') !== 'false') {
+            $errors[] = 'runtime deployment evidence must resolve PAYMENTS_LEGACY_WRITES_ENABLED=false';
         }
         PaymentTransaction::query()->each(function (PaymentTransaction $transaction) use (&$errors): void {
             $invoice = $transaction->doku_order_id ?: $transaction->order?->order_code;
