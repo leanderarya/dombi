@@ -25,6 +25,10 @@ class DokuConfigurationGuard
         if ($sandbox || $baseUrl !== 'https://api.doku.com') {
             throw new RuntimeException('Production DOKU must use production endpoint.');
         }
+        $appUrl = parse_url((string) config('app.url'));
+        if (($appUrl['scheme'] ?? null) !== 'https' || in_array(strtolower($appUrl['host'] ?? ''), ['localhost', '127.0.0.1', '::1'], true)) {
+            throw new RuntimeException('Production application URL must use public HTTPS.');
+        }
         $callbackUrl = parse_url($callback);
         if (($callbackUrl['scheme'] ?? null) !== 'https' || in_array(strtolower($callbackUrl['host'] ?? ''), ['localhost', '127.0.0.1', '::1'], true)) {
             throw new RuntimeException('Production DOKU callback must use public HTTPS.');

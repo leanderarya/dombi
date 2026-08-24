@@ -64,6 +64,38 @@ class DokuProductionConfigTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function test_production_doku_configuration_rejects_insecure_application_url_independently_of_callback(): void
+    {
+        config([
+            'app.env' => 'production',
+            'doku.client_id' => 'client',
+            'doku.api_key' => 'secret',
+            'doku.sandbox' => false,
+            'doku.base_url' => 'https://api.doku.com',
+            'app.url' => 'http://shop.example.com',
+            'doku.callback_url' => 'https://shop.example.com/payment/doku/notify',
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        app(DokuConfigurationGuard::class)->validate();
+    }
+
+    public function test_production_doku_configuration_rejects_local_application_url_independently_of_callback(): void
+    {
+        config([
+            'app.env' => 'production',
+            'doku.client_id' => 'client',
+            'doku.api_key' => 'secret',
+            'doku.sandbox' => false,
+            'doku.base_url' => 'https://api.doku.com',
+            'app.url' => 'https://localhost',
+            'doku.callback_url' => 'https://localhost/payment/doku/notify',
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        app(DokuConfigurationGuard::class)->validate();
+    }
+
     public function test_production_doku_configuration_rejects_http_callback_and_localhost(): void
     {
         config([
