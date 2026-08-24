@@ -27,11 +27,16 @@ class RefundProofController extends Controller
             abort(403);
         }
 
-        if ($order->payment_status !== 'refunded' || ! $order->refund_proof_image) {
-            abort(404);
+        $obligation = $order->selectedRefundObligation();
+        $path = $obligation?->proof_image;
+
+        if ($obligation?->status?->value !== 'completed' || ! $path) {
+            $path = $order->payment_status === 'refunded' ? $order->refund_proof_image : null;
         }
 
-        $path = $order->refund_proof_image;
+        if (! $path) {
+            abort(404);
+        }
 
         if (str_starts_with($path, 'private:')) {
             $diskPath = substr($path, strlen('private:'));

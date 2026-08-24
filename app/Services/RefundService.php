@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\PaymentStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Order;
+use App\Models\RefundObligation;
 use App\Models\RefundStatusHistory;
 use Carbon\Carbon;
 use DomainException;
@@ -140,6 +141,7 @@ class RefundService
                 ->findOrFail($order->id);
 
             $customer = $locked->customer;
+            $obligation = $this->canonicalObligation($locked);
 
             if ($actorType === 'customer' && $customer?->isGuest()) {
                 throw new DomainException('Tujuan refund tidak dapat diubah pada status ini.');
@@ -227,6 +229,11 @@ class RefundService
     {
         return DB::transaction(function () use ($order, $ownerId) {
             $locked = Order::lockForUpdate()->findOrFail($order->id);
+            $obligation = $this->canonicalObligation($locked, true);
+
+            if ($obligation && $obligation->status?->value !== 'pending') {
+                throw new DomainException('Order ini tidak dalam antrean refund.');
+            }
 
             if ($locked->payment_status !== PaymentStatus::RefundPending->value) {
                 throw new DomainException('Order ini tidak dalam antrean refund.');
@@ -435,6 +442,19 @@ class RefundService
 
             return $this->complete($order, $actorId, $proofPath, $transferRef, $transferNote);
         });
+    }
+
+    private function canonicalObligation(Order $order, bool $lock = false): ?RefundObligation
+    {
+        $query = RefundObligation::query()
+            ->where('reason', $order->refund_reason)
+            ->whereHas('paymentAttempt', fn ($attempt) => $attempt->where('order_id', $order->id));
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->latest('id')->first();
     }
 
     private function isDestinationComplete(Order $order): bool

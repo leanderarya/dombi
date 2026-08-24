@@ -369,7 +369,27 @@ class Order extends Model
     public function refundObligation(): HasOne
     {
         return $this->hasOneThrough(RefundObligation::class, PaymentAttempt::class)
-            ->where('refund_obligations.reason', $this->refund_reason);
+            ->where('refund_obligations.reason', $this->refund_reason)
+            ->whereColumn('refund_obligations.payment_attempt_id', 'payment_attempts.id');
+    }
+
+    public function selectedRefundObligation(): ?RefundObligation
+    {
+        $reason = $this->refund_reason;
+        if (! $reason) {
+            return null;
+        }
+
+        return $this->paymentAttempts()
+            ->where(function ($query): void {
+                $query->whereNull('metadata->provenance')
+                    ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+            })
+            ->latest('id')
+            ->get()
+            ->map(fn (PaymentAttempt $attempt) => $attempt->refundObligationFor($reason))
+            ->filter()
+            ->first();
     }
 
     public function refundStatusHistories(): HasMany
