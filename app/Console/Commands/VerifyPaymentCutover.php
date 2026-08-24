@@ -161,7 +161,10 @@ class VerifyPaymentCutover extends Command
         if ($value === null) {
             return null;
         }
-        $text = is_float($value) ? number_format($value, 2, '.', '') : trim((string) $value);
+        if (is_float($value)) {
+            return null;
+        }
+        $text = trim((string) $value);
         if (! preg_match('/^\d+(?:\.\d{1,2})?$/', $text)) {
             return null;
         }
