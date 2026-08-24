@@ -421,6 +421,17 @@ class Order extends Model
             return $this->getRelation('selectedRefundObligation');
         }
 
+        if ($this->relationLoaded('paymentAttempts')) {
+            $obligation = $this->paymentAttempts
+                ->filter(fn (PaymentAttempt $attempt): bool => ($attempt->metadata['provenance'] ?? null) !== 'synthetic_legacy_refund')
+                ->sortByDesc('id')
+                ->flatMap(fn (PaymentAttempt $attempt) => $attempt->relationLoaded('refundObligations') ? $attempt->refundObligations->where('reason', $reason)->sortByDesc('id') : collect())
+                ->first();
+            $this->setRelation('selectedRefundObligation', $obligation);
+
+            return $obligation;
+        }
+
         $obligation = RefundObligation::query()
             ->where('reason', $reason)
             ->whereHas('paymentAttempt', function ($query) {
