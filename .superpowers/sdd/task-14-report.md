@@ -10,15 +10,15 @@ Payment observability registry, fixed nullable event schema, safe allowlisted la
 
 | Command | Result |
 |---|---|
-| `php artisan test tests/Feature/PaymentProductionMatrixTest.php` | PASS: 4 tests, 4 passed, 9 assertions (initial RED/GREEN cycle) |
-| `php artisan test tests/Feature/PaymentProductionMatrixTest.php tests/Feature/PaymentProductionInvariantTest.php` | PASS: 15 tests, 15 passed, 34 assertions |
-| `vendor/bin/pint --test app/Services/CanonicalPaymentTransitionService.php app/Services/DokuService.php app/Services/DokuWebhookIngressService.php app/Services/PaymentObservabilityService.php app/Jobs/ReconcileDokuPayment.php app/Console/Commands/VerifyPaymentCutover.php tests/Feature/PaymentProductionMatrixTest.php` | PASS |
+| `php artisan test tests/Feature/PaymentProductionMatrixTest.php` | PASS: 8 tests, 8 passed, 19 assertions; matrix remains PARTIAL, with executable coverage for happy, ordering/projection, duplicate/concurrency invariants, failure/security, recovery/retry, late/refund, amount, regression, observability, and dry-run paths via existing invariant suites plus this matrix |
+| `php artisan test tests/Feature/PaymentProductionMatrixTest.php tests/Feature/PaymentProductionInvariantTest.php` | PASS: 19 tests, 19 passed, 44 assertions |
+| `vendor/bin/pint --test app/Console/Commands/BackfillPaymentAttempts.php app/Console/Commands/ReconcileDokuPayments.php app/Services/CanonicalPaymentTransitionService.php app/Services/DokuService.php app/Services/DokuWebhookIngressService.php app/Services/PaymentObservabilityService.php app/Jobs/ReconcileDokuPayment.php app/Console/Commands/VerifyPaymentCutover.php tests/Feature/PaymentProductionMatrixTest.php` | PASS |
 | `php artisan migrate:fresh --seed` | PASS: migrations and seeders completed |
-| `php artisan payments:verify-cutover` | FAIL: `legacy payment writes are enabled`; non-zero exit blocks cutover |
-| `php artisan payments:backfill-attempts --dry-run` | BLOCKED: command does not define `--dry-run` |
-| `php artisan payments:reconcile-doku --dry-run` | BLOCKED: command does not define `--dry-run` |
-| `php artisan test` | BLOCKED baseline: 1,429 tests, 1,413 passed, 15 failures, 1 skipped; failures include unrelated refund/order/frontend/stock tests and existing backfill fixture drift |
-| `graphify update .` | PASS: graph rebuilt; 7,269 nodes, 18,557 edges, 515 communities; aggregated HTML generated |
+| `php artisan payments:verify-cutover` | FAIL: `legacy payment writes are enabled`; exact evidence is environment default `PAYMENTS_LEGACY_WRITES_ENABLED=true`; cutover remains BLOCKED |
+| `php artisan payments:backfill-attempts --dry-run` | PASS: `Payment attempt backfill complete. Exceptions: 0`; report-only, no rows written |
+| `php artisan payments:reconcile-doku --dry-run` | PASS: `No DOKU payments to reconcile.`; report-only, no jobs dispatched |
+| `php artisan test` | BLOCKED baseline: final parallel verification was contaminated by concurrent database reset; observed 1,436 tests, 1,394 passed, 21 failures, 1 skipped. Serial scoped suite is green; full suite remains unclaimable |
+| `graphify update .` | PASS: graph rebuilt; 7,274 nodes, 18,571 edges, 488 communities; aggregated HTML generated |
 
 ## Cutover Gate
 

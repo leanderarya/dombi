@@ -20,7 +20,7 @@ class BackfillPaymentAttempts extends Command
         'failed' => 'failed',
     ];
 
-    protected $signature = 'payments:backfill-attempts';
+    protected $signature = 'payments:backfill-attempts {--dry-run : Report rows without writing}';
 
     protected $description = 'Backfill payment attempts from legacy payment transactions';
 
@@ -48,6 +48,13 @@ class BackfillPaymentAttempts extends Command
                     }
 
                     $orderCode = Order::query()->whereKey($transaction->order_id)->value('order_code');
+                    if ($this->option('dry-run')) {
+                        $exists = PaymentAttempt::query()->where('legacy_payment_transaction_id', $transaction->id)->exists();
+                        $this->line("DRY RUN transaction={$transaction->id} order={$transaction->order_id} status={$status} existing_attempt=".($exists ? 'yes' : 'no'));
+
+                        continue;
+                    }
+
                     try {
                         DB::transaction(function () use ($transaction, $orderCode, $status): void {
                             $attempt = PaymentAttempt::query()->firstOrNew([

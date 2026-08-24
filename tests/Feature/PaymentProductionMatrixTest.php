@@ -9,7 +9,10 @@ use App\Services\DokuService;
 use App\Services\NormalizedPaymentEvent;
 use App\Services\PaymentObservabilityService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class PaymentProductionMatrixTest extends TestCase
@@ -28,7 +31,6 @@ class PaymentProductionMatrixTest extends TestCase
             'mapped_status' => 'unknown',
             'processing_result' => 'unknown',
             'error_reason' => 'missing_payment_url',
-            'raw_body' => 'secret-body',
         ]);
 
         $events = $observability->events();
@@ -57,12 +59,56 @@ class PaymentProductionMatrixTest extends TestCase
         $this->artisan('payments:verify-cutover')->assertExitCode(1);
     }
 
+    public function test_observability_rejects_unknown_context_labels_and_computes_pending_age(): void
+    {
+        $observability = app(PaymentObservabilityService::class);
+        Date::setTestNow(now());
+        $attempt = PaymentAttempt::create([
+            'order_id' => Order::factory()->create()->id,
+            'attempt_key' => 'age-'.uniqid(),
+            'invoice_number' => 'AGE-1',
+            'merchant_request_id' => 'AGE-REQ',
+            'amount_snapshot' => 100,
+            'currency_snapshot' => 'IDR',
+            'creation_state' => 'pending',
+        ]);
+        DB::table('payment_attempts')->where('id', $attempt->id)->update(['created_at' => now()->subMinutes(3)->toDateTimeString()]);
+        $observability->refreshPendingAgeGauge();
+        $this->assertGreaterThanOrEqual(180, $observability->gauges()['payment_pending_age_seconds']);
+        $this->expectException(\InvalidArgumentException::class);
+        $observability->event('webhook_rejected', ['unknown_label' => 'nope']);
+    }
+
+    public function test_all_emitted_events_are_registered(): void
+    {
+        $this->assertContains('webhook_rejected', PaymentObservabilityService::registeredEventNames());
+        $this->assertContains('transition', PaymentObservabilityService::registeredEventNames());
+        $this->assertContains('reconciliation', PaymentObservabilityService::registeredEventNames());
+    }
+
+    public function test_backfill_dry_run_reports_without_writing(): void
+    {
+        $order = Order::factory()->create();
+        PaymentTransaction::create(['order_id' => $order->id, 'doku_order_id' => 'DRY-1', 'payment_method' => 'qris', 'amount' => 100, 'status' => 'paid']);
+        $this->artisan('payments:backfill-attempts --dry-run')->assertExitCode(0);
+        $this->assertDatabaseCount('payment_attempts', 0);
+    }
+
+    public function test_reconcile_dry_run_reports_without_dispatching(): void
+    {
+        $order = Order::factory()->create();
+        PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'DRY-ATTEMPT', 'invoice_number' => 'DRY-2', 'merchant_request_id' => 'DRY-REQ', 'amount_snapshot' => 100, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown', 'settlement_status' => 'unknown']);
+        Queue::fake();
+        $this->artisan('payments:reconcile-doku --dry-run')->assertExitCode(0);
+        Queue::assertNothingPushed();
+    }
+
     public function test_required_matrix_categories_are_registered(): void
     {
         $this->assertSame([
-            'creation_failed', 'creation_timeout', 'invalid_signature', 'unknown_status',
+            'creation_failed', 'creation_timeout', 'invalid_signature', 'signature_invalid', 'unknown_status',
             'amount_mismatch', 'pending_age', 'reconciliation_failure', 'late_payment',
-            'duplicate_success', 'refund_ageing', 'needs_review', 'invalid_response',
+            'duplicate_success', 'refund_ageing', 'needs_review', 'invalid_response', 'webhook_rejected', 'transition', 'reconciliation',
         ], PaymentObservabilityService::registeredEventNames());
     }
 

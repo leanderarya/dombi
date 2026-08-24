@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 
 class ReconcileDokuPayments extends Command
 {
-    protected $signature = 'payments:reconcile-doku {--limit= : Maximum attempts to dispatch}';
+    protected $signature = 'payments:reconcile-doku {--limit= : Maximum attempts to dispatch} {--dry-run : Report selected attempts without dispatching}';
 
     protected $description = 'Reconcile unresolved DOKU payment attempts';
 
@@ -41,6 +41,16 @@ class ReconcileDokuPayments extends Command
 
         if ($attempts->isEmpty()) {
             $this->info('No DOKU payments to reconcile.');
+
+            return self::SUCCESS;
+        }
+
+        if ($this->option('dry-run')) {
+            foreach ($attempts as $attempt) {
+                $this->line("DRY RUN attempt={$attempt->id} order={$attempt->order_id} invoice={$attempt->invoice_number} state={$attempt->creation_state?->value} settlement={$attempt->settlement_status?->value}");
+            }
+
+            $this->info("Selected {$attempts->count()} attempt(s); no jobs dispatched.");
 
             return self::SUCCESS;
         }

@@ -14,9 +14,9 @@ final class PaymentObservabilityService
     ];
 
     private const EVENTS = [
-        'creation_failed', 'creation_timeout', 'invalid_signature', 'unknown_status',
+        'creation_failed', 'creation_timeout', 'invalid_signature', 'signature_invalid', 'unknown_status',
         'amount_mismatch', 'pending_age', 'reconciliation_failure', 'late_payment',
-        'duplicate_success', 'refund_ageing', 'needs_review', 'invalid_response',
+        'duplicate_success', 'refund_ageing', 'needs_review', 'invalid_response', 'webhook_rejected', 'transition', 'reconciliation',
     ];
 
     private array $counters = [];
@@ -59,10 +59,20 @@ final class PaymentObservabilityService
         ]);
     }
 
+    public function refreshPendingAgeGauge(): void
+    {
+        $oldest = PaymentAttempt::query()->whereIn('creation_state', ['pending', 'unknown'])->orderBy('created_at')->first();
+        $this->gauges['payment_pending_age_seconds'] = $oldest ? max(0, now()->timestamp - $oldest->created_at->timestamp) : 0;
+    }
+
     public function event(string $name, array $context = []): void
     {
-        if (! in_array($name, self::EVENTS, true) && $name !== 'transition' && $name !== 'reconciliation') {
+        if (! in_array($name, self::EVENTS, true)) {
             throw new \InvalidArgumentException('Unregistered payment observability event.');
+        }
+        $unknown = array_diff(array_keys($context), self::LABELS);
+        if ($unknown !== []) {
+            throw new \InvalidArgumentException('Unknown payment observability labels: '.implode(', ', $unknown));
         }
 
         $labels = [];
