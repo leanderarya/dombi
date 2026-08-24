@@ -44,10 +44,50 @@ Task 13 acceptance relies on focused backend/admin tests and lint checks. A futu
 
 ## Focused Verification
 
-- Backend/admin focused tests: run separately from repository-wide frontend checks.
-- Focused lint: run against only Task 13 frontend/admin files, if any; unrelated guest frontend files remain excluded.
-- `npm run types:check`: blocked by the two baseline errors listed above.
-- `graphify update .`: required after this report change to keep project graph current.
+Command:
+
+```text
+php artisan test tests/Feature/PaymentAdminRecoveryTest.php tests/Feature/DokuProductionConfigTest.php
+```
+
+Exact result:
+
+```text
+Tests:    16 passed (40 assertions)
+Duration: 5.549s
+```
+
+Command:
+
+```text
+composer lint:check
+```
+
+Exact result:
+
+```text
+Pint: passed
+```
+
+Command:
+
+```text
+graphify update .
+```
+
+Exact result:
+
+```text
+[graphify watch] Rebuilt: 7261 nodes, 18521 edges, 479 communities
+graph.html written (aggregated: 479 community nodes, 1348 cross-community edges)
+```
+
+`npm run types:check` remains blocked by the two baseline errors listed above. No Task 12 files were changed.
+
+## Fixes
+
+- `PaymentRecoveryController::checkStatus` now flashes `error` on provider failure and never flashes `success` for that path.
+- `DokuConfigurationGuard` rejects localhost variants, loopback, RFC1918/private, link-local, reserved IPs, and DNS hosts resolving to any private/reserved address. Unresolvable public hostnames remain allowed for deployment configuration validation.
 
 ## Commit Scope
 
