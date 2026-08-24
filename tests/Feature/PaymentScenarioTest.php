@@ -25,12 +25,12 @@ class PaymentScenarioTest extends TestCase
         $this->assertEquals('paid', $doku->mapStatus('Success'));
     }
 
-    public function test_map_status_pending(): void
+    public function test_map_status_pending_and_null_defaults_to_unknown(): void
     {
         $doku = new DokuService;
         $this->assertEquals('pending', $doku->mapStatus('PENDING'));
         $this->assertEquals('pending', $doku->mapStatus('pending'));
-        $this->assertEquals('pending', $doku->mapStatus(null));
+        $this->assertEquals('unknown', $doku->mapStatus(null));
     }
 
     public function test_map_status_failed(): void
@@ -68,11 +68,11 @@ class PaymentScenarioTest extends TestCase
         $this->assertEquals('expired', $doku->mapStatus('expired'));
     }
 
-    public function test_map_status_unknown_defaults_to_pending(): void
+    public function test_map_status_unknown_defaults_to_unknown(): void
     {
         $doku = new DokuService;
-        $this->assertEquals('pending', $doku->mapStatus('UNKNOWN_STATUS'));
-        $this->assertEquals('pending', $doku->mapStatus(''));
+        $this->assertEquals('unknown', $doku->mapStatus('UNKNOWN_STATUS'));
+        $this->assertEquals('unknown', $doku->mapStatus(''));
     }
 
     // ─── PAYMENT REJECTED → ORDER EXPIRED ──────────────────────
