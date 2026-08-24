@@ -1,8 +1,8 @@
 # Task 11 Report
 
 ## Scope
-- Legacy fallback suppression now requires non-synthetic canonical obligation matching `orders.refund_reason`.
-- Obligations for unrelated refund reasons cannot hide legacy refund rows.
+- Canonical action_required selector includes stale in_progress (`started_at <= 24h`) and failed obligations.
+- Legacy action_required fallback includes stale legacy in_progress and refund_failed only when no matching canonical obligation exists.
 
 ## Verification
 - Refund suite: 104 passed, 272 assertions.

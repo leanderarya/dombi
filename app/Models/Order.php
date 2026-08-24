@@ -197,7 +197,7 @@ class Order extends Model
 
     public function scopeWithCanonicalRefund(Builder $query, ?array $statuses = null, ?bool $hasDestination = null, bool $staleInProgressOnly = false): Builder
     {
-        $legacyStatuses = collect($statuses ?? [])->map(fn (string $status): string => match ($status) {
+        $legacyStatuses = collect($statuses ?? ($staleInProgressOnly ? ['in_progress', 'failed'] : []))->map(fn (string $status): string => match ($status) {
             'pending' => PaymentStatus::RefundPending->value,
             'in_progress' => PaymentStatus::RefundInProgress->value,
             'completed' => PaymentStatus::Refunded->value,
@@ -205,7 +205,7 @@ class Order extends Model
             default => $status,
         })->all();
 
-        return $query->where(function (Builder $scope) use ($statuses, $hasDestination, $legacyStatuses): void {
+        return $query->where(function (Builder $scope) use ($statuses, $hasDestination): void {
             $scope->whereExists(function ($selected) use ($statuses, $hasDestination): void {
                 $selected->selectRaw('1')
                     ->from('refund_obligations')
@@ -220,7 +220,12 @@ class Order extends Model
                     ->when($hasDestination !== null, fn ($query) => $hasDestination
                         ? $query->whereNotNull('refund_obligations.destination_type')
                         : $query->whereNull('refund_obligations.destination_type'))
-                    ->when($staleInProgressOnly, fn ($query) => $query->where('refund_obligations.status', RefundObligationStatus::InProgress->value)->where('refund_obligations.started_at', '<=', now()->subHours(24)))
+                    ->when($staleInProgressOnly, fn ($query) => $query->where(function ($stale): void {
+                        $stale->where(function ($inProgress): void {
+                            $inProgress->where('refund_obligations.status', RefundObligationStatus::InProgress->value)
+                                ->where('refund_obligations.started_at', '<=', now()->subHours(24));
+                        })->orWhereIn('refund_obligations.status', [RefundObligationStatus::Failed->value]);
+                    }))
                     ->whereNotExists(function ($newer) {
                         $newer->selectRaw('1')
                             ->from('payment_attempts as newer_attempts')
@@ -239,17 +244,23 @@ class Order extends Model
                                     ->orWhere('newer_attempts.metadata->provenance', '!=', 'synthetic_legacy_refund');
                             });
                     });
-            })->orWhere(function (Builder $legacy) use ($legacyStatuses): void {
-                $legacy->whereIn('payment_status', $legacyStatuses)
-                    ->whereDoesntHave('paymentAttempts.refundObligations', function ($obligation): void {
-                        $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')
-                            ->whereHas('paymentAttempt', function ($attempt): void {
-                                $attempt->where(function ($metadata): void {
-                                    $metadata->whereNull('metadata->provenance')
-                                        ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
-                                });
+            })->orWhere(function (Builder $legacy): void {
+                $legacy->where(function ($status) use ($staleInProgressOnly): void {
+                    if ($staleInProgressOnly) {
+                        $status->where('payment_status', PaymentStatus::RefundFailed->value)
+                            ->orWhere(fn ($stale) => $stale->where('payment_status', PaymentStatus::RefundInProgress->value)->where('refund_started_at', '<=', now()->subHours(24)));
+                    } else {
+                        $status->whereIn('payment_status', $legacyStatuses);
+                    }
+                })->whereDoesntHave('paymentAttempts.refundObligations', function ($obligation): void {
+                    $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')
+                        ->whereHas('paymentAttempt', function ($attempt): void {
+                            $attempt->where(function ($metadata): void {
+                                $metadata->whereNull('metadata->provenance')
+                                    ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
                             });
-                    });
+                        });
+                });
             });
         });
     }
