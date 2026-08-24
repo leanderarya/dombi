@@ -29,10 +29,14 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
     {
         $outlet = Outlet::factory()->create();
         $product = Product::factory()->create();
-        StockMovement::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'type' => 'order_reserved', 'quantity' => 1, 'reference_type' => Order::class, 'reference_id' => 1]);
-        StockMovement::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'type' => 'order_cancelled', 'quantity' => 1, 'reference_type' => Order::class, 'reference_id' => 1]);
+        $order = Order::factory()->create(['outlet_id' => $outlet->id]);
+        $order->items()->create(['product_id' => $product->id, 'product_name' => $product->name, 'quantity' => 1, 'price' => 1, 'subtotal' => 1]);
+        OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'current_stock' => 2, 'reserved_stock' => 0, 'minimum_stock' => 0]);
+        app(InventoryService::class)->reserveStock($outlet->id, [['product_id' => $product->id, 'quantity' => 1]], $order);
+        $order->load('items');
+        app(InventoryService::class)->releaseReservedStock($order);
 
-        $this->assertSame(2, StockMovement::where('reference_id', 1)->count());
+        $this->assertSame(2, StockMovement::where('reference_type', Order::class)->where('reference_id', $order->id)->where('product_id', $product->id)->count());
     }
 
     public function test_duplicate_product_lines_are_completed_as_one_inventory_decrement(): void
