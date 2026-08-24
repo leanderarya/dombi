@@ -137,21 +137,22 @@ class DokuService
 
     private function persistCreationOutcome(PaymentAttempt $attempt, string $claimToken, string $state, ?array $rawResponse, array $metadata): bool
     {
-        return DB::transaction(function () use ($attempt, $claimToken, $state, $rawResponse, $metadata): bool {
-            $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
-            if (data_get($locked->metadata ?? [], 'creation_lease.token') !== $claimToken) {
-                return false;
-            }
-            $locked->update(['creation_state' => $state, 'raw_response' => $rawResponse, 'metadata' => array_merge($locked->metadata ?? [], $metadata, ['creation_lease' => null])]);
-            if ($state === 'failed') {
-                $order = Order::query()->whereKey($locked->order_id)->lockForUpdate()->with('items')->first();
-                if ($order) {
+        return retry(3, function () use ($attempt, $claimToken, $state, $rawResponse, $metadata): bool {
+            return DB::transaction(function () use ($attempt, $claimToken, $state, $rawResponse, $metadata): bool {
+                $orderId = PaymentAttempt::query()->whereKey($attempt->id)->value('order_id');
+                $order = Order::query()->whereKey($orderId)->lockForUpdate()->with('items')->firstOrFail();
+                $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
+                if (data_get($locked->metadata ?? [], 'creation_lease.token') !== $claimToken) {
+                    return false;
+                }
+                $locked->update(['creation_state' => $state, 'raw_response' => $rawResponse, 'metadata' => array_merge($locked->metadata ?? [], $metadata, ['creation_lease' => null])]);
+                if ($state === 'failed') {
                     app(InventoryService::class)->releaseReservedStock($order);
                 }
-            }
 
-            return true;
-        });
+                return true;
+            });
+        }, 100, fn (\Throwable $exception): bool => str_contains(strtolower($exception->getMessage()), 'deadlock') || str_contains(strtolower($exception->getMessage()), 'serialization'));
     }
 
     public function reconcilePaymentAttempt(PaymentAttempt $attempt): PaymentAttempt
