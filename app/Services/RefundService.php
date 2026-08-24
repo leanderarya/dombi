@@ -261,7 +261,8 @@ class RefundService
             }
 
             if ($obligation) {
-                $obligation->update(['status' => 'in_progress', 'processed_by' => $ownerId, 'processed_at' => now()]);
+                $startedAt = now();
+                $obligation->update(['status' => 'in_progress', 'processed_by' => $ownerId, 'started_at' => $startedAt]);
             }
 
             $locked->update([
@@ -332,6 +333,17 @@ class RefundService
                 $updateData['refund_destination_status'] = Order::REFUND_DESTINATION_INVALID;
             } elseif ($isLegacyRepair) {
                 $updateData['refund_destination_status'] = Order::REFUND_DESTINATION_VALID;
+            }
+
+            if ($obligation) {
+                $obligation->update([
+                    'status' => 'rejected',
+                    'rejected_at' => $obligation->rejected_at ?? now(),
+                    'metadata' => array_merge($obligation->metadata ?? [], [
+                        'rejection_reason' => $reason,
+                        'rejection_note' => $note,
+                    ]),
+                ]);
             }
 
             $locked->update($updateData);
@@ -434,13 +446,15 @@ class RefundService
             }
 
             if ($obligation) {
+                $completedAt = now();
                 $obligation->update([
                     'status' => 'completed',
                     'proof_image' => $proofPath,
                     'transfer_reference' => $transferReference,
                     'transfer_note' => $transferNote,
                     'processed_by' => $ownerId,
-                    'processed_at' => now(),
+                    'completed_at' => $completedAt,
+                    'processed_at' => $completedAt,
                 ]);
             }
 

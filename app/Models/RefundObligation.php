@@ -22,7 +22,7 @@ class RefundObligation extends Model
         'payment_attempt_id', 'amount', 'currency', 'reason', 'status',
         'destination_type', 'bank_name', 'account_number', 'account_holder',
         'ewallet_provider', 'ewallet_number', 'ewallet_holder', 'destination_submitted_at',
-        'transfer_reference', 'transfer_note', 'proof_image', 'processed_by', 'processed_at', 'metadata',
+        'transfer_reference', 'transfer_note', 'proof_image', 'processed_by', 'requested_at', 'started_at', 'completed_at', 'rejected_at', 'processed_at', 'metadata',
     ];
 
     protected function casts(): array
@@ -37,6 +37,10 @@ class RefundObligation extends Model
             'ewallet_number' => 'encrypted',
             'ewallet_holder' => 'encrypted',
             'destination_submitted_at' => 'datetime',
+            'requested_at' => 'datetime',
+            'started_at' => 'datetime',
+            'completed_at' => 'datetime',
+            'rejected_at' => 'datetime',
             'processed_at' => 'datetime',
             'metadata' => 'array',
         ];
