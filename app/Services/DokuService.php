@@ -453,7 +453,15 @@ class DokuService
                 ]);
             }
 
-            $this->processPaymentStatusChange($order, $status, $payload);
+            app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+                source: 'doku-webhook',
+                gatewayStatus: $paymentStatus ?? 'UNKNOWN',
+                amount: data_get($payload, 'transaction.amount'),
+                currency: data_get($payload, 'order.currency', 'IDR'),
+                gatewayReference: data_get($payload, 'transaction.original_request_id') ?? data_get($payload, 'transaction.id') ?? $invoiceNumber,
+                receivedAt: now(),
+                rawEvidence: $payload,
+            ));
             Log::info('DOKU webhook processed', [
                 'order_id' => $order->id,
                 'invoice_number' => $invoiceNumber,
@@ -624,8 +632,9 @@ class DokuService
             throw new \LogicException('Canonical payment attempt required before status sync.');
         }
         $order = $attempt->order;
-        $order->doku_order_id = $attempt->invoice_number;
-        $dokuStatus = $this->checkStatus($order);
+        $lookupOrder = clone $order;
+        $lookupOrder->doku_order_id = $attempt->invoice_number;
+        $dokuStatus = $this->checkStatus($lookupOrder);
 
         if (! $dokuStatus) {
             return $order->payment_status;
@@ -633,10 +642,19 @@ class DokuService
 
         $status = $this->mapStatus($dokuStatus['transaction']['status'] ?? 'PENDING');
 
-        return DB::transaction(function () use ($order, $status, $dokuStatus): string {
-            $this->processPaymentStatusChange($order, $status, $dokuStatus);
+        return DB::transaction(function () use ($attempt, $dokuStatus): string {
+            $providerStatus = data_get($dokuStatus, 'transaction.status', 'UNKNOWN');
+            app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+                source: 'doku-status-sync',
+                gatewayStatus: $providerStatus,
+                amount: data_get($dokuStatus, 'transaction.amount'),
+                currency: data_get($dokuStatus, 'order.currency', 'IDR'),
+                gatewayReference: data_get($dokuStatus, 'transaction.original_request_id') ?? data_get($dokuStatus, 'transaction.id') ?? $attempt->invoice_number,
+                receivedAt: now(),
+                rawEvidence: $dokuStatus,
+            ));
 
-            return $status;
+            return $this->mapStatus($providerStatus);
         });
     }
 
@@ -652,8 +670,13 @@ class DokuService
             'PENDING' => 'pending',
             'FAILED', 'REJECTED', 'DENIED', 'CANCELLED' => 'failed',
             'EXPIRED' => 'expired',
-            default => tap('pending', function () use ($upper) {
+            default => tap('unknown', function () use ($upper) {
                 Log::warning('DOKU: unmapped status', ['status' => $upper]);
+                app(PaymentObservabilityService::class)->event('unknown_status', [
+                    'provider' => 'doku',
+                    'provider_status' => $upper,
+                    'processing_result' => 'needs_review',
+                ]);
             }),
         };
     }
