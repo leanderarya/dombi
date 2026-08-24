@@ -177,7 +177,7 @@ class RefundService
 
                 if ($obligation) {
                     $obligation->update([
-                        'status' => 'rejected',
+                        'status' => 'pending',
                         'metadata' => $obligation->metadata ?? [],
                     ]);
                 }
@@ -253,15 +253,11 @@ class RefundService
                 throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
             }
 
-            if ($locked->refund_destination_status !== Order::REFUND_DESTINATION_VALID) {
-                throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
-            }
-
-            if (! $this->isDestinationComplete($locked)) {
-                throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
-            }
-
-            if ((float) $locked->refund_amount <= 0) {
+            if ($obligation) {
+                if (! $this->isObligationDestinationComplete($obligation) || (float) $obligation->amount <= 0) {
+                    throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
+                }
+            } elseif (! $this->isDestinationComplete($locked) || (float) $locked->refund_amount <= 0) {
                 throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
             }
 
@@ -309,7 +305,10 @@ class RefundService
                 && $locked->refund_requested_at !== null
                 && $locked->refund_requested_at->lt(Carbon::create(2026, 7, 24, 1, 0, 0, config('app.timezone')));
 
-            if (! $isLegacyRepair && $locked->refund_destination_status !== Order::REFUND_DESTINATION_VALID) {
+            if (! $isLegacyRepair && $obligation && ! $this->isObligationDestinationComplete($obligation)) {
+                throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
+            }
+            if (! $isLegacyRepair && ! $obligation && $locked->refund_destination_status !== Order::REFUND_DESTINATION_VALID) {
                 throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
             }
 
@@ -427,7 +426,11 @@ class RefundService
                 throw new DomainException('Refund sudah tidak dalam status diproses.');
             }
 
-            if ((float) $locked->refund_amount <= 0) {
+            if ($obligation) {
+                if ((float) $obligation->amount <= 0) {
+                    throw new DomainException('Jumlah refund tidak valid.');
+                }
+            } elseif ((float) $locked->refund_amount <= 0) {
                 throw new DomainException('Jumlah refund tidak valid.');
             }
 
@@ -499,6 +502,19 @@ class RefundService
         }
 
         return $query->latest('id')->first();
+    }
+
+    private function isObligationDestinationComplete(RefundObligation $obligation): bool
+    {
+        if ($obligation->destination_type === 'bank') {
+            return ! empty($obligation->bank_name) && ! empty($obligation->account_number) && ! empty($obligation->account_holder);
+        }
+
+        if ($obligation->destination_type === 'ewallet') {
+            return ! empty($obligation->ewallet_provider) && ! empty($obligation->ewallet_number) && ! empty($obligation->ewallet_holder);
+        }
+
+        return false;
     }
 
     private function isDestinationComplete(Order $order): bool

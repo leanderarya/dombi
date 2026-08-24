@@ -380,15 +380,20 @@ class Order extends Model
             return null;
         }
 
-        return $this->paymentAttempts()
-            ->where(function ($query): void {
-                $query->whereNull('metadata->provenance')
-                    ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+        return RefundObligation::query()
+            ->where('reason', $reason)
+            ->whereHas('paymentAttempt', function ($query) {
+                $query->where('order_id', $this->id)
+                    ->where(function ($metadata): void {
+                        $metadata->whereNull('metadata->provenance')
+                            ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                    });
             })
-            ->latest('id')
-            ->get()
-            ->map(fn (PaymentAttempt $attempt) => $attempt->refundObligationFor($reason))
-            ->filter()
+            ->orderByDesc(
+                PaymentAttempt::query()
+                    ->select('id')
+                    ->whereColumn('payment_attempts.id', 'refund_obligations.payment_attempt_id')
+            )
             ->first();
     }
 
