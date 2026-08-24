@@ -7,6 +7,7 @@ use App\Models\PaymentAttempt;
 use App\Models\PaymentWebhookLog;
 use App\Models\RefundObligation;
 use App\Models\User;
+use App\Services\DokuReconciliationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -119,6 +120,30 @@ class PaymentAdminRecoveryTest extends TestCase
         }
 
         return false;
+    }
+
+    public function test_non_owner_cannot_post_payment_recovery_actions(): void
+    {
+        $user = User::factory()->create(['role' => 'customer']);
+        $attempt = PaymentAttempt::create(['order_id' => Order::factory()->create()->id, 'attempt_key' => 'auth', 'invoice_number' => 'INV-AUTH', 'merchant_request_id' => 'REQ-AUTH', 'amount_snapshot' => 100, 'currency_snapshot' => 'IDR', 'creation_state' => 'pending', 'settlement_status' => 'pending']);
+        $obligation = RefundObligation::create(['payment_attempt_id' => $attempt->id, 'amount' => 100, 'currency' => 'IDR', 'reason' => 'duplicate', 'status' => 'pending']);
+
+        $this->actingAs($user)->post("/owner/finance/payments/{$attempt->id}/check-status")->assertRedirect('/customer/home');
+        $this->actingAs($user)->post("/owner/finance/refund-obligations/{$obligation->id}/needs-review")->assertRedirect('/customer/home');
+    }
+
+    public function test_owner_provider_failure_returns_bounded_safe_response(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        $attempt = PaymentAttempt::create(['order_id' => Order::factory()->create()->id, 'attempt_key' => 'failure', 'invoice_number' => 'INV-FAILURE', 'merchant_request_id' => 'REQ-FAILURE', 'amount_snapshot' => 100, 'currency_snapshot' => 'IDR', 'creation_state' => 'pending', 'settlement_status' => 'pending']);
+        $this->mock(DokuReconciliationService::class)
+            ->shouldReceive('reconcile')->once()->andThrow(new \RuntimeException('provider secret details'));
+
+        $response = $this->actingAs($owner)->post("/owner/finance/payments/{$attempt->id}/check-status");
+
+        $response->assertRedirect();
+        $this->assertSame('Payment status check failed.', session('success'));
+        $this->assertStringNotContainsString('provider secret', session('success'));
     }
 
     public function test_owner_payment_recovery_routes_are_registered(): void

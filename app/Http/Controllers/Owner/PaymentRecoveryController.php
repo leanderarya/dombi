@@ -89,7 +89,11 @@ class PaymentRecoveryController extends Controller
 
     public function checkStatus(PaymentAttempt $attempt): RedirectResponse
     {
-        $result = $this->reconciliation->reconcile($attempt);
+        try {
+            $result = $this->reconciliation->reconcile($attempt);
+        } catch (\Throwable) {
+            return redirect()->back()->with('success', 'Payment status check failed.');
+        }
 
         return redirect()->back()->with('success', $result->changed ? 'Payment status reconciled.' : 'Payment status unchanged.');
     }
