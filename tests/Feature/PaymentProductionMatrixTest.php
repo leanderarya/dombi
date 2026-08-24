@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
+use App\Services\CanonicalPaymentTransitionService;
 use App\Services\DokuService;
 use App\Services\NormalizedPaymentEvent;
 use App\Services\PaymentObservabilityService;
@@ -24,13 +25,16 @@ class PaymentProductionMatrixTest extends TestCase
     {
         Cache::shouldReceive('increment')->andThrow(new \RuntimeException('cache unavailable'));
         Log::shouldReceive('channel')->andThrow(new \RuntimeException('log unavailable'));
-        $orderId = DB::transaction(function (): int {
-            $order = Order::factory()->create(['payment_status' => 'pending']);
-            app(PaymentObservabilityService::class)->event('transition', ['order_id' => $order->id, 'processing_result' => 'committed']);
-
-            return $order->id;
+        $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 100]);
+        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'backend-failure', 'invoice_number' => $order->order_code, 'merchant_request_id' => 'backend-failure-request', 'amount_snapshot' => 100, 'currency_snapshot' => 'IDR', 'creation_state' => 'created']);
+        DB::transaction(function () use ($attempt): void {
+            app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent('test', 'SUCCESS', 100, 'IDR', 'gateway-ref', now(), ['order' => ['invoice_number' => $attempt->invoice_number]]));
+            app(PaymentObservabilityService::class)->event('transition', ['attempt_id' => $attempt->id, 'processing_result' => 'committed']);
         });
-        $this->assertDatabaseHas('orders', ['id' => $orderId, 'payment_status' => 'pending']);
+        $this->assertSame('paid', $attempt->fresh()->settlement_status?->value);
+        $this->assertNotNull($order->fresh()->paid_at);
+        $this->assertSame('paid', $order->fresh()->payment_status);
+        $this->assertDatabaseCount('refund_obligations', 0);
     }
 
     public function test_observability_registry_exposes_fixed_schema_and_safe_allowlisted_labels(): void

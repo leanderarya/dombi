@@ -102,6 +102,7 @@ final class PaymentObservabilityService
 
     public function event(string $name, array $context = []): void
     {
+        $this->validateEvent($name, $context);
         try {
             DB::afterCommit(function () use ($name, $context): void {
                 try {
@@ -118,7 +119,7 @@ final class PaymentObservabilityService
         }
     }
 
-    private function writeEvent(string $name, array $context): void
+    private function validateEvent(string $name, array $context): void
     {
         if (! in_array($name, self::EVENTS, true)) {
             throw new \InvalidArgumentException('Unregistered payment observability event.');
@@ -127,7 +128,10 @@ final class PaymentObservabilityService
         if ($unknown !== []) {
             throw new \InvalidArgumentException('Unknown payment observability labels: '.implode(', ', $unknown));
         }
+    }
 
+    private function writeEvent(string $name, array $context): void
+    {
         $labels = [];
         foreach (self::LABELS as $label) {
             $labels[$label] = array_key_exists($label, $context) ? $context[$label] : null;
