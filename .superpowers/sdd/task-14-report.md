@@ -10,15 +10,14 @@ Payment observability registry, fixed nullable event schema, safe allowlisted la
 
 | Command | Result |
 |---|---|
-| `php artisan test tests/Feature/PaymentProductionMatrixTest.php` | PASS: 8 tests, 8 passed, 19 assertions; matrix remains PARTIAL, with executable coverage for happy, ordering/projection, duplicate/concurrency invariants, failure/security, recovery/retry, late/refund, amount, regression, observability, and dry-run paths via existing invariant suites plus this matrix |
-| `php artisan test tests/Feature/PaymentProductionMatrixTest.php tests/Feature/PaymentProductionInvariantTest.php` | PASS: 19 tests, 19 passed, 44 assertions |
-| `vendor/bin/pint --test app/Console/Commands/BackfillPaymentAttempts.php app/Console/Commands/ReconcileDokuPayments.php app/Services/CanonicalPaymentTransitionService.php app/Services/DokuService.php app/Services/DokuWebhookIngressService.php app/Services/PaymentObservabilityService.php app/Jobs/ReconcileDokuPayment.php app/Console/Commands/VerifyPaymentCutover.php tests/Feature/PaymentProductionMatrixTest.php` | PASS |
+| `php artisan test tests/Feature/PaymentProductionMatrixTest.php tests/Feature/PaymentProductionInvariantTest.php` | PASS: 19 tests, 19 passed, 44 assertions; matrix explicitly PARTIAL. Executable assertions cover happy/order, concurrency/duplicate success, failure/security, recovery/retry, late/refund, amount, regression, unknown status, pending age, reconciliation failure contract, and needs-review contract |
+| `vendor/bin/pint --test app/Console/Commands/BackfillPaymentAttempts.php app/Console/Commands/ReconcileDokuPayments.php app/Services/CanonicalPaymentTransitionService.php app/Services/DokuService.php app/Services/DokuWebhookIngressService.php app/Services/PaymentObservabilityService.php app/Jobs/ReconcileDokuPayment.php app/Console/Commands/VerifyPaymentCutover.php routes/console.php tests/Feature/PaymentProductionMatrixTest.php` | PASS |
 | `php artisan migrate:fresh --seed` | PASS: migrations and seeders completed |
-| `php artisan payments:verify-cutover` | FAIL: `legacy payment writes are enabled`; exact evidence is environment default `PAYMENTS_LEGACY_WRITES_ENABLED=true`; cutover remains BLOCKED |
+| `php artisan payments:verify-cutover` | BLOCKED: `legacy payment writes are enabled`; `config('doku.legacy_writes_enabled')` resolves true from configured default; parity checks attempt/order/invoice/currency/amount/status/gateway identity and refund obligations |
 | `php artisan payments:backfill-attempts --dry-run` | PASS: `Payment attempt backfill complete. Exceptions: 0`; report-only, no rows written |
 | `php artisan payments:reconcile-doku --dry-run` | PASS: `No DOKU payments to reconcile.`; report-only, no jobs dispatched |
-| `php artisan test` | BLOCKED baseline: final parallel verification was contaminated by concurrent database reset; observed 1,436 tests, 1,394 passed, 21 failures, 1 skipped. Serial scoped suite is green; full suite remains unclaimable |
-| `graphify update .` | PASS: graph rebuilt; 7,274 nodes, 18,571 edges, 488 communities; aggregated HTML generated |
+| `php artisan test` | SERIAL final result: 1,436 tests, 1,420 passed, 15 failures, 1 skipped. Failures are baseline refund/order/owner workspace/stock/backfill issues; no parallel DB commands used |
+| `graphify update .` | PASS: graph rebuilt; 7,274 nodes, 18,573 edges, 486 communities; aggregated HTML generated |
 
 ## Cutover Gate
 

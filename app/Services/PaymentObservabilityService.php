@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\PaymentAttempt;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 final class PaymentObservabilityService
@@ -14,7 +15,7 @@ final class PaymentObservabilityService
     ];
 
     private const EVENTS = [
-        'creation_failed', 'creation_timeout', 'invalid_signature', 'signature_invalid', 'unknown_status',
+        'creation_failed', 'creation_timeout', 'signature_invalid', 'unknown_status',
         'amount_mismatch', 'pending_age', 'reconciliation_failure', 'late_payment',
         'duplicate_success', 'refund_ageing', 'needs_review', 'invalid_response', 'webhook_rejected', 'transition', 'reconciliation',
     ];
@@ -37,7 +38,7 @@ final class PaymentObservabilityService
 
     public function gauges(): array
     {
-        return $this->gauges;
+        return array_merge($this->gauges, Cache::get('payment_observability.gauges', []));
     }
 
     public function events(): array
@@ -63,6 +64,7 @@ final class PaymentObservabilityService
     {
         $oldest = PaymentAttempt::query()->whereIn('creation_state', ['pending', 'unknown'])->orderBy('created_at')->first();
         $this->gauges['payment_pending_age_seconds'] = $oldest ? max(0, now()->timestamp - $oldest->created_at->timestamp) : 0;
+        Cache::forever('payment_observability.gauges', $this->gauges);
     }
 
     public function event(string $name, array $context = []): void
