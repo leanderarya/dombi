@@ -2,19 +2,26 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\ReconcileDokuPayment;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
+use App\Models\RefundObligation;
+use App\Models\User;
 use App\Services\CanonicalPaymentTransitionService;
+use App\Services\DokuReconciliationService;
 use App\Services\DokuService;
 use App\Services\NormalizedPaymentEvent;
 use App\Services\PaymentObservabilityService;
+use App\Services\RefundService;
+use App\Services\TransitionResult;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use Mockery;
 use Tests\TestCase;
 
 class PaymentProductionMatrixTest extends TestCase
@@ -148,7 +155,32 @@ class PaymentProductionMatrixTest extends TestCase
             'unknown_status' => 'CanonicalPaymentTransitionService::apply',
             'needs_review' => 'CanonicalPaymentTransitionService::apply',
         ], PaymentObservabilityService::taxonomyOwners());
-        $this->markTestIncomplete('Late, duplicate, reconciliation, and refund-ageing owner paths require available MySQL fixtures.');
+        $lateOrder = Order::factory()->create(['status' => Order::STATUS_EXPIRED, 'payment_status' => 'pending']);
+        $lateAttempt = PaymentAttempt::create(['order_id' => $lateOrder->id, 'attempt_key' => 'late-'.uniqid(), 'invoice_number' => $lateOrder->order_code, 'merchant_request_id' => 'late-request', 'amount_snapshot' => $lateOrder->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'created']);
+        app(CanonicalPaymentTransitionService::class)->apply($lateAttempt, new NormalizedPaymentEvent('matrix', 'SUCCESS', $lateOrder->total, 'IDR', 'late-gateway', now(), []));
+        $this->assertDatabaseHas('refund_obligations', ['payment_attempt_id' => $lateAttempt->id, 'reason' => 'late_payment']);
+
+        $duplicateOrder = Order::factory()->create(['status' => Order::STATUS_CONFIRMED, 'payment_status' => 'pending']);
+        $winner = PaymentAttempt::create(['order_id' => $duplicateOrder->id, 'attempt_key' => 'winner-'.uniqid(), 'invoice_number' => $duplicateOrder->order_code, 'merchant_request_id' => 'winner-request', 'amount_snapshot' => $duplicateOrder->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'created']);
+        $duplicateOrder->update(['fulfilment_claimed_at' => now(), 'fulfilment_claimed_by' => $winner->id]);
+        $duplicate = PaymentAttempt::create(['order_id' => $duplicateOrder->id, 'attempt_key' => 'duplicate-'.uniqid(), 'invoice_number' => 'DUPLICATE-'.uniqid(), 'merchant_request_id' => 'duplicate-request', 'amount_snapshot' => $duplicateOrder->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'created']);
+        app(CanonicalPaymentTransitionService::class)->apply($duplicate, new NormalizedPaymentEvent('matrix', 'SUCCESS', $duplicateOrder->total, 'IDR', 'duplicate-gateway', now(), []));
+        $this->assertDatabaseHas('refund_obligations', ['payment_attempt_id' => $duplicate->id, 'reason' => 'duplicate_paid_attempt']);
+
+        $reconciliation = Mockery::mock(DokuReconciliationService::class);
+        $reconciliation->shouldReceive('reconcile')->once()->andReturn(new TransitionResult(false));
+        app()->instance(DokuReconciliationService::class, $reconciliation);
+        $reconcileAttempt = PaymentAttempt::create(['order_id' => Order::factory()->create()->id, 'attempt_key' => 'reconcile-'.uniqid(), 'invoice_number' => 'RECON-1', 'merchant_request_id' => 'reconcile-request', 'amount_snapshot' => 100, 'currency_snapshot' => 'IDR', 'creation_state' => 'pending']);
+        (new ReconcileDokuPayment($reconcileAttempt->id))->handle($reconciliation);
+        $this->assertArrayHasKey('reconciliation_failure', PaymentObservabilityService::taxonomyOwners());
+
+        $ageOrder = Order::factory()->create(['payment_status' => 'refund_pending', 'refund_reason' => 'late_payment']);
+        $ageAttempt = PaymentAttempt::create(['order_id' => $ageOrder->id, 'attempt_key' => 'age-refund-'.uniqid(), 'invoice_number' => $ageOrder->order_code, 'merchant_request_id' => 'age-request', 'amount_snapshot' => $ageOrder->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'created', 'settlement_status' => 'paid']);
+        RefundObligation::create(['payment_attempt_id' => $ageAttempt->id, 'amount' => $ageOrder->total, 'currency' => 'IDR', 'reason' => 'late_payment', 'status' => 'pending', 'destination_type' => 'bank', 'bank_name' => 'Bank', 'account_number' => '123', 'account_holder' => 'Owner', 'requested_at' => now()->subHours(25)]);
+        $owner = User::factory()->create();
+        app(RefundService::class)->start($ageOrder, $owner->id);
+        $this->assertSame('in_progress', RefundObligation::where('payment_attempt_id', $ageAttempt->id)->first()->status->value);
+        $this->assertArrayHasKey('refund_ageing', PaymentObservabilityService::taxonomyOwners());
     }
 
     public function test_backfill_dry_run_reports_without_writing(): void
