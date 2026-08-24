@@ -1,8 +1,11 @@
 name: linter
 
 on:
+  pull_request:
   push:
-    branches: [never]
+    branches:
+      - main
+      - master
 
 permissions:
   contents: write

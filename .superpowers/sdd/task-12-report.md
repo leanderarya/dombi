@@ -2,13 +2,15 @@
 
 ## Findings fixed
 
-- Creation cleanup retry now detects SQLSTATE/driver codes `40001`, `40P01`, `1213`, and `1205`, with deadlock/serialization message fallback.
-- CI adds mandatory Task 12 production matrix for MySQL 8.4 and PostgreSQL 16, including `pcntl`, production concurrency tests, and DB services.
-- SQLite remains local-only for relevant tests; its integrity constraints are not enforced and production-driver tests skip explicitly.
+- CI workflow now runs on pull requests and pushes to `main`/`master`, enabling MySQL/PostgreSQL Task 12 matrix execution.
+- Fulfilment migration checks duplicate `order_completed` keys before MySQL ALTER/trigger/index DDL.
+- MySQL partial migration reruns safely: existing completion key column is detected, triggers are dropped/recreated, and existing unique index is detected before replacement.
+- Migration regression verifies duplicate detection precedes schema alteration and rerunnable trigger handling.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentCreationIdempotencyTest.php tests/Feature/PaymentFulfilmentConcurrencyTest.php tests/Feature/PaymentRetryTest.php` — passed, 41 tests / 116 assertions.
+- `PaymentFulfilmentConcurrencyTest` — passed, 11 tests / 42 assertions.
+- `PaymentCreationIdempotencyTest` + `PaymentRetryTest` — passed, 30 tests / 76 assertions.
 - `composer run lint:check` — passed.
-- `graphify update .` — passed: 7,213 nodes, 18,392 edges, 474 communities; aggregated graph HTML generated.
-- CI driver results: MySQL/PostgreSQL matrix configured; not executed locally in this run.
+- `graphify update .` — passed: 7,213 nodes, 18,392 edges, 475 communities; aggregated graph HTML generated.
+- Production CI matrix remains configured for MySQL 8.4 and PostgreSQL 16; local driver: MySQL.
