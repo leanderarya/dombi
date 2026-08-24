@@ -2,18 +2,12 @@
 
 ## Findings fixed
 
-- MySQL `order_completed_key` is refreshed by both BEFORE INSERT and BEFORE UPDATE triggers, so updates cannot bypass scoped uniqueness.
-- Regression test attempts to retarget an existing completion movement to another completion key and asserts database rejection.
-- PostgreSQL partial unique index continues enforcing equivalent update-safe uniqueness.
-- Reservation/release movement types remain unrestricted.
+- Canonical payment fulfilment transaction now retries up to three times for deadlock/serialization failures, preserving idempotent claim, completion, inventory, settlement, projection, refund, and outbox effects.
+- Integrity migration returns safely on SQLite before unsupported DDL; MySQL/PostgreSQL production uniqueness remains enforced.
+- Parallel production-driver test uses parent-controlled UNIX socket handshakes: both children signal ready, parent releases both, child exit statuses and final state are asserted.
 
 ## Verification
 
-- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php` — passed, 7 tests / 29 assertions; production-driver parallel worker gate included, SQLite skips explicitly.
+- `php artisan test tests/Feature/PaymentFulfilmentConcurrencyTest.php` — passed, 7 tests / 31 assertions; SQLite migration/concurrency behavior is explicitly skipped where applicable.
 - `composer run lint:check` — passed.
 - `graphify update .` — run after implementation.
-
-## Files
-
-- `database/migrations/2026_08_24_000008_add_fulfilment_integrity_constraints.php`
-- `tests/Feature/PaymentFulfilmentConcurrencyTest.php`

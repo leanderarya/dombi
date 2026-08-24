@@ -9,6 +9,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
         if (! in_array(DB::getDriverName(), ['mysql', 'pgsql'], true)) {
             throw new RuntimeException('Task 12 requires MySQL or PostgreSQL for order_completed uniqueness.');
         }
