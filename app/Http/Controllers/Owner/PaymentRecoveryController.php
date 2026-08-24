@@ -54,7 +54,10 @@ class PaymentRecoveryController extends Controller
             'mapped_status' => $webhook->mapped_status,
             'received_at' => $webhook->created_at,
             'processed_at' => $webhook->updated_at,
-            'error_code' => $webhook->error ? str($webhook->error)->before(':')->toString() : null,
+            'error_code' => is_string(data_get($webhook->payload, 'error_code'))
+                && in_array(data_get($webhook->payload, 'error_code'), ['invalid_signature', 'invoice_not_found', 'provider_error', 'processing_error'], true)
+                ? data_get($webhook->payload, 'error_code')
+                : null,
         ]);
 
         $refundObligations = RefundObligation::query()->with('paymentAttempt:id,order_id')->latest()->paginate(25);
@@ -71,7 +74,10 @@ class PaymentRecoveryController extends Controller
             'completed_at' => $obligation->completed_at,
             'rejected_at' => $obligation->rejected_at,
             'processed_at' => $obligation->processed_at,
-            'rejection_code' => data_get($obligation->metadata, 'rejection_code'),
+            'rejection_code' => is_string(data_get($obligation->metadata, 'rejection_code'))
+                && in_array(data_get($obligation->metadata, 'rejection_code'), ['invalid_destination', 'duplicate', 'customer_cancelled', 'provider_failure'], true)
+                ? data_get($obligation->metadata, 'rejection_code')
+                : null,
         ]);
 
         return response()->json([
