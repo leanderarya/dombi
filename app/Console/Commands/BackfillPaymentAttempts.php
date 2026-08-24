@@ -109,6 +109,6 @@ class BackfillPaymentAttempts extends Command
         $this->info('Payment attempt backfill complete.');
         $this->info('Exceptions: '.count($exceptions));
 
-        return self::SUCCESS;
+        return $exceptions === [] ? self::SUCCESS : self::FAILURE;
     }
 }
