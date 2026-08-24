@@ -17,9 +17,6 @@ return new class extends Migration
         }
 
         if (DB::getDriverName() === 'mysql') {
-            Schema::table('stock_movements', function (Blueprint $table): void {
-                $table->string('order_completed_key')->nullable();
-            });
             $duplicates = DB::table('stock_movements')
                 ->selectRaw("CONCAT(reference_type, ':', reference_id, ':', product_id) AS movement_key, COUNT(*) AS movement_count")
                 ->where('type', 'order_completed')
@@ -30,7 +27,17 @@ return new class extends Migration
                 $details = $duplicates->map(fn ($duplicate): string => "{$duplicate->movement_key} ({$duplicate->movement_count})")->implode(', ');
                 throw new RuntimeException("Cannot add order_completed uniqueness; duplicate movement keys require reconciliation: {$details}");
             }
+            if (! Schema::hasColumn('stock_movements', 'order_completed_key')) {
+                Schema::table('stock_movements', function (Blueprint $table): void {
+                    $table->string('order_completed_key')->nullable();
+                });
+            }
             DB::statement("UPDATE stock_movements SET order_completed_key = CONCAT(reference_type, ':', reference_id, ':', product_id) WHERE type = 'order_completed'");
+            DB::statement('DROP TRIGGER IF EXISTS stock_movements_order_completed_key_update');
+            DB::statement('DROP TRIGGER IF EXISTS stock_movements_order_completed_key_insert');
+            if (collect(Schema::getIndexes('stock_movements'))->contains(fn (array $index): bool => $index['name'] === 'stock_movements_order_completed_unique')) {
+                DB::statement('DROP INDEX stock_movements_order_completed_unique ON stock_movements');
+            }
             DB::statement("CREATE TRIGGER stock_movements_order_completed_key_insert BEFORE INSERT ON stock_movements FOR EACH ROW SET NEW.order_completed_key = IF(NEW.type = 'order_completed', CONCAT(NEW.reference_type, ':', NEW.reference_id, ':', NEW.product_id), NULL)");
             DB::statement("CREATE TRIGGER stock_movements_order_completed_key_update BEFORE UPDATE ON stock_movements FOR EACH ROW SET NEW.order_completed_key = IF(NEW.type = 'order_completed', CONCAT(NEW.reference_type, ':', NEW.reference_id, ':', NEW.product_id), NULL)");
             DB::statement('CREATE UNIQUE INDEX stock_movements_order_completed_unique ON stock_movements (order_completed_key)');
@@ -45,6 +52,7 @@ return new class extends Migration
                 $details = $duplicates->map(fn ($duplicate): string => "{$duplicate->movement_key} ({$duplicate->movement_count})")->implode(', ');
                 throw new RuntimeException("Cannot add order_completed uniqueness; duplicate movement keys require reconciliation: {$details}");
             }
+            DB::statement('DROP INDEX IF EXISTS stock_movements_order_completed_unique');
             DB::statement("CREATE UNIQUE INDEX stock_movements_order_completed_unique ON stock_movements (reference_type, reference_id, product_id) WHERE type = 'order_completed'");
         }
 
