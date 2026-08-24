@@ -190,19 +190,51 @@ class CancelOrderAuthorizationTest extends TestCase
         $response->assertRedirect();
     }
 
-    public function test_guest_token_holder_can_cancel_order(): void
+    public function test_guest_delivery_token_requires_phone_step_up_proof(): void
     {
         $outlet = $this->createOutlet();
-        $customerProfile = Customer::forceCreate([
+        $customer = Customer::forceCreate([
             'name' => 'Guest Customer', 'phone' => '08333333333', 'email' => 'guest@example.com',
             'is_registered' => false,
         ]);
-        $order = $this->createOrderForCustomer($customerProfile, $outlet);
+        $order = $this->createOrderForCustomer($customer, $outlet);
         $order->update(['recovery_token' => 'GUEST-CANCEL-TOKEN']);
 
-        $response = $this->postJson('/track/GUEST-CANCEL-TOKEN/cancel', ['reason' => 'Tidak Jadi Membeli']);
+        $this->postJson('/track/GUEST-CANCEL-TOKEN/cancel', ['reason' => 'Tidak Jadi Membeli'])
+            ->assertUnprocessable();
+        $this->assertEquals(Order::STATUS_PENDING_CONFIRMATION, $order->fresh()->status);
+    }
 
-        $response->assertOk()->assertJson(['success' => true]);
+    public function test_guest_delivery_token_with_phone_step_up_proof_can_cancel(): void
+    {
+        $outlet = $this->createOutlet();
+        $customer = Customer::forceCreate([
+            'name' => 'Guest Customer', 'phone' => '08333333333', 'email' => 'guest@example.com',
+            'is_registered' => false,
+        ]);
+        $order = $this->createOrderForCustomer($customer, $outlet);
+        $order->update(['recovery_token' => 'GUEST-CANCEL-TOKEN']);
+
+        $this->postJson('/track/GUEST-CANCEL-TOKEN/cancel', [
+            'reason' => 'Tidak Jadi Membeli', 'last4_hp' => '3333',
+        ])->assertOk()->assertJson(['success' => true]);
+    }
+
+    public function test_duplicate_cancellation_is_idempotent(): void
+    {
+        $outlet = $this->createOutlet();
+        $customer = Customer::forceCreate([
+            'name' => 'Guest Customer', 'phone' => '08333333333', 'email' => 'guest@example.com',
+            'is_registered' => false,
+        ]);
+        $order = $this->createOrderForCustomer($customer, $outlet);
+        $order->update(['recovery_token' => 'GUEST-CANCEL-TOKEN']);
+        $payload = ['reason' => 'Tidak Jadi Membeli', 'last4_hp' => '3333'];
+
+        $this->postJson('/track/GUEST-CANCEL-TOKEN/cancel', $payload)->assertOk();
+        $this->postJson('/track/GUEST-CANCEL-TOKEN/cancel', $payload)->assertUnprocessable();
+        $this->assertEquals(Order::STATUS_CANCELLED_BY_CUSTOMER, $order->fresh()->status);
+        $this->assertDatabaseCount('order_status_histories', 1);
     }
 
     public function test_authenticated_owner_can_cancel_through_track_token(): void
