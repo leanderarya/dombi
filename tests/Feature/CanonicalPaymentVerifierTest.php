@@ -51,6 +51,80 @@ class CanonicalPaymentVerifierTest extends TestCase
             ->expectsOutputToContain('at least one canonical payment attempt');
     }
 
+    public function test_verifier_accepts_unique_provider_invoice_different_from_order_code(): void
+    {
+        config(['doku.legacy_writes_enabled' => false]);
+
+        $order = Order::factory()->create(['payment_status' => 'paid']);
+
+        PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'provider-invoice-'.$order->id,
+            'invoice_number' => 'DMB-'.$order->id.'-PROVIDER123',
+            'merchant_request_id' => 'provider-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Paid,
+            'verification_status' => PaymentAttemptVerificationStatus::Verified,
+        ]);
+
+        $this->assertNotSame($order->order_code, PaymentAttempt::query()->firstOrFail()->invoice_number);
+
+        $this->artisan('payments:verify-cutover')
+            ->assertExitCode(0)
+            ->expectsOutputToContain('READY');
+    }
+
+    public function test_verifier_rejects_blank_provider_invoice(): void
+    {
+        config(['doku.legacy_writes_enabled' => false]);
+
+        $order = Order::factory()->create(['payment_status' => 'paid']);
+
+        DB::table('payment_attempts')->insert([
+            'order_id' => $order->id,
+            'attempt_key' => 'blank-invoice-'.$order->id,
+            'invoice_number' => '',
+            'merchant_request_id' => 'blank-invoice-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Paid->value,
+            'verification_status' => PaymentAttemptVerificationStatus::Verified->value,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->artisan('payments:verify-cutover')
+            ->assertExitCode(1)
+            ->expectsOutputToContain('blank invoice');
+    }
+
+    public function test_verifier_rejects_duplicate_provider_invoice(): void
+    {
+        config(['doku.legacy_writes_enabled' => false]);
+
+        $firstOrder = Order::factory()->create(['payment_status' => 'paid']);
+        $secondOrder = Order::factory()->create(['payment_status' => 'paid']);
+        $invoice = 'DMB-DUPLICATE-PROVIDER-INVOICE';
+
+        foreach ([$firstOrder, $secondOrder] as $order) {
+            PaymentAttempt::create([
+                'order_id' => $order->id,
+                'attempt_key' => 'duplicate-invoice-'.$order->id,
+                'invoice_number' => $invoice,
+                'merchant_request_id' => 'duplicate-request-'.$order->id,
+                'amount_snapshot' => $order->total,
+                'currency_snapshot' => 'IDR',
+                'settlement_status' => PaymentAttemptSettlementStatus::Paid,
+                'verification_status' => PaymentAttemptVerificationStatus::Verified,
+            ]);
+        }
+
+        $this->artisan('payments:verify-cutover')
+            ->assertExitCode(1)
+            ->expectsOutputToContain('duplicate invoice');
+    }
+
     public function test_verifier_compares_decimal_amounts_exactly(): void
     {
         config(['doku.legacy_writes_enabled' => false]);
