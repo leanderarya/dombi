@@ -70,6 +70,28 @@ class CanonicalPaymentVerifierTest extends TestCase
             ->expectsOutputToContain('amount');
     }
 
+    public function test_verifier_rejects_malformed_and_over_precision_amounts(): void
+    {
+        config(['doku.legacy_writes_enabled' => false]);
+        $method = new \ReflectionMethod(\App\Console\Commands\VerifyPaymentCutover::class, 'minorUnits');
+        $method->setAccessible(true);
+
+        $this->assertNull($method->invoke(null, 'not-a-number'));
+        $this->assertNull($method->invoke(null, '100.123'));
+        $this->assertNull($method->invoke(null, ''));
+        $this->assertSame(10010, $method->invoke(null, '100.10'));
+    }
+
+    public function test_verifier_rejects_over_precision_refund_amount(): void
+    {
+        $method = new \ReflectionMethod(\App\Console\Commands\VerifyPaymentCutover::class, 'minorUnits');
+        $method->setAccessible(true);
+
+        $this->assertNull($method->invoke(null, '10.001'));
+        $this->assertNull($method->invoke(null, 'refund'));
+        $this->assertSame(1000, $method->invoke(null, '10.00'));
+    }
+
     public function test_verifier_reports_invalid_canonical_attempt_and_refund_obligation(): void
     {
         config(['doku.legacy_writes_enabled' => false, 'doku.payment_cutover_at' => null]);
