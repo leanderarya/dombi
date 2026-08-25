@@ -20,7 +20,8 @@ class CleanupStagingLegacyPaymentsTest extends TestCase
         config([
             'app.env' => 'staging',
             'database.connections.mysql.database' => 'dombi_staging',
-            'database.staging_database_name' => 'dombi_staging',
+            'database.connections.sqlite.database' => 'dombi_staging',
+            'database.staging_database_name' => DB::connection()->getDatabaseName(),
         ]);
     }
 
@@ -45,7 +46,7 @@ class CleanupStagingLegacyPaymentsTest extends TestCase
             $this->artisan('payments:cleanup-staging-legacy', ['--confirm-staging' => true])->assertExitCode(1);
         }
 
-        config(['app.env' => 'staging', 'database.connections.mysql.database' => 'wrong']);
+        config(['app.env' => 'staging', 'database.staging_database_name' => 'wrong']);
         $this->artisan('payments:cleanup-staging-legacy', ['--confirm-staging' => true])
             ->assertExitCode(1)
             ->expectsOutputToContain('database identity');
@@ -56,7 +57,11 @@ class CleanupStagingLegacyPaymentsTest extends TestCase
         $legacyOrder = Order::factory()->create([
             'payment_status' => 'paid', 'doku_order_id' => 'legacy-order', 'paid_at' => now(),
         ]);
-        $canonicalOrder = Order::factory()->create(['payment_status' => 'paid', 'doku_order_id' => 'canonical']);
+        $canonicalOrder = Order::factory()->create([
+            'payment_status' => 'paid',
+            'doku_order_id' => 'canonical',
+            'paid_at' => now(),
+        ]);
         $attempt = PaymentAttempt::create([
             'order_id' => $canonicalOrder->id,
             'attempt_key' => 'cleanup-'.$canonicalOrder->id,
@@ -86,7 +91,38 @@ class CleanupStagingLegacyPaymentsTest extends TestCase
         $this->assertDatabaseHas('payment_attempts', ['order_id' => $canonicalOrder->id]);
         $this->assertDatabaseCount('refund_obligations', 1);
         $this->assertDatabaseHas('orders', ['id' => $legacyOrder->id, 'payment_status' => null, 'doku_order_id' => null, 'paid_at' => null]);
-        $this->assertDatabaseHas('orders', ['id' => $canonicalOrder->id, 'doku_order_id' => 'canonical']);
+        $this->assertDatabaseHas('orders', [
+            'id' => $canonicalOrder->id,
+            'payment_status' => 'paid',
+            'doku_order_id' => 'canonical',
+            'paid_at' => $canonicalOrder->paid_at,
+        ]);
         $this->assertTrue(Schema::hasTable('payment_transactions'));
+    }
+
+    public function test_rolls_back_all_cleanup_changes_when_cleanup_fails(): void
+    {
+        $order = Order::factory()->create([
+            'payment_status' => 'paid',
+            'doku_order_id' => 'legacy-order',
+            'paid_at' => now(),
+        ]);
+        DB::table('payment_transactions')->insert([
+            'order_id' => $order->id, 'doku_order_id' => 'legacy', 'payment_method' => 'qris',
+            'amount' => 10, 'status' => 'failed', 'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        config(['database.cleanup_staging_legacy_force_failure' => true]);
+
+        $this->artisan('payments:cleanup-staging-legacy', ['--confirm-staging' => true])
+            ->assertExitCode(1);
+
+        $this->assertDatabaseHas('payment_transactions', ['order_id' => $order->id, 'doku_order_id' => 'legacy']);
+        $this->assertDatabaseHas('orders', [
+            'id' => $order->id,
+            'payment_status' => 'paid',
+            'doku_order_id' => 'legacy-order',
+            'paid_at' => $order->paid_at,
+        ]);
     }
 }

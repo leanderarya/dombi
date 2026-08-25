@@ -18,7 +18,7 @@ class CleanupStagingLegacyPayments extends Command
             return self::FAILURE;
         }
 
-        $configured = config('database.connections.mysql.database');
+        $configured = DB::connection()->getDatabaseName();
         $expected = config('database.staging_database_name') ?: env('STAGING_DATABASE_NAME');
         if (blank($expected) || $configured !== $expected) {
             $this->error('Refused: database identity does not match configured staging database identity.');
@@ -30,7 +30,8 @@ class CleanupStagingLegacyPayments extends Command
             return self::FAILURE;
         }
 
-        return DB::transaction(function (): int {
+        try {
+            return DB::transaction(function (): int {
             $transactions = DB::table('payment_transactions')->count();
             $orders = DB::table('orders')->where(function ($query): void {
                 $query->whereNotNull('payment_status')->orWhereNotNull('doku_order_id')->orWhereNotNull('paid_at');
@@ -38,6 +39,9 @@ class CleanupStagingLegacyPayments extends Command
             $this->info("payment transaction rows: {$transactions}");
             $this->info("legacy order payment rows: {$orders}");
             DB::table('payment_transactions')->delete();
+            if (config('database.cleanup_staging_legacy_force_failure')) {
+                throw new \RuntimeException('forced cleanup failure');
+            }
             DB::table('orders')
                 ->whereNotExists(function ($query): void {
                     $query->select(DB::raw(1))
@@ -50,7 +54,11 @@ class CleanupStagingLegacyPayments extends Command
                     'paid_at' => null,
                 ]);
             $this->info('Staging legacy payment cleanup complete.');
-            return self::SUCCESS;
-        });
+                return self::SUCCESS;
+            });
+        } catch (\Throwable $exception) {
+            $this->error($exception->getMessage());
+            return self::FAILURE;
+        }
     }
 }
