@@ -73,10 +73,10 @@ jobs:
           username: ${{ secrets.HOSTINGER_SSH_USER }}
           password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
           port: ${{ secrets.HOSTINGER_SSH_PORT }}
-          envs: DOKU_IS_SANDBOX,PAYMENTS_LEGACY_WRITES_ENABLED
-          envs_format: DOKU_IS_SANDBOX=$DOKU_IS_SANDBOX,PAYMENTS_LEGACY_WRITES_ENABLED=$PAYMENTS_LEGACY_WRITES_ENABLED
           script: |
             cd domains/dombicenter.com/public_html/app
+            DOKU_IS_SANDBOX='${{ vars.DOKU_IS_SANDBOX }}'
+            PAYMENTS_LEGACY_WRITES_ENABLED='${{ vars.PAYMENTS_LEGACY_WRITES_ENABLED }}'
             DEPLOY_SHA='${{ github.sha }}'
             echo "Deploying SHA $DEPLOY_SHA to production"
             git fetch --no-tags origin "$DEPLOY_SHA"
@@ -102,10 +102,10 @@ jobs:
           username: ${{ secrets.HOSTINGER_SSH_USER }}
           password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
           port: ${{ secrets.HOSTINGER_SSH_PORT }}
-          envs: DOKU_IS_SANDBOX,PAYMENTS_LEGACY_WRITES_ENABLED
-          envs_format: DOKU_IS_SANDBOX=$DOKU_IS_SANDBOX,PAYMENTS_LEGACY_WRITES_ENABLED=$PAYMENTS_LEGACY_WRITES_ENABLED
           script: |
             cd domains/dombicenter.com/public_html/app
+            DOKU_IS_SANDBOX='${{ vars.DOKU_IS_SANDBOX }}'
+            PAYMENTS_LEGACY_WRITES_ENABLED='${{ vars.PAYMENTS_LEGACY_WRITES_ENABLED }}'
             DEPLOY_SHA='${{ github.sha }}'
             echo "Production deploy SHA: $DEPLOY_SHA"
             if [ -d .git ]; then
