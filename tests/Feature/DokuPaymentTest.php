@@ -85,6 +85,34 @@ class DokuPaymentTest extends TestCase
         ]);
     }
 
+    public function test_webhook_success_marks_paid_from_canonical_attempt_without_legacy_transaction(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'webhook-'.$order->id,
+            'invoice_number' => 'INV-001',
+            'merchant_request_id' => 'webhook-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+        ]);
+
+        $payload = [
+            'order' => ['invoice_number' => 'INV-001'],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
+        ];
+
+        $this->doku->handleWebhook($payload);
+
+        $this->assertEquals('paid', $order->fresh()->payment_status);
+        $this->assertNotNull($order->fresh()->paid_at);
+        $this->assertDatabaseCount('payment_transactions', 0);
+        $this->assertDatabaseHas('payment_attempts', [
+            'invoice_number' => 'INV-001',
+            'settlement_status' => 'paid',
+        ]);
+    }
+
     public function test_webhook_success_marks_paid(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);

@@ -250,6 +250,24 @@ class PaymentProductionInvariantTest extends TestCase
         $this->assertSame('pending', $order->fresh()->payment_status);
     }
 
+    public function test_paid_attempt_cannot_regress_on_failed_status_sync_without_legacy_transaction(): void
+    {
+        $order = Order::factory()->paid()->create();
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'sync-canonical-'.$order->id,
+            'invoice_number' => $order->order_code, 'merchant_request_id' => 'sync-canonical-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Paid,
+            'verification_status' => PaymentAttemptVerificationStatus::Verified,
+        ]);
+        Http::fake(['*/checkout/v1/payment/*' => Http::response(['order' => ['invoice_number' => $order->order_code], 'transaction' => ['status' => 'FAILED']])]);
+
+        app(DokuService::class)->syncStatusFromDoku($attempt);
+
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
+        $this->assertDatabaseCount('payment_transactions', 0);
+    }
+
     public function test_paid_transaction_cannot_regress_on_failed_status_sync(): void
     {
         $order = Order::factory()->paid()->create();
