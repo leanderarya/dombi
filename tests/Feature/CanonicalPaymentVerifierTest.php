@@ -7,6 +7,7 @@ use App\Enums\PaymentAttemptVerificationStatus;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CanonicalPaymentVerifierTest extends TestCase
@@ -36,6 +37,37 @@ class CanonicalPaymentVerifierTest extends TestCase
         $this->artisan('payments:verify-cutover')
             ->assertExitCode(0)
             ->expectsOutputToContain('READY');
+    }
+
+    public function test_verifier_fails_when_canonical_database_has_no_payment_attempts(): void
+    {
+        config(['doku.legacy_writes_enabled' => false]);
+
+        $this->artisan('payments:verify-cutover')
+            ->assertExitCode(1)
+            ->expectsOutputToContain('at least one canonical payment attempt');
+    }
+
+    public function test_verifier_compares_decimal_amounts_exactly(): void
+    {
+        config(['doku.legacy_writes_enabled' => false]);
+        $order = Order::factory()->create(['total' => '100.10', 'payment_status' => 'paid']);
+        DB::table('payment_attempts')->insert([
+            'order_id' => $order->id,
+            'attempt_key' => 'invalid-state-'.$order->id,
+            'invoice_number' => $order->order_code,
+            'merchant_request_id' => 'invalid-state-request-'.$order->id,
+            'amount_snapshot' => '100.11',
+            'currency_snapshot' => 'IDR',
+            'settlement_status' => 'pending',
+            'verification_status' => 'verified',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->artisan('payments:verify-cutover')
+            ->assertExitCode(1)
+            ->expectsOutputToContain('amount');
     }
 
     public function test_verifier_reports_invalid_canonical_attempt_and_refund_obligation(): void
