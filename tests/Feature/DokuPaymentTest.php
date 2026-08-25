@@ -125,6 +125,32 @@ class DokuPaymentTest extends TestCase
         ]);
     }
 
+    public function test_webhook_rejects_attempt_when_invoice_belongs_to_different_order(): void
+    {
+        $attemptOrder = Order::factory()->create(['payment_status' => 'pending']);
+        $invoiceOrder = Order::factory()->create(['doku_order_id' => 'INV-MISMATCH', 'payment_status' => 'pending']);
+        PaymentAttempt::create([
+            'order_id' => $attemptOrder->id,
+            'attempt_key' => 'mismatch-'.$attemptOrder->id,
+            'invoice_number' => 'INV-MISMATCH',
+            'merchant_request_id' => 'mismatch-request-'.$attemptOrder->id,
+            'amount_snapshot' => $attemptOrder->total,
+            'currency_snapshot' => 'IDR',
+        ]);
+
+        $this->doku->handleWebhook([
+            'order' => ['invoice_number' => 'INV-MISMATCH'],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => $attemptOrder->total],
+        ]);
+
+        $this->assertEquals('pending', $attemptOrder->fresh()->payment_status);
+        $this->assertEquals('pending', $invoiceOrder->fresh()->payment_status);
+        $this->assertDatabaseHas('payment_webhook_logs', [
+            'invoice_number' => 'INV-MISMATCH',
+            'error' => 'invoice_order_attempt_mismatch',
+        ]);
+    }
+
     public function test_webhook_success_marks_paid(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
