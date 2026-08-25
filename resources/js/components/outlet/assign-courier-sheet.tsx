@@ -50,7 +50,7 @@ export default function AssignCourierSheet({
     useEffect(() => {
         if (open) {
             fetchNearestCouriers();
-            setSelectedCourier(null);
+            queueMicrotask(() => setSelectedCourier(null));
             form.reset();
         }
     }, [open]);
@@ -106,13 +106,19 @@ export default function AssignCourierSheet({
 
     function handleSubmit() {
         if (courierType === 'dombi') {
-            if (!selectedCourier) return;
+            if (!selectedCourier) {
+                return;
+            }
+
             form.transform(() => ({
                 courier_id: String(selectedCourier),
                 courier_type: 'dombi',
             }));
         } else {
-            if (!externalName || !courierCost) return;
+            if (!externalName || !courierCost) {
+                return;
+            }
+
             form.transform(() => ({
                 courier_type: 'eksternal',
                 external_courier_name: externalName,
