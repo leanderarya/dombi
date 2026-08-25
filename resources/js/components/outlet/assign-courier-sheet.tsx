@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { MapPin, Truck, Phone, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 interface NearestCourier {
@@ -47,13 +47,37 @@ export default function AssignCourierSheet({
     const margin = deliveryFee - costNum;
     const isLoss = margin < 0;
 
+    const fetchNearestCouriers = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch(
+                `/outlet/api/outlets/${outletId}/nearest-couriers`,
+            );
+
+            if (!response.ok) {
+                throw new Error('Gagal memuat data kurir');
+            }
+
+            const data = await response.json();
+            setCouriers(data);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+        } finally {
+            setLoading(false);
+        }
+    }, [outletId]);
+
     useEffect(() => {
         if (open) {
-            fetchNearestCouriers();
-            queueMicrotask(() => setSelectedCourier(null));
-            form.reset();
+            queueMicrotask(() => {
+                fetchNearestCouriers();
+                setSelectedCourier(null);
+                form.reset();
+            });
         }
-    }, [open]);
+    }, [open, fetchNearestCouriers, form]);
 
     useEffect(() => {
         if (open) {
@@ -81,28 +105,6 @@ export default function AssignCourierSheet({
 
         return () => document.removeEventListener('keydown', handler);
     }, [open, onClose]);
-
-    async function fetchNearestCouriers() {
-        setLoading(true);
-        setError(null);
-
-        try {
-            const response = await fetch(
-                `/outlet/api/outlets/${outletId}/nearest-couriers`,
-            );
-
-            if (!response.ok) {
-                throw new Error('Gagal memuat data kurir');
-            }
-
-            const data = await response.json();
-            setCouriers(data);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
-        } finally {
-            setLoading(false);
-        }
-    }
 
     function handleSubmit() {
         if (courierType === 'dombi') {
