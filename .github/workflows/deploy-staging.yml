@@ -36,6 +36,9 @@ jobs:
         env:
           DOKU_CLIENT_ID: ${{ secrets.DOKU_CLIENT_ID }}
           DOKU_API_KEY: ${{ secrets.DOKU_API_KEY }}
+          DOKU_IS_SANDBOX: "true"
+          DOKU_CALLBACK_URL: https://staging.dombicenter.com/payment/doku/notify
+          DOKU_ENABLED_METHODS: qris,transfer,ewallet,credit_card
         run: |
           : "${DOKU_CLIENT_ID:?DOKU_CLIENT_ID secret is required}"
           : "${DOKU_API_KEY:?DOKU_API_KEY secret is required}"
