@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\PaymentAttemptSettlementStatus;
+use App\Enums\PaymentAttemptVerificationStatus;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
@@ -22,6 +23,10 @@ class VerifyPaymentCutover extends Command
             $errors[] = 'legacy payment writes must resolve to PAYMENTS_LEGACY_WRITES_ENABLED=false';
         }
 
+        if (! PaymentAttempt::query()->exists()) {
+            $errors[] = 'canonical database must contain at least one canonical payment attempt';
+        }
+
         PaymentAttempt::query()->each(function (PaymentAttempt $attempt) use (&$errors): void {
             $order = $attempt->order;
             if ($order === null) {
@@ -32,13 +37,14 @@ class VerifyPaymentCutover extends Command
             if (blank($attempt->invoice_number) || $attempt->invoice_number !== $order->order_code) {
                 $issues[] = 'invoice';
             }
-            if ($attempt->amount_snapshot === null || (float) $attempt->amount_snapshot !== (float) $order->total) {
+            if ($attempt->amount_snapshot === null || self::minorUnits($attempt->amount_snapshot) !== self::minorUnits($order->total)) {
                 $issues[] = 'amount';
             }
             if (blank($attempt->currency_snapshot) || strtoupper($attempt->currency_snapshot) !== strtoupper((string) config('doku.currency', 'IDR'))) {
                 $issues[] = 'currency';
             }
-            if ($attempt->settlement_status === null || $attempt->verification_status === null) {
+            if (! self::isAllowedState($attempt->settlement_status, PaymentAttemptSettlementStatus::cases())
+                || ! self::isAllowedState($attempt->verification_status, PaymentAttemptVerificationStatus::cases())) {
                 $issues[] = 'state';
             }
             if ($issues !== []) {
@@ -64,5 +70,23 @@ class VerifyPaymentCutover extends Command
 
         $this->info('READY: canonical payment runtime valid and legacy writes disabled.');
         return self::SUCCESS;
+    }
+
+    private static function isAllowedState(mixed $value, array $cases): bool
+    {
+        $value = $value instanceof \BackedEnum ? $value->value : $value;
+
+        return is_string($value) && in_array($value, array_map(static fn (\BackedEnum $case): string => $case->value, $cases), true);
+    }
+
+    private static function minorUnits(mixed $value): int
+    {
+        $normalized = trim((string) $value);
+        $negative = str_starts_with($normalized, '-');
+        $normalized = ltrim($normalized, '+-');
+        [$whole, $fraction] = array_pad(explode('.', $normalized, 2), 2, '');
+        $fraction = str_pad(substr($fraction, 0, 2), 2, '0');
+
+        return ($negative ? -1 : 1) * ((int) $whole * 100 + (int) $fraction);
     }
 }
