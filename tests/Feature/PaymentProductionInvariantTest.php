@@ -264,7 +264,13 @@ class PaymentProductionInvariantTest extends TestCase
 
         app(DokuService::class)->syncStatusFromDoku($attempt);
 
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/checkout/v1/payment/'.$attempt->invoice_number));
         $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
+        $this->assertDatabaseHas('payment_attempts', [
+            'id' => $attempt->id,
+            'invoice_number' => $order->order_code,
+            'settlement_status' => PaymentAttemptSettlementStatus::Paid->value,
+        ]);
         $this->assertDatabaseCount('payment_transactions', 0);
     }
 
