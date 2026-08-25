@@ -48,6 +48,11 @@ class DokuPaymentTest extends TestCase
 
         $this->doku->createPayment($attempt);
 
+        $this->assertDatabaseHas('payment_attempts', [
+            'id' => $attempt->id,
+            'creation_state' => 'created',
+            'invoice_number' => 'CUTOVER-001',
+        ]);
         $this->assertDatabaseMissing('payment_transactions', ['doku_order_id' => 'CUTOVER-001']);
     }
 
@@ -77,6 +82,13 @@ class DokuPaymentTest extends TestCase
         $url = $this->doku->createPayment($attempt);
 
         $this->assertEquals('https://sandbox.doku.com/pay/abc123', $url);
+        Http::assertSent(fn ($request) => $request->url() === 'https://api-sandbox.doku.com/checkout/v1/payment'
+            && $request['order']['invoice_number'] === 'INV-001');
+        $this->assertDatabaseHas('payment_attempts', [
+            'id' => $attempt->id,
+            'creation_state' => 'created',
+            'invoice_number' => 'INV-001',
+        ]);
         $this->assertNull($order->fresh()->doku_order_id);
         $this->assertSame('pending', $order->fresh()->payment_status);
         $this->assertDatabaseMissing('payment_transactions', [
