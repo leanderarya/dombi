@@ -37,7 +37,9 @@ class VerifyPaymentCutover extends Command
             if (blank($attempt->invoice_number) || $attempt->invoice_number !== $order->order_code) {
                 $issues[] = 'invoice';
             }
-            if ($attempt->amount_snapshot === null || self::minorUnits($attempt->amount_snapshot) !== self::minorUnits($order->total)) {
+            $attemptAmount = self::minorUnits($attempt->amount_snapshot);
+            $orderAmount = self::minorUnits($order->total);
+            if ($attemptAmount === null || $orderAmount === null || $attemptAmount !== $orderAmount) {
                 $issues[] = 'amount';
             }
             if (blank($attempt->currency_snapshot) || strtoupper($attempt->currency_snapshot) !== strtoupper((string) config('doku.currency', 'IDR'))) {
@@ -58,7 +60,8 @@ class VerifyPaymentCutover extends Command
                 $errors[] = "refund obligation {$obligation->id} references missing attempt/order";
                 return;
             }
-            if ((float) $obligation->amount <= 0 || blank($obligation->currency) || strtoupper($obligation->currency) !== strtoupper((string) $attempt->currency_snapshot)) {
+            $refundAmount = self::minorUnits($obligation->amount);
+            if ($refundAmount === null || $refundAmount <= 0 || blank($obligation->currency) || strtoupper($obligation->currency) !== strtoupper((string) $attempt->currency_snapshot)) {
                 $errors[] = "refund obligation {$obligation->id} has invalid amount/currency for attempt {$attempt->id}";
             }
         });
@@ -79,13 +82,21 @@ class VerifyPaymentCutover extends Command
         return is_string($value) && in_array($value, array_map(static fn (\BackedEnum $case): string => $case->value, $cases), true);
     }
 
-    private static function minorUnits(mixed $value): int
+    private static function minorUnits(mixed $value): ?int
     {
+        if (! is_int($value) && ! is_float($value) && ! is_string($value)) {
+            return null;
+        }
+
         $normalized = trim((string) $value);
+        if (! preg_match('/^[+-]?\d+(?:\.\d{1,2})?$/', $normalized)) {
+            return null;
+        }
+
         $negative = str_starts_with($normalized, '-');
         $normalized = ltrim($normalized, '+-');
         [$whole, $fraction] = array_pad(explode('.', $normalized, 2), 2, '');
-        $fraction = str_pad(substr($fraction, 0, 2), 2, '0');
+        $fraction = str_pad($fraction, 2, '0');
 
         return ($negative ? -1 : 1) * ((int) $whole * 100 + (int) $fraction);
     }
