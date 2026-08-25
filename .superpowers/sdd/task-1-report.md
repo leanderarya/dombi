@@ -25,4 +25,15 @@ Output: 3 tests failed, 6 assertions.
 
 - Requested tests expose current production behavior; production code intentionally unchanged.
 - Duplicate-invoice test cannot reach verifier while database unique constraint exists.
-- Commit not created: shell/git execution unavailable in delegated environment.
+## Fix
+
+- Duplicate test drops both invoice unique indexes, inserts duplicate rows, then restores indexes in `finally`.
+- Focused test command still has expected production failures; duplicate test now reaches verifier and asserts output.
+
+Command:
+
+```text
+php artisan test tests/Feature/CanonicalPaymentVerifierTest.php --filter='provider_invoice|blank_provider_invoice|duplicate_provider_invoice'
+```
+
+Output: 2 tests failed, 1 passed; duplicate provider invoice test passed.
