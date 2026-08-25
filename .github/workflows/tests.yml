@@ -59,5 +59,8 @@ jobs:
       - run: npm run format:check
       - run: npm run lint:check
       - run: npm run types:check
-      - run: php artisan test
+      # Run suites as separate, ordered invocations; race-gate tests fork their
+      # own workers against shared MySQL, so no external PHPUnit parallelism.
+      - run: php artisan test --testsuite Unit
+      - run: php artisan test --testsuite Feature
       - run: npm test
