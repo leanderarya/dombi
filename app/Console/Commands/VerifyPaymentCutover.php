@@ -26,6 +26,18 @@ class VerifyPaymentCutover extends Command
             $errors[] = 'canonical database must contain at least one canonical payment attempt';
         }
 
+        $duplicateInvoices = PaymentAttempt::query()
+            ->select('invoice_number')
+            ->whereNotNull('invoice_number')
+            ->where('invoice_number', '!=', '')
+            ->groupBy('invoice_number')
+            ->havingRaw('COUNT(*) > 1')
+            ->pluck('invoice_number');
+
+        foreach ($duplicateInvoices as $invoice) {
+            $errors[] = "duplicate payment attempt invoice {$invoice}";
+        }
+
         PaymentAttempt::query()->each(function (PaymentAttempt $attempt) use (&$errors): void {
             $order = $attempt->order;
             if ($order === null) {
@@ -34,8 +46,8 @@ class VerifyPaymentCutover extends Command
                 return;
             }
             $issues = [];
-            if (blank($attempt->invoice_number) || $attempt->invoice_number !== $order->order_code) {
-                $issues[] = 'invoice';
+            if (blank($attempt->invoice_number)) {
+                $issues[] = 'blank invoice';
             }
             $attemptAmount = self::minorUnits($attempt->amount_snapshot);
             $orderAmount = self::minorUnits($order->total);
