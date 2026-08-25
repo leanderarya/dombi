@@ -117,6 +117,7 @@ jobs:
               echo "No git repo in production (FTP mode), skipping git sync"
             fi
             set -eu
+            perl -0pi -e 's/\\\\n/\n/g' .env
             for key in DOKU_IS_SANDBOX PAYMENTS_LEGACY_WRITES_ENABLED; do
               value="${!key}"
               case "$value" in
@@ -126,7 +127,7 @@ jobs:
               if grep -q "^${key}=" .env; then
                 sed -i "s/^${key}=.*/${key}=${value}/" .env
               else
-                printf '\\n%s=%s\\n' "$key" "$value" >> .env
+                printf '\n%s=%s\n' "$key" "$value" >> .env
               fi
             done
             echo "Installing dependencies"
