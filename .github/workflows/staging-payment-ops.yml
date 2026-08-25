@@ -1,0 +1,53 @@
+name: Staging Payment Operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Payment operation to run on staging
+        required: true
+        type: choice
+        options:
+          - verify
+          - cleanup
+
+concurrency:
+  group: staging-payment-ops
+  cancel-in-progress: false
+
+jobs:
+  payment-ops:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Run staging payment operation
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          script: |
+            set -eu
+            APP_PATH='domains/dombicenter.com/public_html/staging'
+            ACTION='${{ inputs.action }}'
+
+            case "$ACTION" in
+              verify|cleanup) ;;
+              *) echo 'Invalid action; refusing to continue'; exit 1 ;;
+            esac
+
+            cd "$APP_PATH"
+            echo "Target: staging ($APP_PATH)"
+
+            echo '=== pre-operation payment verification (staging) ==='
+            php artisan payments:verify-cutover
+
+            if [ "$ACTION" = cleanup ]; then
+              echo '=== cleaning up staging legacy payment data ==='
+              php artisan payments:cleanup-staging-legacy --confirm-staging
+              echo '=== post-cleanup payment verification (staging) ==='
+              php artisan payments:verify-cutover
+            fi
+
+            echo "Staging payment operation completed: $ACTION"
