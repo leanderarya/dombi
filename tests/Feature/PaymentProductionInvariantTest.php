@@ -293,7 +293,38 @@ class PaymentProductionInvariantTest extends TestCase
 
         app(DokuService::class)->syncStatusFromDoku($attempt);
 
+        Http::assertSentCount(1);
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
         $this->assertSame('paid', PaymentTransaction::where('order_id', $order->id)->sole()->status);
+        $this->assertSame('paid', $order->fresh()->payment_status);
+    }
+
+    public function test_paid_transaction_cannot_regress_on_ambiguous_status_sync(): void
+    {
+        $order = Order::factory()->paid()->create();
+        $order->update(['doku_order_id' => $order->order_code]);
+        PaymentTransaction::create([
+            'order_id' => $order->id, 'doku_order_id' => $order->order_code,
+            'payment_method' => 'qris', 'amount' => $order->total, 'status' => 'paid',
+        ]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'sync-ambiguous-'.$order->id,
+            'invoice_number' => $order->order_code, 'merchant_request_id' => 'sync-ambiguous-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Paid,
+            'verification_status' => PaymentAttemptVerificationStatus::Verified,
+        ]);
+        Http::fake(['*/checkout/v1/payment/*' => Http::response([
+            'order' => ['invoice_number' => $order->order_code],
+            'transaction' => ['status' => 'PENDING_REVIEW'],
+        ])]);
+
+        app(DokuService::class)->syncStatusFromDoku($attempt);
+
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/checkout/v1/payment/'.$attempt->invoice_number));
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
+        $this->assertSame('paid', PaymentTransaction::where('order_id', $order->id)->sole()->status);
+        $this->assertSame('paid', $order->fresh()->payment_status);
     }
 
     public function test_paid_order_cannot_regress_on_late_failure(): void
