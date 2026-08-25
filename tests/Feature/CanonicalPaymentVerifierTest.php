@@ -134,7 +134,7 @@ class CanonicalPaymentVerifierTest extends TestCase
 
             $this->artisan('payments:verify-cutover')
                 ->assertExitCode(1)
-                ->expectsOutputToContain('duplicate invoice');
+                ->expectsOutputToContain('duplicate payment attempt invoice '.$invoice);
         } finally {
             DB::table('payment_attempts')->where('invoice_number', $invoice)->delete();
             Schema::table('payment_attempts', function ($table) use ($uniqueIndexes): void {
