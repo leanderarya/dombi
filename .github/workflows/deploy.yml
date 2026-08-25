@@ -18,7 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     env:
+      APP_ENV: production
+      APP_URL: https://app.dombicenter.com
       DOKU_IS_SANDBOX: ${{ vars.DOKU_IS_SANDBOX }}
+      DOKU_CLIENT_ID: ${{ secrets.DOKU_CLIENT_ID }}
+      DOKU_API_KEY: ${{ secrets.DOKU_API_KEY }}
+      DOKU_CALLBACK_URL: ${{ secrets.DOKU_CALLBACK_URL }}
       PAYMENTS_LEGACY_WRITES_ENABLED: ${{ vars.PAYMENTS_LEGACY_WRITES_ENABLED }}
     steps:
       - name: Validate production payment variables
@@ -57,7 +62,7 @@ jobs:
 
       - name: Install dependencies & Build
         run: |
-          composer install --no-dev --no-interaction --optimize-autoloader
+          APP_ENV=testing composer install --no-dev --no-interaction --optimize-autoloader
           npm ci
           npm run build
 
