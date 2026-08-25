@@ -32,7 +32,12 @@ jobs:
           cache: npm
 
       - name: Build frontend
+        env:
+          DOKU_CLIENT_ID: ${{ secrets.DOKU_CLIENT_ID }}
+          DOKU_API_KEY: ${{ secrets.DOKU_API_KEY }}
         run: |
+          : "${DOKU_CLIENT_ID:?DOKU_CLIENT_ID secret is required}"
+          : "${DOKU_API_KEY:?DOKU_API_KEY secret is required}"
           composer install --no-dev --no-interaction --optimize-autoloader
           npm ci
           npm run build
