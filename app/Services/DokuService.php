@@ -126,6 +126,7 @@ class DokuService
                 return false;
             }
             $locked->update(['creation_state' => 'created', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data, 'metadata' => array_merge($locked->metadata ?? [], ['payment_url' => $paymentUrl])]);
+
             return true;
         });
         if (! $persisted) {

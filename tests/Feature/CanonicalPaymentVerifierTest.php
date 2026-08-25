@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Console\Commands\VerifyPaymentCutover;
 use App\Enums\PaymentAttemptSettlementStatus;
 use App\Enums\PaymentAttemptVerificationStatus;
+use App\Enums\RefundObligationStatus;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
+use App\Models\RefundObligation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -73,7 +76,7 @@ class CanonicalPaymentVerifierTest extends TestCase
     public function test_verifier_rejects_malformed_and_over_precision_amounts(): void
     {
         config(['doku.legacy_writes_enabled' => false]);
-        $method = new \ReflectionMethod(\App\Console\Commands\VerifyPaymentCutover::class, 'minorUnits');
+        $method = new \ReflectionMethod(VerifyPaymentCutover::class, 'minorUnits');
         $method->setAccessible(true);
 
         $this->assertNull($method->invoke(null, 'not-a-number'));
@@ -85,7 +88,7 @@ class CanonicalPaymentVerifierTest extends TestCase
 
     public function test_verifier_rejects_over_precision_refund_amount(): void
     {
-        $method = new \ReflectionMethod(\App\Console\Commands\VerifyPaymentCutover::class, 'minorUnits');
+        $method = new \ReflectionMethod(VerifyPaymentCutover::class, 'minorUnits');
         $method->setAccessible(true);
 
         $this->assertNull($method->invoke(null, '10.001'));
@@ -108,12 +111,12 @@ class CanonicalPaymentVerifierTest extends TestCase
             'verification_status' => PaymentAttemptVerificationStatus::NeedsReview,
         ]);
         $otherOrder = Order::factory()->create();
-        \App\Models\RefundObligation::create([
+        RefundObligation::create([
             'payment_attempt_id' => $attempt->id,
             'amount' => 10,
             'currency' => 'EUR',
             'reason' => 'test',
-            'status' => \App\Enums\RefundObligationStatus::Pending,
+            'status' => RefundObligationStatus::Pending,
         ]);
         $attempt->order_id = $otherOrder->id;
         $attempt->saveQuietly();
