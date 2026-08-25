@@ -39,9 +39,6 @@ class CleanupStagingLegacyPayments extends Command
             $this->info("payment transaction rows: {$transactions}");
             $this->info("legacy order payment rows: {$orders}");
             DB::table('payment_transactions')->delete();
-            if (config('database.cleanup_staging_legacy_force_failure')) {
-                throw new \RuntimeException('forced cleanup failure');
-            }
             DB::table('orders')
                 ->whereNotExists(function ($query): void {
                     $query->select(DB::raw(1))
@@ -53,6 +50,9 @@ class CleanupStagingLegacyPayments extends Command
                     'doku_order_id' => null,
                     'paid_at' => null,
                 ]);
+            if (config('database.cleanup_staging_legacy_force_failure')) {
+                throw new \RuntimeException('forced cleanup failure');
+            }
             $this->info('Staging legacy payment cleanup complete.');
                 return self::SUCCESS;
             });
