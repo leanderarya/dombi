@@ -34,6 +34,7 @@ jobs:
 
       - name: Build frontend
         env:
+          APP_ENV: staging
           DOKU_CLIENT_ID: ${{ secrets.DOKU_CLIENT_ID }}
           DOKU_API_KEY: ${{ secrets.DOKU_API_KEY }}
           DOKU_IS_SANDBOX: "true"
