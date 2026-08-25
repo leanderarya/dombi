@@ -19,6 +19,8 @@ return [
 
     'default' => env('DB_CONNECTION', 'sqlite'),
 
+    'staging_database_name' => env('STAGING_DATABASE_NAME'),
+
     /*
     |--------------------------------------------------------------------------
     | Database Connections
