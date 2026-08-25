@@ -407,9 +407,8 @@ class DokuService
 
         DB::transaction(function () use ($invoiceNumber, $status, $paymentStatus, $payload): void {
             $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->first();
-            $resolvedOrderId = $attempt?->order_id;
-            $order = $attempt?->order;
-            if ($attempt && $resolvedOrderId !== null && $attempt->order_id !== $resolvedOrderId) {
+            $invoiceOrderId = Order::query()->where('doku_order_id', $invoiceNumber)->value('id');
+            if ($attempt && $invoiceOrderId !== null && (int) $attempt->order_id !== (int) $invoiceOrderId) {
                 PaymentWebhookLog::create([
                     'source' => 'doku', 'invoice_number' => $invoiceNumber,
                     'status' => $paymentStatus, 'mapped_status' => $status,
