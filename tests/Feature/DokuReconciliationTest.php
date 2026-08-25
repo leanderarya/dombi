@@ -408,6 +408,9 @@ class DokuReconciliationTest extends TestCase
         }
 
         $attempt = $this->makeAttempt('pending');
+        // Forked workers reconnect independently; commit fixture outside RefreshDatabase transaction.
+        DB::commit();
+        DB::disconnect();
         $requests = tempnam(sys_get_temp_dir(), 'doku-reconcile-');
         $outcomes = tempnam(sys_get_temp_dir(), 'doku-outcomes-');
         Http::fake([
