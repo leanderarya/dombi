@@ -450,10 +450,12 @@ class DokuReconciliationTest extends TestCase
                     $result = app(DokuReconciliationService::class)->reconcile($attempt->fresh());
                     file_put_contents($outcomes, ($result->changed ? 'transition' : 'noop')."\n", FILE_APPEND | LOCK_EX);
                 } else {
-                    $beforeVersion = (int) $attempt->fresh()->status_version;
                     app(DokuWebhookIngressService::class)->receive($body, $headers);
+                    // The webhook worker may read a stale pre-lock version while
+                    // reconciliation owns the canonical transition. Classify
+                    // outcomes from final canonical state, not that stale read.
                     $after = $attempt->fresh();
-                    $outcome = (int) $after->status_version > $beforeVersion ? 'transition' : 'noop';
+                    $outcome = (int) $after->status_version === 1 ? 'transition' : 'noop';
                     file_put_contents($outcomes, $outcome."\n", FILE_APPEND | LOCK_EX);
                 }
                 exit(0);
