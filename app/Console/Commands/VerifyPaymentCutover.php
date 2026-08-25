@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Enums\PaymentAttemptSettlementStatus;
 use App\Enums\PaymentAttemptVerificationStatus;
-use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
 use Illuminate\Console\Command;
@@ -31,6 +30,7 @@ class VerifyPaymentCutover extends Command
             $order = $attempt->order;
             if ($order === null) {
                 $errors[] = "canonical attempt {$attempt->id} references missing order";
+
                 return;
             }
             $issues = [];
@@ -58,6 +58,7 @@ class VerifyPaymentCutover extends Command
             $attempt = $obligation->paymentAttempt;
             if ($attempt === null || $attempt->order === null) {
                 $errors[] = "refund obligation {$obligation->id} references missing attempt/order";
+
                 return;
             }
             $refundAmount = self::minorUnits($obligation->amount);
@@ -68,10 +69,12 @@ class VerifyPaymentCutover extends Command
 
         if ($errors !== []) {
             $this->error(implode(PHP_EOL, $errors));
+
             return self::FAILURE;
         }
 
         $this->info('READY: canonical payment runtime valid and legacy writes disabled.');
+
         return self::SUCCESS;
     }
 
