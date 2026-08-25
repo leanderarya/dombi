@@ -117,7 +117,7 @@ jobs:
               echo "No git repo in production (FTP mode), skipping git sync"
             fi
             set -eu
-            perl -0pi -e 's/\\\\n/\n/g' .env
+            sed -i '/DOKU_IS_SANDBOX/d; /PAYMENTS_LEGACY_WRITES_ENABLED/d' .env
             for key in DOKU_IS_SANDBOX PAYMENTS_LEGACY_WRITES_ENABLED; do
               value="${!key}"
               case "$value" in
