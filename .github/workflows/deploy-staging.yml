@@ -16,6 +16,7 @@ jobs:
   deploy:
     needs: quality
     runs-on: ubuntu-latest
+    environment: staging
     steps:
       - uses: actions/checkout@v4
 
