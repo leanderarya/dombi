@@ -23,8 +23,10 @@ class DokuReconciliationService
             return new TransitionResult(false);
         }
 
+        // `creation_state` records reconciliation bookkeeping (created) after the
+        // canonical payment transition. It must not make a canonical no-op look
+        // like a second payment transition when webhook won the race.
         $beforeSettlement = $attempt->settlement_status?->value;
-        $beforeCreation = $attempt->creation_state?->value;
 
         try {
             $this->doku->reconcilePaymentAttempt($attempt);
@@ -37,8 +39,7 @@ class DokuReconciliationService
             return new TransitionResult(false);
         }
 
-        $changed = $attempt->settlement_status?->value !== $beforeSettlement
-            || $attempt->creation_state?->value !== $beforeCreation;
+        $changed = $attempt->settlement_status?->value !== $beforeSettlement;
 
         return new TransitionResult(
             changed: $changed,
