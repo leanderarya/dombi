@@ -39,16 +39,25 @@ export default function GuestCancelPage() {
     ];
 
     const handleCancel = () => {
-        if (!confirm('Apakah Anda yakin ingin membatalkan pesanan ini? Tindakan ini tidak dapat dibatalkan.')) return;
+        if (
+            !confirm(
+                'Apakah Anda yakin ingin membatalkan pesanan ini? Tindakan ini tidak dapat dibatalkan.',
+            )
+        )
+            return;
         setSubmitting(true);
-        router.post(`/track/${token}/cancel`, {
-            reason,
-            note: reason === 'Lainnya' ? note : undefined,
-            ...(isPickup ? { last4_hp: last4Hp } : {}),
-        }, {
-            preserveScroll: true,
-            onFinish: () => setSubmitting(false),
-        });
+        router.post(
+            `/track/${token}/cancel`,
+            {
+                reason,
+                note: reason === 'Lainnya' ? note : undefined,
+                ...(isPickup ? { last4_hp: last4Hp } : {}),
+            },
+            {
+                preserveScroll: true,
+                onFinish: () => setSubmitting(false),
+            },
+        );
     };
 
     return (
@@ -56,10 +65,13 @@ export default function GuestCancelPage() {
             <Head title="Batalkan Pesanan" />
             <div className="mx-auto max-w-lg px-4 py-8">
                 <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-                    <h1 className="text-lg font-bold text-red-800">Batalkan Pesanan</h1>
+                    <h1 className="text-lg font-bold text-red-800">
+                        Batalkan Pesanan
+                    </h1>
                     <p className="mt-1 text-sm text-red-600">
-                        Anda akan membatalkan pesanan <strong>{order.order_code}</strong>.
-                        Tindakan ini tidak dapat dibatalkan.
+                        Anda akan membatalkan pesanan{' '}
+                        <strong>{order.order_code}</strong>. Tindakan ini tidak
+                        dapat dibatalkan.
                     </p>
                 </div>
 
@@ -67,7 +79,9 @@ export default function GuestCancelPage() {
                     <h2 className="font-semibold">Ringkasan Pesanan</h2>
                     {order.items.map((item, i) => (
                         <div key={i} className="flex justify-between text-sm">
-                            <span>{item.product_name} x{item.quantity}</span>
+                            <span>
+                                {item.product_name} x{item.quantity}
+                            </span>
                             <span>{item.subtotal.toLocaleString('id-ID')}</span>
                         </div>
                     ))}
@@ -76,13 +90,18 @@ export default function GuestCancelPage() {
                         <span>{order.total.toLocaleString('id-ID')}</span>
                     </div>
                     <p className="text-xs text-gray-500">
-                        {order.outlet_name} · {order.fulfillment_type === 'pickup' ? 'Ambil di Outlet' : 'Diantar'}
+                        {order.outlet_name} ·{' '}
+                        {order.fulfillment_type === 'pickup'
+                            ? 'Ambil di Outlet'
+                            : 'Diantar'}
                     </p>
                 </div>
 
                 {isPickup && (
                     <div className="mb-6 space-y-2">
-                        <label htmlFor="last4_hp" className="font-semibold">4 digit terakhir nomor HP</label>
+                        <label htmlFor="last4_hp" className="font-semibold">
+                            4 digit terakhir nomor HP
+                        </label>
                         <input
                             id="last4_hp"
                             type="text"
@@ -90,7 +109,13 @@ export default function GuestCancelPage() {
                             maxLength={4}
                             pattern="\\d{4}"
                             value={last4Hp}
-                            onChange={(e) => setLast4Hp(e.target.value.replace(/\\D/g, '').slice(0, 4))}
+                            onChange={(e) =>
+                                setLast4Hp(
+                                    e.target.value
+                                        .replace(/\\D/g, '')
+                                        .slice(0, 4),
+                                )
+                            }
                             placeholder="Contoh: 1234"
                             className="w-full rounded border p-2 text-sm"
                         />
@@ -100,7 +125,10 @@ export default function GuestCancelPage() {
                 <div className="mb-6 space-y-3">
                     <label className="font-semibold">Alasan Pembatalan</label>
                     {reasons.map((r) => (
-                        <label key={r} className="flex items-center gap-2 text-sm">
+                        <label
+                            key={r}
+                            className="flex items-center gap-2 text-sm"
+                        >
                             <input
                                 type="radio"
                                 name="reason"
@@ -125,7 +153,11 @@ export default function GuestCancelPage() {
 
                 <button
                     onClick={handleCancel}
-                    disabled={submitting || (reason === 'Lainnya' && !note) || (isPickup && last4Hp.length !== 4)}
+                    disabled={
+                        submitting ||
+                        (reason === 'Lainnya' && !note) ||
+                        (isPickup && last4Hp.length !== 4)
+                    }
                     className="w-full rounded-lg bg-red-600 py-3 font-bold text-white disabled:opacity-50"
                 >
                     {submitting ? 'Memproses...' : 'Ya, Batalkan Pesanan Saya'}
