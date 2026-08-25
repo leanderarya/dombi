@@ -79,6 +79,7 @@ class CanonicalPaymentVerifierTest extends TestCase
         $this->assertNull($method->invoke(null, 'not-a-number'));
         $this->assertNull($method->invoke(null, '100.123'));
         $this->assertNull($method->invoke(null, ''));
+        $this->assertNull($method->invoke(null, '999999999999999999999999999999.99'));
         $this->assertSame(10010, $method->invoke(null, '100.10'));
     }
 

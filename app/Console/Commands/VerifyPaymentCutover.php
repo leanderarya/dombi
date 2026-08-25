@@ -97,6 +97,14 @@ class VerifyPaymentCutover extends Command
         $normalized = ltrim($normalized, '+-');
         [$whole, $fraction] = array_pad(explode('.', $normalized, 2), 2, '');
         $fraction = str_pad($fraction, 2, '0');
+        $maximumWhole = intdiv(PHP_INT_MAX, 100);
+        $maximumFraction = PHP_INT_MAX % 100;
+        $whole = ltrim($whole, '0') ?: '0';
+        if (strlen($whole) > strlen((string) $maximumWhole)
+            || (strlen($whole) === strlen((string) $maximumWhole) && strcmp($whole, (string) $maximumWhole) > 0)
+            || ($whole === (string) $maximumWhole && (int) $fraction > $maximumFraction)) {
+            return null;
+        }
 
         return ($negative ? -1 : 1) * ((int) $whole * 100 + (int) $fraction);
     }
