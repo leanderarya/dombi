@@ -11,6 +11,7 @@ use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class CanonicalPaymentVerifierTest extends TestCase
@@ -106,23 +107,41 @@ class CanonicalPaymentVerifierTest extends TestCase
         $firstOrder = Order::factory()->create(['payment_status' => 'paid']);
         $secondOrder = Order::factory()->create(['payment_status' => 'paid']);
         $invoice = 'DMB-DUPLICATE-PROVIDER-INVOICE';
+        $uniqueIndexes = [
+            'payment_attempts_invoice_number_unique',
+            'payment_attempts_order_invoice_unique',
+        ];
 
-        foreach ([$firstOrder, $secondOrder] as $order) {
-            PaymentAttempt::create([
-                'order_id' => $order->id,
-                'attempt_key' => 'duplicate-invoice-'.$order->id,
-                'invoice_number' => $invoice,
-                'merchant_request_id' => 'duplicate-request-'.$order->id,
-                'amount_snapshot' => $order->total,
-                'currency_snapshot' => 'IDR',
-                'settlement_status' => PaymentAttemptSettlementStatus::Paid,
-                'verification_status' => PaymentAttemptVerificationStatus::Verified,
-            ]);
+        Schema::table('payment_attempts', function ($table) use ($uniqueIndexes): void {
+            foreach ($uniqueIndexes as $uniqueIndex) {
+                $table->dropUnique($uniqueIndex);
+            }
+        });
+
+        try {
+            foreach ([$firstOrder, $secondOrder] as $order) {
+                PaymentAttempt::create([
+                    'order_id' => $order->id,
+                    'attempt_key' => 'duplicate-invoice-'.$order->id,
+                    'invoice_number' => $invoice,
+                    'merchant_request_id' => 'duplicate-request-'.$order->id,
+                    'amount_snapshot' => $order->total,
+                    'currency_snapshot' => 'IDR',
+                    'settlement_status' => PaymentAttemptSettlementStatus::Paid,
+                    'verification_status' => PaymentAttemptVerificationStatus::Verified,
+                ]);
+            }
+
+            $this->artisan('payments:verify-cutover')
+                ->assertExitCode(1)
+                ->expectsOutputToContain('duplicate invoice');
+        } finally {
+            DB::table('payment_attempts')->where('invoice_number', $invoice)->delete();
+            Schema::table('payment_attempts', function ($table) use ($uniqueIndexes): void {
+                $table->unique('invoice_number', $uniqueIndexes[0]);
+                $table->unique(['order_id', 'invoice_number'], $uniqueIndexes[1]);
+            });
         }
-
-        $this->artisan('payments:verify-cutover')
-            ->assertExitCode(1)
-            ->expectsOutputToContain('duplicate invoice');
     }
 
     public function test_verifier_compares_decimal_amounts_exactly(): void
