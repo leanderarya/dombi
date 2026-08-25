@@ -1,0 +1,44 @@
+name: Diagnose Staging Environment
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: diagnose-staging
+  cancel-in-progress: true
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Read safe staging metadata via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          script: |
+            set -eu
+            APP_PATH='domains/dombicenter.com/public_html/staging'
+            cd "$APP_PATH"
+
+            echo '=== deployment identity ==='
+            printf 'hostname: '; hostname
+            printf 'path: '; pwd
+            printf 'branch: '; git branch --show-current 2>/dev/null || echo 'unavailable'
+            printf 'commit: '; git rev-parse HEAD
+            printf 'origin: '; git remote get-url origin 2>/dev/null || echo 'unavailable'
+
+            echo '=== Laravel environment (safe values only) ==='
+            php artisan about --only=environment,database 2>/dev/null || true
+            php -r "require 'vendor/autoload.php'; \$app=require 'bootstrap/app.php'; \$app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap(); echo 'app_env: '.config('app.env').PHP_EOL; echo 'db_connection: '.config('database.default').PHP_EOL; echo 'db_database: '.config('database.connections.'.config('database.default').'.database').PHP_EOL; echo 'legacy_writes_enabled: '.(config('doku.legacy_writes_enabled') ? 'true' : 'false').PHP_EOL; echo 'legacy_writes_evidence: '.(config('doku.legacy_writes_deployment_evidence') ?? 'unset').PHP_EOL; echo 'payment_cutover_at: '.(config('doku.payment_cutover_at') ?? 'unset').PHP_EOL;"
+
+            echo '=== migration state ==='
+            php artisan migrate:status --no-ansi | tail -30
+
+            echo '=== health ==='
+            php artisan route:list --path=up --compact --no-ansi 2>/dev/null || true
+            curl --fail --max-time 30 --retry 2 --retry-delay 3 https://staging.dombicenter.com/up >/dev/null
+            echo 'staging health: OK'
