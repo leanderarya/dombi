@@ -7,7 +7,6 @@ use App\Enums\PaymentStatus;
 use App\Exceptions\DokuPaymentException;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
-use App\Models\PaymentTransaction;
 use App\Models\PaymentWebhookLog;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
@@ -127,10 +126,6 @@ class DokuService
                 return false;
             }
             $locked->update(['creation_state' => 'created', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data, 'metadata' => array_merge($locked->metadata ?? [], ['payment_url' => $paymentUrl])]);
-            if (config('doku.legacy_writes_enabled') === true) {
-                PaymentTransaction::firstOrCreate(['doku_order_id' => $locked->invoice_number], ['order_id' => $order->id, 'doku_order_id' => $locked->invoice_number, 'payment_method' => $locked->payment_method ?? $order->payment_method ?? 'qris', 'amount' => (int) $locked->amount_snapshot, 'status' => 'pending', 'session_id' => $sessionId, 'token_id' => $tokenId, 'raw_response' => $data]);
-            }
-
             return true;
         });
         if (! $persisted) {
@@ -412,13 +407,8 @@ class DokuService
 
         DB::transaction(function () use ($invoiceNumber, $status, $paymentStatus, $payload): void {
             $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->first();
-            $order = $attempt?->order
-                ?? Order::where('order_code', $invoiceNumber)->first()
-                ?? Order::where('doku_order_id', $invoiceNumber)->first();
-            $transaction = $attempt?->legacy_payment_transaction_id
-                ? PaymentTransaction::whereKey($attempt->legacy_payment_transaction_id)->first()
-                : null;
-            $resolvedOrderId = $order?->id;
+            $resolvedOrderId = $attempt?->order_id;
+            $order = $attempt?->order;
             if ($attempt && $resolvedOrderId !== null && $attempt->order_id !== $resolvedOrderId) {
                 PaymentWebhookLog::create([
                     'source' => 'doku', 'invoice_number' => $invoiceNumber,
@@ -443,14 +433,6 @@ class DokuService
                 ]);
 
                 return;
-            }
-
-            // Preserve transaction evidence until canonical transition validates the event.
-            if (! $transaction) {
-                Log::warning('DOKU webhook: no PaymentTransaction record, processing order directly', [
-                    'order_id' => $order->id,
-                    'invoice_number' => $invoiceNumber,
-                ]);
             }
 
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
