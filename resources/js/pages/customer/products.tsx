@@ -9,11 +9,11 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import ActiveOrderBar from '@/components/customer/active-order-bar';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CollapsedOutletBar from '@/components/customer/collapsed-outlet-bar';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
-import ActiveOrderBar from '@/components/customer/active-order-bar';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import OutletSheet from '@/components/customer/outlet-sheet';
 import ProductImage from '@/components/customer/product-image';
