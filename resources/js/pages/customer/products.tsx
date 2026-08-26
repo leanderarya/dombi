@@ -13,6 +13,7 @@ import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CollapsedOutletBar from '@/components/customer/collapsed-outlet-bar';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
+import ActiveOrderBar from '@/components/customer/active-order-bar';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import OutletSheet from '@/components/customer/outlet-sheet';
 import ProductImage from '@/components/customer/product-image';
@@ -56,7 +57,8 @@ interface FamilySection {
 /* ─── Main ─────────────────────────────────────────────────── */
 
 function ProductsInner() {
-    const { auth } = usePage().props as any;
+    const { auth, activeOrders = [] } = usePage().props as any;
+    const activeOrder = activeOrders[0] ?? null;
     const isLoggedIn = !!auth?.user;
     const { selectedOutlet, loading: outletLoading } = useOutlet();
     const { families, loading, error } = useProducts(
@@ -558,7 +560,11 @@ function ProductsInner() {
                 deliveryDisabled={!isLoggedIn}
                 deliveryBadge={isLoggedIn ? undefined : 'Login'}
             />
-            {totalItems > 0 && <FloatingCartBar />}
+            {activeOrder ? (
+                <ActiveOrderBar order={activeOrder} />
+            ) : totalItems > 0 ? (
+                <FloatingCartBar />
+            ) : null}
         </>
     );
 }
