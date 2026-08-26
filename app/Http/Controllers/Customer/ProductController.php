@@ -3,17 +3,45 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\ProductCategory;
+use App\Services\RefundPayloadService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProductController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request, RefundPayloadService $refundPayloads): Response
     {
-        return Inertia::render('customer/products');
+        $activeOrders = collect();
+        $customer = $request->user()?->customer;
+
+        if ($customer) {
+            $activeOrders = $customer->orders()
+                ->visibleAsCustomerActive()
+                ->with('outlet:id,name')
+                ->latest('ordered_at')
+                ->limit(5)
+                ->get()
+                ->map(function (Order $order) use ($refundPayloads) {
+                    $queue = $refundPayloads->queueState($order);
+                    if ($queue) {
+                        $order->setAttribute('refund_badge', [
+                            'payment_status' => $order->payment_status,
+                            'queue_state' => $queue,
+                            'status_label' => $refundPayloads->statusLabel($order),
+                        ]);
+                    }
+
+                    return $order;
+                });
+        }
+
+        return Inertia::render('customer/products', [
+            'activeOrders' => $activeOrders,
+        ]);
     }
 
     public function show(Request $request, ?ProductCategory $category = null): Response

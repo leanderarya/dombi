@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import ActiveOrderBar from '@/components/customer/active-order-bar';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CollapsedOutletBar from '@/components/customer/collapsed-outlet-bar';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
@@ -56,7 +57,8 @@ interface FamilySection {
 /* ─── Main ─────────────────────────────────────────────────── */
 
 function ProductsInner() {
-    const { auth } = usePage().props as any;
+    const { auth, activeOrders = [] } = usePage().props as any;
+    const activeOrder = activeOrders[0] ?? null;
     const isLoggedIn = !!auth?.user;
     const { selectedOutlet, loading: outletLoading } = useOutlet();
     const { families, loading, error } = useProducts(
@@ -558,7 +560,11 @@ function ProductsInner() {
                 deliveryDisabled={!isLoggedIn}
                 deliveryBadge={isLoggedIn ? undefined : 'Login'}
             />
-            {totalItems > 0 && <FloatingCartBar />}
+            {activeOrder ? (
+                <ActiveOrderBar order={activeOrder} />
+            ) : totalItems > 0 ? (
+                <FloatingCartBar />
+            ) : null}
         </>
     );
 }

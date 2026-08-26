@@ -29,7 +29,7 @@ class GenericPushNotification extends Notification
         return (new WebPushMessage)
             ->title($this->title)
             ->body($this->body)
-            ->icon('/favicon.png')
+            ->icon('/icons/icon-192.png')
             ->action($url, 'Buka')
             ->options([
                 'tag' => $this->data['tag'] ?? 'dombi-notification',

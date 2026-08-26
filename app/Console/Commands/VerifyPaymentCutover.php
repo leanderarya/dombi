@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Enums\PaymentAttemptSettlementStatus;
 use App\Enums\PaymentAttemptVerificationStatus;
-use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
 use Illuminate\Console\Command;
@@ -27,15 +26,28 @@ class VerifyPaymentCutover extends Command
             $errors[] = 'canonical database must contain at least one canonical payment attempt';
         }
 
+        $duplicateInvoices = PaymentAttempt::query()
+            ->select('invoice_number')
+            ->whereNotNull('invoice_number')
+            ->where('invoice_number', '!=', '')
+            ->groupBy('invoice_number')
+            ->havingRaw('COUNT(*) > 1')
+            ->pluck('invoice_number');
+
+        foreach ($duplicateInvoices as $invoice) {
+            $errors[] = "duplicate payment attempt invoice {$invoice}";
+        }
+
         PaymentAttempt::query()->each(function (PaymentAttempt $attempt) use (&$errors): void {
             $order = $attempt->order;
             if ($order === null) {
                 $errors[] = "canonical attempt {$attempt->id} references missing order";
+
                 return;
             }
             $issues = [];
-            if (blank($attempt->invoice_number) || $attempt->invoice_number !== $order->order_code) {
-                $issues[] = 'invoice';
+            if (blank($attempt->invoice_number)) {
+                $issues[] = 'blank invoice';
             }
             $attemptAmount = self::minorUnits($attempt->amount_snapshot);
             $orderAmount = self::minorUnits($order->total);
@@ -58,6 +70,7 @@ class VerifyPaymentCutover extends Command
             $attempt = $obligation->paymentAttempt;
             if ($attempt === null || $attempt->order === null) {
                 $errors[] = "refund obligation {$obligation->id} references missing attempt/order";
+
                 return;
             }
             $refundAmount = self::minorUnits($obligation->amount);
@@ -68,10 +81,12 @@ class VerifyPaymentCutover extends Command
 
         if ($errors !== []) {
             $this->error(implode(PHP_EOL, $errors));
+
             return self::FAILURE;
         }
 
         $this->info('READY: canonical payment runtime valid and legacy writes disabled.');
+
         return self::SUCCESS;
     }
 

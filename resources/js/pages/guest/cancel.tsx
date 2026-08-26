@@ -43,8 +43,10 @@ export default function GuestCancelPage() {
             !confirm(
                 'Apakah Anda yakin ingin membatalkan pesanan ini? Tindakan ini tidak dapat dibatalkan.',
             )
-        )
+        ) {
             return;
+        }
+
         setSubmitting(true);
         router.post(
             `/track/${token}/cancel`,

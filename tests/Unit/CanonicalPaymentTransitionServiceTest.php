@@ -61,6 +61,21 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $this->assertTrue($expires->between($before->copy()->addMinutes(17)->subSecond(), now()->addMinutes(17)->addSecond()));
     }
 
+    public function test_pending_confirmation_success_stays_pending_and_does_not_claim_fulfilment(): void
+    {
+        [$order, $attempt] = $this->attempt(['status' => Order::STATUS_PENDING_CONFIRMATION]);
+
+        $result = app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []
+        ));
+
+        $this->assertFalse($result->fulfilmentWinner);
+        $this->assertSame(Order::STATUS_PENDING_CONFIRMATION, $order->fresh()->status);
+        $this->assertNull($order->fresh()->fulfilment_claimed_at);
+        $this->assertNull($order->fresh()->fulfilment_claimed_by);
+        $this->assertNull($attempt->fresh()->fulfilment_claimed_at);
+    }
+
     public function test_terminal_order_success_is_paid_but_creates_refund_without_claiming(): void
     {
         [$order, $attempt] = $this->attempt(['status' => Order::STATUS_CANCELLED_BY_CUSTOMER]);
@@ -218,7 +233,7 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
 
     public function test_same_attempt_duplicate_success_is_idempotent_without_self_refund(): void
     {
-        [, $attempt] = $this->attempt();
+        [, $attempt] = $this->attempt(['status' => Order::STATUS_CONFIRMED]);
         $service = app(CanonicalPaymentTransitionService::class);
         $event = new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []);
 
@@ -257,7 +272,7 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
 
     public function test_only_one_paid_attempt_claims_fulfilment(): void
     {
-        [$order, $first] = $this->attempt();
+        [$order, $first] = $this->attempt(['status' => Order::STATUS_CONFIRMED]);
         $second = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'second', 'invoice_number' => 'invoice-second',
             'merchant_request_id' => 'request-second', 'amount_snapshot' => 50000, 'currency_snapshot' => 'IDR',

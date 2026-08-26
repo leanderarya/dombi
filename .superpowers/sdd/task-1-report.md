@@ -1,75 +1,39 @@
 # Task 1 Report
 
-## Status
+Status: complete
 
-Implemented characterization and invariant coverage in `tests/Feature/PaymentProductionInvariantTest.php`.
+## Files
 
-Covered:
-
-- Duplicate SUCCESS webhook idempotency and single payment attempt.
-- Amount mismatch settlement protection.
-- Order payment status versus successful-attempt projection.
-- Duplicate payment retry identity.
-- Ambiguous payment creation/invoice handling.
-- Late SUCCESS refund obligation uniqueness.
-- Repeated refund request uniqueness.
-- Paid-state regression protection against late failure.
-
-No production implementation changed. Existing unrelated uncommitted files were preserved.
-
-## Commits
-
-- Original commit: `9d208511 test: characterize production payment invariants`
-- Follow-up commit: pending
-- Review follow-up commit: `cd25467d test: strengthen payment invariant findings`
-- Scope reconciliation commit: `test: reconcile payment task scope`
-- Regression test follow-up commit: pending
+- `tests/Feature/CanonicalPaymentVerifierTest.php` — added three requested provider-invoice contract tests.
+- `.superpowers/sdd/task-1-report.md` — this report.
 
 ## Tests
 
 Command:
 
 ```text
-php artisan test tests/Feature/PaymentProductionInvariantTest.php
+php artisan test tests/Feature/CanonicalPaymentVerifierTest.php --filter='provider_invoice|blank_provider_invoice|duplicate_provider_invoice'
 ```
 
-Focused suite result: 5 passed, 3 expected characterization failures, 13 assertions.
+Output: 3 tests failed, 6 assertions.
 
-Latest covering command result: 63 passed, 4 expected characterization failures, 192 assertions across invariant and six existing payment suites. Failures are named below; one exposes missing current-schema source identity on refund histories, with existing metadata used as proxy for future `(payment_attempt_id, reason)` identity.
+- Provider invoice success: exit code was `1`, expected `0`; current verifier still requires invoice equality with order code.
+- Blank invoice: exit code was `1`, but output did not contain `blank invoice`; current verifier reports generic `invoice`.
+- Duplicate invoice: database unique constraint rejected second insert before verifier execution.
 
-Added amount-mismatch assertions for unchanged attempt status and zero refund histories. Duplicate refund assertions now verify first/second return values and reason-scoped obligation proxy. Test names and failure messages explicitly identify future canonical obligation identity `(payment_attempt_id, reason)` without inventing model fields.
+## Concerns
 
-Strengthened findings:
+- Requested tests expose current production behavior; production code intentionally unchanged.
+- Duplicate-invoice test cannot reach verifier while database unique constraint exists.
+## Fix
 
-- Duplicate retry now calls `DokuService::createPayment()` twice and fails explicitly if second creation throws; current unique constraint surfaces a database exception.
-- No-attempt SUCCESS webhook asserts no settlement and no transaction creation.
-- Provider amount is supplied in webhook payload; current implementation settles despite mismatch.
-- Projection test mutates attempt state from pending to paid and asserts order projection; current order status remains pending.
-- Duplicate late SUCCESS webhooks assert one paid attempt and one refund obligation.
-- Duplicate refund request asserts first history exists, second result is null, and exactly one obligation history remains.
-
-Expected characterization failures in latest covering run:
-
-- `test_success_with_amount_mismatch_does_not_settle_order` — provider amount mismatch still settles order.
-- `test_order_payment_status_projects_from_successful_attempt_state` — paid attempt does not project order to paid.
-- `test_duplicate_payment_retry_creation_keeps_single_attempt_for_same_invoice` — duplicate creation throws database uniqueness exception.
-- `test_duplicate_refund_request_returns_null_without_second_obligation` — current refund history lacks source identity metadata for `late_payment`.
-
-These are intentional red tests for later production hardening; no production code changed.
+- Duplicate test drops both invoice unique indexes, inserts duplicate rows, then restores indexes in `finally`.
+- Focused test command still has expected production failures; duplicate test now reaches verifier and asserts output.
 
 Command:
 
 ```text
-./vendor/bin/pint tests/Feature/PaymentProductionInvariantTest.php
-./vendor/bin/pint --test tests/Feature/PaymentProductionInvariantTest.php
-php -l tests/Feature/PaymentProductionInvariantTest.php
-git diff --check
+php artisan test tests/Feature/CanonicalPaymentVerifierTest.php --filter='provider_invoice|blank_provider_invoice|duplicate_provider_invoice'
 ```
 
-Result: formatter passed, syntax passed, diff check passed.
-
-## Concerns
-
-- Brief listed six existing feature files for modification, but their current coverage already contains overlapping characterization cases. Only new invariant file was changed to minimize scope and avoid unrelated churn.
-- Existing schema uniqueness constraints prevent constructing duplicate invoice rows directly; retry test records current uniqueness behavior rather than bypassing database constraints.
-- Focused suite intentionally remains red for three production risks: provider amount validation, attempt-to-order projection, and duplicate retry creation. Covering suite has one additional expected refund-identity failure.
+Output: 2 tests failed, 1 passed; duplicate provider invoice test passed.

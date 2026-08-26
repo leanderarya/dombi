@@ -2,12 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Console\Commands\VerifyPaymentCutover;
 use App\Enums\PaymentAttemptSettlementStatus;
 use App\Enums\PaymentAttemptVerificationStatus;
+use App\Enums\RefundObligationStatus;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
+use App\Models\RefundObligation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class CanonicalPaymentVerifierTest extends TestCase
@@ -48,6 +52,98 @@ class CanonicalPaymentVerifierTest extends TestCase
             ->expectsOutputToContain('at least one canonical payment attempt');
     }
 
+    public function test_verifier_accepts_unique_provider_invoice_different_from_order_code(): void
+    {
+        config(['doku.legacy_writes_enabled' => false]);
+
+        $order = Order::factory()->create(['payment_status' => 'paid']);
+
+        PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'provider-invoice-'.$order->id,
+            'invoice_number' => 'DMB-'.$order->id.'-PROVIDER123',
+            'merchant_request_id' => 'provider-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Paid,
+            'verification_status' => PaymentAttemptVerificationStatus::Verified,
+        ]);
+
+        $this->assertNotSame($order->order_code, PaymentAttempt::query()->firstOrFail()->invoice_number);
+
+        $this->artisan('payments:verify-cutover')
+            ->assertExitCode(0)
+            ->expectsOutputToContain('READY');
+    }
+
+    public function test_verifier_rejects_blank_provider_invoice(): void
+    {
+        config(['doku.legacy_writes_enabled' => false]);
+
+        $order = Order::factory()->create(['payment_status' => 'paid']);
+
+        DB::table('payment_attempts')->insert([
+            'order_id' => $order->id,
+            'attempt_key' => 'blank-invoice-'.$order->id,
+            'invoice_number' => '',
+            'merchant_request_id' => 'blank-invoice-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Paid->value,
+            'verification_status' => PaymentAttemptVerificationStatus::Verified->value,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->artisan('payments:verify-cutover')
+            ->assertExitCode(1)
+            ->expectsOutputToContain('blank invoice');
+    }
+
+    public function test_verifier_rejects_duplicate_provider_invoice(): void
+    {
+        config(['doku.legacy_writes_enabled' => false]);
+
+        $firstOrder = Order::factory()->create(['payment_status' => 'paid']);
+        $secondOrder = Order::factory()->create(['payment_status' => 'paid']);
+        $invoice = 'DMB-DUPLICATE-PROVIDER-INVOICE';
+        $uniqueIndexes = [
+            'payment_attempts_invoice_number_unique',
+            'payment_attempts_order_invoice_unique',
+        ];
+
+        Schema::table('payment_attempts', function ($table) use ($uniqueIndexes): void {
+            foreach ($uniqueIndexes as $uniqueIndex) {
+                $table->dropUnique($uniqueIndex);
+            }
+        });
+
+        try {
+            foreach ([$firstOrder, $secondOrder] as $order) {
+                PaymentAttempt::create([
+                    'order_id' => $order->id,
+                    'attempt_key' => 'duplicate-invoice-'.$order->id,
+                    'invoice_number' => $invoice,
+                    'merchant_request_id' => 'duplicate-request-'.$order->id,
+                    'amount_snapshot' => $order->total,
+                    'currency_snapshot' => 'IDR',
+                    'settlement_status' => PaymentAttemptSettlementStatus::Paid,
+                    'verification_status' => PaymentAttemptVerificationStatus::Verified,
+                ]);
+            }
+
+            $this->artisan('payments:verify-cutover')
+                ->assertExitCode(1)
+                ->expectsOutputToContain('duplicate payment attempt invoice '.$invoice);
+        } finally {
+            DB::table('payment_attempts')->where('invoice_number', $invoice)->delete();
+            Schema::table('payment_attempts', function ($table) use ($uniqueIndexes): void {
+                $table->unique('invoice_number', $uniqueIndexes[0]);
+                $table->unique(['order_id', 'invoice_number'], $uniqueIndexes[1]);
+            });
+        }
+    }
+
     public function test_verifier_compares_decimal_amounts_exactly(): void
     {
         config(['doku.legacy_writes_enabled' => false]);
@@ -73,7 +169,7 @@ class CanonicalPaymentVerifierTest extends TestCase
     public function test_verifier_rejects_malformed_and_over_precision_amounts(): void
     {
         config(['doku.legacy_writes_enabled' => false]);
-        $method = new \ReflectionMethod(\App\Console\Commands\VerifyPaymentCutover::class, 'minorUnits');
+        $method = new \ReflectionMethod(VerifyPaymentCutover::class, 'minorUnits');
         $method->setAccessible(true);
 
         $this->assertNull($method->invoke(null, 'not-a-number'));
@@ -85,7 +181,7 @@ class CanonicalPaymentVerifierTest extends TestCase
 
     public function test_verifier_rejects_over_precision_refund_amount(): void
     {
-        $method = new \ReflectionMethod(\App\Console\Commands\VerifyPaymentCutover::class, 'minorUnits');
+        $method = new \ReflectionMethod(VerifyPaymentCutover::class, 'minorUnits');
         $method->setAccessible(true);
 
         $this->assertNull($method->invoke(null, '10.001'));
@@ -108,12 +204,12 @@ class CanonicalPaymentVerifierTest extends TestCase
             'verification_status' => PaymentAttemptVerificationStatus::NeedsReview,
         ]);
         $otherOrder = Order::factory()->create();
-        \App\Models\RefundObligation::create([
+        RefundObligation::create([
             'payment_attempt_id' => $attempt->id,
             'amount' => 10,
             'currency' => 'EUR',
             'reason' => 'test',
-            'status' => \App\Enums\RefundObligationStatus::Pending,
+            'status' => RefundObligationStatus::Pending,
         ]);
         $attempt->order_id = $otherOrder->id;
         $attempt->saveQuietly();

@@ -12,9 +12,8 @@
         <meta name="vapid-public-key" content="{{ config('services.vapid.public_key') }}">
         @endif
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.png" type="image/png">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192">
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" sizes="192x192">
         <link rel="manifest" href="/manifest.json">
 
         @viteReactRefresh
