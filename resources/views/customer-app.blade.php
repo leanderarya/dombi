@@ -10,8 +10,9 @@
     <meta name="theme-color" content="#047857">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Dombi">
+    <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192">
     <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" sizes="192x192">
 
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/customer-app.tsx'])

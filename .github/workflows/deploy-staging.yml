@@ -16,6 +16,7 @@ jobs:
   deploy:
     needs: quality
     runs-on: ubuntu-latest
+    environment: staging
     steps:
       - uses: actions/checkout@v4
 
@@ -32,7 +33,16 @@ jobs:
           cache: npm
 
       - name: Build frontend
+        env:
+          APP_ENV: staging
+          DOKU_CLIENT_ID: ${{ secrets.DOKU_CLIENT_ID }}
+          DOKU_API_KEY: ${{ secrets.DOKU_API_KEY }}
+          DOKU_IS_SANDBOX: "true"
+          DOKU_CALLBACK_URL: https://staging.dombicenter.com/payment/doku/notify
+          DOKU_ENABLED_METHODS: qris,transfer,ewallet,credit_card
         run: |
+          : "${DOKU_CLIENT_ID:?DOKU_CLIENT_ID secret is required}"
+          : "${DOKU_API_KEY:?DOKU_API_KEY secret is required}"
           composer install --no-dev --no-interaction --optimize-autoloader
           npm ci
           npm run build
@@ -60,6 +70,8 @@ jobs:
             php artisan cache:clear
             php artisan view:clear
             php artisan storage:link || true
+            echo "Running canonical payment verifier"
+            php artisan payments:verify-cutover
             echo "Staging code and migrations done"
 
       - name: Upload built assets via SCP

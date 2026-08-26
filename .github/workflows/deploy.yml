@@ -17,7 +17,34 @@ jobs:
     needs: quality
     runs-on: ubuntu-latest
     environment: production
+    env:
+      APP_ENV: production
+      APP_URL: https://app.dombicenter.com
+      DOKU_IS_SANDBOX: ${{ vars.DOKU_IS_SANDBOX }}
+      DOKU_CLIENT_ID: ${{ secrets.DOKU_CLIENT_ID }}
+      DOKU_API_KEY: ${{ secrets.DOKU_API_KEY }}
+      DOKU_CALLBACK_URL: ${{ secrets.DOKU_CALLBACK_URL }}
+      PAYMENTS_LEGACY_WRITES_ENABLED: ${{ vars.PAYMENTS_LEGACY_WRITES_ENABLED }}
     steps:
+      - name: Validate production payment variables
+        run: |
+          set -eu
+          case "$DOKU_IS_SANDBOX" in
+            true|false) ;;
+            *) echo 'DOKU_IS_SANDBOX must be explicitly true or false'; exit 1 ;;
+          esac
+          case "$PAYMENTS_LEGACY_WRITES_ENABLED" in
+            true|false) ;;
+            *) echo 'PAYMENTS_LEGACY_WRITES_ENABLED must be explicitly true or false'; exit 1 ;;
+          esac
+          if [ "$DOKU_IS_SANDBOX" != 'false' ]; then
+            echo 'Production DOKU_IS_SANDBOX must be false'; exit 1
+          fi
+          if [ "$PAYMENTS_LEGACY_WRITES_ENABLED" != 'false' ]; then
+            echo 'Production PAYMENTS_LEGACY_WRITES_ENABLED must be false'; exit 1
+          fi
+          echo 'Production payment variables validated.'
+
       - uses: actions/checkout@v4
 
       - name: Setup PHP
@@ -35,7 +62,7 @@ jobs:
 
       - name: Install dependencies & Build
         run: |
-          composer install --no-dev --no-interaction --optimize-autoloader
+          APP_ENV=testing composer install --no-dev --no-interaction --optimize-autoloader
           npm ci
           npm run build
 
@@ -48,6 +75,8 @@ jobs:
           port: ${{ secrets.HOSTINGER_SSH_PORT }}
           script: |
             cd domains/dombicenter.com/public_html/app
+            DOKU_IS_SANDBOX='${{ vars.DOKU_IS_SANDBOX }}'
+            PAYMENTS_LEGACY_WRITES_ENABLED='${{ vars.PAYMENTS_LEGACY_WRITES_ENABLED }}'
             DEPLOY_SHA='${{ github.sha }}'
             echo "Deploying SHA $DEPLOY_SHA to production"
             git fetch --no-tags origin "$DEPLOY_SHA"
@@ -75,6 +104,8 @@ jobs:
           port: ${{ secrets.HOSTINGER_SSH_PORT }}
           script: |
             cd domains/dombicenter.com/public_html/app
+            DOKU_IS_SANDBOX='${{ vars.DOKU_IS_SANDBOX }}'
+            PAYMENTS_LEGACY_WRITES_ENABLED='${{ vars.PAYMENTS_LEGACY_WRITES_ENABLED }}'
             DEPLOY_SHA='${{ github.sha }}'
             echo "Production deploy SHA: $DEPLOY_SHA"
             if [ -d .git ]; then
@@ -85,11 +116,27 @@ jobs:
             else
               echo "No git repo in production (FTP mode), skipping git sync"
             fi
+            set -eu
+            sed -i '/DOKU_IS_SANDBOX/d; /PAYMENTS_LEGACY_WRITES_ENABLED/d' .env
+            for key in DOKU_IS_SANDBOX PAYMENTS_LEGACY_WRITES_ENABLED; do
+              value="${!key}"
+              case "$value" in
+                true|false) ;;
+                *) echo "Invalid production value for $key"; exit 1 ;;
+              esac
+              if grep -q "^${key}=" .env; then
+                sed -i "s/^${key}=.*/${key}=${value}/" .env
+              else
+                printf '\n%s=%s\n' "$key" "$value" >> .env
+              fi
+            done
             echo "Installing dependencies"
             composer install --no-dev --no-interaction --optimize-autoloader
             echo "Running migrations"
             php artisan migrate --force --no-interaction
             php artisan config:clear
+            php artisan config:cache
+            php artisan tinker --execute='if (config("app.env") !== "production" || config("app.debug") !== false || config("doku.sandbox") !== false || config("doku.legacy_writes_enabled") !== false) { exit(1); } echo "Production payment configuration assertion passed.", PHP_EOL;'
             php artisan route:clear
             php artisan cache:clear
             php artisan view:clear

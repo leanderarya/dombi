@@ -3,7 +3,6 @@ import {
     Copy,
     Package,
     Pencil,
-    Plus,
     Trash2,
     ToggleLeft,
     ToggleRight,
@@ -28,7 +27,7 @@ import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
-import VariantForm, { DEFAULT_MARKUP_PERCENT } from './variant-form';
+import VariantForm from './variant-form';
 
 // ── Types ──
 interface Variant {
@@ -221,7 +220,13 @@ export default function ProductFamilyShow({ family }: Props) {
     const toggleSelect = (id: number) => {
         setSelectedIds((prev) => {
             const next = new Set(prev);
-            next.has(id) ? next.delete(id) : next.add(id);
+
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+
             return next;
         });
     };
@@ -289,7 +294,11 @@ export default function ProductFamilyShow({ family }: Props) {
     };
     const handleUpdateVariant = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingVariant) return;
+
+        if (!editingVariant) {
+            return;
+        }
+
         variantForm.put(`/owner/variants/${editingVariant.id}`, {
             preserveScroll: true,
             onSuccess: () => {
@@ -331,7 +340,7 @@ export default function ProductFamilyShow({ family }: Props) {
         setShowVariantForm(true);
     };
 
-    const SortMarker = ({ col }: { col: SortKey }) =>
+    const sortMarker = (col: SortKey) =>
         sortKey === col ? (
             <span className="ml-0.5 text-[10px] text-primary">
                 {sortDir === 'asc' ? '▲' : '▼'}
@@ -478,7 +487,7 @@ export default function ProductFamilyShow({ family }: Props) {
                                         onClick={() => toggleSort('name')}
                                     >
                                         Nama
-                                        <SortMarker col="name" />
+                                        {sortMarker('name')}
                                     </th>
                                     <th className="px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
                                         Gambar
@@ -490,7 +499,7 @@ export default function ProductFamilyShow({ family }: Props) {
                                         }
                                     >
                                         HPP
-                                        <SortMarker col="center_price" />
+                                        {sortMarker('center_price')}
                                     </th>
                                     <th
                                         className="cursor-pointer px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase select-none"
@@ -499,14 +508,14 @@ export default function ProductFamilyShow({ family }: Props) {
                                         }
                                     >
                                         Harga Jual
-                                        <SortMarker col="selling_price" />
+                                        {sortMarker('selling_price')}
                                     </th>
                                     <th
                                         className="cursor-pointer px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase select-none"
                                         onClick={() => toggleSort('margin')}
                                     >
                                         Margin
-                                        <SortMarker col="margin" />
+                                        {sortMarker('margin')}
                                     </th>
                                     <th
                                         className="cursor-pointer px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase select-none"
@@ -515,7 +524,7 @@ export default function ProductFamilyShow({ family }: Props) {
                                         }
                                     >
                                         Stok
-                                        <SortMarker col="center_stock" />
+                                        {sortMarker('center_stock')}
                                     </th>
                                     <th className="w-28 px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
                                         Aksi
@@ -741,7 +750,9 @@ export default function ProductFamilyShow({ family }: Props) {
             <Dialog
                 open={showVariantForm || editingVariant !== null}
                 onOpenChange={(open) => {
-                    if (!open) cancelForm();
+                    if (!open) {
+                        cancelForm();
+                    }
                 }}
             >
                 <DialogContent className="sm:max-w-lg">
@@ -777,21 +788,30 @@ export default function ProductFamilyShow({ family }: Props) {
                             > = { variant_ids: [...selectedIds] } as {
                                 variant_ids: number[];
                             } & Record<string, string | number | boolean>;
-                            if (bulkForm.data.center_price)
+
+                            if (bulkForm.data.center_price) {
                                 payload.center_price = Number(
                                     bulkForm.data.center_price,
                                 );
-                            if (bulkForm.data.selling_price)
+                            }
+
+                            if (bulkForm.data.selling_price) {
                                 payload.selling_price = Number(
                                     bulkForm.data.selling_price,
                                 );
-                            if (bulkForm.data.center_stock)
+                            }
+
+                            if (bulkForm.data.center_stock) {
                                 payload.center_stock = Number(
                                     bulkForm.data.center_stock,
                                 );
-                            if (bulkForm.data.is_active !== '')
+                            }
+
+                            if (bulkForm.data.is_active !== '') {
                                 payload.is_active =
                                     bulkForm.data.is_active === '1';
+                            }
+
                             bulkForm.post(
                                 `/owner/product-families/${family.id}/variants/bulk-update`,
                                 {

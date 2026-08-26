@@ -57,7 +57,7 @@ class PaymentOutboxTest extends TestCase
             'doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []
         ));
 
-        $this->assertGreaterThan(1, PaymentOutboxEvent::count());
+        $this->assertSame(1, PaymentOutboxEvent::count());
         $this->assertSame(0, PaymentOutboxEvent::where('status', 'delivered')->count());
         $this->assertSame(PaymentOutboxEvent::count(), PaymentOutboxEvent::where('status', 'pending')->count());
         $this->assertSame(PaymentOutboxEvent::count(), PaymentOutboxEvent::where('last_error', 'queue unavailable')->count());

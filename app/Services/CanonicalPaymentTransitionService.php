@@ -211,6 +211,10 @@ class CanonicalPaymentTransitionService
 
     private function claimOrRefund(PaymentAttempt $attempt, Order $order): bool
     {
+        if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
+            return false;
+        }
+
         $claimMatches = $order->fulfilment_claimed_by === $attempt->id
              && $order->fulfilment_claimed_at !== null;
         if ($claimMatches) {
