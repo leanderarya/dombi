@@ -11,5 +11,6 @@ Checks:
 - `php -l tests/Feature/CheckoutAddressPersistenceTest.php` — passed.
 - `php artisan test tests/Feature/CheckoutAddressPersistenceTest.php` — blocked: Artisan `test` command unavailable.
 - `vendor/bin/phpunit tests/Feature/CheckoutAddressPersistenceTest.php` — blocked: `vendor/bin/phpunit` absent.
+- `graphify update .` — passed.
 
-Commit: pending.
+Commit: `fix: align checkout address test payload`.
