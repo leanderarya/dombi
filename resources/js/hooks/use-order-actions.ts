@@ -69,7 +69,7 @@ export function useOrderCancel(
                     const data = await res.json();
 
                     if (data.success) {
-                        window.location.reload();
+                        router.visit('/customer/orders', { replace: true });
                     } else {
                         setError(data.error || 'Gagal membatalkan pesanan.');
                     }
@@ -82,7 +82,14 @@ export function useOrderCancel(
                 return;
             }
 
-            router.post(`/customer/orders/${orderId}/cancel`, { reason, note });
+            router.post(
+                `/customer/orders/${orderId}/cancel`,
+                { reason, note },
+                {
+                    onSuccess: () =>
+                        router.visit('/customer/orders', { replace: true }),
+                },
+            );
         },
         [orderId, isConfirmation, recoveryToken, isPickup],
     );
