@@ -96,12 +96,6 @@ export default function OrderShow({
     const reportForm = useForm({ type: '', notes: '' });
 
     useEffect(() => {
-        if (isConfirmation) {
-            window.history.replaceState(null, '', '/customer/orders');
-        }
-    }, [isConfirmation]);
-
-    useEffect(() => {
         if (order.customer_phone && order.order_code) {
             addOrder(order.customer_phone, order.order_code);
         }
