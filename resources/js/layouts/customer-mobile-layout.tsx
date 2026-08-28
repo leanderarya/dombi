@@ -33,8 +33,7 @@ export default function CustomerMobileLayout({
     useFlashToast();
     const { totalItems } = useCart();
 
-    const showCartBar =
-        !hideCartBar && !footerSlot && !activeOrder && totalItems > 0;
+    const showCartBar = !hideCartBar && !footerSlot && totalItems > 0;
     const hasFloatingBar = !!footerSlot || !!activeOrder || showCartBar;
 
     return (
@@ -58,10 +57,10 @@ export default function CustomerMobileLayout({
                     </main>
 
                     {footerSlot ??
-                        (activeOrder ? (
-                            <ActiveOrderBar order={activeOrder} />
-                        ) : showCartBar ? (
+                        (showCartBar ? (
                             <FloatingCartBar />
+                        ) : activeOrder ? (
+                            <ActiveOrderBar order={activeOrder} />
                         ) : null)}
                     {!hideBottomNav && <CustomerBottomNav />}
                 </div>

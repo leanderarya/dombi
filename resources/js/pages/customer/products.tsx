@@ -560,10 +560,10 @@ function ProductsInner() {
                 deliveryDisabled={!isLoggedIn}
                 deliveryBadge={isLoggedIn ? undefined : 'Login'}
             />
-            {activeOrder ? (
-                <ActiveOrderBar order={activeOrder} />
-            ) : totalItems > 0 ? (
+            {totalItems > 0 ? (
                 <FloatingCartBar />
+            ) : activeOrder ? (
+                <ActiveOrderBar order={activeOrder} />
             ) : null}
         </>
     );
