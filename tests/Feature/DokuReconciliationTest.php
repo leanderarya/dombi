@@ -88,6 +88,42 @@ class DokuReconciliationTest extends TestCase
         $this->assertSame('paid', $attempt->settlement_status?->value);
     }
 
+    public function test_unknown_attempt_gets_24_hour_reconciliation_deadline(): void
+    {
+        $now = now()->startOfSecond();
+        $this->travelTo($now);
+        $attempt = $this->makeAttempt('unknown');
+        Http::fake(['*/checkout/v1/payment/*' => Http::response(null, 500)]);
+
+        $this->reconciliation->reconcile($attempt);
+
+        $deadline = data_get($attempt->fresh()->metadata, 'reconciliation_deadline_at');
+        $this->assertSame($now->copy()->addHours(24)->toIso8601String(), $deadline);
+        $this->travelBack();
+    }
+
+    public function test_unknown_attempt_past_deadline_fails_and_expires_order(): void
+    {
+        $attempt = $this->makeAttempt('unknown', ['reconciliation_deadline_at' => now()->subSecond()->toIso8601String()]);
+
+        $this->assertSame(1, $this->reconciliation->expireDueUnknownAttempts());
+        $attempt->refresh();
+
+        $this->assertSame('failed', $attempt->creation_state?->value);
+        $this->assertSame('failed', $attempt->settlement_status?->value);
+        $this->assertSame(Order::STATUS_EXPIRED, $attempt->order->fresh()->status);
+    }
+
+    public function test_already_expired_unknown_attempt_is_not_transitioned_again(): void
+    {
+        $attempt = $this->makeAttempt('unknown', ['reconciliation_deadline_at' => now()->subSecond()->toIso8601String()]);
+        $this->assertSame(1, $this->reconciliation->expireDueUnknownAttempts());
+        $first = $attempt->fresh()->updated_at->toIso8601String();
+
+        $this->assertSame(0, $this->reconciliation->expireDueUnknownAttempts());
+        $this->assertSame($first, $attempt->fresh()->updated_at->toIso8601String());
+    }
+
     public function test_initiated_attempt_skipped(): void
     {
         $attempt = $this->makeAttempt('initiated');

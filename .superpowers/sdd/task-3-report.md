@@ -1,15 +1,17 @@
-# Task 3 Report
+# Task 3 report
 
-## Final review fixes
-- Per-row attempt creation and historical timestamp update now run inside one transaction; failed rows leave no linked partial attempt and can be repaired on rerun.
-- Batch processing continues after row failures.
-- Invoice precedence is explicit: `doku_order_id` is canonical invoice identity; `order_code` is fallback only; differing order code is retained as `metadata.legacy_order_code`.
-- Migration preflight validates duplicate/orphan links before schema mutation and guards columns, unique index, and foreign key creation for partial retries.
+Added focused coverage for DOKU reconciliation and late callbacks:
 
-## Verification
-- `php artisan test tests/Feature/PaymentAttemptBackfillTest.php` — PASS, 6 tests, 37 assertions.
-- `composer run lint:check` — PASS.
-- `git diff --check` — PASS.
+- Unknown attempts receive 24-hour reconciliation deadline.
+- Unknown attempts past deadline transition to failed and expire non-terminal order.
+- Already expired attempts are idempotent and not transitioned again.
+- Late success on expired order remains terminal and creates exactly one `late_payment` RefundObligation.
 
-## Scope
-Task 3 files only. Unrelated uncommitted files preserved.
+Production code unchanged; existing implementation satisfies scenarios.
+
+Checks:
+
+- `php artisan test --filter='DokuReconciliation|CanonicalPaymentTransitionService|Refund'` unavailable: artisan has no `test` command.
+- `./vendor/bin/phpunit --filter=...` unavailable: vendor dependencies are not installed.
+- `git diff --check` passed.
+- `graphify update .` pending.
