@@ -1,39 +1,15 @@
 # Task 1 Report
 
-Status: complete
+Status: review fix applied; focused test runner unavailable.
 
-## Files
+Changes:
+- Adjusted `test_store_customer_persists_auto_selected_default_address` to omit optional address metadata that frontend auto-selection does not submit.
+- Keeps only supported POST contract: customer fields, selected `address_id`, required `address_line`, and coordinates.
+- Asserts backend persists selected default address ID, address line, latitude, and longitude in `checkout.location`.
 
-- `tests/Feature/CanonicalPaymentVerifierTest.php` — added three requested provider-invoice contract tests.
-- `.superpowers/sdd/task-1-report.md` — this report.
+Checks:
+- `php -l tests/Feature/CheckoutAddressPersistenceTest.php` — passed.
+- `php artisan test tests/Feature/CheckoutAddressPersistenceTest.php` — blocked: Artisan `test` command unavailable.
+- `vendor/bin/phpunit tests/Feature/CheckoutAddressPersistenceTest.php` — blocked: `vendor/bin/phpunit` absent.
 
-## Tests
-
-Command:
-
-```text
-php artisan test tests/Feature/CanonicalPaymentVerifierTest.php --filter='provider_invoice|blank_provider_invoice|duplicate_provider_invoice'
-```
-
-Output: 3 tests failed, 6 assertions.
-
-- Provider invoice success: exit code was `1`, expected `0`; current verifier still requires invoice equality with order code.
-- Blank invoice: exit code was `1`, but output did not contain `blank invoice`; current verifier reports generic `invoice`.
-- Duplicate invoice: database unique constraint rejected second insert before verifier execution.
-
-## Concerns
-
-- Requested tests expose current production behavior; production code intentionally unchanged.
-- Duplicate-invoice test cannot reach verifier while database unique constraint exists.
-## Fix
-
-- Duplicate test drops both invoice unique indexes, inserts duplicate rows, then restores indexes in `finally`.
-- Focused test command still has expected production failures; duplicate test now reaches verifier and asserts output.
-
-Command:
-
-```text
-php artisan test tests/Feature/CanonicalPaymentVerifierTest.php --filter='provider_invoice|blank_provider_invoice|duplicate_provider_invoice'
-```
-
-Output: 2 tests failed, 1 passed; duplicate provider invoice test passed.
+Commit: pending.
