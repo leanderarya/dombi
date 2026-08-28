@@ -99,7 +99,7 @@ function resolveSelection(
 
 /* ─── Hook: useAddToCart ───────────────────────────────────── */
 
-function useAddToCart() {
+function useAddToCart(isOpen?: boolean) {
     const cart = useCart();
     const { totalItems } = cart;
     const { selectedOutlet, syncOutletId } = useOutlet();
@@ -110,7 +110,8 @@ function useAddToCart() {
     );
     const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-    const isOutletClosed = selectedOutlet?.is_open === false;
+    const isOutletClosed =
+        isOpen === false || selectedOutlet?.is_open === false;
 
     useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
@@ -174,10 +175,12 @@ export default function ProductDetail({
     family,
     otherFamilies = [],
     outletId,
+    is_open,
 }: {
     family: Family;
     otherFamilies?: OtherFamily[];
     outletId?: number | null;
+    is_open?: boolean;
 }) {
     return (
         <OutletProvider>
@@ -187,6 +190,7 @@ export default function ProductDetail({
                 family={family}
                 otherFamilies={otherFamilies}
                 outletId={outletId}
+                is_open={is_open}
             />
         </OutletProvider>
     );
@@ -196,14 +200,18 @@ function ProductDetailInner({
     family,
     otherFamilies = [],
     outletId,
+    is_open,
 }: {
     family: Family;
     otherFamilies?: OtherFamily[];
     outletId?: number | null;
+    is_open?: boolean;
 }) {
-    const { addToCart, adding, added, toast, totalItems } = useAddToCart();
+    const { addToCart, adding, added, toast, totalItems } =
+        useAddToCart(is_open);
     const { selectedOutlet } = useOutlet();
-    const isOutletClosed = selectedOutlet?.is_open === false;
+    const isOutletClosed =
+        is_open === false || selectedOutlet?.is_open === false;
 
     const flavors = useMemo(
         () =>
