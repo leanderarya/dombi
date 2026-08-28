@@ -85,10 +85,19 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $service->apply($attempt, $event);
         $service->apply($attempt->fresh(), $event);
 
-        $this->assertSame(Order::STATUS_EXPIRED, $order->fresh()->status);
-        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
+        $freshOrder = $order->fresh();
+        $freshAttempt = $attempt->fresh();
+        $obligation = RefundObligation::where('payment_attempt_id', $attempt->id)->firstOrFail();
+        $this->assertSame(Order::STATUS_EXPIRED, $freshOrder->status);
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $freshAttempt->settlement_status);
         $this->assertSame(1, RefundObligation::where('payment_attempt_id', $attempt->id)->count());
-        $this->assertSame('late_payment', RefundObligation::where('payment_attempt_id', $attempt->id)->value('reason'));
+        $this->assertSame($attempt->id, $obligation->payment_attempt_id);
+        $this->assertSame('invoice-first', $freshAttempt->invoice_number);
+        $this->assertSame('50000.00', (string) $obligation->amount);
+        $this->assertSame('IDR', $obligation->currency);
+        $this->assertSame('late_payment', $obligation->reason);
+        $this->assertSame('pending', $obligation->status->value);
+        $this->assertSame($attempt->id, $obligation->paymentAttempt->id);
     }
 
     public function test_terminal_order_success_is_paid_but_creates_refund_without_claiming(): void
