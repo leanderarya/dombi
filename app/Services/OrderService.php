@@ -165,8 +165,11 @@ class OrderService
             'notes' => $payload['notes'] ?? $address?->delivery_notes ?? null,
             'ordered_at' => now(),
             'confirmation_expires_at' => now()->addMinutes(
-                $outlet->confirmation_timeout_minutes
-                    ?? (int) (config('order.confirmation_timeout_minutes') ?? 30)
+                max(1, (int) (is_numeric($outlet->confirmation_timeout_minutes) && $outlet->confirmation_timeout_minutes > 0
+                    ? $outlet->confirmation_timeout_minutes
+                    : (is_numeric(config('order.confirmation_timeout_minutes')) && config('order.confirmation_timeout_minutes') > 0
+                        ? config('order.confirmation_timeout_minutes')
+                        : 30)))
             ),
         ]);
 
