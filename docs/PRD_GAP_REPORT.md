@@ -24,6 +24,12 @@ Commands run in the audited worktree root (deps symlinked from the main checkout
 
 Note: the `types:check` failure was confined to a Vitest fixture in `products.build-sections.test.ts`; fixed by adding `is_recommended`/`image` to the fixture variants. Gate now green.
 
+## Final timing audit — 2026-08-28
+
+- Order creation and `Order` creating hook now reject null, zero, negative, and non-numeric outlet/config confirmation timeouts before applying fallback and minimum-one-minute clamp.
+- DOKU runtime reconciliation deadline initialization now rejects null, zero, negative, and non-numeric config values before applying 24-hour fallback.
+- PHP lint and `git diff --check` pass. PHPUnit unavailable in checkout (`vendor/bin/phpunit` missing; `php artisan test` command unavailable).
+
 ## Requirement matrix
 
 | ID | Requirement | Status | Evidence / gap |

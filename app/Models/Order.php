@@ -136,8 +136,12 @@ class Order extends Model
             }
             if (empty($order->confirmation_expires_at) && $order->status === self::STATUS_PENDING_CONFIRMATION) {
                 $outlet = $order->outlet_id ? Outlet::find($order->outlet_id) : null;
-                $timeout = $outlet?->confirmation_timeout_minutes ?? (int) (config('order.confirmation_timeout_minutes') ?? 30);
-                $order->confirmation_expires_at = now()->addMinutes($timeout);
+                $timeout = is_numeric($outlet?->confirmation_timeout_minutes) && $outlet->confirmation_timeout_minutes > 0
+                    ? $outlet->confirmation_timeout_minutes
+                    : (is_numeric(config('order.confirmation_timeout_minutes')) && config('order.confirmation_timeout_minutes') > 0
+                        ? config('order.confirmation_timeout_minutes')
+                        : 30);
+                $order->confirmation_expires_at = now()->addMinutes(max(1, (int) $timeout));
             }
         });
     }
