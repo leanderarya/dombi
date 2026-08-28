@@ -116,6 +116,7 @@ export default function CheckoutCustomer({
     );
     const autoApplied = useRef(false);
     const userChoseLocation = useRef(false);
+    const reloadQuoteAfterLocationUpdate = useRef(false);
 
     const form = useForm<CustomerForm>({
         customer_name: draft?.customer?.customer_name ?? authUser?.name ?? '',
@@ -153,9 +154,7 @@ export default function CheckoutCustomer({
                 ...nextData,
                 address_id: loc.address_id ?? null,
             });
-            router.reload({
-                only: ['draft', 'deliveryQuote', 'deliveryTiers'],
-            });
+            reloadQuoteAfterLocationUpdate.current = true;
         },
         [form],
     );
@@ -166,6 +165,8 @@ export default function CheckoutCustomer({
             form.setData({
                 ...form.data,
                 address_id: addr.id,
+                recipient_name: addr.recipient_name ?? '',
+                recipient_phone: addr.phone ?? '',
                 address_line: addr.address_line ?? '',
                 address_detail: addr.address_detail ?? '',
                 province: addr.province ?? '',
@@ -178,12 +179,21 @@ export default function CheckoutCustomer({
                 landmark: addr.landmark ?? '',
                 delivery_notes: addr.delivery_notes ?? '',
             });
-            router.reload({
-                only: ['draft', 'deliveryQuote', 'deliveryTiers'],
-            });
+            reloadQuoteAfterLocationUpdate.current = true;
         },
         [form],
     );
+
+    useEffect(() => {
+        if (!reloadQuoteAfterLocationUpdate.current) {
+            return;
+        }
+
+        reloadQuoteAfterLocationUpdate.current = false;
+        router.reload({
+            only: ['draft', 'deliveryQuote', 'deliveryTiers'],
+        });
+    }, [form.data]);
 
     // Single auto-select effect with priority chain
     useEffect(() => {

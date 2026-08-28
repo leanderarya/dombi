@@ -2,17 +2,18 @@
 
 Status: implemented.
 
+Root cause:
+- Auto/manual address helpers called `router.reload` immediately after `form.setData`. Reload could run before React/Inertia form state reflected the complete address payload, so quote/session-derived state diverged.
+
 Changes:
-- Added duplicate non-empty `invoice_number` detection before per-attempt validation.
-- Replaced invoice/order-code equality check with blank-invoice validation.
-- Preserved remaining verifier invariants.
-
-Focused test:
-- `php artisan test tests/Feature/CanonicalPaymentVerifierTest.php`
-- 9 passed, 1 failed: existing assertion expects `duplicate invoice`; verifier now emits required `duplicate payment attempt invoice {invoice}` wording.
-
-Concern resolved: duplicate assertion now matches required error wording.
+- Both `applySavedAddress` and `applyLocation` now mark quote refresh pending after setting complete form state.
+- A `form.data` effect performs quote reload after state update.
+- Saved-address application now also copies recipient name and phone, keeping automatic selection aligned with manual address flow.
+- Existing auto/manual guards preserved. No controller or endpoint change.
 
 Verification:
-- Command: `php artisan test tests/Feature/CanonicalPaymentVerifierTest.php`
-- Output: 10 passed (25 assertions), duration 15.94s, exit code 0.
+- `npm run types:check` — passed.
+- `npm run lint:check` — passed.
+- `npm run format:check` — passed.
+- `git diff --check` — passed.
+- `php artisan test tests/Feature/CheckoutAddressPersistenceTest.php` — unavailable: this Laravel install has no `test` Artisan command.
