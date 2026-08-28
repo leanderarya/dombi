@@ -76,6 +76,21 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $this->assertNull($attempt->fresh()->fulfilment_claimed_at);
     }
 
+    public function test_expired_order_late_success_stays_terminal_and_creates_one_refund_obligation(): void
+    {
+        [$order, $attempt] = $this->attempt(['status' => Order::STATUS_EXPIRED, 'expired_at' => now()->subMinute()]);
+        $service = app(CanonicalPaymentTransitionService::class);
+        $event = new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []);
+
+        $service->apply($attempt, $event);
+        $service->apply($attempt->fresh(), $event);
+
+        $this->assertSame(Order::STATUS_EXPIRED, $order->fresh()->status);
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
+        $this->assertSame(1, RefundObligation::where('payment_attempt_id', $attempt->id)->count());
+        $this->assertSame('late_payment', RefundObligation::where('payment_attempt_id', $attempt->id)->value('reason'));
+    }
+
     public function test_terminal_order_success_is_paid_but_creates_refund_without_claiming(): void
     {
         [$order, $attempt] = $this->attempt(['status' => Order::STATUS_CANCELLED_BY_CUSTOMER]);
