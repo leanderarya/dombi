@@ -166,7 +166,7 @@ class OrderService
             'ordered_at' => now(),
             'confirmation_expires_at' => now()->addMinutes(
                 $outlet->confirmation_timeout_minutes
-                    ?? (int) config('order.confirmation_timeout_minutes', 30)
+                    ?? (int) (config('order.confirmation_timeout_minutes') ?? 30)
             ),
         ]);
 
