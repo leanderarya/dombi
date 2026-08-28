@@ -142,3 +142,6 @@ The soft-launch vertical slice is implemented and all 10 launch invariants are v
 3. (Non-blocking backlog) Add date range filter to `outlet/orders/index.tsx` + `Outlet/OrderController::index` for OUT-5.
 4. (Non-blocking backlog) Surface delivery margin in `assign-courier-sheet.tsx` for DEL-3.
 5. (Non-blocking backlog) Migrate `FcmSender` to FCM HTTP v1 for SYS-1 multi-platform push.
+## Reviewer finding — checkout address ownership (2026-08-28)
+
+Fixed `CheckoutController` address validation to scope `address_id` existence checks to authenticated customer's `customer_addresses`. Added regression coverage proving another customer's address is rejected. PHP syntax checks and `npm run types:check` pass; PHPUnit unavailable because project dependencies are not installed in this worktree.

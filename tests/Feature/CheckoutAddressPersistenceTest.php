@@ -71,6 +71,36 @@ class CheckoutAddressPersistenceTest extends TestCase
         $this->assertSame('Blok B', session('checkout.location.address_detail'));
     }
 
+    public function test_store_customer_rejects_another_customers_address(): void
+    {
+        $user = User::factory()->create();
+        $customer = Customer::factory()->for($user)->create();
+        $otherCustomer = Customer::factory()->create();
+        $otherAddress = $otherCustomer->addresses()->create([
+            'label' => 'Lain',
+            'recipient_name' => 'Other',
+            'phone' => '6281234567890',
+            'address' => 'Jl. Other No. 1',
+            'city' => 'Bandung',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession([
+                'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi'],
+            ])
+            ->post('/customer/checkout/customer', [
+                'customer_name' => 'Arya',
+                'phone_number' => '081234567890',
+                'address_id' => $otherAddress->id,
+                'address_line' => 'Jl. Other No. 1',
+                'latitude' => -6.9175,
+                'longitude' => 107.6191,
+            ])
+            ->assertSessionHasErrors('address_id');
+
+        $this->assertNull(session('checkout.location'));
+    }
+
     public function test_store_customer_persists_auto_selected_default_address(): void
     {
         $user = User::factory()->create();
