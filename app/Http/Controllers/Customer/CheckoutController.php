@@ -670,7 +670,7 @@ class CheckoutController extends Controller
             // Reset confirmation_expires_at so customer gets fresh retry window
             $order->update([
                 'confirmation_expires_at' => now()->addMinutes(
-                    $order->outlet->confirmation_timeout_minutes ?? config('order.confirmation_timeout_minutes', 15)
+                    max(1, (int) ($order->outlet->confirmation_timeout_minutes ?: (config('order.confirmation_timeout_minutes') ?: 30)))
                 ),
             ]);
 
@@ -686,7 +686,7 @@ class CheckoutController extends Controller
             // Reset confirmation_expires_at so customer gets fresh retry window
             $order->update([
                 'confirmation_expires_at' => now()->addMinutes(
-                    $order->outlet->confirmation_timeout_minutes ?? config('order.confirmation_timeout_minutes', 15)
+                    max(1, (int) ($order->outlet->confirmation_timeout_minutes ?: (config('order.confirmation_timeout_minutes') ?: 30)))
                 ),
             ]);
 
