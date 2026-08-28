@@ -174,7 +174,13 @@ class DokuService
 
     public function expireDueUnknownAttempts(int $limit = 100): int
     {
-        $ids = PaymentAttempt::query()->where('creation_state', 'unknown')->orderBy('id')->limit($limit)->pluck('id');
+        $ids = PaymentAttempt::query()
+            ->where('creation_state', 'unknown')
+            ->whereNotNull('metadata->reconciliation_deadline_at')
+            ->where('metadata->reconciliation_deadline_at', '<=', now()->toIso8601String())
+            ->orderBy('id')
+            ->limit($limit)
+            ->pluck('id');
         $expired = 0;
         foreach ($ids as $id) {
             try {

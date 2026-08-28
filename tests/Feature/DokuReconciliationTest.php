@@ -148,6 +148,16 @@ class DokuReconciliationTest extends TestCase
         $this->assertSame($deadline, data_get($attempt->fresh()->metadata, 'reconciliation_deadline_at'));
     }
 
+    public function test_expiry_sweep_limit_ignores_undated_unknown_attempts(): void
+    {
+        $undated = $this->makeAttempt('unknown');
+        $due = $this->makeAttempt('unknown', ['reconciliation_deadline_at' => now()->subSecond()->toIso8601String()]);
+
+        $this->assertSame(1, $this->reconciliation->expireDueUnknownAttempts(1));
+        $this->assertSame('unknown', $undated->fresh()->creation_state?->value);
+        $this->assertSame('failed', $due->fresh()->creation_state?->value);
+    }
+
     public function test_expiry_sweep_only_expires_due_unknown_attempts(): void
     {
         $due = $this->makeAttempt('unknown', ['reconciliation_deadline_at' => now()->subSecond()->toIso8601String()]);
