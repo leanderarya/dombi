@@ -2,8 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\PaymentAttemptSettlementStatus;
+use App\Enums\PaymentAttemptVerificationStatus;
 use App\Models\Order;
 use App\Models\Outlet;
+use App\Models\PaymentAttempt;
+use App\Services\CanonicalPaymentTransitionService;
+use App\Services\NormalizedPaymentEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -61,24 +66,48 @@ class ExpirePendingOrdersTest extends TestCase
         ]);
     }
 
-    public function test_failed_payment_expires_after_retry_window_and_not_before_confirmation_window(): void
+    public function test_confirmation_deadline_boundary_is_not_expired_until_after_deadline(): void
     {
         Carbon::setTestNow('2026-08-28 12:00:00');
         $order = Order::factory()->create([
             'status' => Order::STATUS_PENDING_CONFIRMATION,
-            'payment_status' => 'failed',
-            'confirmation_expires_at' => now()->addMinutes(15),
+            'confirmation_expires_at' => now(),
         ]);
 
         $this->artisan('orders:expire-pending')->assertSuccessful();
         $this->assertSame(Order::STATUS_PENDING_CONFIRMATION, $order->fresh()->status);
 
+        Carbon::setTestNow('2026-08-28 12:00:01');
+        $this->artisan('orders:expire-pending')->assertSuccessful();
+        $this->assertSame(Order::STATUS_EXPIRED, $order->fresh()->status);
+    }
+
+    public function test_failed_payment_retry_window_resets_through_canonical_transition(): void
+    {
+        Carbon::setTestNow('2026-08-28 12:00:00');
+        $order = Order::factory()->create([
+            'status' => Order::STATUS_PENDING_CONFIRMATION,
+            'payment_status' => 'pending',
+            'confirmation_expires_at' => now()->addMinutes(30),
+            'total' => 50000,
+        ]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'retry', 'invoice_number' => 'invoice-retry',
+            'merchant_request_id' => 'request-retry', 'amount_snapshot' => 50000, 'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Pending,
+            'verification_status' => PaymentAttemptVerificationStatus::NeedsReview,
+        ]);
+
+        app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
+            'doku', 'FAILED', null, 'IDR', 'invoice-retry', now(), []
+        ));
+
+        $this->assertSame('2026-08-28T12:15:00+00:00', $order->fresh()->confirmation_expires_at->toIso8601String());
+        $this->artisan('orders:expire-pending')->assertSuccessful();
+        $this->assertSame(Order::STATUS_PENDING_CONFIRMATION, $order->fresh()->status);
+
         Carbon::setTestNow('2026-08-28 12:16:00');
         $this->artisan('orders:expire-pending')->assertSuccessful();
-
-        $expired = $order->fresh();
-        $this->assertSame(Order::STATUS_EXPIRED, $expired->status);
-        $this->assertSame('Payment failed (grace period expired)', $expired->expired_reason);
-        $this->assertNotNull($expired->expired_at);
+        $this->assertSame(Order::STATUS_EXPIRED, $order->fresh()->status);
     }
 }
