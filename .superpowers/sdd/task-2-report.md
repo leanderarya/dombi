@@ -17,3 +17,18 @@ Verification:
 - `npm run format:check` — passed.
 - `git diff --check` — passed.
 - `php artisan test tests/Feature/CheckoutAddressPersistenceTest.php` — unavailable: this Laravel install has no `test` Artisan command.
+
+## Final Review Fix
+
+Root cause confirmed: `router.reload` is GET-only and sent no address payload, so `checkout.location` stayed unset until final form submission. The existing `POST /customer/location` path now receives `form.data` before the partial reload; backend validation accepts `address_id` and persists it with location data. No new endpoint added.
+
+Additional verification:
+- `npm run types:check` — passed.
+- `npm run lint:check` — passed.
+- `npm run format:check` — passed.
+- `php -l app/Http/Controllers/Customer/CheckoutController.php` — passed.
+- `php -l routes/web.php` — passed.
+- `git diff --check` — passed.
+- `graphify update .` — passed; refreshed graph.
+
+Limitation: Laravel feature test remains unavailable because this install exposes no `test` Artisan command; browser/integration execution was not available.

@@ -725,6 +725,7 @@ class CheckoutController extends Controller
     public function storeLocationDraft(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'address_id' => ['nullable', 'integer', Rule::exists('customer_addresses', 'id')],
             'address_line' => ['nullable', 'string', 'max:1000'],
             'address_detail' => ['nullable', 'string', 'max:500'],
             'province' => ['nullable', 'string', 'max:255'],

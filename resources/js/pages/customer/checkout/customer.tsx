@@ -190,8 +190,14 @@ export default function CheckoutCustomer({
         }
 
         reloadQuoteAfterLocationUpdate.current = false;
-        router.reload({
-            only: ['draft', 'deliveryQuote', 'deliveryTiers'],
+        router.post('/customer/location', form.data, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({
+                    only: ['draft', 'deliveryQuote', 'deliveryTiers'],
+                });
+            },
         });
     }, [form.data]);
 
