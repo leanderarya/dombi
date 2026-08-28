@@ -318,7 +318,7 @@ class CheckoutController extends Controller
             'recipient_name' => ['nullable', 'string', 'min:3', 'max:255'],
             'recipient_phone' => ['nullable', 'string', 'max:20'],
             'save_recipient' => ['nullable', 'boolean'],
-            'address_id' => ['nullable', 'integer', Rule::exists('customer_addresses', 'id')],
+            'address_id' => ['nullable', 'integer', Rule::exists('customer_addresses', 'id')->where('customer_id', $request->user()?->customer?->id ?? 0)],
             'latitude' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'numeric', 'between:-180,180'],
             'address_line' => [$isDelivery ? 'required' : 'nullable', 'nullable', 'string', 'max:1000'],
@@ -725,7 +725,7 @@ class CheckoutController extends Controller
     public function storeLocationDraft(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'address_id' => ['nullable', 'integer', Rule::exists('customer_addresses', 'id')],
+            'address_id' => ['nullable', 'integer', Rule::exists('customer_addresses', 'id')->where('customer_id', $request->user()?->customer?->id ?? 0)],
             'address_line' => ['nullable', 'string', 'max:1000'],
             'address_detail' => ['nullable', 'string', 'max:500'],
             'province' => ['nullable', 'string', 'max:255'],
