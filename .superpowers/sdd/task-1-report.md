@@ -1,16 +1,22 @@
-# Task 1 Report
+# Task 1 Report: Centralize timeout configuration
 
-Status: review fix applied; focused test runner unavailable.
+## Changes
 
-Changes:
-- Adjusted `test_store_customer_persists_auto_selected_default_address` to omit optional address metadata that frontend auto-selection does not submit.
-- Keeps only supported POST contract: customer fields, selected `address_id`, required `address_line`, and coordinates.
-- Asserts backend persists selected default address ID, address line, latitude, and longitude in `checkout.location`.
+- Added typed `order.doku_reconciliation_deadline_hours` config with default `24`.
+- Preserved and typed confirmation timeout default `30` and payment retry window default `15`.
+- Updated `OrderService` fallback to `config('order.confirmation_timeout_minutes', 30)`.
+- Updated both DOKU reconciliation deadline calculations to use centralized config.
+- Added `tests/Unit/OrderTimingConfigTest.php` covering defaults and runtime overrides.
+- Ran `graphify update .` after code changes.
 
-Checks:
-- `php -l tests/Feature/CheckoutAddressPersistenceTest.php` — passed.
-- `php artisan test tests/Feature/CheckoutAddressPersistenceTest.php` — blocked: Artisan `test` command unavailable.
-- `vendor/bin/phpunit tests/Feature/CheckoutAddressPersistenceTest.php` — blocked: `vendor/bin/phpunit` absent.
-- `graphify update .` — passed.
+## Verification
 
-Commit: `fix: align checkout address test payload`.
+- PHP lint passed for `config/order.php`, `app/Services/OrderService.php`, `app/Services/DokuService.php`.
+- `git diff --check` passed.
+- `php artisan test --filter='OrderTimingConfig|DokuReconciliation|OrderService'` unavailable: this project does not define `artisan test`.
+- `vendor/bin/phpunit` unavailable: PHPUnit dependencies/binary are not installed.
+- npm checks not run; task workspace has no installed test runner verification available.
+
+## Commit
+
+`5ff6a489 fix: centralize order expiry timing`
