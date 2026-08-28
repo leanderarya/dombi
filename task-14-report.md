@@ -16,4 +16,11 @@ Verification (2026-08-24):
 - `npm run types:check` — pass.
 - `composer run lint:check` — pass (Pint 661 files).
 
+Verification (2026-08-28):
+
+- `php -l app/Services/DokuService.php`, `php -l tests/Feature/DokuReconciliationTest.php`, `git diff --check` — pass.
+- `php artisan test tests/Feature/DokuReconciliationTest.php` — unavailable: project Artisan has no `test` command.
+- `vendor/bin/phpunit tests/Feature/DokuReconciliationTest.php`, `vendor/bin/pint --test ...` — unavailable: vendor binaries absent.
+- Runtime-null assertions added for both deadline initialization paths; configured-hours override assertion added for reconciliation path.
+
 Incomplete test is intentional: late, duplicate, reconciliation, and refund-ageing owner paths require available MySQL fixtures. No production readiness claim.

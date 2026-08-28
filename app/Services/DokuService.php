@@ -147,7 +147,7 @@ class DokuService
                     return false;
                 }
                 $locked->update(['creation_state' => $state, 'raw_response' => $rawResponse, 'metadata' => array_merge($locked->metadata ?? [], $metadata, ['creation_lease' => null], $state === 'unknown' ? ['reconciliation_deadline_at' => now()->addHours(
-                    (int) config('order.doku_reconciliation_deadline_hours', 24)
+                    (int) (config('order.doku_reconciliation_deadline_hours') ?? 24)
                 )->toIso8601String()] : [])]);
                 if ($state === 'failed') {
                     app(InventoryService::class)->releaseReservedStock($order);
@@ -228,7 +228,7 @@ class DokuService
             $metadata = $locked->metadata ?? [];
             if (! data_get($metadata, 'reconciliation_deadline_at')) {
                 $metadata['reconciliation_deadline_at'] = now()->addHours(
-                    (int) config('order.doku_reconciliation_deadline_hours', 24)
+                    (int) (config('order.doku_reconciliation_deadline_hours') ?? 24)
                 )->toIso8601String();
             }
             $count = (int) ($metadata['reconciliation_attempts'] ?? 0);
