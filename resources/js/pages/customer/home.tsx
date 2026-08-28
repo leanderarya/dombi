@@ -50,8 +50,9 @@ export default function Home({ customerName, activeOrders }: any) {
 
     useLockSwipeBack();
 
+    const customerPhone = auth?.user?.customer?.phone ?? auth?.user?.phone;
     const showPhoneBanner =
-        isLoggedIn && !auth?.user?.customer?.phone && !phoneBannerDismissed;
+        isLoggedIn && !customerPhone && !phoneBannerDismissed;
 
     const handleDelivery = () => {
         if (!isLoggedIn) {
