@@ -10,6 +10,7 @@ use App\Services\DokuReconciliationService;
 use App\Services\DokuService;
 use App\Services\DokuWebhookIngressService;
 use App\Services\TransitionResult;
+use App\Exceptions\DokuPaymentException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
@@ -88,8 +89,9 @@ class DokuReconciliationTest extends TestCase
         $this->assertSame('paid', $attempt->settlement_status?->value);
     }
 
-    public function test_unknown_attempt_gets_24_hour_reconciliation_deadline(): void
+    public function test_unknown_attempt_gets_24_hour_reconciliation_deadline_when_config_is_null(): void
     {
+        config(['order.doku_reconciliation_deadline_hours' => null]);
         $now = now()->startOfSecond();
         $this->travelTo($now);
         $attempt = $this->makeAttempt('unknown');
@@ -100,6 +102,38 @@ class DokuReconciliationTest extends TestCase
         $metadata = $attempt->fresh()->metadata;
         $this->assertSame($now->copy()->addHours(24)->toIso8601String(), $metadata['reconciliation_deadline_at']);
         $this->assertSame($now->copy()->addMinutes(2)->toIso8601String(), $metadata['next_reconciliation_at']);
+        $this->travelBack();
+    }
+
+    public function test_creation_failure_initializes_deadline_with_null_runtime_config(): void
+    {
+        config(['order.doku_reconciliation_deadline_hours' => null]);
+        $now = now()->startOfSecond();
+        $this->travelTo($now);
+        $attempt = $this->makeAttempt('initiated');
+        Http::fake(['*/checkout/v1/payment' => Http::response(null, 500)]);
+
+        try {
+            app(DokuService::class)->createPayment($attempt);
+        } catch (DokuPaymentException) {
+            // Expected ambiguous creation failure.
+        }
+
+        $this->assertSame($now->copy()->addHours(24)->toIso8601String(), data_get($attempt->fresh()->metadata, 'reconciliation_deadline_at'));
+        $this->travelBack();
+    }
+
+    public function test_unknown_attempt_initializes_deadline_from_runtime_config(): void
+    {
+        config(['order.doku_reconciliation_deadline_hours' => 7]);
+        $now = now()->startOfSecond();
+        $this->travelTo($now);
+        $attempt = $this->makeAttempt('unknown');
+        Http::fake(['*/checkout/v1/payment/*' => Http::response(null, 500)]);
+
+        $this->reconciliation->reconcile($attempt);
+
+        $this->assertSame($now->copy()->addHours(7)->toIso8601String(), data_get($attempt->fresh()->metadata, 'reconciliation_deadline_at'));
         $this->travelBack();
     }
 
