@@ -20,3 +20,15 @@
 ## Commit
 
 `5ff6a489 fix: centralize order expiry timing`
+
+## Follow-up Review Fix
+
+- Changed `Order` creation hook fallback to `config('order.confirmation_timeout_minutes', 30)`.
+- Added focused coverage for the 30-minute fallback when config value is unset.
+- Ran PHP lint for model and test plus `git diff --check` successfully.
+- `vendor/bin/phpunit` unavailable; PHPUnit dependencies/binary are not installed.
+- Ran `graphify update .` successfully.
+
+## Commit
+
+`8d95ce43 fix: use centralized order timeout fallback`
