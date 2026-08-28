@@ -164,7 +164,10 @@ class OrderService
             'longitude' => $address?->longitude,
             'notes' => $payload['notes'] ?? $address?->delivery_notes ?? null,
             'ordered_at' => now(),
-            'confirmation_expires_at' => now()->addMinutes($outlet->confirmation_timeout_minutes ?? 15),
+            'confirmation_expires_at' => now()->addMinutes(
+                $outlet->confirmation_timeout_minutes
+                    ?? (int) config('order.confirmation_timeout_minutes', 30)
+            ),
         ]);
 
         foreach ($items as $item) {
