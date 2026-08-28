@@ -8,3 +8,10 @@ Verification (2026-08-28):
 - `php -l app/Models/Order.php` — pass.
 - `git diff --check` — pass.
 - `DB_PASSWORD= php artisan test tests/Feature/ExpirePendingOrdersTest.php` — unavailable: this project exposes no `artisan test` command in current environment.
+
+# Reviewer follow-up — CheckoutController timeout normalization
+
+- Updated both payment-failure timeout resets to accept only numeric positive outlet/config values; invalid values such as `abc` now fall back to configured timeout, then 30 minutes.
+- `php -l app/Http/Controllers/Customer/CheckoutController.php` — pass.
+- `git diff --check` — pass.
+- `graphify update .` — pass.
