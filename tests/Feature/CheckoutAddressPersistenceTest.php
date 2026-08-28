@@ -70,4 +70,57 @@ class CheckoutAddressPersistenceTest extends TestCase
         );
         $this->assertSame('Blok B', session('checkout.location.address_detail'));
     }
+
+    public function test_store_customer_persists_auto_selected_default_address(): void
+    {
+        $user = User::factory()->create();
+        $customer = Customer::factory()->for($user)->create();
+        $address = $customer->addresses()->create([
+            'label' => 'Rumah',
+            'recipient_name' => 'Arya',
+            'phone' => '6281234567890',
+            'address' => 'Jl. Default No. 10',
+            'village' => 'Sukamaju',
+            'district' => 'Coblong',
+            'city' => 'Bandung',
+            'is_default' => true,
+            'latitude' => -6.9147,
+            'longitude' => 107.6098,
+        ]);
+
+        $this->actingAs($user)
+            ->withSession([
+                'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi'],
+            ])
+            ->post('/customer/checkout/customer', [
+                'customer_name' => 'Arya',
+                'phone_number' => '081234567890',
+                'address_id' => $address->id,
+                'address_line' => 'Jl. Default No. 10',
+                'address_detail' => 'Rumah depan taman',
+                'province' => 'Jawa Barat',
+                'city' => 'Bandung',
+                'district' => 'Coblong',
+                'village' => 'Sukamaju',
+                'postal_code' => '40132',
+                'latitude' => -6.9147,
+                'longitude' => 107.6098,
+                'recipient_name' => '',
+                'recipient_phone' => '',
+                'save_recipient' => false,
+            ]);
+
+        $location = session('checkout.location');
+
+        $this->assertSame($address->id, $location['address_id']);
+        $this->assertSame('Jl. Default No. 10', $location['address_line']);
+        $this->assertSame('Rumah depan taman', $location['address_detail']);
+        $this->assertSame('Jawa Barat', $location['province']);
+        $this->assertSame('Bandung', $location['city']);
+        $this->assertSame('Coblong', $location['district']);
+        $this->assertSame('Sukamaju', $location['village']);
+        $this->assertSame('40132', $location['postal_code']);
+        $this->assertSame(-6.9147, $location['latitude']);
+        $this->assertSame(107.6098, $location['longitude']);
+    }
 }
