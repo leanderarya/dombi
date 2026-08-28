@@ -96,11 +96,17 @@ class CheckoutAddressPersistenceTest extends TestCase
                 'customer_name' => 'Arya',
                 'phone_number' => '081234567890',
                 'address_id' => $address->id,
-                // Auto-selection supplies selected address ID plus required location fields;
-                // optional address metadata remains absent from this request.
                 'address_line' => 'Jl. Default No. 10',
+                'address_detail' => '',
+                'province' => '',
+                'city' => 'Bandung',
+                'district' => 'Coblong',
+                'village' => 'Sukamaju',
+                'postal_code' => '',
                 'latitude' => -6.9147,
                 'longitude' => 107.6098,
+                'landmark' => '',
+                'delivery_notes' => '',
             ]);
 
         $location = session('checkout.location');
