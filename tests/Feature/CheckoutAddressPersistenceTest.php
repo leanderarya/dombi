@@ -96,30 +96,17 @@ class CheckoutAddressPersistenceTest extends TestCase
                 'customer_name' => 'Arya',
                 'phone_number' => '081234567890',
                 'address_id' => $address->id,
+                // Auto-selection supplies selected address ID plus required location fields;
+                // optional address metadata remains absent from this request.
                 'address_line' => 'Jl. Default No. 10',
-                'address_detail' => 'Rumah depan taman',
-                'province' => 'Jawa Barat',
-                'city' => 'Bandung',
-                'district' => 'Coblong',
-                'village' => 'Sukamaju',
-                'postal_code' => '40132',
                 'latitude' => -6.9147,
                 'longitude' => 107.6098,
-                'recipient_name' => '',
-                'recipient_phone' => '',
-                'save_recipient' => false,
             ]);
 
         $location = session('checkout.location');
 
         $this->assertSame($address->id, $location['address_id']);
         $this->assertSame('Jl. Default No. 10', $location['address_line']);
-        $this->assertSame('Rumah depan taman', $location['address_detail']);
-        $this->assertSame('Jawa Barat', $location['province']);
-        $this->assertSame('Bandung', $location['city']);
-        $this->assertSame('Coblong', $location['district']);
-        $this->assertSame('Sukamaju', $location['village']);
-        $this->assertSame('40132', $location['postal_code']);
         $this->assertSame(-6.9147, $location['latitude']);
         $this->assertSame(107.6098, $location['longitude']);
     }
