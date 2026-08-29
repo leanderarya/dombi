@@ -504,7 +504,7 @@ class DokuReconciliationTest extends TestCase
         $available = env('RUN_PRODUCTION_DRIVER_TESTS') === true
             && in_array(config('database.default'), ['mysql', 'pgsql'], true)
             && function_exists('pcntl_fork');
-        if (! $available) {
+        if (!$available) {
             if (env('CI')) {
                 $this->fail('Production-driver race gate required in CI: set RUN_PRODUCTION_DRIVER_TESTS=true with MySQL/PostgreSQL and pcntl.');
             }
