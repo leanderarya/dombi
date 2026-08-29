@@ -226,7 +226,7 @@ export default function CheckoutIndex({
                         {/* Segmented Toggle */}
                         <div className="relative flex rounded-xl bg-surface-muted p-1">
                             <div
-                                className="absolute top-1 bottom-1 rounded-lg bg-white shadow-sm transition-all duration-300 ease-in-out"
+                                className="absolute top-1 bottom-1 rounded-lg bg-white shadow-sm transition-all duration-200 ease-out motion-reduce:transition-none"
                                 style={{
                                     left:
                                         fulfillmentType === 'pickup'
@@ -272,7 +272,7 @@ export default function CheckoutIndex({
                         {/* Detail Card */}
                         <div className="mt-3 overflow-hidden rounded-xl border border-border bg-white">
                             <div
-                                className="flex transition-transform duration-300 ease-in-out"
+                                className="flex transition-transform duration-200 ease-out motion-reduce:transition-none"
                                 style={{
                                     transform:
                                         fulfillmentType === 'pickup'
