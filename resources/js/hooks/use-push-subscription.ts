@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 
-export type PushState = 'active' | 'denied' | 'unsupported' | 'loading';
+export type PushState =
+    | 'active'
+    | 'denied'
+    | 'unsupported'
+    | 'loading'
+    | 'error';
 
 const CSRF_TOKEN =
     typeof document !== 'undefined'
@@ -80,7 +85,7 @@ export function usePushSubscription(): {
 
             if (Notification.permission === 'granted') {
                 void subscribeToPush().then((ok) =>
-                    setPushState(ok ? 'active' : 'denied'),
+                    setPushState(ok ? 'active' : 'error'),
                 );
             }
         }, 0);
@@ -110,7 +115,7 @@ export function usePushSubscription(): {
         }
 
         const ok = await subscribeToPush();
-        setPushState(ok ? 'active' : 'denied');
+        setPushState(ok ? 'active' : 'error');
 
         return ok;
     }, [pushState]);

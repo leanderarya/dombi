@@ -69,7 +69,6 @@ class PaymentOutboxTest extends TestCase
 
         $service->apply($attempt, $event);
         $service->apply($attempt->fresh(), $event);
-        app(NotificationService::class)->notifyOrderCreated($attempt->order);
         $outbox = PaymentOutboxEvent::query()->where('event_type', 'payment.paid')->firstOrFail();
         (new DispatchPaymentOutboxEvent($outbox->id))->handle();
         (new DispatchPaymentOutboxEvent($outbox->id))->handle();

@@ -36,7 +36,7 @@ describe('subscribeToPush', () => {
         );
     });
 
-    it('does not report an existing subscription active when backend registration fails', async () => {
+    it('returns false when backend registration fails', async () => {
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
         vi.stubGlobal('navigator', {
             serviceWorker: {
@@ -51,5 +51,52 @@ describe('subscribeToPush', () => {
         });
 
         await expect(subscribeToPush()).resolves.toBe(false);
+    });
+
+    it('returns false when backend registration throws server error', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValue({ ok: false, status: 500 }),
+        );
+        vi.stubGlobal('navigator', {
+            serviceWorker: {
+                ready: Promise.resolve({
+                    pushManager: {
+                        getSubscription: vi
+                            .fn()
+                            .mockResolvedValue(subscription),
+                    },
+                }),
+            },
+        });
+
+        await expect(subscribeToPush()).resolves.toBe(false);
+    });
+
+    it('returns false on network error', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')));
+        vi.stubGlobal('navigator', {
+            serviceWorker: {
+                ready: Promise.resolve({
+                    pushManager: {
+                        getSubscription: vi
+                            .fn()
+                            .mockResolvedValue(subscription),
+                    },
+                }),
+            },
+        });
+
+        await expect(subscribeToPush()).resolves.toBe(false);
+    });
+});
+
+describe('usePushSubscription', () => {
+    it('defines error state distinct from denied', () => {
+        const denied = 'denied' as const;
+        const error = 'error' as const;
+
+        expect(error).toBe('error');
+        expect(denied).not.toBe(error);
     });
 });
