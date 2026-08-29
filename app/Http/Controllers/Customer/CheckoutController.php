@@ -695,14 +695,7 @@ class CheckoutController extends Controller
                 ),
             ]);
 
-            return $this->checkoutFailure(
-                $request,
-                'Gagal membuat pembayaran. Silakan coba lagi.',
-                'customer.orders.confirm',
-                'payment',
-                502,
-                ['orderCode' => $order->order_code],
-            );
+            return $this->paymentCreationFailure($request, $order);
         } catch (\Exception $e) {
             Log::error('Failed to create DOKU payment', [
                 'order_id' => $order->id,
@@ -720,14 +713,7 @@ class CheckoutController extends Controller
                 ),
             ]);
 
-            return $this->checkoutFailure(
-                $request,
-                'Gagal membuat pembayaran. Silakan coba lagi.',
-                'customer.orders.confirm',
-                'payment',
-                502,
-                ['orderCode' => $order->order_code],
-            );
+            return $this->paymentCreationFailure($request, $order);
         }
     }
 
@@ -995,6 +981,17 @@ class CheckoutController extends Controller
 
             return 0;
         });
+    }
+
+    private function paymentCreationFailure(Request $request, Order $order): RedirectResponse|JsonResponse
+    {
+        $message = 'Gagal membuat pembayaran. Silakan coba lagi.';
+        $url = route('customer.orders.confirm', ['orderCode' => $order->order_code]);
+        $request->session()->flash('error', $message);
+
+        return $request->expectsJson()
+            ? response()->json(['message' => $message, 'redirect_url' => $url])
+            : redirect()->to($url);
     }
 
     private function checkoutFailure(
