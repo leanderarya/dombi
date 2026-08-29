@@ -17,6 +17,7 @@ import PhoneInput from '@/components/ui/phone-input';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { mutationFetch } from '@/lib/api';
 import { getDeliveryAddressPresentation } from '@/lib/checkout-address-presentation';
+import { CheckoutLocationSaver } from '@/lib/checkout-location-save';
 import { applyLocationToForm } from '@/lib/checkout-utils';
 import { useCustomerLocation } from '@/lib/customer-location';
 import type { CustomerLocation } from '@/lib/customer-location';
@@ -118,6 +119,15 @@ export default function CheckoutCustomer({
     const autoApplied = useRef(false);
     const userChoseLocation = useRef(false);
     const reloadQuoteAfterLocationUpdate = useRef(false);
+    const [locationSaver] = useState(
+        () =>
+            new CheckoutLocationSaver<CustomerForm>(async (data) => {
+                await mutationFetch('/customer/location', {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                });
+            }),
+    );
 
     const form = useForm<CustomerForm>({
         customer_name: draft?.customer?.customer_name ?? authUser?.name ?? '',
@@ -191,16 +201,19 @@ export default function CheckoutCustomer({
         }
 
         reloadQuoteAfterLocationUpdate.current = false;
-        void mutationFetch('/customer/location', {
-            method: 'POST',
-            body: JSON.stringify(form.data),
-        })
+        void locationSaver
+            .persist(form.data)
             .then(() => {
                 router.reload({
                     only: ['draft', 'deliveryQuote', 'deliveryTiers'],
                 });
             })
-            .catch(() => {});
+            .catch(() => {
+                form.setError(
+                    'address_line',
+                    'Alamat gagal disimpan. Silakan coba lagi.',
+                );
+            });
     }, [form.data]);
 
     // Single auto-select effect with priority chain
@@ -337,7 +350,7 @@ export default function CheckoutCustomer({
           )?.label ?? null)
         : null;
 
-    const submit = () => {
+    const submit = async () => {
         if (form.processing) {
             return;
         }
@@ -345,8 +358,23 @@ export default function CheckoutCustomer({
         const finalRecipient = !showRecipient
             ? { recipient_name: '', recipient_phone: '', save_recipient: false }
             : { save_recipient: saveRecipient };
+        const data = { ...form.data, ...finalRecipient };
 
-        form.setData((current) => ({ ...current, ...finalRecipient }));
+        form.setData(data);
+
+        if (isDelivery) {
+            try {
+                await locationSaver.persist(data);
+            } catch {
+                form.setError(
+                    'address_line',
+                    'Alamat gagal disimpan. Silakan coba lagi.',
+                );
+
+                return;
+            }
+        }
+
         form.post('/customer/checkout/customer');
     };
 
