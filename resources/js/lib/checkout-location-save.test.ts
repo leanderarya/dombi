@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CheckoutLocationSaver } from './checkout-location-save';
+import {
+    CheckoutLocationSaver,
+    CheckoutSubmissionLock,
+} from './checkout-location-save';
 
 function deferred() {
     let resolve!: () => void;
@@ -9,6 +12,19 @@ function deferred() {
 
     return { promise, resolve };
 }
+
+describe('CheckoutSubmissionLock', () => {
+    it('locks synchronously and allows retry after release', () => {
+        const lock = new CheckoutSubmissionLock();
+
+        expect(lock.acquire()).toBe(true);
+        expect(lock.acquire()).toBe(false);
+
+        lock.release();
+
+        expect(lock.acquire()).toBe(true);
+    });
+});
 
 describe('CheckoutLocationSaver', () => {
     it('waits for an older save before persisting and continuing with current location', async () => {

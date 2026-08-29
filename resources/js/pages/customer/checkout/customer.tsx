@@ -17,7 +17,10 @@ import PhoneInput from '@/components/ui/phone-input';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { mutationFetch } from '@/lib/api';
 import { getDeliveryAddressPresentation } from '@/lib/checkout-address-presentation';
-import { CheckoutLocationSaver } from '@/lib/checkout-location-save';
+import {
+    CheckoutLocationSaver,
+    CheckoutSubmissionLock,
+} from '@/lib/checkout-location-save';
 import { applyLocationToForm } from '@/lib/checkout-utils';
 import { useCustomerLocation } from '@/lib/customer-location';
 import type { CustomerLocation } from '@/lib/customer-location';
@@ -119,6 +122,7 @@ export default function CheckoutCustomer({
     const autoApplied = useRef(false);
     const userChoseLocation = useRef(false);
     const reloadQuoteAfterLocationUpdate = useRef(false);
+    const [submissionLock] = useState(() => new CheckoutSubmissionLock());
     const [locationSaver] = useState(
         () =>
             new CheckoutLocationSaver<CustomerForm>(async (data) => {
@@ -351,7 +355,7 @@ export default function CheckoutCustomer({
         : null;
 
     const submit = async () => {
-        if (form.processing) {
+        if (form.processing || !submissionLock.acquire()) {
             return;
         }
 
@@ -366,6 +370,7 @@ export default function CheckoutCustomer({
             try {
                 await locationSaver.persist(data);
             } catch {
+                submissionLock.release();
                 form.setError(
                     'address_line',
                     'Alamat gagal disimpan. Silakan coba lagi.',
@@ -375,7 +380,9 @@ export default function CheckoutCustomer({
             }
         }
 
-        form.post('/customer/checkout/customer');
+        form.post('/customer/checkout/customer', {
+            onFinish: () => submissionLock.release(),
+        });
     };
 
     const displayAddress =
