@@ -24,6 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -631,13 +632,30 @@ class CheckoutController extends Controller
 
             return back()->withErrors($e->validator->errors())->withInput();
         } catch (\Exception $e) {
+            $errorId = (string) Str::uuid();
+            Log::error('Checkout order creation failed', [
+                'error_id' => $errorId,
+                'exception' => $e::class,
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user_id' => $request->user()?->id,
+                'fulfillment_type' => $fulfillmentType,
+                'selected_outlet_id' => $selectedOutletIdForPayload,
+                'address_id' => $location['address_id'] ?? null,
+                'has_coordinates' => isset($location['latitude'], $location['longitude']),
+                'item_count' => count($cart),
+                'product_ids' => collect($cart)->pluck('product_id')->map(fn ($id) => (int) $id)->all(),
+            ]);
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.',
+                    'error_id' => $errorId,
                 ], 500);
             }
 
-            return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.'])->withInput();
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat pesanan. Silakan coba lagi. Reference: '.$errorId])->withInput();
         }
 
         // If fully paid by credit, skip DOKU and go straight to confirmation
