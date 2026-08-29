@@ -15,6 +15,7 @@ import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
 import PhoneInput from '@/components/ui/phone-input';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import { mutationFetch } from '@/lib/api';
 import { getDeliveryAddressPresentation } from '@/lib/checkout-address-presentation';
 import { applyLocationToForm } from '@/lib/checkout-utils';
 import { useCustomerLocation } from '@/lib/customer-location';
@@ -190,15 +191,16 @@ export default function CheckoutCustomer({
         }
 
         reloadQuoteAfterLocationUpdate.current = false;
-        router.post('/customer/location', form.data, {
-            preserveState: true,
-            preserveScroll: true,
-            onSuccess: () => {
+        void mutationFetch('/customer/location', {
+            method: 'POST',
+            body: JSON.stringify(form.data),
+        })
+            .then(() => {
                 router.reload({
                     only: ['draft', 'deliveryQuote', 'deliveryTiers'],
                 });
-            },
-        });
+            })
+            .catch(() => {});
     }, [form.data]);
 
     // Single auto-select effect with priority chain
