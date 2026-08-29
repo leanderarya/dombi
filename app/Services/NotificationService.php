@@ -151,27 +151,39 @@ class NotificationService
 
     // ─── ORDER NOTIFICATIONS ──────────────────────────────────────────
 
-    public function notifyOrderCreated(Order $order): void
+    public function notifyOrderCreated(Order $order, bool $throwOnFailure = false): void
     {
-        // Notify outlet
         $outletUser = $this->getOutletUser($order->outlet_id);
-        if ($outletUser && ! Notification::query()
-            ->where('user_type', 'outlet')
-            ->where('user_id', $outletUser->id)
-            ->where('type', self::ORDER_CREATED)
-            ->where('entity_type', 'order')
-            ->where('entity_id', $order->id)
-            ->exists()) {
-            $this->create(
-                userType: 'outlet',
+        if (! $outletUser) {
+            return;
+        }
+
+        $notification = Notification::firstOrCreate(
+            attributes: [
+                'user_type' => 'outlet',
+                'user_id' => $outletUser->id,
+                'type' => self::ORDER_CREATED,
+                'entity_type' => 'order',
+                'entity_id' => $order->id,
+            ],
+            values: [
+                'customer_id' => null,
+                'title' => 'Pesanan Baru',
+                'message' => "Pesanan baru {$order->order_code} dari {$order->customer_name}.",
+                'data' => ['order_id' => $order->id, 'order_code' => $order->order_code],
+            ],
+        );
+
+        if ($notification->wasRecentlyCreated) {
+            $this->dispatchPush(
                 userId: $outletUser->id,
                 customerId: null,
-                type: self::ORDER_CREATED,
                 title: 'Pesanan Baru',
                 message: "Pesanan baru {$order->order_code} dari {$order->customer_name}.",
                 data: ['order_id' => $order->id, 'order_code' => $order->order_code],
                 entityType: 'order',
-                entityId: $order->id
+                entityId: $order->id,
+                throwOnFailure: $throwOnFailure,
             );
         }
     }
@@ -1432,7 +1444,43 @@ class NotificationService
                 'entity_id' => $entityId,
             ]);
 
-            // Dispatch push notification
+            $this->dispatchPush(
+                userId: $userId,
+                customerId: $customerId,
+                title: $title,
+                message: $message,
+                data: $data,
+                entityType: $entityType,
+                entityId: $entityId,
+                throwOnFailure: false,
+            );
+
+            return $notification;
+        } catch (\Throwable $e) {
+            \Log::error("Failed to create notification: {$e->getMessage()}", [
+                'type' => $type,
+                'user_type' => $userType,
+                'user_id' => $userId,
+                'customer_id' => $customerId,
+                'entity_type' => $entityType,
+                'entity_id' => $entityId,
+            ]);
+
+            return null;
+        }
+    }
+
+    private function dispatchPush(
+        ?int $userId,
+        ?int $customerId,
+        string $title,
+        string $message,
+        array $data = [],
+        ?string $entityType = null,
+        ?int $entityId = null,
+        bool $throwOnFailure = false,
+    ): void {
+        try {
             $pushUrl = $data['url'] ?? $this->getPushUrl($entityType, $entityId);
 
             if ($userId) {
@@ -1463,19 +1511,17 @@ class NotificationService
                     ],
                 ));
             }
-
-            return $notification;
         } catch (\Throwable $e) {
-            \Log::error("Failed to create notification: {$e->getMessage()}", [
-                'type' => $type,
-                'user_type' => $userType,
+            \Log::error("Failed to dispatch push: {$e->getMessage()}", [
                 'user_id' => $userId,
                 'customer_id' => $customerId,
                 'entity_type' => $entityType,
                 'entity_id' => $entityId,
             ]);
 
-            return null;
+            if ($throwOnFailure) {
+                throw $e;
+            }
         }
     }
 

@@ -16,18 +16,24 @@ function PushToggle() {
         {
             loading: 'Aktifkan Notifikasi',
             denied: 'Notifikasi Dimatikan',
+            error: 'Coba Lagi',
         }[pushState] ?? 'Notifikasi';
 
     const desc =
         {
             loading: 'Dapatkan info pesanan real-time',
             denied: 'Buka Settings → Notifikasi → Allow',
+            error: 'Gagal mendaftarkan, ketuk untuk coba lagi',
         }[pushState] ?? '';
 
     return (
         <button
             type="button"
-            onClick={pushState === 'loading' ? requestEnable : undefined}
+            onClick={
+                pushState === 'loading' || pushState === 'error'
+                    ? requestEnable
+                    : undefined
+            }
             className="flex min-h-[52px] w-full items-center gap-3.5 rounded-xl px-1 active:opacity-80"
         >
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted">

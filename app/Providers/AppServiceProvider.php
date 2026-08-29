@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
         Event::listen('payment.paid', function (array $payload): void {
             if (($order = Order::find($payload['order_id'] ?? null))?->outlet_id) {
-                app(NotificationService::class)->notifyOrderCreated($order);
+                app(NotificationService::class)->notifyOrderCreated($order, throwOnFailure: true);
             }
         });
         app(DokuConfigurationGuard::class)->validate();
