@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\DokuPaymentException;
 use App\Jobs\ReconcileDokuPayment;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
@@ -10,7 +11,6 @@ use App\Services\DokuReconciliationService;
 use App\Services\DokuService;
 use App\Services\DokuWebhookIngressService;
 use App\Services\TransitionResult;
-use App\Exceptions\DokuPaymentException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
