@@ -38,3 +38,25 @@ Implemented and verified.
 - Full test discovery includes ignored `.claude/worktrees` copies, inflating totals; all discovered tests passed.
 - Existing unrelated `.superpowers/sdd/task-1-brief.md` and `.superpowers/sdd/task-1-report.md` modifications were left untouched and excluded from commit.
 - Manual browser/device scenarios were not run in this non-browser task session; dimensions were verified from current component classes and fixed offsets.
+
+## Review Fixes
+
+- Made cart and active-order offsets navigation-aware: 4.5rem above visible navigation, 0.75rem above viewport safe area when navigation is hidden.
+- Lifted active-order dismissal visibility into `CustomerMobileLayout`, so content clearance disappears with dismissed bar.
+- Added exact class assertions for cart, order, and custom footer states with navigation shown and hidden; added exact shared-position assertions.
+
+## Review Fix Verification
+
+- RED — `npx vitest run resources/js/layouts/customer-mobile-layout-state.test.ts --reporter=verbose`: 1 file; 8 failed, 1 passed because new visibility and positioning helpers were absent.
+- GREEN — `npx vitest run resources/js/layouts/customer-mobile-layout-state.test.ts --reporter=verbose`: 1 file, 9 tests passed.
+- `npm run format:check`: passed; all matched files use Prettier style.
+- `npm run lint:check`: passed; zero errors.
+- `npm run types:check`: passed; zero errors.
+- `npm test`: 173 files, 596 tests passed.
+- `graphify update .`: completed; graph rebuilt with 7,319 nodes and 18,774 edges.
+- `git diff --check` found pre-existing trailing blank line in unrelated `.superpowers/sdd/task-1-brief.md`; targeted changed-file check passed.
+
+## Review Fix Concerns
+
+- Full test discovery still includes ignored `.claude/worktrees` copies and emits existing Node localStorage experimental warnings.
+- Unrelated task-1 working-tree edits remain untouched and excluded from commit.

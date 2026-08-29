@@ -1,11 +1,16 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { customerFloatingBarBottom } from '@/layouts/customer-mobile-layout-state';
 import { formatCurrency } from '@/lib/format';
 import { getStoredOutletId } from '@/lib/outlet-store';
 import { useCart } from '@/lib/use-cart';
 
-export default function FloatingCartBar() {
+export default function FloatingCartBar({
+    hideBottomNav = false,
+}: {
+    hideBottomNav?: boolean;
+}) {
     const { items, totalItems, totalPrice } = useCart();
     const [processing, setProcessing] = useState(false);
 
@@ -53,7 +58,7 @@ export default function FloatingCartBar() {
         });
     };
 
-    const bottom = 'calc(4.5rem + env(safe-area-inset-bottom, 0px))';
+    const bottom = customerFloatingBarBottom(hideBottomNav);
 
     return (
         <div

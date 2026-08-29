@@ -1,13 +1,14 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, Package, X } from 'lucide-react';
 import { useState } from 'react';
+import { customerFloatingBarBottom } from '@/layouts/customer-mobile-layout-state';
 import type { RefundBadge } from '@/lib/active-order-card-state';
 import { getActiveRefundPresentation } from '@/lib/active-order-card-state';
 import { orderStatusLabel } from '@/lib/customer-status';
 
 const DISMISS_KEY = 'dombi_active_order_dismissed';
 
-function getDismissedOrderCode(): string | null {
+export function getDismissedOrderCode(): string | null {
     try {
         return localStorage.getItem(DISMISS_KEY);
     } catch {
@@ -31,9 +32,15 @@ interface Props {
         outlet?: { name: string } | null;
         refund_badge?: RefundBadge | null;
     };
+    hideBottomNav?: boolean;
+    onVisibilityChange?: (visible: boolean) => void;
 }
 
-export default function ActiveOrderBar({ order }: Props) {
+export default function ActiveOrderBar({
+    order,
+    hideBottomNav = false,
+    onVisibilityChange,
+}: Props) {
     const [dismissedOrderCode, setDismissedOrderCodeState] = useState(
         getDismissedOrderCode,
     );
@@ -46,9 +53,10 @@ export default function ActiveOrderBar({ order }: Props) {
     const handleDismiss = () => {
         setDismissedOrderCode(order.order_code);
         setDismissedOrderCodeState(order.order_code);
+        onVisibilityChange?.(false);
     };
 
-    const bottom = 'calc(4.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem)';
+    const bottom = customerFloatingBarBottom(hideBottomNav);
     const refundPresentation = getActiveRefundPresentation(
         order.refund_badge ?? null,
     );
