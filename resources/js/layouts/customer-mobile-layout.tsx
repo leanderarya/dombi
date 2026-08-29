@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
-import ActiveOrderBar from '@/components/customer/active-order-bar';
+import ActiveOrderBar, {
+    getDismissedOrderCode,
+} from '@/components/customer/active-order-bar';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import CustomerTopBar from '@/components/customer/customer-top-bar';
@@ -9,7 +12,10 @@ import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useCart } from '@/lib/use-cart';
 import FavoritesProvider from '@/providers/favorites-provider';
 import { NavigationProvider } from '@/providers/navigation-provider';
-import { customerContentBottomPadding } from './customer-mobile-layout-state';
+import {
+    customerContentBottomPadding,
+    customerHasFloatingBar,
+} from './customer-mobile-layout-state';
 
 interface Props extends PropsWithChildren {
     activeOrder?: any;
@@ -33,9 +39,18 @@ export default function CustomerMobileLayout({
 }: Props) {
     useFlashToast();
     const { totalItems } = useCart();
+    const [dismissedOrderCode, setDismissedOrderCode] = useState(
+        getDismissedOrderCode,
+    );
+    const showActiveOrderBar =
+        !!activeOrder && dismissedOrderCode !== activeOrder.order_code;
 
     const showCartBar = !hideCartBar && !footerSlot && totalItems > 0;
-    const hasFloatingBar = !!footerSlot || !!activeOrder || showCartBar;
+    const hasFloatingBar = customerHasFloatingBar({
+        hasFooterSlot: !!footerSlot,
+        showCartBar,
+        showActiveOrderBar: !footerSlot && !showCartBar && showActiveOrderBar,
+    });
 
     return (
         <FavoritesProvider>
@@ -59,9 +74,18 @@ export default function CustomerMobileLayout({
 
                     {footerSlot ??
                         (showCartBar ? (
-                            <FloatingCartBar />
+                            <FloatingCartBar hideBottomNav={hideBottomNav} />
                         ) : activeOrder ? (
-                            <ActiveOrderBar order={activeOrder} />
+                            <ActiveOrderBar
+                                order={activeOrder}
+                                hideBottomNav={hideBottomNav}
+                                onVisibilityChange={(visible) =>
+                                    !visible &&
+                                    setDismissedOrderCode(
+                                        activeOrder.order_code,
+                                    )
+                                }
+                            />
                         ) : null)}
                     {!hideBottomNav && <CustomerBottomNav />}
                 </div>
