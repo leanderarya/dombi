@@ -9,6 +9,7 @@ import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useCart } from '@/lib/use-cart';
 import FavoritesProvider from '@/providers/favorites-provider';
 import { NavigationProvider } from '@/providers/navigation-provider';
+import { customerContentBottomPadding } from './customer-mobile-layout-state';
 
 interface Props extends PropsWithChildren {
     activeOrder?: any;
@@ -51,7 +52,7 @@ export default function CustomerMobileLayout({
 
                     <main
                         data-page
-                        className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${hideTopBar ? '' : 'pt-5'} ${hasFloatingBar ? 'pb-[calc(10rem+env(safe-area-inset-bottom,0))]' : 'pb-[calc(5.5rem+env(safe-area-inset-bottom,0))]'}`}
+                        className={`mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 ${hideTopBar ? '' : 'pt-5'} ${customerContentBottomPadding({ hasFloatingBar, hideBottomNav })}`}
                     >
                         {children}
                     </main>
