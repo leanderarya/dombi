@@ -104,25 +104,18 @@ createInertiaApp({
         color: '#047857',
     },
     resolve: (name) => {
-        const customerPages = import.meta.glob<{
-            default: ComponentType;
-        }>('./pages/customer/**/*.tsx', { eager: true });
-        const authPages = import.meta.glob<{ default: ComponentType }>(
+        const pages = import.meta.glob<{ default: ComponentType }>([
+            './pages/customer/**/*.tsx',
             './pages/auth/**/*.tsx',
-            { eager: true },
-        );
-        const rootPages = import.meta.glob<{ default: ComponentType }>(
             './pages/*.tsx',
-            { eager: true },
-        );
-        const pages = { ...customerPages, ...authPages, ...rootPages };
+        ]);
         const page = pages[`./pages/${name}.tsx`];
 
         if (!page) {
             throw new Error(`Page not found: ${name}`);
         }
 
-        return page;
+        return page().then(({ default: component }) => component);
     },
     setup({ el, App, props }) {
         const root = createRoot(el!);
