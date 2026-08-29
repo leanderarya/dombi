@@ -5,11 +5,15 @@ namespace Tests\Feature;
 use App\Enums\PaymentAttemptSettlementStatus;
 use App\Enums\PaymentAttemptVerificationStatus;
 use App\Jobs\DispatchPaymentOutboxEvent;
+use App\Models\Notification;
 use App\Models\Order;
+use App\Models\Outlet;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentOutboxEvent;
+use App\Models\User;
 use App\Services\CanonicalPaymentTransitionService;
 use App\Services\NormalizedPaymentEvent;
+use App\Services\NotificationService;
 use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -44,6 +48,37 @@ class PaymentOutboxTest extends TestCase
         $this->assertSame(1, $outbox->fresh()->attempts);
         Event::assertDispatched('payment.paid', 1);
         $this->assertSame('paid', $order->fresh()->payment_status);
+    }
+
+    public function test_first_canonical_paid_transition_notifies_outlet_once_and_replay_is_idempotent(): void
+    {
+        Queue::fake();
+        $outletUser = User::factory()->create(['role' => 'outlet']);
+        $outlet = Outlet::create([
+            'name' => 'Paid Outlet',
+            'user_id' => $outletUser->id,
+            'kelurahan' => 'Test',
+            'kecamatan' => 'Test',
+            'address' => 'Test Address',
+            'status' => 'active',
+        ]);
+        $outletUser->forceFill(['outlet_id' => $outlet->id])->save();
+        [, $attempt] = $this->attempt(['outlet_id' => $outlet->id]);
+        $service = app(CanonicalPaymentTransitionService::class);
+        $event = new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []);
+
+        $service->apply($attempt, $event);
+        $service->apply($attempt->fresh(), $event);
+        app(NotificationService::class)->notifyOrderCreated($attempt->order);
+        $outbox = PaymentOutboxEvent::query()->where('event_type', 'payment.paid')->firstOrFail();
+        (new DispatchPaymentOutboxEvent($outbox->id))->handle();
+        (new DispatchPaymentOutboxEvent($outbox->id))->handle();
+
+        $this->assertSame(1, PaymentOutboxEvent::query()->where('event_type', 'payment.paid')->count());
+        $this->assertSame(1, Notification::query()
+            ->where('type', NotificationService::ORDER_CREATED)
+            ->where('user_id', $outletUser->id)
+            ->count());
     }
 
     public function test_enqueue_failure_after_commit_leaves_all_outbox_rows_pending(): void
