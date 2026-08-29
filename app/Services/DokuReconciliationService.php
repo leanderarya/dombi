@@ -9,6 +9,11 @@ class DokuReconciliationService
 {
     public function __construct(private DokuService $doku) {}
 
+    public function expireDueUnknownAttempts(int $limit = 100): int
+    {
+        return $this->doku->expireDueUnknownAttempts($limit);
+    }
+
     public function reconcile(PaymentAttempt $attempt): TransitionResult
     {
         $attempt = $attempt->fresh();
