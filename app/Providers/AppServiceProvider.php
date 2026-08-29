@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\Order;
 use App\Services\DokuConfigurationGuard;
+use App\Services\NotificationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -23,6 +26,11 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureRateLimiting();
+        Event::listen('payment.paid', function (array $payload): void {
+            if (($order = Order::find($payload['order_id'] ?? null))?->outlet_id) {
+                app(NotificationService::class)->notifyOrderCreated($order);
+            }
+        });
         app(DokuConfigurationGuard::class)->validate();
     }
 

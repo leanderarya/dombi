@@ -155,7 +155,13 @@ class NotificationService
     {
         // Notify outlet
         $outletUser = $this->getOutletUser($order->outlet_id);
-        if ($outletUser) {
+        if ($outletUser && ! Notification::query()
+            ->where('user_type', 'outlet')
+            ->where('user_id', $outletUser->id)
+            ->where('type', self::ORDER_CREATED)
+            ->where('entity_type', 'order')
+            ->where('entity_id', $order->id)
+            ->exists()) {
             $this->create(
                 userType: 'outlet',
                 userId: $outletUser->id,

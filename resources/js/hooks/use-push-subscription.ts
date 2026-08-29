@@ -19,27 +19,25 @@ function urlBase64ToUint8Array(base64String: string): BufferSource {
     return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
-async function doSubscribe(): Promise<boolean> {
+export async function subscribeToPush(): Promise<boolean> {
     try {
         const registration = await navigator.serviceWorker.ready;
-        const existing = await registration.pushManager.getSubscription();
+        let subscription = await registration.pushManager.getSubscription();
 
-        if (existing) {
-            return true;
+        if (!subscription) {
+            const vapidKey = document
+                .querySelector('meta[name="vapid-public-key"]')
+                ?.getAttribute('content');
+
+            if (!vapidKey) {
+                return false;
+            }
+
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidKey),
+            });
         }
-
-        const vapidKey = document
-            .querySelector('meta[name="vapid-public-key"]')
-            ?.getAttribute('content');
-
-        if (!vapidKey) {
-            return false;
-        }
-
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(vapidKey),
-        });
 
         const res = await fetch('/push/subscribe', {
             method: 'POST',
@@ -81,7 +79,7 @@ export function usePushSubscription(): {
             }
 
             if (Notification.permission === 'granted') {
-                void doSubscribe().then((ok) =>
+                void subscribeToPush().then((ok) =>
                     setPushState(ok ? 'active' : 'denied'),
                 );
             }
@@ -111,7 +109,7 @@ export function usePushSubscription(): {
             return false;
         }
 
-        const ok = await doSubscribe();
+        const ok = await subscribeToPush();
         setPushState(ok ? 'active' : 'denied');
 
         return ok;
