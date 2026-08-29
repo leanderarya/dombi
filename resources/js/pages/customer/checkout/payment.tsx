@@ -7,6 +7,7 @@ import StepHeader from '@/components/customer/step-header';
 import Dialog from '@/components/ui/dialog';
 import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import { readCheckoutPaymentResponse } from '@/lib/checkout-payment-response';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { formatCurrency, formatDistance } from '@/lib/format';
 import { isDifferentRecipient } from '@/lib/recipient';
@@ -103,7 +104,21 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 body: JSON.stringify({ payment_method: paymentMethod }),
             });
 
-            const data = await response.json();
+            const result = await readCheckoutPaymentResponse(response);
+
+            if ('redirectUrl' in result) {
+                window.location.assign(result.redirectUrl);
+
+                return;
+            }
+
+            const data = result.data;
+
+            if (data.redirect_url) {
+                window.location.assign(data.redirect_url);
+
+                return;
+            }
 
             if (response.status === 422) {
                 if (data.all_removed) {
@@ -122,8 +137,8 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
                 if (data.adjusted) {
                     setAdjustmentModal({
-                        warnings: data.warnings,
-                        adjustments: data.adjustments,
+                        warnings: data.warnings ?? [],
+                        adjustments: data.adjustments ?? [],
                     });
                     setProcessing(false);
 
@@ -147,9 +162,9 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
             if (!response.ok) {
                 const errorMsg =
-                    data.message || data.errors
-                        ? Object.values(data.errors ?? {}).flat()[0]
-                        : 'Terjadi kesalahan. Silakan coba lagi.';
+                    data.message ??
+                    Object.values(data.errors ?? {}).flat()[0] ??
+                    'Terjadi kesalahan. Silakan coba lagi.';
                 setSubmitError(
                     typeof errorMsg === 'string'
                         ? errorMsg

@@ -511,19 +511,19 @@ class CheckoutController extends Controller
         $cart = $request->session()->get('checkout.cart');
 
         if (! in_array($fulfillmentType, self::FULFILLMENT_TYPES, true)) {
-            return redirect()->route('customer.checkout.index')->withErrors(['fulfillment_type' => 'Pilih metode pengambilan terlebih dahulu.']);
+            return $this->checkoutFailure($request, 'Pilih metode pengambilan terlebih dahulu.', 'customer.checkout.index', 'fulfillment_type');
         }
 
         if (! $customer) {
-            return redirect()->route('customer.checkout.customer')->withErrors(['phone_number' => 'Isi informasi pemesan terlebih dahulu.']);
+            return $this->checkoutFailure($request, 'Isi informasi pemesan terlebih dahulu.', 'customer.checkout.customer', 'phone_number');
         }
 
         if (in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true) && ! $location) {
-            return redirect()->route('customer.checkout.customer')->withErrors(['latitude' => 'Lengkapi alamat pengiriman terlebih dahulu.']);
+            return $this->checkoutFailure($request, 'Lengkapi alamat pengiriman terlebih dahulu.', 'customer.checkout.customer', 'latitude');
         }
 
         if (! is_array($cart) || count($cart) === 0) {
-            return redirect()->route('customer.checkout.index')->withErrors(['items' => 'Pilih produk terlebih dahulu.']);
+            return $this->checkoutFailure($request, 'Pilih produk terlebih dahulu.', 'customer.checkout.index', 'items');
         }
 
         $validated = $request->validate([
@@ -543,10 +543,14 @@ class CheckoutController extends Controller
         if ($cachedOrderId) {
             $order = Order::find($cachedOrderId);
             if ($order) {
-                return redirect()->route('customer.orders.confirmation', [
+                $confirmationUrl = route('customer.orders.confirmation', [
                     'order' => $order->id,
                     'token' => $order->recovery_token,
                 ]);
+
+                return $request->expectsJson()
+                    ? response()->json(['redirect_url' => $confirmationUrl])
+                    : redirect()->to($confirmationUrl);
             }
         }
 
@@ -561,7 +565,7 @@ class CheckoutController extends Controller
             $route = $deliveryQuote['reason'] ?? null ? 'customer.checkout.payment' : 'customer.checkout.customer';
             $field = $deliveryQuote['reason'] ?? null ? 'selected_outlet_id' : 'latitude';
 
-            return redirect()->route($route)->withErrors([$field => $reason]);
+            return $this->checkoutFailure($request, $reason, $route, $field);
         }
         $selectedOutletIdForPayload = $this->selectedOutletId($request);
 
@@ -618,8 +622,21 @@ class CheckoutController extends Controller
                 'warnings' => $warnings,
             ], 422);
         } catch (ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+
             return back()->withErrors($e->validator->errors())->withInput();
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.',
+                ], 500);
+            }
+
             return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.'])->withInput();
         }
 
@@ -678,9 +695,14 @@ class CheckoutController extends Controller
                 ),
             ]);
 
-            return redirect()->route('customer.orders.confirm', [
-                'orderCode' => $order->order_code,
-            ])->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
+            return $this->checkoutFailure(
+                $request,
+                'Gagal membuat pembayaran. Silakan coba lagi.',
+                'customer.orders.confirm',
+                'payment',
+                502,
+                ['orderCode' => $order->order_code],
+            );
         } catch (\Exception $e) {
             Log::error('Failed to create DOKU payment', [
                 'order_id' => $order->id,
@@ -698,9 +720,14 @@ class CheckoutController extends Controller
                 ),
             ]);
 
-            return redirect()->route('customer.orders.confirm', [
-                'orderCode' => $order->order_code,
-            ])->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
+            return $this->checkoutFailure(
+                $request,
+                'Gagal membuat pembayaran. Silakan coba lagi.',
+                'customer.orders.confirm',
+                'payment',
+                502,
+                ['orderCode' => $order->order_code],
+            );
         }
     }
 
@@ -968,6 +995,29 @@ class CheckoutController extends Controller
 
             return 0;
         });
+    }
+
+    private function checkoutFailure(
+        Request $request,
+        string $message,
+        string $route,
+        string $field,
+        int $status = 422,
+        array $routeParameters = [],
+    ): RedirectResponse|JsonResponse {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'errors' => [$field => [$message]],
+                'redirect_url' => route($route, $routeParameters),
+            ], $status);
+        }
+
+        $redirect = redirect()->route($route, $routeParameters);
+
+        return $field === 'payment'
+            ? $redirect->with('error', $message)
+            : $redirect->withErrors([$field => $message]);
     }
 
     private function calculatePaymentFee(string $paymentMethod, float $subtotal): float
