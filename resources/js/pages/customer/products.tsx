@@ -634,6 +634,7 @@ function ProductCard({
     return (
         <Link
             href={`/customer/products/${group.familyId}`}
+            prefetch="hover"
             className="flex max-w-[200px] min-w-[200px] shrink-0 items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3 shadow-xs active:bg-gray-50"
         >
             <ProductImage
@@ -737,6 +738,7 @@ function VariantRow({
     return (
         <Link
             href={productHref}
+            prefetch="hover"
             className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3 shadow-xs active:bg-gray-50"
         >
             <div className="relative shrink-0">

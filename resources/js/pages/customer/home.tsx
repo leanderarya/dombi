@@ -426,6 +426,7 @@ function PromoBento() {
                 </h2>
                 <Link
                     href="/customer/products"
+                    prefetch="hover"
                     className="text-xs font-semibold text-primary active:opacity-80"
                 >
                     Lihat Semua

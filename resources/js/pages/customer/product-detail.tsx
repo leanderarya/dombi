@@ -693,6 +693,7 @@ function OtherProducts({
                         <Link
                             key={other.id}
                             href={href}
+                            prefetch="hover"
                             className="flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-white active:opacity-80"
                         >
                             <div className="flex h-20 items-center justify-center bg-gradient-to-br from-emerald-50 to-zinc-50">
