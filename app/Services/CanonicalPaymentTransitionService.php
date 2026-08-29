@@ -11,6 +11,7 @@ use App\Models\PaymentAttempt;
 use App\Models\PaymentOutboxEvent;
 use App\Models\RefundObligation;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
 class CanonicalPaymentTransitionService
@@ -163,7 +164,7 @@ class CanonicalPaymentTransitionService
         };
     }
 
-    private function terminalTransitionAt(Order $order): ?Carbon
+    private function terminalTransitionAt(Order $order): ?CarbonInterface
     {
         return match ($order->status) {
             Order::STATUS_CANCELLED_BY_CUSTOMER, Order::STATUS_CANCELLED_BY_OUTLET => $order->cancelled_at,
