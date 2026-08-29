@@ -112,6 +112,10 @@ body {
 /* Remove gray tap highlight on mobile (iOS/Android) */
 button,
 a,
+input,
+select,
+textarea,
+summary,
 [role='button'] {
     -webkit-tap-highlight-color: transparent;
 }
