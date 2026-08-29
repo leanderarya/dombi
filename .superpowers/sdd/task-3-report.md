@@ -1,21 +1,40 @@
-# Task 3 report
+# Task 3 Report: Floating Cart Bottom Clearance
 
-Added focused coverage for DOKU reconciliation and late callbacks:
+## Status
 
-- Unknown attempts receive 24-hour reconciliation deadline.
-- Unknown attempts past deadline transition to failed and expire non-terminal order.
-- Already expired attempts are idempotent and not transitioned again.
-- Reconciliation preserves existing deadlines and records `next_reconciliation_at` backoff.
-- Expiry sweep fixtures prove only due `unknown` attempts expire; future unknown and due non-unknown attempts remain unchanged.
-- Late success on expired order remains terminal and creates exactly one `late_payment` RefundObligation.
-- Late refund assertions cover order terminal state, invoice identity, attempt identity, amount, currency, reason/source, pending status, and idempotent reuse.
+Implemented and verified.
 
-Production code unchanged; existing implementation satisfies scenarios.
+## Changes
 
-Checks:
+- Added `customerContentBottomPadding` state helper with statically discoverable Tailwind classes.
+- Updated shared `CustomerMobileLayout` to select clearance from floating-bar and bottom-navigation state.
+- Added focused Vitest coverage for combined controls, hidden navigation, and safe-area-only state.
+- Kept dimensions aligned with existing UI:
+  - Bottom navigation: `h-14` plus safe area.
+  - Floating cart: approximately 3.5rem tall, positioned above 4.5rem nav offset.
+  - Combined clearance: 10rem including breathing room.
+  - Single floating control/navigation clearance: 5.5rem.
+- Added no per-page spacers, z-index changes, dependencies, or CSS source duplication.
 
-- `php -l tests/Feature/DokuReconciliationTest.php` passed.
-- `php -l tests/Unit/CanonicalPaymentTransitionServiceTest.php` passed.
-- `git diff --check` passed.
-- Focused PHPUnit unavailable: `vendor/bin/phpunit` is not installed.
-- `graphify update .` passed; graph rebuilt with 7,304 nodes and 18,673 edges.
+## TDD Evidence
+
+1. Added focused test first.
+2. Confirmed RED: Vitest failed because `./customer-mobile-layout-state` did not exist.
+3. Added minimal helper and shared-layout integration.
+4. Confirmed GREEN: 3 focused tests passed.
+
+## Verification
+
+- `npx vitest run resources/js/layouts/customer-mobile-layout-state.test.ts --reporter=verbose`: 1 file, 3 tests passed.
+- `npm run format:check`: passed.
+- `npm run lint:check`: passed.
+- `npm run types:check`: passed.
+- `npm test`: 173 files, 590 tests passed.
+- `git diff --check -- resources/js/layouts/customer-mobile-layout.tsx resources/js/layouts/customer-mobile-layout-state.ts resources/js/layouts/customer-mobile-layout-state.test.ts`: passed.
+- `graphify update .`: completed; graph rebuilt with 7,317 nodes and 18,759 edges.
+
+## Concerns
+
+- Full test discovery includes ignored `.claude/worktrees` copies, inflating totals; all discovered tests passed.
+- Existing unrelated `.superpowers/sdd/task-1-brief.md` and `.superpowers/sdd/task-1-report.md` modifications were left untouched and excluded from commit.
+- Manual browser/device scenarios were not run in this non-browser task session; dimensions were verified from current component classes and fixed offsets.
