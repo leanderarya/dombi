@@ -17,6 +17,8 @@ const SCRIPT_URLS = {
         'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-inject-fails.js',
     loadButNoGlobal:
         'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-no-global.js',
+    staleNode:
+        'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-stale-node.js',
 };
 
 /**
@@ -72,6 +74,28 @@ describe('ensureDokuScript', () => {
             ensureDokuScript(SCRIPT_URLS.loadResolves),
         ).resolves.toBeUndefined();
         expect(typeof (window as any).loadJokulCheckout).toBe('function');
+    });
+
+    it('removes a stale DOM node and loads fresh when the map has no entry', async () => {
+        // Simulate a previously failed load: a <script data-doku-checkout> node
+        // left behind in the DOM with no matching entry in the module-level
+        // scriptTags map. Previously this path recursed forever.
+        const stale = document.createElement('script');
+        stale.src = SCRIPT_URLS.staleNode;
+        stale.dataset.dokuCheckout = SCRIPT_URLS.staleNode;
+        document.head.appendChild(stale);
+
+        const append = stubScriptLoad(true);
+
+        await expect(
+            ensureDokuScript(SCRIPT_URLS.staleNode),
+        ).resolves.toBeUndefined();
+
+        // The stale node was removed and exactly one fresh script was injected.
+        expect(
+            document.head.querySelectorAll('script[data-doku-checkout]'),
+        ).toHaveLength(0);
+        expect(append).toHaveBeenCalledTimes(1);
     });
 });
 
