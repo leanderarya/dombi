@@ -205,7 +205,7 @@ class OrderController extends Controller
      * Create DOKU payment for a confirmed order and redirect to payment page.
      * Accessible by: logged-in customer, recovered guest, OR fresh checkout guest (CSRF-protected).
      */
-    public function pay(Request $request, Order $order): RedirectResponse
+    public function pay(Request $request, Order $order): RedirectResponse|JsonResponse
     {
         $this->authorizePaymentAccess($request, $order);
 
@@ -295,6 +295,10 @@ class OrderController extends Controller
                 return back()->with('error', 'Pembayaran sedang diproses. Silakan tunggu hasil rekonsiliasi.');
             }
             $paymentUrl = $doku->createPayment($attempt);
+
+            if ($request->expectsJson()) {
+                return response()->json(['payment_url' => $paymentUrl]);
+            }
 
             return redirect()->away($paymentUrl);
         } catch (\Exception $e) {
