@@ -7,6 +7,7 @@ export type CheckoutPaymentData = {
     payment_url?: string;
     redirect_url?: string;
     warnings?: string[];
+    order?: { id: number; order_code: string };
 };
 
 type CheckoutPaymentResponse =

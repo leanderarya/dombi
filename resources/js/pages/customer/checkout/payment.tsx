@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, MapPin, Store } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ChevronDown, ChevronUp, Clock, MapPin, Store } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import NoticeBanner from '@/components/customer/checkout/notice-banner';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
@@ -9,11 +9,28 @@ import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { readCheckoutPaymentResponse } from '@/lib/checkout-payment-response';
 import { useCustomerLocation } from '@/lib/customer-location';
+import { openDokuCheckout } from '@/lib/doku-checkout';
 import { formatCurrency, formatDistance } from '@/lib/format';
 import { isDifferentRecipient } from '@/lib/recipient';
 import { useCart } from '@/lib/use-cart';
 
-export default function CheckoutPayment({ draft, summary }: any) {
+type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
+
+const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max polling
+const DEFAULT_DOKU_CHECKOUT_JS =
+    'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js';
+const PAYMENT_TERMINAL_STATUSES: PaymentStatus[] = [
+    'paid',
+    'failed',
+    'expired',
+    'cancelled',
+];
+
+export default function CheckoutPayment({
+    draft,
+    summary,
+    dokuCheckoutJs,
+}: any) {
     const cart = useCart();
     const { markUsedForOrder } = useCustomerLocation();
     useLockSwipeBack();
@@ -28,6 +45,17 @@ export default function CheckoutPayment({ draft, summary }: any) {
         warnings: string[];
         adjustments: any[];
     } | null>(null);
+    const [waitingPayment, setWaitingPayment] = useState(false);
+    const [paymentStatus, setPaymentStatus] =
+        useState<PaymentStatus>('pending');
+    const [pendingOrder, setPendingOrder] = useState<{
+        id: number;
+        order_code: string;
+    } | null>(null);
+    const [lastPaymentUrl, setLastPaymentUrl] = useState<string | null>(null);
+    const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+    const pollStart = useRef<number | null>(null);
+    const submitLock = useRef(false);
     const paymentOptions = summary.payment_options ?? [];
     const [paymentMethod, setPaymentMethod] = useState(
         paymentOptions[0]?.value ?? 'qris',
@@ -85,7 +113,91 @@ export default function CheckoutPayment({ draft, summary }: any) {
         recipient_phone: draft?.customer?.recipient_phone,
     });
 
+    const scriptUrl = dokuCheckoutJs ?? DEFAULT_DOKU_CHECKOUT_JS;
+
+    const stopPolling = useCallback(() => {
+        if (pollInterval.current) {
+            clearInterval(pollInterval.current);
+            pollInterval.current = null;
+        }
+    }, []);
+
+    // Poll DOKU/DB payment status while waiting (webhook fallback), max 5 min.
+    useEffect(() => {
+        if (!waitingPayment || !pendingOrder) {
+            return;
+        }
+
+        pollStart.current = Date.now();
+
+        pollInterval.current = setInterval(async () => {
+            // Stop polling after timeout (mirrors confirm.tsx POLL_TIMEOUT_MS).
+            if (
+                pollStart.current !== null &&
+                Date.now() - pollStart.current > POLL_TIMEOUT_MS
+            ) {
+                stopPolling();
+
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `/customer/orders/${pendingOrder.id}/payment-status`,
+                    {
+                        headers: { Accept: 'application/json' },
+                    },
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const status = data.payment_status as PaymentStatus;
+
+                    if (PAYMENT_TERMINAL_STATUSES.includes(status)) {
+                        stopPolling();
+
+                        if (status === 'paid') {
+                            setWaitingPayment(false);
+                            // Confirm page is the same post-paid destination
+                            // DOKU redirect lands on after payment.
+                            router.visit(
+                                `/customer/orders/confirm/${pendingOrder.order_code}`,
+                            );
+                        } else {
+                            // Surface the terminal failure, keep the retry affordance.
+                            setPaymentStatus(status);
+                        }
+                    }
+                }
+            } catch {
+                // Silent fail — will retry next interval
+            }
+        }, 5000);
+
+        return stopPolling;
+    }, [waitingPayment, pendingOrder, stopPolling]);
+
+    const handleRetryPayment = useCallback(async () => {
+        if (!lastPaymentUrl) {
+            return;
+        }
+
+        const ok = await openDokuCheckout(lastPaymentUrl, scriptUrl);
+
+        if (!ok) {
+            window.open(lastPaymentUrl, '_blank', 'noopener,noreferrer');
+            setSubmitError(
+                'Kami belum dapat menampilkan pembayaran di dalam aplikasi. Pembayaran dibuka di tab baru.',
+            );
+        }
+    }, [lastPaymentUrl, scriptUrl]);
+
     const submit = async () => {
+        if (submitLock.current || waitingPayment) {
+            return;
+        }
+
+        submitLock.current = true;
         setSubmitError(null);
         setProcessing(true);
 
@@ -178,15 +290,38 @@ export default function CheckoutPayment({ draft, summary }: any) {
             if (data.payment_url) {
                 cart.clear();
                 markUsedForOrder();
-                // replace() removes DOKU from browser history — back button goes to orders, not DOKU
-                window.location.replace(data.payment_url);
-            } else {
-                setSubmitError('Tidak ada URL pembayaran. Silakan coba lagi.');
+
+                const orderRef = data.order; // { id, order_code } from new backend contract
+                setPendingOrder(orderRef ?? null);
+                setLastPaymentUrl(data.payment_url);
+                setPaymentStatus('pending');
+                setWaitingPayment(true);
                 setProcessing(false);
+
+                const ok = await openDokuCheckout(data.payment_url, scriptUrl);
+
+                if (!ok) {
+                    // Fallback: open hosted page in a new tab; app context stays intact.
+                    window.open(
+                        data.payment_url,
+                        '_blank',
+                        'noopener,noreferrer',
+                    );
+                    setSubmitError(
+                        'Kami belum dapat menampilkan pembayaran di dalam aplikasi. Pembayaran dibuka di tab baru.',
+                    );
+                }
+
+                return;
             }
+
+            setSubmitError('Tidak ada URL pembayaran. Silakan coba lagi.');
+            setProcessing(false);
         } catch {
             setSubmitError('Terjadi kesalahan jaringan. Silakan coba lagi.');
             setProcessing(false);
+        } finally {
+            submitLock.current = false;
         }
     };
 
@@ -200,6 +335,17 @@ export default function CheckoutPayment({ draft, summary }: any) {
         });
     };
 
+    const payButtonLabel = waitingPayment ? 'Menunggu pembayaran' : ctaLabel;
+    const payButtonDisabled = processing || waitingPayment || deliveryBlocked;
+    const waitingTerminalMessage =
+        paymentStatus === 'failed'
+            ? 'Pembayaran tidak berhasil diproses. Tekan "Selesaikan Pembayaran" untuk mencoba lagi.'
+            : paymentStatus === 'expired'
+              ? 'Waktu pembayaran telah habis. Tekan "Selesaikan Pembayaran" untuk mencoba lagi.'
+              : paymentStatus === 'cancelled'
+                ? 'Pembayaran dibatalkan. Tekan "Selesaikan Pembayaran" untuk mencoba lagi.'
+                : null;
+
     return (
         <CustomerMobileLayout
             hideTopBar
@@ -207,8 +353,8 @@ export default function CheckoutPayment({ draft, summary }: any) {
             hideBottomNav
             footerSlot={
                 <StepButton
-                    label={ctaLabel}
-                    disabled={processing || deliveryBlocked}
+                    label={payButtonLabel}
+                    disabled={payButtonDisabled}
                     processing={processing}
                     onClick={submit}
                 />
@@ -238,6 +384,41 @@ export default function CheckoutPayment({ draft, summary }: any) {
                                 onDismiss={() => setSubmitError(null)}
                             />
                         </div>
+                    )}
+
+                    {/* Waiting Payment Panel */}
+                    {waitingPayment && (
+                        <section className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                            <div className="flex items-start gap-3">
+                                <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-semibold text-amber-900">
+                                        Pembayaran sedang diproses di DOKU
+                                    </p>
+                                    <p className="mt-1 text-xs text-amber-800">
+                                        {waitingTerminalMessage ??
+                                            'Selesaikan pembayaran di jendela DOKU. Status pesanan diperbarui otomatis.'}
+                                    </p>
+                                    {pendingOrder && (
+                                        <p className="mt-2 text-xs text-amber-800">
+                                            Kode pesanan:{' '}
+                                            <span className="font-mono font-semibold text-amber-900">
+                                                {pendingOrder.order_code}
+                                            </span>
+                                        </p>
+                                    )}
+                                    {lastPaymentUrl && (
+                                        <button
+                                            type="button"
+                                            onClick={handleRetryPayment}
+                                            className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-600 px-5 text-sm font-bold text-white active:opacity-80"
+                                        >
+                                            Selesaikan Pembayaran
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </section>
                     )}
 
                     {/* Stock Warning Banner */}
@@ -626,10 +807,10 @@ export default function CheckoutPayment({ draft, summary }: any) {
                             <button
                                 type="button"
                                 onClick={submit}
-                                disabled={processing || deliveryBlocked}
+                                disabled={payButtonDisabled}
                                 className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white active:opacity-80 disabled:bg-border disabled:text-text-subtle"
                             >
-                                {processing ? 'Memproses...' : ctaLabel}
+                                {processing ? 'Memproses...' : payButtonLabel}
                             </button>
                         </div>
                     </div>
