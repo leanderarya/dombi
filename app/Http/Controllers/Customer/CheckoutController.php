@@ -501,6 +501,9 @@ class CheckoutController extends Controller
                 'payment_options' => $paymentOptions,
             ],
             'deliveryTiers' => config('delivery.tiers', []),
+            'dokuCheckoutJs' => config('doku.sandbox')
+                ? 'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js'
+                : 'https://jokul.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js',
         ]);
     }
 
@@ -690,7 +693,13 @@ class CheckoutController extends Controller
             // Inertia/XHR requests can't follow cross-origin redirects (CORS).
             // Return JSON and let the frontend do a full-page navigation.
             if ($request->expectsJson()) {
-                return response()->json(['payment_url' => $paymentUrl]);
+                return response()->json([
+                    'payment_url' => $paymentUrl,
+                    'order' => [
+                        'id' => $order->id,
+                        'order_code' => $order->order_code,
+                    ],
+                ]);
             }
 
             return redirect()->away($paymentUrl);
