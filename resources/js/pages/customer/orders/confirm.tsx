@@ -13,19 +13,24 @@ import PushBanner from '@/components/shared/push-banner';
 import Dialog from '@/components/ui/dialog';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { copyToClipboard } from '@/lib/clipboard';
+import { openDokuCheckout } from '@/lib/doku-checkout';
 import { formatCurrency } from '@/lib/format';
 import { useNavigation } from '@/providers/navigation-provider';
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max polling
+const DEFAULT_DOKU_CHECKOUT_JS =
+    'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js';
 
 export default function ConfirmPage({
     order,
     isLoggedIn,
+    dokuCheckoutJs,
     cancellationReasons = [],
 }: any) {
     const nav = useNavigation();
+    const scriptUrl = dokuCheckoutJs ?? DEFAULT_DOKU_CHECKOUT_JS;
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(() => {
         const s = order.payment_status;
 
@@ -186,7 +191,7 @@ export default function ConfirmPage({
     }, [order.id, cancelReason, paymentStatus]);
 
     const handlePay = useCallback(
-        (method?: string) => {
+        async (method?: string) => {
             if (submitLock.current || payLoading) {
                 return;
             }
@@ -196,39 +201,59 @@ export default function ConfirmPage({
             setPayError(null);
 
             try {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/customer/orders/${order.id}/pay`;
-
                 const csrf =
                     document
                         .querySelector('meta[name="csrf-token"]')
                         ?.getAttribute('content') ?? '';
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = csrf;
-                form.appendChild(csrfInput);
 
-                if (method) {
-                    const methodInput = document.createElement('input');
-                    methodInput.type = 'hidden';
-                    methodInput.name = 'payment_method';
-                    methodInput.value = method;
-                    form.appendChild(methodInput);
+                const response = await fetch(
+                    `/customer/orders/${order.id}/pay`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': csrf,
+                        },
+                        body: JSON.stringify({
+                            payment_method: method ?? order.payment_method,
+                        }),
+                    },
+                );
+
+                if (!response.ok) {
+                    throw new Error('pay-failed');
                 }
 
-                document.body.appendChild(form);
-                form.submit();
+                const data = await response.json();
+                const ok = await openDokuCheckout(
+                    data.payment_url,
+                    scriptUrl,
+                );
+
+                if (!ok) {
+                    window.open(
+                        data.payment_url,
+                        '_blank',
+                        'noopener,noreferrer',
+                    );
+                    setPayError(
+                        'Kami belum dapat menampilkan pembayaran di dalam aplikasi. Pembayaran dibuka di tab baru.',
+                    );
+                } else {
+                    // Keep the existing poll running; it converges to DB status.
+                }
             } catch {
                 setPayError(
                     'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.',
                 );
+            } finally {
                 setPayLoading(false);
                 submitLock.current = false;
             }
         },
-        [order.id, payLoading],
+        [order.id, order.payment_method, payLoading, scriptUrl],
     );
 
     const statusConfig: Record<
