@@ -53,6 +53,7 @@ export default function CheckoutPayment({
         order_code: string;
     } | null>(null);
     const [lastPaymentUrl, setLastPaymentUrl] = useState<string | null>(null);
+    const [pollEpoch, setPollEpoch] = useState(0);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
     const pollStart = useRef<number | null>(null);
     const submitLock = useRef(false);
@@ -175,12 +176,21 @@ export default function CheckoutPayment({
         }, 5000);
 
         return stopPolling;
-    }, [waitingPayment, pendingOrder, stopPolling]);
+    }, [waitingPayment, pendingOrder, stopPolling, pollEpoch]);
 
     const handleRetryPayment = useCallback(async () => {
         if (!lastPaymentUrl) {
             return;
         }
+
+        // Clear the stale terminal (failed/expired/cancelled) message so the
+        // panel returns to the waiting state for the new payment attempt.
+        setPaymentStatus('pending');
+        // Reset the poll bookkeeping before re-arming so the effect's cleanup
+        // clears the old interval without the new one double-firing.
+        stopPolling();
+        pollStart.current = null;
+        setPollEpoch((value) => value + 1);
 
         const ok = await openDokuCheckout(lastPaymentUrl, scriptUrl);
 
@@ -190,7 +200,7 @@ export default function CheckoutPayment({
                 'Kami belum dapat menampilkan pembayaran di dalam aplikasi. Pembayaran dibuka di tab baru.',
             );
         }
-    }, [lastPaymentUrl, scriptUrl]);
+    }, [lastPaymentUrl, scriptUrl, stopPolling]);
 
     const submit = async () => {
         if (submitLock.current || waitingPayment) {

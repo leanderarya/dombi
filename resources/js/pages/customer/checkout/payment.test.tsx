@@ -268,4 +268,57 @@ describe('PaymentPage submit', () => {
         ).length;
         expect(statusFetchesAfter).toBe(1);
     });
+
+    it('resets to the waiting state and resumes polling after a retry, navigating on paid', async () => {
+        vi.useFakeTimers();
+        paymentStatusBody = { payment_status: 'failed' };
+
+        clickButton('Bayar');
+        await act(async () => {
+            for (let i = 0; i < 10; i++) {
+                await Promise.resolve();
+            }
+        });
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(5000);
+        });
+
+        // Terminal failure surfaced + polling stopped.
+        expect(document.body.textContent).toMatch(
+            /Pembayaran tidak berhasil diproses/i,
+        );
+
+        const statusFetches = () =>
+            (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
+                ([input]) => String(input).includes('/customer/orders/'),
+            ).length;
+        expect(statusFetches()).toBe(1);
+
+        // Retry: resets status to pending (failure message gone, waiting panel
+        // back to default copy) and re-opens the DOKU session.
+        clickButton('Selesaikan Pembayaran');
+        await flushAsync();
+
+        expect(document.body.textContent).not.toMatch(
+            /Pembayaran tidak berhasil diproses/i,
+        );
+        expect(document.body.textContent).toContain(
+            'Selesaikan pembayaran di jendela DOKU. Status pesanan diperbarui otomatis.',
+        );
+        expect(document.body.textContent).toContain(
+            'Pembayaran sedang diproses di DOKU',
+        );
+
+        // Subsequent poll returns paid → in-app navigation to confirm page.
+        paymentStatusBody = { payment_status: 'paid' };
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(5000);
+        });
+
+        expect(routerMock.visit).toHaveBeenCalledWith(
+            '/customer/orders/confirm/ORD-99',
+        );
+    });
 });
