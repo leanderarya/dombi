@@ -23,7 +23,9 @@ export function ensureDokuScript(scriptUrl: string): Promise<void> {
     );
 
     if (existing) {
-        return ensureDokuScript(scriptUrl);
+        // Stale node from a failed load (the Map entry was deleted on error, but
+        // the <script> tag was left in the DOM). Remove it and load fresh.
+        existing.remove();
     }
 
     const promise = new Promise<void>((resolve, reject) => {
