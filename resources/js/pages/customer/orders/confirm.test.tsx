@@ -242,4 +242,51 @@ describe('ConfirmPage handlePay', () => {
             '/customer/orders/confirm/ORD-42',
         );
     });
+
+    it('re-arms polling after a retry from terminal failed so paid is detected', async () => {
+        vi.useFakeTimers();
+        unmount();
+        renderPage({ ...baseOrder, payment_status: 'failed' });
+        paymentStatusBody = { payment_status: 'failed' };
+
+        // Terminal failure surfaced; polling stopped after the first tick.
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(5000);
+        });
+        expect(document.body.textContent).toMatch(
+            /Pembayaran tidak berhasil diproses/i,
+        );
+
+        // Retry: /pay returns a fresh attempt URL.
+        const FRESH_URL = 'https://sandbox.doku.com/checkout/link/PAY2';
+        payResponseBody = { payment_url: FRESH_URL };
+        openDokuCheckoutMock.mockClear();
+
+        clickButton('Bayar Sekarang');
+        await flushAsync();
+
+        expect(openDokuCheckoutMock).toHaveBeenCalledWith(
+            FRESH_URL,
+            SCRIPT_URL,
+        );
+
+        const statusFetches = () =>
+            (
+                global.fetch as unknown as ReturnType<typeof vi.fn>
+            ).mock.calls.filter(([input]) =>
+                String(input).includes('/payment-status'),
+            ).length;
+
+        const countAfterRetry = statusFetches();
+
+        // Payment completes in the modal → next poll returns paid → reload.
+        paymentStatusBody = { payment_status: 'paid' };
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(5000);
+        });
+
+        expect(statusFetches()).toBeGreaterThan(countAfterRetry);
+        expect(routerMock.reload).toHaveBeenCalled();
+    });
 });
