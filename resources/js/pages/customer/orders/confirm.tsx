@@ -261,6 +261,11 @@ export default function ConfirmPage({
                     return;
                 }
 
+                // Fresh attempt created — reset to pending so the poll effect
+                // re-runs ([order.id, paymentStatus]) and re-arms the interval,
+                // even when retrying from a terminal failed/expired status.
+                setPaymentStatus('pending');
+
                 const ok = await openDokuCheckout(data.payment_url, scriptUrl);
 
                 if (!ok) {
