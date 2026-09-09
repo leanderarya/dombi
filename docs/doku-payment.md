@@ -2,7 +2,7 @@
 
 > Dokumen ini menjelaskan seluruh alur pembayaran DOKU: arsitektur, konfigurasi, alur, skenario, keamanan, dan testing/audit.
 
-**Terakhir disinkronkan dengan kode:** 2026-08-05
+**Terakhir disinkronkan dengan kode:** 2026-09-09
 
 ---
 
@@ -213,7 +213,7 @@ return [
 
 ### Langkah Detail
 
-1. **Customer** menekan "Bayar" di halaman checkout
+1. **Customer** menekan "Bayar" di halaman checkout (`/customer/checkout/payment`)
 2. **CheckoutController::submit()** memanggil `DokuService::createPayment($order)`
 3. **DokuService** mengirim POST ke `/checkout/v1/payment` dengan:
    - `order.invoice_number` = order_code
@@ -221,16 +221,60 @@ return [
    - `order.line_items` = item-item pesanan **plus delivery fee** (`Ongkos Kirim`) dan **payment fee** (`Biaya Layanan`) sehingga jumlah line items = order total
    - `payment.payment_method_types` = dari enum `PaymentMethod::dokuType()` (QRIS / VA / EWALLET / CREDIT_CARD)
    - `customer` = nama, email, phone
-4. **DOKU** mengembalikan `payment_url` (hosted payment page)
-5. **Customer** di-redirect ke halaman DOKU untuk membayar
-6. Setelah pembayaran:
+4. **DOKU** mengembalikan `payment_url`
+5. **CheckoutController::submit()** (JSON) merespons `{ payment_url, order: { id, order_code } }` — sejak fitur in-app modal, halaman checkout **tidak lagi redirect penuh** ke hosted page
+6. **Frontend** memuat DOKU Checkout JS sekali dan membuka **modal pembayaran in-app** (`window.loadJokulCheckout(payment_url)`) — lihat [3.3 In-App Payment Modal](#33-in-app-payment-modal)
+7. Setelah pembayaran:
    - **Webhook**: DOKU mengirim POST ke `/payment/doku/notify`
-   - **Redirect**: Customer di-redirect ke `/payment/doku/redirect`
-7. **Order** di-update statusnya (paid/failed/expired)
+   - **Redirect**: Customer (bila keluar ke hosted page, mis. fallback tab baru) di-redirect ke `/payment/doku/redirect`
+8. **Order** di-update statusnya (paid/failed/expired)
+9. **Frontend polling** `/customer/orders/{id}/payment-status` setiap 5 detik mendeteksi status akhir tanpa bergantung callback modal — begitu `paid`, customer dialihkan in-app ke halaman konfirmasi
 
 ---
+### 3.3 In-App Payment Modal (Checkout Jika Fitur Aktif)
 
-## 4. Semua Skenario Pembayaran
+Sejak 2026-09-09, alur bayar default **tetap di dalam aplikasi**: tidak ada navigasi penuh keluar ke hosted DOKU page.
+
+**Alur checkout (`resources/js/pages/customer/checkout/payment.tsx`):**
+```
+Customer klik "Bayar"
+→ POST /customer/checkout/payment (JSON) → { payment_url, order: { id, order_code } }
+→ Cart dikosongkan + markUsedForOrder
+→ Mode "Menunggu pembayaran" aktif, tombol "Bayar" berubah "Menunggu pembayaran" & disabled (cegah double-submit)
+→ openDokuCheckout(payment_url, scriptUrl) memuat DOKU Checkout JS + membuka modal in-app
+→ Setiap 5 detik: GET /customer/orders/{orderId}/payment-status (Accept: application/json)
+   - paid  → stop polling, router.visit ke /customer/orders/confirm/{order_code}
+   - failed/expired/cancelled → stop polling, tampilkan status terminal + tombol "Selesaikan Pembayaran"
+→ "Selesaikan Pembayaran" → openDokuCheckout(payment_url yang sama, scriptUrl) lagi (retry, TANPA membuat order baru)
+```
+
+**Alur retry dari halaman confirm (`resources/js/pages/customer/orders/confirm.tsx`):**
+```
+Customer klik "Lanjutkan Pembayaran" / "Bayar Sekarang"
+→ POST /customer/orders/{id}/pay (JSON fetch, bukan form redirect)
+   headers: Content-Type: application/json, Accept: application/json,
+            X-Requested-With: XMLHttpRequest, X-CSRF-TOKEN (meta csrf-token)
+   body:    { payment_method: <method ?? order.payment_method> }
+→ Non-OK → error "Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi."
+→ OK → { payment_url } → openDokuCheckout(payment_url, scriptUrl)
+→ openDokuCheckout false → window.open(payment_url, '_blank','noopener,noreferrer') + pesan fallback
+```
+
+**Contoh langkah / fallback (keduanya, checkout & confirm):**
+- `openDokuCheckout` mengembalikan `false` (script gagal dimuat / `window.loadJokulCheckout` tidak tersedia) → buka `payment_url` di tab baru: `window.open(payment_url,'_blank','noopener,noreferrer')`, tampilkan "Kami belum dapat menampilkan pembayaran di dalam aplikasi. Pembayaran dibuka di tab baru."
+- Status deteksi berbasis **polling DB** (`/payment-status`), bukan callback internal modal — jadi retry/selesai di modal atau tab baru tetap terdeteksi.
+
+**URL script DOKU Checkout JS** (di-pass lewat prop `dokuCheckoutJs` dari backend, tidak di-hardcode env di frontend):
+| Environment | URL |
+|-------------|-----|
+| Sandbox | `https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js` |
+| Production | `https://jokul.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js` |
+
+Frontend memakai `dokuCheckoutJs ?? <sandbox default>`; controller menurunkan dari `config('doku.sandbox')`.
+
+**File terkait**: `resources/js/lib/doku-checkout.ts` (`ensureDokuScript`, `openDokuCheckout`), `resources/js/lib/checkout-payment-response.ts` (`CheckoutPaymentData` + `order` ref), `CheckoutController::payment()` & `OrderController::confirm()` (prop `dokuCheckoutJs`), `CheckoutController::submit()` & `OrderController::pay()` (JSON `payment_url` + `expectsJson` branch).
+
+---
 
 ### 4.1 ✅ Pembayaran Berhasil (SUCCESS)
 
@@ -271,7 +315,7 @@ raw_response = { ... webhook payload ... }
 **Alur**:
 ```
 createPayment → order.payment_status = 'pending'
-Customer di-redirect ke DOKU hosted page
+Modal DOKU dibuka in-app (atau hosted page bila fallback tab baru)
 Menunggu customer membayar (QRIS scan, dll)
 ```
 
@@ -402,9 +446,9 @@ DOKU Webhook → mapStatus('CANCELLED') = 'failed'
 **Alur di `OrderController::pay()`** (POST `/customer/orders/{order}/pay`, throttle `pay-token`):
 
 ```
-Customer klik "Bayar Lagi"
+Customer klik "Bayar Lagi" / "Lanjutkan Pembayaran" / "Bayar Sekarang"
 → auth: payment access + validate payment_method
-→ Guard: order terminal? → redirect
+→ Guard: order terminal? → redirect/error
 → Guard: order.payment_status == 'paid'? → redirect ke confirm
 → Guard: PaymentTransaction sudah hit max_payment_attempts (default 3)? → error
 
@@ -419,10 +463,12 @@ Customer klik "Bayar Lagi"
 
 → Hapus semua transaksi lama (cegah duplikat doku_order_id), reset doku_order_id = null
 → createPayment(order) — buat payment baru
-→ Redirect ke DOKU hosted page
+→ Response (dua bentuk):
+   - JSON (expectsJson): { payment_url } → frontend buka DOKU modal in-app (confirm.tsx handlePay fetch)
+   - Non-JSON: redirect()->away($paymentUrl) → hosted page (flow legacy)
 ```
 
-**Test**: `PaymentScenarioTest::test_pay_endpoint_rejects_*`, `PaymentAuthorizationMutationTest`
+**Test**: `PaymentScenarioTest::test_pay_endpoint_rejects_*`, `PaymentAuthorizationMutationTest`, `OrderPayJsonResponseTest` (JSON branch)
 
 ---
 
@@ -432,7 +478,7 @@ Customer klik "Bayar Lagi"
 
 **Alur**:
 ```
-Frontend polling setiap 5 detik
+Frontend polling setiap 5 detik (payment.tsx & confirm.tsx)
 → paymentStatus() di OrderController
 → authorizePaymentAccess
 → Jika ada doku_order_id, selalu sync dari DOKU API (handle webhook delay)
@@ -448,11 +494,12 @@ Frontend polling setiap 5 detik
 }
 ```
 
-**Polling interval**: 5 detik (5000ms)
+**Polling interval**: 5 detik (5000ms), timeout 5 menit (`POLL_TIMEOUT_MS`)
 
 **Kapan berhenti polling**:
 - `payment_status` berubah dari `pending` ke `paid`/`failed`/`expired`
-- Frontend redirect ke halaman yang sesuai
+- `paid` → redirect in-app ke halaman konfirmasi
+- terminal gagal → tampilkan status + tombol retry "Selesaikan Pembayaran" (retry me-reset status ke pending + re-arm polling, tanpa membuat order baru)
 
 ---
 
