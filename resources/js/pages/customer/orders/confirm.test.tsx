@@ -162,9 +162,8 @@ describe('ConfirmPage handlePay', () => {
         clickButton('Lanjutkan Pembayaran');
         await flushAsync();
 
-        const fetchCalls = (
-            global.fetch as unknown as ReturnType<typeof vi.fn>
-        ).mock.calls;
+        const fetchCalls = (global.fetch as unknown as ReturnType<typeof vi.fn>)
+            .mock.calls;
         const payCall = fetchCalls.find(
             ([input, init]) =>
                 String(input).includes('/pay') &&

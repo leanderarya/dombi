@@ -227,10 +227,7 @@ export default function ConfirmPage({
                 }
 
                 const data = await response.json();
-                const ok = await openDokuCheckout(
-                    data.payment_url,
-                    scriptUrl,
-                );
+                const ok = await openDokuCheckout(data.payment_url, scriptUrl);
 
                 if (!ok) {
                     window.open(
