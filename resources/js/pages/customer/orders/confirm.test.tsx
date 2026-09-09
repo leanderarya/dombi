@@ -214,4 +214,32 @@ describe('ConfirmPage handlePay', () => {
         );
         expect(openDokuCheckoutMock).not.toHaveBeenCalled();
     });
+
+    it('surfaces the server guard message (JSON) on a non-OK pay response', async () => {
+        payResponseStatus = 429;
+        payResponseBody = {
+            message: 'Batas maksimum percobaan pembayaran tercapai.',
+        };
+
+        clickButton('Lanjutkan Pembayaran');
+        await flushAsync();
+
+        expect(document.body.textContent).toContain(
+            'Batas maksimum percobaan pembayaran tercapai.',
+        );
+        expect(openDokuCheckoutMock).not.toHaveBeenCalled();
+    });
+
+    it('navigates to confirm when the pay response reports the order already paid', async () => {
+        payResponseBody = { paid: true, order_code: 'ORD-42' };
+
+        clickButton('Lanjutkan Pembayaran');
+        await flushAsync();
+
+        // Already-paid guard: no modal, in-app navigation instead.
+        expect(openDokuCheckoutMock).not.toHaveBeenCalled();
+        expect(routerMock.visit).toHaveBeenCalledWith(
+            '/customer/orders/confirm/ORD-42',
+        );
+    });
 });

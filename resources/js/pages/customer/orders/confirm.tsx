@@ -223,10 +223,44 @@ export default function ConfirmPage({
                 );
 
                 if (!response.ok) {
-                    throw new Error('pay-failed');
+                    // Guard rejection (JSON { message } from the backend):
+                    // surface the real reason instead of a generic error.
+                    let message =
+                        'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.';
+
+                    try {
+                        const errData = await response.json();
+
+                        if (errData?.message) {
+                            message = errData.message;
+                        }
+                    } catch {
+                        // fall through to generic
+                    }
+
+                    setPayError(message);
+
+                    return;
                 }
 
                 const data = await response.json();
+
+                if (data.paid) {
+                    // Order is already paid (reconciled server-side) — go to the
+                    // paid confirmation state for this order.
+                    router.visit(`/customer/orders/confirm/${data.order_code}`);
+
+                    return;
+                }
+
+                if (!data.payment_url) {
+                    setPayError(
+                        'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.',
+                    );
+
+                    return;
+                }
+
                 const ok = await openDokuCheckout(data.payment_url, scriptUrl);
 
                 if (!ok) {
