@@ -69,6 +69,11 @@ function jsonResponse(body: JsonShape, status = 200): Response {
 }
 
 let paymentStatusBody: JsonShape = { payment_status: 'pending' };
+let checkoutPaymentBody: JsonShape = {
+    payment_url: PAYMENT_URL,
+    order: { id: 99, order_code: 'ORD-99' },
+};
+let payRetryResponse: (JsonShape & { status?: number }) | null = null;
 
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
@@ -119,17 +124,27 @@ function stubFetch() {
             return Promise.resolve(jsonResponse({ valid: true }));
         }
 
+        if (
+            url.includes('/customer/orders/') &&
+            url.endsWith('/payment-status')
+        ) {
+            return Promise.resolve(jsonResponse(paymentStatusBody));
+        }
+
+        if (url.includes('/customer/orders/') && url.endsWith('/pay')) {
+            const configured = payRetryResponse;
+            const status = configured?.status ?? 200;
+            const body = configured ?? { payment_url: PAYMENT_URL };
+
+            return Promise.resolve(jsonResponse(body, status));
+        }
+
         if (url.includes('/customer/orders/')) {
             return Promise.resolve(jsonResponse(paymentStatusBody));
         }
 
         if (url.includes('/customer/checkout/payment')) {
-            return Promise.resolve(
-                jsonResponse({
-                    payment_url: PAYMENT_URL,
-                    order: { id: 99, order_code: 'ORD-99' },
-                }),
-            );
+            return Promise.resolve(jsonResponse(checkoutPaymentBody));
         }
 
         return Promise.reject(new Error(`Unexpected fetch: ${url}`));
@@ -142,6 +157,11 @@ beforeEach(() => {
     routerMock.visit.mockReset();
     vi.spyOn(window, 'open').mockImplementation(() => null);
     paymentStatusBody = { payment_status: 'pending' };
+    checkoutPaymentBody = {
+        payment_url: PAYMENT_URL,
+        order: { id: 99, order_code: 'ORD-99' },
+    };
+    payRetryResponse = null;
     stubFetch();
     renderPage();
 });
@@ -208,6 +228,17 @@ describe('PaymentPage submit', () => {
             PAYMENT_URL,
             SCRIPT_URL,
         );
+
+        // Status still pending → abandon/reopen branch: NO server round-trip
+        // to /pay for a fresh attempt.
+        const payFetches = (
+            global.fetch as ReturnType<typeof vi.fn>
+        ).mock.calls.filter(
+            ([input, init]) =>
+                String(input).endsWith('/pay') &&
+                (init as RequestInit)?.method === 'POST',
+        );
+        expect(payFetches).toHaveLength(0);
     });
 
     it('stops polling and navigates in-app to the confirmation page once paid', async () => {
@@ -272,6 +303,7 @@ describe('PaymentPage submit', () => {
     it('resets to the waiting state and resumes polling after a retry, navigating on paid', async () => {
         vi.useFakeTimers();
         paymentStatusBody = { payment_status: 'failed' };
+        const FRESH_URL = 'https://sandbox.doku.com/checkout/link/PAY2';
 
         clickButton('Bayar');
         await act(async () => {
@@ -291,15 +323,37 @@ describe('PaymentPage submit', () => {
 
         const statusFetches = () =>
             (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
-                ([input]) => String(input).includes('/customer/orders/'),
+                ([input, init]) =>
+                    String(input).endsWith('/payment-status') &&
+                    (init as RequestInit)?.method !== 'POST',
             ).length;
         expect(statusFetches()).toBe(1);
 
-        // Retry: resets status to pending (failure message gone, waiting panel
-        // back to default copy) and re-opens the DOKU session.
+        // Retry after terminal failure: request a FRESH payment attempt from
+        // /pay instead of reopening the possibly-dead stored URL.
+        payRetryResponse = { payment_url: FRESH_URL };
+        openDokuCheckoutMock.mockClear();
+
         clickButton('Selesaikan Pembayaran');
         await flushAsync();
 
+        const payCalls = (
+            global.fetch as ReturnType<typeof vi.fn>
+        ).mock.calls.filter(
+            ([input, init]) =>
+                String(input).endsWith('/pay') &&
+                (init as RequestInit)?.method === 'POST',
+        );
+        expect(payCalls).toHaveLength(1);
+        expect(String(payCalls[0]![0])).toBe('/customer/orders/99/pay');
+
+        // The modal reopened with the /pay-returned URL, not the stale one.
+        expect(openDokuCheckoutMock).toHaveBeenCalledWith(
+            FRESH_URL,
+            SCRIPT_URL,
+        );
+
+        // Failure message gone; back to pending waiting copy.
         expect(document.body.textContent).not.toMatch(
             /Pembayaran tidak berhasil diproses/i,
         );
@@ -320,5 +374,86 @@ describe('PaymentPage submit', () => {
         expect(routerMock.visit).toHaveBeenCalledWith(
             '/customer/orders/confirm/ORD-99',
         );
+    });
+
+    it('surfaces a guard rejection from /pay on retry without reopening the modal', async () => {
+        vi.useFakeTimers();
+        paymentStatusBody = { payment_status: 'failed' };
+
+        clickButton('Bayar');
+        await act(async () => {
+            for (let i = 0; i < 10; i++) {
+                await Promise.resolve();
+            }
+        });
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(5000);
+        });
+
+        // Terminal failure surfaced; polling stopped.
+        expect(document.body.textContent).toMatch(
+            /Pembayaran tidak berhasil diproses/i,
+        );
+
+        // Retry hits a guard rejection (429) — server message must surface.
+        payRetryResponse = {
+            status: 429,
+            message: 'Batas maksimum percobaan pembayaran tercapai.',
+        };
+        openDokuCheckoutMock.mockClear();
+
+        clickButton('Selesaikan Pembayaran');
+        await flushAsync();
+
+        expect(document.body.textContent).toContain(
+            'Batas maksimum percobaan pembayaran tercapai.',
+        );
+
+        // No modal opened with a /pay-returned URL (no fresh attempt success).
+        expect(openDokuCheckoutMock).not.toHaveBeenCalled();
+
+        // Retry button still present so the user can try again.
+        expect(document.body.textContent).toContain('Selesaikan Pembayaran');
+
+        // Polling stays stopped after the guard rejection.
+        const payFetches = (
+            global.fetch as ReturnType<typeof vi.fn>
+        ).mock.calls.filter(
+            ([input, init]) =>
+                String(input).endsWith('/pay') &&
+                (init as RequestInit)?.method === 'POST',
+        );
+        expect(payFetches).toHaveLength(1);
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(15000);
+        });
+
+        const payFetchesAfter = (
+            global.fetch as ReturnType<typeof vi.fn>
+        ).mock.calls.filter(
+            ([input, init]) =>
+                String(input).endsWith('/pay') &&
+                (init as RequestInit)?.method === 'POST',
+        );
+        expect(payFetchesAfter).toHaveLength(1);
+    });
+
+    it('surfaces an error and skips waiting mode when submit omits order metadata', async () => {
+        checkoutPaymentBody = { payment_url: PAYMENT_URL };
+
+        clickButton('Bayar');
+        await flushAsync();
+
+        // Error surfaced, no modal opened, no waiting mode entered.
+        expect(document.body.textContent).toContain(
+            'Tidak ada URL pembayaran. Silakan coba lagi.',
+        );
+        expect(openDokuCheckoutMock).not.toHaveBeenCalled();
+        expect(document.body.textContent).not.toContain(
+            'Pembayaran sedang diproses di DOKU',
+        );
+        expect(document.body.textContent).not.toContain('Menunggu pembayaran');
     });
 });

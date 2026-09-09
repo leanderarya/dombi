@@ -54,6 +54,8 @@ export default function CheckoutPayment({
     } | null>(null);
     const [lastPaymentUrl, setLastPaymentUrl] = useState<string | null>(null);
     const [pollEpoch, setPollEpoch] = useState(0);
+    const [pollTimedOut, setPollTimedOut] = useState(false);
+    const [retryError, setRetryError] = useState<string | null>(null);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
     const pollStart = useRef<number | null>(null);
     const submitLock = useRef(false);
@@ -138,6 +140,9 @@ export default function CheckoutPayment({
                 Date.now() - pollStart.current > POLL_TIMEOUT_MS
             ) {
                 stopPolling();
+                // Surface visible feedback: polling stopped, order may still
+                // process in the background via DOKU/webhook.
+                setPollTimedOut(true);
 
                 return;
             }
@@ -179,28 +184,112 @@ export default function CheckoutPayment({
     }, [waitingPayment, pendingOrder, stopPolling, pollEpoch]);
 
     const handleRetryPayment = useCallback(async () => {
-        if (!lastPaymentUrl) {
+        if (!lastPaymentUrl || !pendingOrder) {
             return;
         }
 
-        // Clear the stale terminal (failed/expired/cancelled) message so the
-        // panel returns to the waiting state for the new payment attempt.
-        setPaymentStatus('pending');
-        // Reset the poll bookkeeping before re-arming so the effect's cleanup
-        // clears the old interval without the new one double-firing.
+        setRetryError(null);
+
+        // Abandon/reopen case: session still pending → just reopen the same URL.
+        if (paymentStatus === 'pending') {
+            const ok = await openDokuCheckout(lastPaymentUrl, scriptUrl);
+
+            if (!ok) {
+                window.open(lastPaymentUrl, '_blank', 'noopener,noreferrer');
+                setRetryError(
+                    'Kami belum dapat menampilkan pembayaran di dalam aplikasi. Pembayaran dibuka di tab baru.',
+                );
+            }
+
+            return;
+        }
+
+        // Terminal status (failed/expired/cancelled): request a fresh payment
+        // attempt from the backend so the returned URL is not dead. No new
+        // order is created — /pay only issues a new DOKU payment attempt.
+        // Keep the panel at the terminal status until /pay confirms a new
+        // attempt, so a guard rejection still leaves retry visible.
+        setPollTimedOut(false);
         stopPolling();
         pollStart.current = null;
-        setPollEpoch((value) => value + 1);
 
-        const ok = await openDokuCheckout(lastPaymentUrl, scriptUrl);
+        const csrf =
+            document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content') ?? '';
 
-        if (!ok) {
-            window.open(lastPaymentUrl, '_blank', 'noopener,noreferrer');
-            setSubmitError(
-                'Kami belum dapat menampilkan pembayaran di dalam aplikasi. Pembayaran dibuka di tab baru.',
+        try {
+            const response = await fetch(
+                `/customer/orders/${pendingOrder.id}/pay`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrf,
+                    },
+                    body: JSON.stringify({}),
+                },
             );
+
+            if (!response.ok) {
+                let message =
+                    'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.';
+
+                try {
+                    const errData = await response.json();
+
+                    if (errData?.message) {
+                        message = errData.message;
+                    }
+                } catch {
+                    // fall through to generic message
+                }
+
+                // Guard rejection (e.g. max attempts, already processing): the
+                // panel keeps showing the last known terminal status + the
+                // retry button, and the server message is surfaced. Polling
+                // stays stopped — no fresh attempt was created.
+                setRetryError(message);
+
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.paid) {
+                // Order became paid while we were retrying (reconciled via sync).
+                setWaitingPayment(false);
+                router.visit(`/customer/orders/confirm/${data.order_code}`);
+
+                return;
+            }
+
+            if (!data.payment_url) {
+                setRetryError(
+                    'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.',
+                );
+
+                return;
+            }
+
+            setLastPaymentUrl(data.payment_url);
+            setPaymentStatus('pending');
+            setPollEpoch((v) => v + 1); // re-arm polling for the new attempt
+
+            const ok = await openDokuCheckout(data.payment_url, scriptUrl);
+
+            if (!ok) {
+                window.open(data.payment_url, '_blank', 'noopener,noreferrer');
+                setRetryError(
+                    'Kami belum dapat menampilkan pembayaran di dalam aplikasi. Pembayaran dibuka di tab baru.',
+                );
+            }
+        } catch {
+            setRetryError('Terjadi kesalahan jaringan. Silakan coba lagi.');
         }
-    }, [lastPaymentUrl, scriptUrl, stopPolling]);
+    }, [lastPaymentUrl, pendingOrder, paymentStatus, scriptUrl, stopPolling]);
 
     const submit = async () => {
         if (submitLock.current || waitingPayment) {
@@ -298,13 +387,27 @@ export default function CheckoutPayment({
             }
 
             if (data.payment_url) {
+                // Guard the order metadata before entering waiting mode so we
+                // never render a permanent "Menunggu pembayaran" where
+                // pendingOrder is null and polling can never start.
+                const orderRef = data.order; // { id, order_code } from new backend contract
+
+                if (!orderRef?.id) {
+                    setSubmitError(
+                        'Tidak ada URL pembayaran. Silakan coba lagi.',
+                    );
+                    setProcessing(false);
+
+                    return;
+                }
+
                 cart.clear();
                 markUsedForOrder();
 
-                const orderRef = data.order; // { id, order_code } from new backend contract
-                setPendingOrder(orderRef ?? null);
+                setPendingOrder(orderRef);
                 setLastPaymentUrl(data.payment_url);
                 setPaymentStatus('pending');
+                setPollTimedOut(false);
                 setWaitingPayment(true);
                 setProcessing(false);
 
@@ -407,7 +510,9 @@ export default function CheckoutPayment({
                                     </p>
                                     <p className="mt-1 text-xs text-amber-800">
                                         {waitingTerminalMessage ??
-                                            'Selesaikan pembayaran di jendela DOKU. Status pesanan diperbarui otomatis.'}
+                                            (pollTimedOut
+                                                ? 'Waktu pemantauan pembayaran habis. Jika Anda sudah menyelesaikan pembayaran, pesanan akan tetap diproses.'
+                                                : 'Selesaikan pembayaran di jendela DOKU. Status pesanan diperbarui otomatis.')}
                                     </p>
                                     {pendingOrder && (
                                         <p className="mt-2 text-xs text-amber-800">
@@ -428,6 +533,16 @@ export default function CheckoutPayment({
                                     )}
                                 </div>
                             </div>
+                            {retryError && (
+                                <div className="mt-3">
+                                    <NoticeBanner
+                                        variant="error"
+                                        title="Pembayaran belum berhasil"
+                                        message={retryError}
+                                        onDismiss={() => setRetryError(null)}
+                                    />
+                                </div>
+                            )}
                         </section>
                     )}
 
