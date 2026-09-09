@@ -245,7 +245,9 @@ Customer klik "Bayar"
 → Setiap 5 detik: GET /customer/orders/{orderId}/payment-status (Accept: application/json)
    - paid  → stop polling, router.visit ke /customer/orders/confirm/{order_code}
    - failed/expired/cancelled → stop polling, tampilkan status terminal + tombol "Selesaikan Pembayaran"
-→ "Selesaikan Pembayaran" → openDokuCheckout(payment_url yang sama, scriptUrl) lagi (retry, TANPA membuat order baru)
+→ "Selesaikan Pembayaran":
+   - status masih pending (abandon, modal ditutup) → buka ulang payment_url yang sama
+   - status terminal (failed/expired/cancelled) → POST /customer/orders/{id}/pay (JSON) utk attempt baru → modal dengan payment_url baru (TANPA membuat order baru)
 ```
 
 **Alur retry dari halaman confirm (`resources/js/pages/customer/orders/confirm.tsx`):**
@@ -257,6 +259,7 @@ Customer klik "Lanjutkan Pembayaran" / "Bayar Sekarang"
    body:    { payment_method: <method ?? order.payment_method> }
 → Non-OK → error "Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi."
 → OK → { payment_url } → openDokuCheckout(payment_url, scriptUrl)
+→ Response guard (backend, JSON): { message: <alasan> } dgn status 409/429 → ditampilkan apa adanya; { paid: true, order_code } → sudah terbayar → pindah ke confirm
 → openDokuCheckout false → window.open(payment_url, '_blank','noopener,noreferrer') + pesan fallback
 ```
 
@@ -465,6 +468,8 @@ Customer klik "Bayar Lagi" / "Lanjutkan Pembayaran" / "Bayar Sekarang"
 → createPayment(order) — buat payment baru
 → Response (dua bentuk):
    - JSON (expectsJson): { payment_url } → frontend buka DOKU modal in-app (confirm.tsx handlePay fetch)
+     - guard ter-reject: { message: <alasan> } + status 409/429 → pesan alasan tampil
+     - sudah terbayar: { paid: true, order_code } status 200 → frontend pindah ke halaman confirm
    - Non-JSON: redirect()->away($paymentUrl) → hosted page (flow legacy)
 ```
 
@@ -494,12 +499,12 @@ Frontend polling setiap 5 detik (payment.tsx & confirm.tsx)
 }
 ```
 
-**Polling interval**: 5 detik (5000ms), timeout 5 menit (`POLL_TIMEOUT_MS`)
+**Polling interval**: 5 detik (5000ms), timeout 5 menit (`POLL_TIMEOUT_MS`; saat timeout tampil pesan "waktu pemantauan habis", tombol retry tetap ada)
 
 **Kapan berhenti polling**:
 - `payment_status` berubah dari `pending` ke `paid`/`failed`/`expired`
 - `paid` → redirect in-app ke halaman konfirmasi
-- terminal gagal → tampilkan status + tombol retry "Selesaikan Pembayaran" (retry me-reset status ke pending + re-arm polling, tanpa membuat order baru)
+- terminal gagal → tampilkan status + tombol retry "Selesaikan Pembayaran" (retry via POST `/customer/orders/{id}/pay` untuk attempt baru — TANPA membuat order baru)
 
 ---
 
