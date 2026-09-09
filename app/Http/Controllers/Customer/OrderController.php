@@ -230,14 +230,12 @@ class OrderController extends Controller
             Order::STATUS_EXPIRED,
         ];
         if (in_array($order->status, $terminalStatuses, true)) {
-            return back()->with('error', 'Pesanan sudah tidak aktif.');
+            return $this->payGuardResponse($request, 'Pesanan sudah tidak aktif.', 409);
         }
 
         // Guard: order must not already be paid
         if ($order->payment_status === 'paid') {
-            return redirect()->route('customer.orders.confirm', [
-                'orderCode' => $order->order_code,
-            ]);
+            return $this->payPaidResponse($request, $order);
         }
 
         // Guard: if payment failed/expired, reset so user can retry
@@ -250,9 +248,7 @@ class OrderController extends Controller
 
                 // If paid after sync, redirect to confirm
                 if ($order->payment_status === 'paid') {
-                    return redirect()->route('customer.orders.confirm', [
-                        'orderCode' => $order->order_code,
-                    ]);
+                    return $this->payPaidResponse($request, $order);
                 }
 
                 if (in_array($syncStatus, ['failed', 'expired'], true)) {
@@ -275,27 +271,27 @@ class OrderController extends Controller
             })->latest('id')->first();
             $paymentAttempts = PaymentAttempt::where('order_id', $order->id)->count();
             if (! $activeAttempt && $paymentAttempts >= config('order.max_payment_attempts', 3)) {
-                return back()->with('error', 'Batas maksimum percobaan pembayaran tercapai.');
+                return $this->payGuardResponse($request, 'Batas maksimum percobaan pembayaran tercapai.', 429);
             }
             $attempt = $activeAttempt ?: $doku->preparePaymentAttempt($order);
             if ($paymentAttempts >= config('order.max_payment_attempts', 3) && ! in_array($attempt->creation_state?->value, ['initiated', 'pending', 'created', 'unknown'], true)) {
-                return back()->with('error', 'Batas maksimum percobaan pembayaran tercapai.');
+                return $this->payGuardResponse($request, 'Batas maksimum percobaan pembayaran tercapai.', 429);
             }
             if ($attempt->creation_state?->value === 'unknown') {
                 $attempt = $doku->reconcilePaymentAttempt($attempt);
                 $order->refresh();
                 if ($attempt->creation_state?->value === 'unknown' || ($attempt->creation_state?->value === 'failed' && $attempt->settlement_status?->value === 'unknown')) {
-                    return back()->with('error', 'Pembayaran sedang dipastikan. Silakan tunggu hasil rekonsiliasi.');
+                    return $this->payGuardResponse($request, 'Pembayaran sedang dipastikan. Silakan tunggu hasil rekonsiliasi.', 409);
                 }
                 if ($attempt->creation_state?->value === 'failed') {
                     $attempt = $doku->preparePaymentAttempt($order);
                 }
                 if ($order->payment_status === 'paid') {
-                    return redirect()->route('customer.orders.confirm', ['orderCode' => $order->order_code]);
+                    return $this->payPaidResponse($request, $order);
                 }
             }
             if ($attempt->creation_state?->value === 'created') {
-                return back()->with('error', 'Pembayaran sedang diproses. Silakan tunggu hasil rekonsiliasi.');
+                return $this->payGuardResponse($request, 'Pembayaran sedang diproses. Silakan tunggu hasil rekonsiliasi.', 409);
             }
             $paymentUrl = $doku->createPayment($attempt);
 
@@ -479,6 +475,26 @@ class OrderController extends Controller
 
         return redirect()->route('customer.checkout.index')
             ->with('success', $message);
+    }
+
+    private function payGuardResponse(Request $request, string $message, int $status = 409): RedirectResponse|JsonResponse
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message], $status);
+        }
+
+        return back()->with('error', $message);
+    }
+
+    private function payPaidResponse(Request $request, Order $order): RedirectResponse|JsonResponse
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['paid' => true, 'order_code' => $order->order_code], 200);
+        }
+
+        return redirect()->route('customer.orders.confirm', [
+            'orderCode' => $order->order_code,
+        ]);
     }
 
     private function authorizePaymentAccess(Request $request, Order $order): void
