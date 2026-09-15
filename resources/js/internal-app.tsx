@@ -73,7 +73,10 @@ createInertiaApp({
     },
     resolve: (name) => {
         const pages = import.meta.glob<{ default: ComponentType }>(
-            './pages/{owner,outlet,courier,auth}/**/*.tsx',
+            [
+                './pages/{owner,outlet,courier,auth}/**/*.tsx',
+                '!./pages/**/*.test.tsx',
+            ],
             { eager: true },
         );
         const page = pages[`./pages/${name}.tsx`];
