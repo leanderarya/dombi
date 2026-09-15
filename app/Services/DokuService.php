@@ -89,7 +89,8 @@ class DokuService
         }
 
         $order = $attempt->order;
-        $body = ['order' => ['invoice_number' => $attempt->invoice_number, 'amount' => (int) $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'callback_url' => route('doku.redirect', ['invoice_number' => $attempt->invoice_number]), 'callback_url_result' => config('doku.callback_url') ?: route('doku.notify'), 'auto_redirect' => true, 'payment_due_date' => config('doku.payment_timeout', 30), 'line_items' => data_get($attempt->metadata ?? [], 'line_items', $this->buildLineItems($order))], 'payment' => array_merge(['payment_method_types' => [$this->mapPaymentMethod($attempt->payment_method)]], $this->channelInfo($attempt->payment_method) ?? []), 'customer' => data_get($attempt->metadata ?? [], 'customer_snapshot', $this->buildCustomerInfo($order))];
+        $redirectUrl = route('doku.redirect', ['invoice_number' => $attempt->invoice_number]);
+        $body = ['order' => ['invoice_number' => $attempt->invoice_number, 'amount' => (int) $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'callback_url' => $redirectUrl, 'callback_url_result' => $redirectUrl, 'auto_redirect' => (bool) config('doku.auto_redirect', true), 'payment_due_date' => config('doku.payment_timeout', 30), 'line_items' => data_get($attempt->metadata ?? [], 'line_items', $this->buildLineItems($order))], 'payment' => array_merge(['payment_method_types' => [$this->mapPaymentMethod($attempt->payment_method)]], $this->channelInfo($attempt->payment_method) ?? []), 'customer' => data_get($attempt->metadata ?? [], 'customer_snapshot', $this->buildCustomerInfo($order))];
         $bodyJson = json_encode($body);
         $endpoint = '/checkout/v1/payment';
         $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
@@ -401,7 +402,9 @@ class DokuService
 
     /**
      * Handle DOKU webhook notification.
-     * DOKU sends this to callback_url_result when payment status changes.
+     * DOKU sends this to the Notification URL configured in the DOKU Back Office
+     * (server-to-server), not to callback_url_result (which is the browser
+     * "Back to Merchant" URL).
      */
     public function handleWebhook(array $payload): void
     {
