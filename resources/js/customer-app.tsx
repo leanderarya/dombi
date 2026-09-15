@@ -108,6 +108,7 @@ createInertiaApp({
             './pages/customer/**/*.tsx',
             './pages/auth/**/*.tsx',
             './pages/*.tsx',
+            '!./pages/**/*.test.tsx',
         ]);
         const page = pages[`./pages/${name}.tsx`];
 
