@@ -15,6 +15,10 @@ return [
 
     // Allowed payment methods (null = all methods) - deprecated, use methods/enabled_methods
     'payment_methods' => env('DOKU_PAYMENT_METHODS', 'QRIS'),
+
+    // Notification URL yang dikonfigurasi di DOKU Back Office (server-to-server).
+    // Dipakai untuk assertion konfigurasi produksi (DokuConfigurationGuard), BUKAN
+    // dikirim sebagai callback_url_result — keduanya URL browser "Back to Merchant".
     'callback_url' => env('DOKU_CALLBACK_URL'),
 
     // Max age (seconds) for a webhook timestamp to be considered fresh.

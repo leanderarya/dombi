@@ -99,7 +99,10 @@ DOKU_PAYMENT_TIMEOUT=30                       # Menit sebelum payment expired
 DOKU_AUTO_REDIRECT=true
 DOKU_CURRENCY=IDR
 DOKU_ENABLED_METHODS=qris,transfer,ewallet,credit_card
-DOKU_CALLBACK_URL=                            # Optional override (default: route doku.notify)
+DOKU_CALLBACK_URL=https://staging.dombicenter.com/payment/doku/notify
+                                              # Notification URL yang dikonfigurasi di DOKU Back Office
+                                              # (server-to-server). Digunakan sebagai assertion config produksi.
+                                              # Bukan dikirim sebagai callback_url_result.
 DOKU_WEBHOOK_MAX_AGE_SECONDS=300              # Maks umur timestamp webhook (detik)
 DOKU_FEE_THRESHOLD=500000                     # Subtotal tanpa delivery. Di bawah = Dombi tanggung, di atas = customer bayar
 DOKU_FEE_QRIS=0.007                           # Fee rate per method
@@ -511,6 +514,16 @@ Frontend polling setiap 5 detik (payment.tsx & confirm.tsx)
 ### 4.9 🔙 Redirect dari DOKU
 
 **Endpoint**: `GET /payment/doku/redirect?invoice_number=XXX&status=SUCCESS`
+
+**Penting:** `order.callback_url` **dan** `order.callback_url_result` sama-sama diarahkan ke
+`route('doku.redirect')`. Keduanya adalah URL **browser** ("Back to Merchant"), bukan webhook.
+Notification URL terpisah dan dikonfigurasi di DOKU Back Office (server-to-server).
+
+> **Regresi yang pernah terjadi:** `callback_url_result` sempat diarahkan ke
+> `route('doku.notify')`. Karena `auto_redirect=true`, setelah bayar browser customer
+> mendarat di endpoint webhook dan hanya melihat `{"message":"OK"}` — SPA mati sebelum
+> polling sempat mengalihkan ke halaman konfirmasi. Diperbaiki di `DokuService::createPayment()`
+> dan dikunci oleh `test_create_payment_points_browser_callbacks_at_redirect_handler`.
 
 **Alur**:
 ```

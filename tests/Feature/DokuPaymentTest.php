@@ -97,6 +97,68 @@ class DokuPaymentTest extends TestCase
         ]);
     }
 
+    public function test_create_payment_points_browser_callbacks_at_redirect_handler(): void
+    {
+        $order = Order::factory()->create([
+            'total' => 50000,
+            'order_code' => 'INV-CB',
+            'payment_status' => 'pending',
+        ]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'callback-'.$order->id,
+            'invoice_number' => 'INV-CB', 'merchant_request_id' => 'callback-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
+
+        Http::fake([
+            '*/checkout/v1/payment' => Http::response([
+                'response' => ['payment' => ['url' => 'https://sandbox.doku.com/pay/cb']],
+            ], 200),
+        ]);
+
+        $this->doku->createPayment($attempt);
+
+        $expected = route('doku.redirect', ['invoice_number' => 'INV-CB']);
+        $webhook = route('doku.notify');
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://api-sandbox.doku.com/checkout/v1/payment'
+            && $request['order']['callback_url'] === $expected
+            && $request['order']['callback_url_result'] === $expected);
+
+        // Both callbacks are browser-facing ("Back to Merchant"). Pointing either
+        // of them at the JSON webhook endpoint strands the customer on
+        // {"message":"OK"} after paying, before polling can redirect in-app.
+        Http::assertNotSent(fn ($request) => in_array($request['order']['callback_url'] ?? null, [$webhook], true)
+            || in_array($request['order']['callback_url_result'] ?? null, [$webhook], true));
+    }
+
+    public function test_create_payment_honours_configured_auto_redirect(): void
+    {
+        config(['doku.auto_redirect' => false]);
+
+        $order = Order::factory()->create([
+            'total' => 50000,
+            'order_code' => 'INV-AR',
+            'payment_status' => 'pending',
+        ]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'autoredirect-'.$order->id,
+            'invoice_number' => 'INV-AR', 'merchant_request_id' => 'autoredirect-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
+
+        Http::fake([
+            '*/checkout/v1/payment' => Http::response([
+                'response' => ['payment' => ['url' => 'https://sandbox.doku.com/pay/ar']],
+            ], 200),
+        ]);
+
+        $this->doku->createPayment($attempt);
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://api-sandbox.doku.com/checkout/v1/payment'
+            && $request['order']['auto_redirect'] === false);
+    }
+
     public function test_webhook_success_marks_paid_from_canonical_attempt_without_legacy_transaction(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
