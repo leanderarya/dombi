@@ -111,6 +111,35 @@ jobs:
                 }
             ' 2>&1 | tail -20
 
+            echo '=== end-to-end settle check (writes settlement on staging test orders) ==='
+            php artisan tinker --execute='
+                foreach (["DOMBI-20260916-0006", "DOMBI-20260916-0005", "DOMBI-20260916-0004"] as $code) {
+                    $order = \App\Models\Order::where("order_code", $code)->first();
+                    if (! $order) { continue; }
+                    $attempt = \App\Models\PaymentAttempt::where("order_id", $order->id)->latest("id")->first();
+                    if (! $attempt) { continue; }
+                    try {
+                        $mapped = app(\App\Services\DokuService::class)->syncStatusFromDoku($attempt);
+                    } catch (\Throwable $e) {
+                        $mapped = "EXCEPTION ".get_class($e).": ".$e->getMessage();
+                    }
+                    $o = $order->fresh();
+                    $a = $attempt->fresh();
+                    echo json_encode([
+                        "order_code" => $code,
+                        "mapped" => $mapped,
+                        "payment_status" => $o->payment_status,
+                        "paid_at" => $o->paid_at?->toIso8601String(),
+                        "order_status" => $o->status,
+                        "creation_state" => $a->creation_state?->value,
+                        "settlement_status" => $a->settlement_status?->value,
+                        "verification_status" => $a->verification_status?->value,
+                        "gateway_status" => $a->gateway_status,
+                        "gateway_amount" => $a->gateway_amount,
+                    ], JSON_UNESCAPED_SLASHES).PHP_EOL;
+                }
+            ' 2>&1 | tail -20
+
             echo '=== migration state ==='
             php artisan migrate:status --no-ansi | tail -30
 
