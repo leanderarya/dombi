@@ -280,6 +280,21 @@ Frontend memakai `dokuCheckoutJs ?? <sandbox default>`; controller menurunkan da
 
 **File terkait**: `resources/js/lib/doku-checkout.ts` (`ensureDokuScript`, `openDokuCheckout`), `resources/js/lib/checkout-payment-response.ts` (`CheckoutPaymentData` + `order` ref), `CheckoutController::payment()` & `OrderController::confirm()` (prop `dokuCheckoutJs`), `CheckoutController::submit()` & `OrderController::pay()` (JSON `payment_url` + `expectsJson` branch).
 
+#### Batasan modal bawaan DOKU (bukan bug Dombi)
+
+`jokul-checkout-1.0.0.js` (1.2 KB) hanya menyuntik satu `<div class="jokul-modal">` berisi
+`<iframe src="<payment_url>?view=iframe">`. Konsekuensinya:
+
+| Perilaku | Penyebab |
+|----------|----------|
+| Modal menutupi seluruh layar di HP (navbar Dombi tidak terlihat) | CSS vendor: `.jokul-modal { position:fixed; z-index:999999; width:100%; height:100% }`, dan di `max-width:575.98px` iframe `width:100%` |
+| Klik area gelap di luar modal **tidak** menutup | Bug vendor: `window.onclick` menyetel `modal.style.display="block"` (seharusnya `"none"`) |
+| Tidak ada tombol tutup sendiri | Penutupan hanya lewat `postMessage({func:'closeJokul'})` dari dalam iframe DOKU |
+
+Karena itu, saat modal sedang terbuka, **tombol "Selesaikan Pembayaran" di halaman
+checkout tidak dapat dijangkau**. Alur retry in-app baru berguna setelah modal ditutup
+oleh DOKU sendiri (mis. user menekan tombol kembali/close di dalam iframe).
+
 ---
 
 ### 4.1 ✅ Pembayaran Berhasil (SUCCESS)

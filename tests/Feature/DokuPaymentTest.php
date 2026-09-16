@@ -356,4 +356,42 @@ class DokuPaymentTest extends TestCase
         $this->assertEquals('paid', $order->fresh()->payment_status);
         $this->assertNotNull($order->fresh()->paid_at);
     }
+
+    public function test_redirect_resolves_order_from_attempt_invoice_number(): void
+    {
+        // DOKU echoes back order.invoice_number, which is the payment attempt's
+        // invoice (DMB-...), not the customer-facing order_code (DOMBI-...).
+        // Failing to resolve it bounced the customer to the dashboard after paying.
+        $order = Order::factory()->create([
+            'order_code' => 'DOMBI-20260916-0001',
+            'payment_status' => 'pending',
+        ]);
+        PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'invoice-lookup-'.$order->id,
+            'invoice_number' => 'DMB-'.$order->id.'-abcdef123456',
+            'merchant_request_id' => 'invoice-lookup-request-'.$order->id,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+        ]);
+
+        Http::fake([
+            '*/checkout/v1/payment/*' => Http::response([
+                'order' => ['invoice_number' => 'DMB-'.$order->id.'-abcdef123456'],
+                'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
+            ], 200),
+        ]);
+
+        $response = $this->get('/payment/doku/redirect?invoice_number=DMB-'.$order->id.'-abcdef123456&status=SUCCESS');
+
+        $response->assertRedirect(route('customer.orders.confirm', ['orderCode' => $order->order_code]));
+        $this->assertEquals('paid', $order->fresh()->payment_status);
+    }
+
+    public function test_redirect_falls_back_to_home_for_unknown_invoice(): void
+    {
+        $response = $this->get('/payment/doku/redirect?invoice_number=DMB-999-unknown&status=SUCCESS');
+
+        $response->assertRedirect(route('customer.home'));
+    }
 }
