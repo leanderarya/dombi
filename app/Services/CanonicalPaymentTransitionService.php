@@ -198,10 +198,14 @@ class CanonicalPaymentTransitionService
 
     private function minorUnits(int|float|string|null $amount): ?int
     {
-        if ($amount === null || is_float($amount)) {
+        if ($amount === null) {
             return null;
         }
-        $value = (string) $amount;
+
+        // JSON numbers with a decimal point decode to PHP float (e.g. 120000.0),
+        // which is still an unambiguous amount. Normalise it instead of
+        // rejecting it, otherwise every such payload looks like a mismatch.
+        $value = is_float($amount) ? number_format($amount, 2, '.', '') : (string) $amount;
         if (! preg_match('/^\\d+(?:\\.\\d{1,2})?$/', $value)) {
             return null;
         }

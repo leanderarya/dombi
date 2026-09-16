@@ -786,6 +786,15 @@ Format `DMB-{orderId}-{timestamp}-{random}` — unik per request.
 | POST | `/checkout/v1/payment` | Create payment session |
 | GET | `/checkout/v1/payment/{invoiceNumber}` | Check payment status |
 
+> **Penting — lokasi `amount` pada payload DOKU.** Check Status API dan
+> webhook DOKU Checkout menaruh nominal di **`order.amount`**, bukan
+> `transaction.amount`. Contoh resmi DOKU bahkan mengirim `"amount": 120000.0`
+> (float). `DokuService::providerAmount()` membaca `order.amount` dengan
+> fallback `transaction.amount`; jangan kembalikan ke pembacaan satu lokasi.
+> Amount `null` atau float yang ditolak akan dianggap mismatch, sehingga
+> `payment_attempts.verification_status` menjadi `needs_review` dan order
+> **tidak akan pernah** menjadi `paid` (lihat `OrderPaymentProjectionService`).
+
 ---
 
 ## 8. Database Schema

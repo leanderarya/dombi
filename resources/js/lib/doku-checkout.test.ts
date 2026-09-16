@@ -119,6 +119,26 @@ describe('openDokuCheckout', () => {
         );
     });
 
+    it('renders a native-style header with a centered title', () => {
+        openDokuCheckout(PAYMENT_URL);
+
+        const overlay = modal();
+        const header = overlay?.firstElementChild as HTMLElement;
+        const title = header.querySelector('p');
+
+        expect(
+            header.className.includes('border-b') &&
+                header.className.includes('pt-safe'),
+        ).toBe(true);
+        expect(title?.textContent).toBe('Pembayaran');
+        expect(title?.className).toContain('text-center');
+
+        // 44px touch target, matching the app header buttons.
+        expect(closeButton().className).toContain('h-11');
+        expect(closeButton().className).toContain('w-11');
+        expect(closeButton().className).toContain('bg-surface-muted');
+    });
+
     it('closes via the close button', () => {
         openDokuCheckout(PAYMENT_URL);
         clickCloseButton();
