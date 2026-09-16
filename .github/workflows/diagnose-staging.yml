@@ -98,6 +98,19 @@ jobs:
             echo '=== configured vs provider payment window ==='
             php artisan tinker --execute='echo "doku.payment_timeout=".config("doku.payment_timeout").PHP_EOL; echo "order.payment_retry_window_minutes=".config("order.payment_retry_window_minutes").PHP_EOL; echo "order.confirmation_timeout_minutes=".config("order.confirmation_timeout_minutes").PHP_EOL; foreach (\App\Models\PaymentAttempt::latest("id")->limit(3)->get() as $a) { echo json_encode(["attempt_id" => $a->id, "due_date_echoed_by_doku" => data_get($a->raw_response, "response.payment.payment_due_date"), "expired_date" => data_get($a->raw_response, "response.payment.expired_date"), "amount_snapshot" => $a->amount_snapshot], JSON_UNESCAPED_SLASHES).PHP_EOL; }' 2>&1 | tail -8
 
+            echo '=== fresh DOKU status probe using deployed code ==='
+            php artisan tinker --execute='
+                foreach (["DOMBI-20260916-0006", "DOMBI-20260916-0005", "DOMBI-20260916-0004"] as $code) {
+                    $order = \App\Models\Order::where("order_code", $code)->first();
+                    if (! $order) { echo $code." missing".PHP_EOL; continue; }
+                    $attempt = \App\Models\PaymentAttempt::where("order_id", $order->id)->latest("id")->first();
+                    $invoice = $attempt?->invoice_number;
+                    $order->doku_order_id = $invoice;
+                    $res = app(\App\Services\DokuService::class)->checkStatus($order);
+                    echo $code." invoice=".$invoice." => ".substr((string) json_encode($res), 0, 420).PHP_EOL;
+                }
+            ' 2>&1 | tail -20
+
             echo '=== migration state ==='
             php artisan migrate:status --no-ansi | tail -30
 
