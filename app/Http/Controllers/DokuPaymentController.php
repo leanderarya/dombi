@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\PaymentAttempt;
 use App\Models\PaymentWebhookLog;
 use App\Services\DokuService;
 use App\Services\DokuWebhookIngressService;
@@ -44,8 +45,7 @@ class DokuPaymentController extends Controller
         ]);
 
         if ($invoiceNumber) {
-            $order = Order::where('order_code', $invoiceNumber)->first()
-                ?? Order::where('doku_order_id', $invoiceNumber)->first();
+            $order = $this->resolveOrder($invoiceNumber);
 
             if ($order) {
                 // Doku may not have finished processing yet — retry status check with delay
@@ -89,5 +89,26 @@ class DokuPaymentController extends Controller
         }
 
         return redirect()->route('customer.home');
+    }
+
+    /**
+     * Resolve the order behind a DOKU redirect.
+     *
+     * DOKU echoes back the `order.invoice_number` we sent, which is the payment
+     * attempt's invoice (DMB-{order}-{hex}) — not the customer-facing
+     * order_code (DOMBI-YYYYMMDD-NNNN). Legacy rows may still carry the
+     * invoice in `doku_order_id`, so keep that as a fallback before giving up
+     * and bouncing the customer to the dashboard.
+     */
+    private function resolveOrder(string $invoiceNumber): ?Order
+    {
+        $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->latest('id')->first();
+
+        if ($attempt?->order) {
+            return $attempt->order;
+        }
+
+        return Order::where('order_code', $invoiceNumber)->first()
+            ?? Order::where('doku_order_id', $invoiceNumber)->first();
     }
 }
