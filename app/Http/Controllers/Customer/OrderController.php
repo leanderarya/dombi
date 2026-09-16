@@ -198,9 +198,6 @@ class OrderController extends Controller
             ],
             'isLoggedIn' => $request->user() !== null,
             'cancellationReasons' => OrderStatusService::cancellationReasons(),
-            'dokuCheckoutJs' => config('doku.sandbox')
-                ? 'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js'
-                : 'https://jokul.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js',
         ]);
     }
 

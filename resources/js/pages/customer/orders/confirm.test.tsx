@@ -5,8 +5,6 @@ import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ConfirmPage from './confirm';
 
-const SCRIPT_URL =
-    'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js';
 const PAYMENT_URL = 'https://sandbox.doku.com/checkout/link/PAY1';
 
 const baseOrder = {
@@ -20,20 +18,24 @@ const baseOrder = {
     outlet: { name: 'Outlet Gacoan' },
 };
 
-const { openDokuCheckoutMock, routerMock } = vi.hoisted(() => ({
-    openDokuCheckoutMock: vi.fn(),
-    routerMock: {
-        visit: vi.fn(),
-        get: vi.fn(),
-        post: vi.fn(),
-        reload: vi.fn(),
-        replace: vi.fn(),
-        on: vi.fn(),
-    },
-}));
+const { openDokuCheckoutMock, closeDokuCheckoutMock, routerMock } = vi.hoisted(
+    () => ({
+        openDokuCheckoutMock: vi.fn(),
+        closeDokuCheckoutMock: vi.fn(),
+        routerMock: {
+            visit: vi.fn(),
+            get: vi.fn(),
+            post: vi.fn(),
+            reload: vi.fn(),
+            replace: vi.fn(),
+            on: vi.fn(),
+        },
+    }),
+);
 
 vi.mock('@/lib/doku-checkout', () => ({
     openDokuCheckout: openDokuCheckoutMock,
+    closeDokuCheckout: closeDokuCheckoutMock,
 }));
 
 vi.mock('@inertiajs/react', async (importOriginal) => {
@@ -80,13 +82,7 @@ function renderPage(order: JsonShape = baseOrder) {
     document.body.appendChild(container);
     root = createRoot(container);
     act(() => {
-        root!.render(
-            <ConfirmPage
-                order={order}
-                isLoggedIn
-                dokuCheckoutJs={SCRIPT_URL}
-            />,
-        );
+        root!.render(<ConfirmPage order={order} isLoggedIn />);
     });
 }
 
@@ -133,7 +129,8 @@ function stubFetch() {
 
 beforeEach(() => {
     (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
-    openDokuCheckoutMock.mockReset().mockResolvedValue(true);
+    openDokuCheckoutMock.mockReset().mockReturnValue(true);
+    closeDokuCheckoutMock.mockReset();
     routerMock.visit.mockReset();
     vi.spyOn(window, 'open').mockImplementation(() => null);
     paymentStatusBody = { payment_status: 'pending' };
@@ -181,14 +178,11 @@ describe('ConfirmPage handlePay', () => {
         });
         expect(init.body).toBe(JSON.stringify({ payment_method: 'qris' }));
 
-        expect(openDokuCheckoutMock).toHaveBeenCalledWith(
-            PAYMENT_URL,
-            SCRIPT_URL,
-        );
+        expect(openDokuCheckoutMock).toHaveBeenCalledWith(PAYMENT_URL);
     });
 
     it('falls back to a new tab + message when the DOKU modal cannot open', async () => {
-        openDokuCheckoutMock.mockResolvedValue(false);
+        openDokuCheckoutMock.mockReturnValue(false);
 
         clickButton('Lanjutkan Pembayaran');
         await flushAsync();
@@ -243,6 +237,23 @@ describe('ConfirmPage handlePay', () => {
         );
     });
 
+    it('closes the overlay when the confirmation countdown expires', async () => {
+        vi.useFakeTimers();
+        unmount();
+        renderPage({
+            ...baseOrder,
+            confirmation_expires_at: new Date(Date.now() + 1000).toISOString(),
+        });
+        closeDokuCheckoutMock.mockClear();
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(1500);
+        });
+
+        expect(document.body.textContent).toMatch(/Waktu pembayaran/i);
+        expect(closeDokuCheckoutMock).toHaveBeenCalled();
+    });
+
     it('re-arms polling after a retry from terminal failed so paid is detected', async () => {
         vi.useFakeTimers();
         unmount();
@@ -265,10 +276,7 @@ describe('ConfirmPage handlePay', () => {
         clickButton('Bayar Sekarang');
         await flushAsync();
 
-        expect(openDokuCheckoutMock).toHaveBeenCalledWith(
-            FRESH_URL,
-            SCRIPT_URL,
-        );
+        expect(openDokuCheckoutMock).toHaveBeenCalledWith(FRESH_URL);
 
         const statusFetches = () =>
             (
@@ -288,5 +296,7 @@ describe('ConfirmPage handlePay', () => {
 
         expect(statusFetches()).toBeGreaterThan(countAfterRetry);
         expect(routerMock.reload).toHaveBeenCalled();
+        // Overlay dismissed once the DB reports paid, before reloading.
+        expect(closeDokuCheckoutMock).toHaveBeenCalled();
     });
 });

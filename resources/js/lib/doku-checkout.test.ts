@@ -1,147 +1,248 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { ensureDokuScript, openDokuCheckout } from './doku-checkout';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+    buildDokuCheckoutUrl,
+    closeDokuCheckout,
+    isDokuCheckoutOpen,
+    openDokuCheckout,
+} from './doku-checkout';
 
-const SCRIPT_URL =
-    'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js';
+const PAYMENT_URL = 'https://sandbox.doku.com/checkout/link/PAY1';
+const MODAL_SELECTOR = '#dombi-doku-checkout';
 
-// jsdom never fires load/error for appended <script src>, and the module keeps
-// an in-flight promise per URL, so each scenario exercises the load path with
-// its own URL to keep tests isolated.
-const SCRIPT_URLS = {
-    injectOnce:
-        'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-inject-once.js',
-    loadResolves:
-        'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-load-resolves.js',
-    injectFails:
-        'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-inject-fails.js',
-    loadButNoGlobal:
-        'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-no-global.js',
-    staleNode:
-        'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-stale-node.js',
-};
-
-/**
- * Make appending a doku-checkout <script> behave like a real browser load:
- * fire the load event (optionally defining window.loadJokulCheckout first, as
- * the real DOKU lib does) instead of leaving the promise pending forever.
- */
-function stubScriptLoad(definesGlobal: boolean) {
-    const appendChild = document.head.appendChild.bind(document.head);
-    vi.spyOn(document.head, 'appendChild').mockImplementation((node) => {
-        const tag = node as HTMLScriptElement;
-
-        if (tag.dataset?.dokuCheckout !== undefined) {
-            setTimeout(() => {
-                if (definesGlobal) {
-                    (window as any).loadJokulCheckout = () => {};
-                }
-
-                tag.dispatchEvent(new Event('load'));
-            }, 0);
-        }
-
-        return appendChild(node);
-    });
-
-    return vi.mocked(document.head.appendChild);
+function modal(): HTMLElement | null {
+    return document.querySelector(MODAL_SELECTOR);
 }
 
-describe('ensureDokuScript', () => {
-    beforeEach(() => {
-        document.head
-            .querySelectorAll('script[data-doku-checkout]')
-            .forEach((s) => s.remove());
-        vi.restoreAllMocks();
-        delete window.loadJokulCheckout;
+function frame(): HTMLIFrameElement | null {
+    return document.querySelector(`${MODAL_SELECTOR} iframe`);
+}
+
+function closeButton(): HTMLButtonElement {
+    const button = modal()?.querySelector('button');
+
+    if (!button) {
+        throw new Error('close button not found');
+    }
+
+    return button as HTMLButtonElement;
+}
+
+function clickCloseButton() {
+    closeButton().click();
+}
+
+function pressEscape() {
+    document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+    );
+}
+
+function clickBackdrop() {
+    const stage = modal()?.lastElementChild as HTMLElement | undefined;
+
+    if (!stage) {
+        throw new Error('overlay stage not found');
+    }
+
+    stage.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+}
+
+function postFromDoku(data: unknown, origin = 'https://sandbox.doku.com') {
+    window.dispatchEvent(
+        new MessageEvent('message', {
+            data,
+            origin,
+            source: frame()?.contentWindow ?? null,
+        }),
+    );
+}
+
+function postFromForeignWindow(
+    data: unknown,
+    origin = 'https://sandbox.doku.com',
+) {
+    window.dispatchEvent(
+        new MessageEvent('message', { data, origin, source: window }),
+    );
+}
+
+describe('buildDokuCheckoutUrl', () => {
+    it('appends view=iframe to a bare url', () => {
+        expect(buildDokuCheckoutUrl(PAYMENT_URL)).toBe(
+            `${PAYMENT_URL}?view=iframe`,
+        );
     });
 
-    it('injects the script once', async () => {
-        const append = stubScriptLoad(true);
-
-        await ensureDokuScript(SCRIPT_URLS.injectOnce);
-        await ensureDokuScript(SCRIPT_URLS.injectOnce);
-
-        // The loader removes the tag after it loads, so "once" means a single
-        // injection attempt for repeated calls with the same URL.
-        expect(append).toHaveBeenCalledTimes(1);
+    it('appends after the existing query string', () => {
+        expect(buildDokuCheckoutUrl(`${PAYMENT_URL}?token=abc`)).toBe(
+            `${PAYMENT_URL}?token=abc&view=iframe`,
+        );
     });
 
-    it('resolves once window.loadJokulCheckout exists', async () => {
-        stubScriptLoad(true);
-
-        await expect(
-            ensureDokuScript(SCRIPT_URLS.loadResolves),
-        ).resolves.toBeUndefined();
-        expect(typeof (window as any).loadJokulCheckout).toBe('function');
+    it('leaves an existing view parameter untouched', () => {
+        expect(buildDokuCheckoutUrl(`${PAYMENT_URL}?view=iframe`)).toBe(
+            `${PAYMENT_URL}?view=iframe`,
+        );
     });
 
-    it('removes a stale DOM node and loads fresh when the map has no entry', async () => {
-        // Simulate a previously failed load: a <script data-doku-checkout> node
-        // left behind in the DOM with no matching entry in the module-level
-        // scriptTags map. Previously this path recursed forever.
-        const stale = document.createElement('script');
-        stale.src = SCRIPT_URLS.staleNode;
-        stale.dataset.dokuCheckout = SCRIPT_URLS.staleNode;
-        document.head.appendChild(stale);
-
-        const append = stubScriptLoad(true);
-
-        await expect(
-            ensureDokuScript(SCRIPT_URLS.staleNode),
-        ).resolves.toBeUndefined();
-
-        // The stale node was removed and exactly one fresh script was injected.
-        expect(
-            document.head.querySelectorAll('script[data-doku-checkout]'),
-        ).toHaveLength(0);
-        expect(append).toHaveBeenCalledTimes(1);
+    it('keeps the query before the fragment', () => {
+        expect(buildDokuCheckoutUrl(`${PAYMENT_URL}#step2`)).toBe(
+            `${PAYMENT_URL}?view=iframe#step2`,
+        );
     });
 });
 
 describe('openDokuCheckout', () => {
     beforeEach(() => {
-        document.head
-            .querySelectorAll('script[data-doku-checkout]')
-            .forEach((s) => s.remove());
-        vi.restoreAllMocks();
-        delete window.loadJokulCheckout;
+        closeDokuCheckout();
+        document.body.innerHTML = '';
+        document.body.style.overflow = '';
     });
 
-    it('calls loadJokulCheckout with the payment url', async () => {
-        const open = vi.fn();
-        (window as any).loadJokulCheckout = open;
+    it('renders an in-app overlay with the embeddable DOKU url', () => {
+        expect(openDokuCheckout(PAYMENT_URL)).toBe(true);
 
-        const ok = await openDokuCheckout(
-            'https://sandbox.doku.com/checkout/link/PAY1',
-            SCRIPT_URL,
-        );
+        const overlay = modal();
+        expect(overlay).not.toBeNull();
+        expect(overlay?.getAttribute('role')).toBe('dialog');
+        expect(overlay?.getAttribute('aria-modal')).toBe('true');
 
-        expect(ok).toBe(true);
-        expect(open).toHaveBeenCalledWith(
-            'https://sandbox.doku.com/checkout/link/PAY1',
+        expect(frame()?.src).toBe(`${PAYMENT_URL}?view=iframe`);
+    });
+
+    it('exposes a labelled close control', () => {
+        openDokuCheckout(PAYMENT_URL);
+
+        expect(closeButton().getAttribute('aria-label')).toBe(
+            'Tutup pembayaran',
         );
     });
 
-    it('returns false when script injection fails', async () => {
-        vi.spyOn(document.head, 'appendChild').mockImplementation(() => {
-            throw new Error('blocked');
+    it('closes via the close button', () => {
+        openDokuCheckout(PAYMENT_URL);
+        clickCloseButton();
+
+        expect(modal()).toBeNull();
+        expect(isDokuCheckoutOpen()).toBe(false);
+    });
+
+    it('closes via Escape', () => {
+        openDokuCheckout(PAYMENT_URL);
+        pressEscape();
+
+        expect(modal()).toBeNull();
+    });
+
+    it('closes via a backdrop click', () => {
+        openDokuCheckout(PAYMENT_URL);
+        clickBackdrop();
+
+        expect(modal()).toBeNull();
+    });
+
+    it('does not close when the panel itself is clicked', () => {
+        openDokuCheckout(PAYMENT_URL);
+
+        frame()?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+        expect(modal()).not.toBeNull();
+    });
+
+    it('closes on closeJokul from an allowed DOKU origin', () => {
+        openDokuCheckout(PAYMENT_URL);
+        postFromDoku({ func: 'closeJokul' });
+
+        expect(modal()).toBeNull();
+    });
+
+    it('ignores closeJokul from an untrusted origin', () => {
+        openDokuCheckout(PAYMENT_URL);
+        postFromDoku({ func: 'closeJokul' }, 'https://evil.example');
+
+        expect(modal()).not.toBeNull();
+    });
+
+    it('ignores closeJokul from an allowlisted origin in a foreign window', () => {
+        openDokuCheckout(PAYMENT_URL);
+        postFromForeignWindow({ func: 'closeJokul' });
+
+        expect(modal()).not.toBeNull();
+    });
+
+    it('ignores unrelated messages from DOKU', () => {
+        openDokuCheckout(PAYMENT_URL);
+        postFromDoku({ func: 'somethingElse' });
+
+        expect(modal()).not.toBeNull();
+    });
+
+    it('replaces a previously open overlay instead of stacking', () => {
+        openDokuCheckout(PAYMENT_URL);
+        openDokuCheckout(`${PAYMENT_URL}2`);
+
+        expect(document.querySelectorAll(MODAL_SELECTOR)).toHaveLength(1);
+        expect(frame()?.src).toBe(`${PAYMENT_URL}2?view=iframe`);
+    });
+
+    it('locks page scroll while open and restores it on close', () => {
+        document.body.style.overflow = 'auto';
+
+        openDokuCheckout(PAYMENT_URL);
+        expect(document.body.style.overflow).toBe('hidden');
+
+        closeDokuCheckout();
+        expect(document.body.style.overflow).toBe('auto');
+    });
+
+    it('detaches its listeners after closing', () => {
+        openDokuCheckout(PAYMENT_URL);
+
+        const removeWindow = vi.spyOn(window, 'removeEventListener');
+        const removeDocument = vi.spyOn(document, 'removeEventListener');
+
+        clickCloseButton();
+
+        expect(removeWindow).toHaveBeenCalledWith(
+            'message',
+            expect.any(Function),
+        );
+        expect(removeDocument).toHaveBeenCalledWith(
+            'keydown',
+            expect.any(Function),
+        );
+
+        // A late DOKU message must not throw or resurrect the overlay.
+        expect(() => postFromDoku({ func: 'closeJokul' })).not.toThrow();
+        expect(() => pressEscape()).not.toThrow();
+        expect(modal()).toBeNull();
+    });
+
+    it('hides the page behind the dialog from assistive tech while open', () => {
+        const app = document.createElement('div');
+        app.id = 'app';
+        document.body.appendChild(app);
+
+        openDokuCheckout(PAYMENT_URL);
+        expect(app.getAttribute('aria-hidden')).toBe('true');
+        expect(app.hasAttribute('inert')).toBe(true);
+
+        closeDokuCheckout();
+        expect(app.hasAttribute('aria-hidden')).toBe(false);
+        expect(app.hasAttribute('inert')).toBe(false);
+    });
+
+    it('keeps Tab focus on the close control', () => {
+        openDokuCheckout(PAYMENT_URL);
+
+        const event = new KeyboardEvent('keydown', {
+            key: 'Tab',
+            bubbles: true,
+            cancelable: true,
         });
+        document.dispatchEvent(event);
 
-        const ok = await openDokuCheckout(
-            'https://sandbox.doku.com/checkout/link/PAY2',
-            SCRIPT_URLS.injectFails,
-        );
-        expect(ok).toBe(false);
-    });
-
-    it('returns false when loadJokulCheckout is missing', async () => {
-        stubScriptLoad(false);
-
-        const ok = await openDokuCheckout(
-            'https://sandbox.doku.com/checkout/link/PAY3',
-            SCRIPT_URLS.loadButNoGlobal,
-        );
-        expect(ok).toBe(false);
+        expect(event.defaultPrevented).toBe(true);
+        expect(document.activeElement).toBe(closeButton());
     });
 });

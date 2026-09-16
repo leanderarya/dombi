@@ -226,7 +226,7 @@ return [
    - `customer` = nama, email, phone
 4. **DOKU** mengembalikan `payment_url`
 5. **CheckoutController::submit()** (JSON) merespons `{ payment_url, order: { id, order_code } }` — sejak fitur in-app modal, halaman checkout **tidak lagi redirect penuh** ke hosted page
-6. **Frontend** memuat DOKU Checkout JS sekali dan membuka **modal pembayaran in-app** (`window.loadJokulCheckout(payment_url)`) — lihat [3.3 In-App Payment Modal](#33-in-app-payment-modal)
+6. **Frontend** membuka **overlay pembayaran in-app** (`openDokuCheckout(payment_url)`) — lihat [3.3 In-App Payment Modal](#33-in-app-payment-modal)
 7. Setelah pembayaran:
    - **Webhook**: DOKU mengirim POST ke `/payment/doku/notify`
    - **Redirect**: Customer (bila keluar ke hosted page, mis. fallback tab baru) di-redirect ke `/payment/doku/redirect`
@@ -244,7 +244,7 @@ Customer klik "Bayar"
 → POST /customer/checkout/payment (JSON) → { payment_url, order: { id, order_code } }
 → Cart dikosongkan + markUsedForOrder
 → Mode "Menunggu pembayaran" aktif, tombol "Bayar" berubah "Menunggu pembayaran" & disabled (cegah double-submit)
-→ openDokuCheckout(payment_url, scriptUrl) memuat DOKU Checkout JS + membuka modal in-app
+→ openDokuCheckout(payment_url) membuka overlay in-app (header + tombol tutup + iframe `?view=iframe`)
 → Setiap 5 detik: GET /customer/orders/{orderId}/payment-status (Accept: application/json)
    - paid  → stop polling, router.visit ke /customer/orders/confirm/{order_code}
    - failed/expired/cancelled → stop polling, tampilkan status terminal + tombol "Selesaikan Pembayaran"
@@ -261,39 +261,45 @@ Customer klik "Lanjutkan Pembayaran" / "Bayar Sekarang"
             X-Requested-With: XMLHttpRequest, X-CSRF-TOKEN (meta csrf-token)
    body:    { payment_method: <method ?? order.payment_method> }
 → Non-OK → error "Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi."
-→ OK → { payment_url } → openDokuCheckout(payment_url, scriptUrl)
+→ OK → { payment_url } → openDokuCheckout(payment_url)
 → Response guard (backend, JSON): { message: <alasan> } dgn status 409/429 → ditampilkan apa adanya; { paid: true, order_code } → sudah terbayar → pindah ke confirm
 → openDokuCheckout false → window.open(payment_url, '_blank','noopener,noreferrer') + pesan fallback
 ```
 
 **Contoh langkah / fallback (keduanya, checkout & confirm):**
-- `openDokuCheckout` mengembalikan `false` (script gagal dimuat / `window.loadJokulCheckout` tidak tersedia) → buka `payment_url` di tab baru: `window.open(payment_url,'_blank','noopener,noreferrer')`, tampilkan "Kami belum dapat menampilkan pembayaran di dalam aplikasi. Pembayaran dibuka di tab baru."
+- `openDokuCheckout` mengembalikan `false` hanya bila `document.body` tidak tersedia → buka `payment_url` di tab baru: `window.open(payment_url,'_blank','noopener,noreferrer')`, tampilkan "Kami belum dapat menampilkan pembayaran di dalam aplikasi. Pembayaran dibuka di tab baru."
+- Overlay ditutup otomatis saat status terminal terdeteksi dari polling DB (`paid`/`failed`/`expired`/`cancelled`), saat countdown konfirmasi habis, dan saat halaman unmount — supaya tombol retry di belakangnya bisa dijangkau. Polling yang timeout (status belum terminal) sengaja **tidak** menutup overlay: pembayaran mungkin masih berjalan, dan overlay kini bisa ditutup manual.
 - Status deteksi berbasis **polling DB** (`/payment-status`), bukan callback internal modal — jadi retry/selesai di modal atau tab baru tetap terdeteksi.
 
-**URL script DOKU Checkout JS** (di-pass lewat prop `dokuCheckoutJs` dari backend, tidak di-hardcode env di frontend):
-| Environment | URL |
-|-------------|-----|
-| Sandbox | `https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js` |
-| Production | `https://jokul.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js` |
+**File terkait**: `resources/js/lib/doku-checkout.ts` (`openDokuCheckout`, `closeDokuCheckout`, `buildDokuCheckoutUrl`), `resources/js/lib/checkout-payment-response.ts` (`CheckoutPaymentData` + `order` ref), `CheckoutController::submit()` & `OrderController::pay()` (JSON `payment_url` + `expectsJson` branch).
 
-Frontend memakai `dokuCheckoutJs ?? <sandbox default>`; controller menurunkan dari `config('doku.sandbox')`.
+#### Overlay milik sendiri (menggantikan JS vendor)
 
-**File terkait**: `resources/js/lib/doku-checkout.ts` (`ensureDokuScript`, `openDokuCheckout`), `resources/js/lib/checkout-payment-response.ts` (`CheckoutPaymentData` + `order` ref), `CheckoutController::payment()` & `OrderController::confirm()` (prop `dokuCheckoutJs`), `CheckoutController::submit()` & `OrderController::pay()` (JSON `payment_url` + `expectsJson` branch).
+Sejak 2026-09-16, frontend **tidak lagi memuat** `jokul-checkout-1.0.0.js`.
+Bundle vendor (1.2 KB) hanya menyuntik satu `<div class="jokul-modal">` berisi
+`<iframe src="<payment_url>?view=iframe">`, tetapi punya tiga cacat yang membuat
+pelanggan tidak bisa keluar dari modal untuk menekan tombol retry:
 
-#### Batasan modal bawaan DOKU (bukan bug Dombi)
-
-`jokul-checkout-1.0.0.js` (1.2 KB) hanya menyuntik satu `<div class="jokul-modal">` berisi
-`<iframe src="<payment_url>?view=iframe">`. Konsekuensinya:
-
-| Perilaku | Penyebab |
+| Perilaku vendor | Penyebab |
 |----------|----------|
 | Modal menutupi seluruh layar di HP (navbar Dombi tidak terlihat) | CSS vendor: `.jokul-modal { position:fixed; z-index:999999; width:100%; height:100% }`, dan di `max-width:575.98px` iframe `width:100%` |
 | Klik area gelap di luar modal **tidak** menutup | Bug vendor: `window.onclick` menyetel `modal.style.display="block"` (seharusnya `"none"`) |
 | Tidak ada tombol tutup sendiri | Penutupan hanya lewat `postMessage({func:'closeJokul'})` dari dalam iframe DOKU |
 
-Karena itu, saat modal sedang terbuka, **tombol "Selesaikan Pembayaran" di halaman
-checkout tidak dapat dijangkau**. Alur retry in-app baru berguna setelah modal ditutup
-oleh DOKU sendiri (mis. user menekan tombol kembali/close di dalam iframe).
+Karena itu Dombi merender overlay-nya sendiri dengan mekanisme `?view=iframe`
+yang sama:
+
+- **Header Dombi** berisi judul "Pembayaran" + tombol tutup ber-`aria-label`
+  ("Tutup pembayaran") — selalu bisa dijangkau, juga di HP.
+- **Backdrop click** (handler milik sendiri) dan **ESC** menutup overlay.
+- **`postMessage({func:'closeJokul'})`** dari origin DOKU yang diizinkan tetap
+  menutup overlay otomatis.
+- Body scroll dikunci selama overlay terbuka dan dipulihkan saat ditutup.
+- `?view=iframe` ditambahkan dengan sadar query-string (`buildDokuCheckoutUrl`),
+  tidak sekadar menempel `?`.
+
+Tidak ada lagi prop `dokuCheckoutJs` di Inertia page props; controller tidak lagi
+menurunkan URL script vendor dari `config('doku.sandbox')`.
 
 ---
 

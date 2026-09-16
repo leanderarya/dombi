@@ -13,24 +13,20 @@ import PushBanner from '@/components/shared/push-banner';
 import Dialog from '@/components/ui/dialog';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { copyToClipboard } from '@/lib/clipboard';
-import { openDokuCheckout } from '@/lib/doku-checkout';
+import { openDokuCheckout, closeDokuCheckout } from '@/lib/doku-checkout';
 import { formatCurrency } from '@/lib/format';
 import { useNavigation } from '@/providers/navigation-provider';
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max polling
-const DEFAULT_DOKU_CHECKOUT_JS =
-    'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js';
 
 export default function ConfirmPage({
     order,
     isLoggedIn,
-    dokuCheckoutJs,
     cancellationReasons = [],
 }: any) {
     const nav = useNavigation();
-    const scriptUrl = dokuCheckoutJs ?? DEFAULT_DOKU_CHECKOUT_JS;
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(() => {
         const s = order.payment_status;
 
@@ -57,6 +53,10 @@ export default function ConfirmPage({
     useEffect(() => {
         nav.pruneToRoot();
     }, [nav]);
+
+    // The overlay lives outside the Inertia page tree, so tear it down on
+    // unmount instead of leaking it into the next page.
+    useEffect(() => closeDokuCheckout, []);
 
     // Poll payment status as webhook fallback (max 5 min)
     useEffect(() => {
@@ -92,6 +92,7 @@ export default function ConfirmPage({
 
                     if (data.payment_status === 'paid') {
                         setPaymentStatus('paid');
+                        closeDokuCheckout();
 
                         if (pollInterval.current) {
                             clearInterval(pollInterval.current);
@@ -104,6 +105,9 @@ export default function ConfirmPage({
                         )
                     ) {
                         setPaymentStatus(data.payment_status as PaymentStatus);
+                        // Dismiss the overlay so the retry affordance behind it
+                        // is reachable.
+                        closeDokuCheckout();
 
                         if (pollInterval.current) {
                             clearInterval(pollInterval.current);
@@ -139,6 +143,9 @@ export default function ConfirmPage({
 
             if (remaining === 0) {
                 setPaymentStatus('expired');
+                // Same reason as the poll path: never leave the overlay pinned
+                // over the expired panel.
+                closeDokuCheckout();
 
                 if (pollInterval.current) {
                     clearInterval(pollInterval.current);
@@ -248,6 +255,7 @@ export default function ConfirmPage({
                 if (data.paid) {
                     // Order is already paid (reconciled server-side) — go to the
                     // paid confirmation state for this order.
+                    closeDokuCheckout();
                     router.visit(`/customer/orders/confirm/${data.order_code}`);
 
                     return;
@@ -266,7 +274,7 @@ export default function ConfirmPage({
                 // even when retrying from a terminal failed/expired status.
                 setPaymentStatus('pending');
 
-                const ok = await openDokuCheckout(data.payment_url, scriptUrl);
+                const ok = openDokuCheckout(data.payment_url);
 
                 if (!ok) {
                     window.open(
@@ -289,7 +297,7 @@ export default function ConfirmPage({
                 submitLock.current = false;
             }
         },
-        [order.id, order.payment_method, payLoading, scriptUrl],
+        [order.id, order.payment_method, payLoading],
     );
 
     const statusConfig: Record<
