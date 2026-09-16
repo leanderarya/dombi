@@ -501,9 +501,6 @@ class CheckoutController extends Controller
                 'payment_options' => $paymentOptions,
             ],
             'deliveryTiers' => config('delivery.tiers', []),
-            'dokuCheckoutJs' => config('doku.sandbox')
-                ? 'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js'
-                : 'https://jokul.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js',
         ]);
     }
 

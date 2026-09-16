@@ -5,8 +5,6 @@ import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import PaymentPage from './payment';
 
-const SCRIPT_URL =
-    'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js';
 const PAYMENT_URL = 'https://sandbox.doku.com/checkout/link/PAY1';
 
 const baseDraft = {
@@ -20,20 +18,24 @@ const baseSummary = {
     payment_options: [{ value: 'qris', label: 'QRIS' }],
 };
 
-const { openDokuCheckoutMock, routerMock } = vi.hoisted(() => ({
-    openDokuCheckoutMock: vi.fn(),
-    routerMock: {
-        visit: vi.fn(),
-        get: vi.fn(),
-        post: vi.fn(),
-        reload: vi.fn(),
-        replace: vi.fn(),
-        on: vi.fn(),
-    },
-}));
+const { openDokuCheckoutMock, closeDokuCheckoutMock, routerMock } = vi.hoisted(
+    () => ({
+        openDokuCheckoutMock: vi.fn(),
+        closeDokuCheckoutMock: vi.fn(),
+        routerMock: {
+            visit: vi.fn(),
+            get: vi.fn(),
+            post: vi.fn(),
+            reload: vi.fn(),
+            replace: vi.fn(),
+            on: vi.fn(),
+        },
+    }),
+);
 
 vi.mock('@/lib/doku-checkout', () => ({
     openDokuCheckout: openDokuCheckoutMock,
+    closeDokuCheckout: closeDokuCheckoutMock,
 }));
 
 vi.mock('@inertiajs/react', async (importOriginal) => {
@@ -83,13 +85,7 @@ function renderPage() {
     document.body.appendChild(container);
     root = createRoot(container);
     act(() => {
-        root!.render(
-            <PaymentPage
-                draft={baseDraft}
-                summary={baseSummary}
-                dokuCheckoutJs={SCRIPT_URL}
-            />,
-        );
+        root!.render(<PaymentPage draft={baseDraft} summary={baseSummary} />);
     });
 }
 
@@ -153,7 +149,8 @@ function stubFetch() {
 
 beforeEach(() => {
     (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
-    openDokuCheckoutMock.mockReset().mockResolvedValue(true);
+    openDokuCheckoutMock.mockReset().mockReturnValue(true);
+    closeDokuCheckoutMock.mockReset();
     routerMock.visit.mockReset();
     vi.spyOn(window, 'open').mockImplementation(() => null);
     paymentStatusBody = { payment_status: 'pending' };
@@ -186,10 +183,7 @@ describe('PaymentPage submit', () => {
         clickButton('Bayar');
         await flushAsync();
 
-        expect(openDokuCheckoutMock).toHaveBeenCalledWith(
-            PAYMENT_URL,
-            SCRIPT_URL,
-        );
+        expect(openDokuCheckoutMock).toHaveBeenCalledWith(PAYMENT_URL);
 
         // Waiting mode UI: button label flips, retry affordance present.
         expect(document.body.textContent).toContain(
@@ -201,7 +195,7 @@ describe('PaymentPage submit', () => {
     });
 
     it('falls back to a new tab when the DOKU modal cannot be opened', async () => {
-        openDokuCheckoutMock.mockResolvedValue(false);
+        openDokuCheckoutMock.mockReturnValue(false);
 
         clickButton('Bayar');
         await flushAsync();
@@ -224,10 +218,7 @@ describe('PaymentPage submit', () => {
         clickButton('Selesaikan Pembayaran');
         await flushAsync();
 
-        expect(openDokuCheckoutMock).toHaveBeenCalledWith(
-            PAYMENT_URL,
-            SCRIPT_URL,
-        );
+        expect(openDokuCheckoutMock).toHaveBeenCalledWith(PAYMENT_URL);
 
         // Status still pending → abandon/reopen branch: NO server round-trip
         // to /pay for a fresh attempt.
@@ -258,6 +249,12 @@ describe('PaymentPage submit', () => {
 
         expect(routerMock.visit).toHaveBeenCalledWith(
             '/customer/orders/confirm/ORD-99',
+        );
+        // Overlay dismissed *before* navigating so it cannot leak to the next
+        // page: the close must be recorded ahead of the visit.
+        expect(closeDokuCheckoutMock).toHaveBeenCalled();
+        expect(closeDokuCheckoutMock.mock.invocationCallOrder[0]).toBeLessThan(
+            routerMock.visit.mock.invocationCallOrder[0]!,
         );
     });
 
@@ -348,10 +345,7 @@ describe('PaymentPage submit', () => {
         expect(String(payCalls[0]![0])).toBe('/customer/orders/99/pay');
 
         // The modal reopened with the /pay-returned URL, not the stale one.
-        expect(openDokuCheckoutMock).toHaveBeenCalledWith(
-            FRESH_URL,
-            SCRIPT_URL,
-        );
+        expect(openDokuCheckoutMock).toHaveBeenCalledWith(FRESH_URL);
 
         // Failure message gone; back to pending waiting copy.
         expect(document.body.textContent).not.toMatch(

@@ -9,7 +9,7 @@ import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { readCheckoutPaymentResponse } from '@/lib/checkout-payment-response';
 import { useCustomerLocation } from '@/lib/customer-location';
-import { openDokuCheckout } from '@/lib/doku-checkout';
+import { closeDokuCheckout, openDokuCheckout } from '@/lib/doku-checkout';
 import { formatCurrency, formatDistance } from '@/lib/format';
 import { isDifferentRecipient } from '@/lib/recipient';
 import { useCart } from '@/lib/use-cart';
@@ -17,8 +17,6 @@ import { useCart } from '@/lib/use-cart';
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max polling
-const DEFAULT_DOKU_CHECKOUT_JS =
-    'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js';
 const PAYMENT_TERMINAL_STATUSES: PaymentStatus[] = [
     'paid',
     'failed',
@@ -26,11 +24,7 @@ const PAYMENT_TERMINAL_STATUSES: PaymentStatus[] = [
     'cancelled',
 ];
 
-export default function CheckoutPayment({
-    draft,
-    summary,
-    dokuCheckoutJs,
-}: any) {
+export default function CheckoutPayment({ draft, summary }: any) {
     const cart = useCart();
     const { markUsedForOrder } = useCustomerLocation();
     useLockSwipeBack();
@@ -116,14 +110,16 @@ export default function CheckoutPayment({
         recipient_phone: draft?.customer?.recipient_phone,
     });
 
-    const scriptUrl = dokuCheckoutJs ?? DEFAULT_DOKU_CHECKOUT_JS;
-
     const stopPolling = useCallback(() => {
         if (pollInterval.current) {
             clearInterval(pollInterval.current);
             pollInterval.current = null;
         }
     }, []);
+
+    // The overlay is appended to <body>, outside the Inertia page tree, so it
+    // must be torn down explicitly when the page unmounts.
+    useEffect(() => closeDokuCheckout, []);
 
     // Poll DOKU/DB payment status while waiting (webhook fallback), max 5 min.
     useEffect(() => {
@@ -161,6 +157,9 @@ export default function CheckoutPayment({
 
                     if (PAYMENT_TERMINAL_STATUSES.includes(status)) {
                         stopPolling();
+                        // Status is final: dismiss the overlay so the result
+                        // panel (and its retry affordance) is reachable.
+                        closeDokuCheckout();
 
                         if (status === 'paid') {
                             setWaitingPayment(false);
@@ -192,7 +191,7 @@ export default function CheckoutPayment({
 
         // Abandon/reopen case: session still pending → just reopen the same URL.
         if (paymentStatus === 'pending') {
-            const ok = await openDokuCheckout(lastPaymentUrl, scriptUrl);
+            const ok = openDokuCheckout(lastPaymentUrl);
 
             if (!ok) {
                 window.open(lastPaymentUrl, '_blank', 'noopener,noreferrer');
@@ -261,6 +260,7 @@ export default function CheckoutPayment({
             if (data.paid) {
                 // Order became paid while we were retrying (reconciled via sync).
                 setWaitingPayment(false);
+                closeDokuCheckout();
                 router.visit(`/customer/orders/confirm/${data.order_code}`);
 
                 return;
@@ -278,7 +278,7 @@ export default function CheckoutPayment({
             setPaymentStatus('pending');
             setPollEpoch((v) => v + 1); // re-arm polling for the new attempt
 
-            const ok = await openDokuCheckout(data.payment_url, scriptUrl);
+            const ok = openDokuCheckout(data.payment_url);
 
             if (!ok) {
                 window.open(data.payment_url, '_blank', 'noopener,noreferrer');
@@ -289,7 +289,7 @@ export default function CheckoutPayment({
         } catch {
             setRetryError('Terjadi kesalahan jaringan. Silakan coba lagi.');
         }
-    }, [lastPaymentUrl, pendingOrder, paymentStatus, scriptUrl, stopPolling]);
+    }, [lastPaymentUrl, pendingOrder, paymentStatus, stopPolling]);
 
     const submit = async () => {
         if (submitLock.current || waitingPayment) {
@@ -411,7 +411,7 @@ export default function CheckoutPayment({
                 setWaitingPayment(true);
                 setProcessing(false);
 
-                const ok = await openDokuCheckout(data.payment_url, scriptUrl);
+                const ok = openDokuCheckout(data.payment_url);
 
                 if (!ok) {
                     // Fallback: open hosted page in a new tab; app context stays intact.

@@ -85,13 +85,16 @@ class CheckoutPaymentJsonResponseTest extends TestCase
         ]);
     }
 
-    public function test_payment_page_exposes_doku_checkout_js_url(): void
+    public function test_payment_page_no_longer_exposes_vendor_checkout_script(): void
     {
+        // The in-app overlay renders DOKU's `?view=iframe` page itself, so the
+        // vendor `jokul-checkout-1.0.0.js` bundle is no longer shipped to the
+        // client. Guard against re-introducing that dependency.
         $this->get('/customer/checkout/payment')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/checkout/payment')
-                ->where('dokuCheckoutJs', 'https://sandbox.doku.com/jokul-checkout-js/v1/jokul-checkout-1.0.0.js')
+                ->missing('dokuCheckoutJs')
             );
     }
 }
