@@ -8,8 +8,11 @@ return [
         ? 'https://api-sandbox.doku.com'
         : 'https://api.doku.com',
 
-    // Payment configuration
-    'payment_timeout' => env('DOKU_PAYMENT_TIMEOUT', 30), // minutes
+    // Fallback payment window (minutes) used only when an order has no
+    // confirmation_expires_at. In normal flow the window is derived from the
+    // order's own deadline so Dombi and DOKU expire together; DOKU's own
+    // default when the value is omitted is 60 minutes.
+    'payment_timeout' => env('DOKU_PAYMENT_TIMEOUT', 60),
     'auto_redirect' => env('DOKU_AUTO_REDIRECT', true),
     'currency' => env('DOKU_CURRENCY', 'IDR'),
 

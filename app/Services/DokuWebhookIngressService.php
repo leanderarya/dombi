@@ -126,7 +126,7 @@ final class DokuWebhookIngressService
 
         return new NormalizedPaymentEvent(
             source: 'doku-webhook',
-            gatewayStatus: (string) data_get($payload, 'transaction.status', ''),
+            gatewayStatus: $this->doku->providerStatus($payload),
             amount: data_get($payload, 'order.amount') ?? data_get($payload, 'transaction.amount'),
             currency: (string) (data_get($payload, 'order.currency') ?? data_get($payload, 'transaction.currency', 'IDR')),
             gatewayReference: $invoice,

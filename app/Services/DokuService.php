@@ -90,7 +90,7 @@ class DokuService
 
         $order = $attempt->order;
         $redirectUrl = route('doku.redirect', ['invoice_number' => $attempt->invoice_number]);
-        $body = ['order' => ['invoice_number' => $attempt->invoice_number, 'amount' => (int) $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'callback_url' => $redirectUrl, 'callback_url_result' => $redirectUrl, 'auto_redirect' => (bool) config('doku.auto_redirect', true), 'payment_due_date' => config('doku.payment_timeout', 30), 'line_items' => data_get($attempt->metadata ?? [], 'line_items', $this->buildLineItems($order))], 'payment' => array_merge(['payment_method_types' => [$this->mapPaymentMethod($attempt->payment_method)]], $this->channelInfo($attempt->payment_method) ?? []), 'customer' => data_get($attempt->metadata ?? [], 'customer_snapshot', $this->buildCustomerInfo($order))];
+        $body = ['order' => ['invoice_number' => $attempt->invoice_number, 'amount' => (int) $attempt->amount_snapshot, 'currency' => $attempt->currency_snapshot, 'callback_url' => $redirectUrl, 'callback_url_result' => $redirectUrl, 'auto_redirect' => (bool) config('doku.auto_redirect', true), 'line_items' => data_get($attempt->metadata ?? [], 'line_items', $this->buildLineItems($order))], 'payment' => array_merge(['payment_method_types' => [$this->mapPaymentMethod($attempt->payment_method)], 'payment_due_date' => $this->paymentDueDateMinutes($order)], $this->channelInfo($attempt->payment_method) ?? []), 'customer' => data_get($attempt->metadata ?? [], 'customer_snapshot', $this->buildCustomerInfo($order))];
         $bodyJson = json_encode($body);
         $endpoint = '/checkout/v1/payment';
         $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
@@ -256,10 +256,10 @@ class DokuService
             return $attempt->fresh();
         }
         $requestId = 'REC-'.$attempt->id.'-'.bin2hex(random_bytes(4));
-        $endpoint = '/checkout/v1/payment/'.$attempt->invoice_number;
+        $endpoint = self::STATUS_ENDPOINT.'/'.$attempt->invoice_number;
         $timestamp = now('UTC')->format('Y-m-d\\TH:i:s\\Z');
         try {
-            $response = Http::withHeaders($this->generateHeaders($requestId, $timestamp, $endpoint, ''))->timeout(10)->get($this->baseUrl.$endpoint);
+            $response = Http::withHeaders($this->generateHeaders($requestId, $timestamp, $endpoint, '', false))->timeout(10)->get($this->baseUrl.$endpoint);
         } catch (ConnectionException $exception) {
             return $this->recordReconciliationFailure($attempt, $claimToken, null, $exception->getMessage());
         }
@@ -271,7 +271,7 @@ class DokuService
             return $this->recordReconciliationFailure($attempt, $claimToken, $response->status(), $response->body());
         }
         $data = $response->json();
-        $status = strtoupper(data_get($data, 'transaction.status', ''));
+        $status = $this->providerStatus($data);
         if ($status === 'SUCCESS') {
             $persisted = DB::transaction(function () use ($attempt, $claimToken, $data, $status): bool {
                 $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
@@ -560,10 +560,10 @@ class DokuService
 
         $requestId = 'CHK-'.$order->id.'-'.time();
         $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
-        $endpoint = '/checkout/v1/payment/'.$order->doku_order_id;
+        $endpoint = self::STATUS_ENDPOINT.'/'.$order->doku_order_id;
 
         return $this->withRetry(function () use ($requestId, $timestamp, $endpoint, $order) {
-            $response = Http::withHeaders($this->generateHeaders($requestId, $timestamp, $endpoint, ''))
+            $response = Http::withHeaders($this->generateHeaders($requestId, $timestamp, $endpoint, '', false))
                 ->timeout(10)
                 ->get($this->baseUrl.$endpoint);
 
@@ -571,10 +571,11 @@ class DokuService
                 return $response->json();
             }
 
-            // 404 = DOKU session not found — could be API issue, not necessarily expired.
-            // Don't assume expired. Return null so syncStatusFromDoku preserves existing payment_status.
+            // 404 = the invoice is not (yet) resolvable at DOKU. Don't assume
+            // expired: return a non-terminal payload so syncStatusFromDoku
+            // preserves the existing payment_status.
             if ($response->status() === 404) {
-                Log::warning('DOKU status check: session not found (404)', [
+                Log::warning('DOKU status check: invoice not found (404)', [
                     'order_id' => $order->id,
                     'doku_order_id' => $order->doku_order_id,
                 ]);
@@ -639,10 +640,10 @@ class DokuService
             return $order->payment_status;
         }
 
-        $status = $this->mapStatus($dokuStatus['transaction']['status'] ?? 'PENDING');
+        $status = $this->mapStatus($this->providerStatus($dokuStatus));
 
         return DB::transaction(function () use ($attempt, $dokuStatus): string {
-            $providerStatus = data_get($dokuStatus, 'transaction.status', 'UNKNOWN');
+            $providerStatus = $this->providerStatus($dokuStatus);
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
                 source: 'doku-status-sync',
                 gatewayStatus: $providerStatus,
@@ -652,6 +653,18 @@ class DokuService
                 receivedAt: now(),
                 rawEvidence: $dokuStatus,
             ));
+
+            // A provider-terminal status also closes the creation life cycle.
+            // reconcilePaymentAttempt() does the same; without it an attempt
+            // stays `created`, so `reconcile-doku` (which only claims pending/
+            // unknown) never revisits it and pay() answers "sedang diproses"
+            // for a session DOKU already retired.
+            $locked = $attempt->fresh();
+            if ($locked !== null
+                && $locked->creation_state?->value === 'created'
+                && in_array($locked->settlement_status?->value, ['failed', 'expired'], true)) {
+                $locked->update(['creation_state' => 'failed']);
+            }
 
             return $this->mapStatus($providerStatus);
         });
@@ -877,18 +890,80 @@ class DokuService
     }
 
     /**
-     * Generate DOKU Non-SNAP API headers with HMAC-SHA256 signature.
+     * Resolve the effective provider status from a DOKU payload.
+     *
+     * `transaction.status` is authoritative when present. When the channel has
+     * not published one yet, the order-level status is the only signal: DOKU
+     * reports `order.status = ORDER_EXPIRED` for sessions that lapsed unpaid.
+     * Without this fallback those sessions stay `PENDING` forever and the order
+     * never reaches a terminal state.
      */
-    private function generateHeaders(string $requestId, string $timestamp, string $endpoint, string $body): array
+    public function providerStatus(array $payload): string
     {
-        $digest = base64_encode(hash('sha256', $body, true));
+        $transactionStatus = strtoupper((string) data_get($payload, 'transaction.status', ''));
 
-        // DOKU signature uses actual newline characters (\n in double quotes)
+        if ($transactionStatus !== '' && $transactionStatus !== 'PENDING') {
+            return $transactionStatus;
+        }
+
+        return match (strtoupper((string) data_get($payload, 'order.status', ''))) {
+            'ORDER_EXPIRED' => 'EXPIRED',
+            'ORDER_GENERATED', 'ORDER_RECOVERED' => 'PENDING',
+            default => $transactionStatus !== '' ? $transactionStatus : 'UNKNOWN',
+        };
+    }
+
+    /**
+     * Hard bound on the DOKU session length. DOKU accepts up to 6 digits; a
+     * week is a sane operational ceiling.
+     */
+    public const MAX_PAYMENT_DUE_DATE_MINUTES = 10080;
+
+    /**
+     * Whole-minute payment window for the DOKU checkout page.
+     *
+     * DOKU defaults to 60 minutes when this is omitted, but Dombi expires its
+     * own orders on `confirmation_expires_at`. If DOKU's clock runs longer, a
+     * customer can pay a session whose order Dombi already treats as expired,
+     * which forces a late-payment refund. Deriving the value from the order's
+     * own remaining deadline keeps both clocks equal.
+     */
+    private function paymentDueDateMinutes(Order $order): int
+    {
+        $fallback = max(1, min(self::MAX_PAYMENT_DUE_DATE_MINUTES, (int) config('doku.payment_timeout', 60)));
+        $expiresAt = $order->confirmation_expires_at;
+
+        if ($expiresAt === null) {
+            return $fallback;
+        }
+
+        $remaining = (int) ceil(max(0, now()->diffInSeconds($expiresAt, false)) / 60);
+
+        return max(1, min(self::MAX_PAYMENT_DUE_DATE_MINUTES, $remaining));
+    }
+
+    /**
+     * DOKU non-SNAP Check Status API. This is the only status surface that
+     * resolves a Checkout invoice; `/checkout/v1/payment` is create-only and
+     * answers 404 for lookups.
+     */
+    public const STATUS_ENDPOINT = '/orders/v1/status';
+
+    private function generateHeaders(string $requestId, string $timestamp, string $endpoint, string $body, bool $withDigest = true): array
+    {
+        // DOKU signature uses actual newline characters (\n in double quotes).
+        // GET endpoints (Check Status API) must omit the Digest line entirely;
+        // sending it makes DOKU answer 400 invalid_signature.
         $assembled = 'Client-Id:'.$this->clientId."\n"
             .'Request-Id:'.$requestId."\n"
             .'Request-Timestamp:'.$timestamp."\n"
-            .'Request-Target:'.$endpoint."\n"
-            .'Digest:'.$digest;
+            .'Request-Target:'.$endpoint."\n";
+
+        if ($withDigest) {
+            $assembled .= 'Digest:'.base64_encode(hash('sha256', $body, true));
+        } else {
+            $assembled = rtrim($assembled, "\n");
+        }
 
         $signature = 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, $this->secretKey, true));
 

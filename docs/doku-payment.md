@@ -95,7 +95,10 @@ database/migrations/
 DOKU_CLIENT_ID=your-client-id
 DOKU_API_KEY=your-secret-key
 DOKU_IS_SANDBOX=true                          # true = sandbox, false = production
-DOKU_PAYMENT_TIMEOUT=30                       # Menit sebelum payment expired
+DOKU_PAYMENT_TIMEOUT=60                       # Fallback window (menit) bila order tanpa confirmation_expires_at.
+                                              # Normalnya window DOKU diturunkan dari confirmation_expires_at order
+                                              # agar Dombi & DOKU kedaluwarsa bersamaan. Default DOKU bila
+                                              # parameter dihilangkan = 60 menit.
 DOKU_AUTO_REDIRECT=true
 DOKU_CURRENCY=IDR
 DOKU_ENABLED_METHODS=qris,transfer,ewallet,credit_card
@@ -122,7 +125,7 @@ return [
         ? 'https://api-sandbox.doku.com'
         : 'https://api.doku.com',
 
-    'payment_timeout' => env('DOKU_PAYMENT_TIMEOUT', 30), // minutes
+    'payment_timeout' => env('DOKU_PAYMENT_TIMEOUT', 60), // minutes (fallback only)
     'auto_redirect' => env('DOKU_AUTO_REDIRECT', true),
     'currency' => env('DOKU_CURRENCY', 'IDR'),
 
@@ -784,7 +787,37 @@ Format `DMB-{orderId}-{timestamp}-{random}` — unik per request.
 | Method | Endpoint | Deskripsi |
 |--------|----------|-----------|
 | POST | `/checkout/v1/payment` | Create payment session |
-| GET | `/checkout/v1/payment/{invoiceNumber}` | Check payment status |
+| GET | `/orders/v1/status/{invoiceNumber}` | Check payment status (non-SNAP Check Status API) |
+
+> **Penting — endpoint status.** DOKU **tidak** menyediakan status lookup di
+> `/checkout/v1/payment/{invoiceNumber}`; path itu hanya untuk create dan
+> menjawab **404 `No static resource`** bila dipakai untuk lookup. Endpoint
+> resmi adalah `/orders/v1/status/{invoiceNumber}` (lihat
+> `DokuService::STATUS_ENDPOINT`). Gejala bila salah: setiap sinkronisasi
+> menyimpan `transaction.status = UNKNOWN` dengan
+> `reason = provider_session_lookup_ambiguous`, `gateway_status = UNKNOWN`, dan
+> order tidak pernah menjadi `paid` walau customer sudah membayar.
+>
+> **Penting — signature GET.** Check Status API memakai method GET dan
+> **tidak boleh menyertakan baris `Digest:`** pada komponen signature. Bila
+> disertakan, DOKU membalas **400 `invalid_signature`**. `generateHeaders()`
+> menerima flag `$withDigest` (default `true`) dan seluruh pemanggil GET
+> mengirim `false`.
+
+> **Penting — `payment_due_date`.** Nilai ini wajib berada di dalam objek
+> **`payment`**, bukan `order`. Bila ditaruh di `order`, DOKU mengabaikannya
+> dan memakai default **60 menit**, sehingga sesi DOKU bisa tetap bisa dibayar
+> setelah order Dombi kedaluwarsa (late payment → refund). Nilai dihitung
+> `paymentDueDateMinutes()` dari `order.confirmation_expires_at`, dengan batas
+> atas `MAX_PAYMENT_DUE_DATE_MINUTES` (7 hari). `config('doku.payment_timeout')`
+> hanya dipakai sebagai fallback bila order tidak punya
+> `confirmation_expires_at`.
+
+> **Penting — `order.status`.** Selain `transaction.status`, DOKU Checkout
+> mengirim status level order: `ORDER_GENERATED`, `ORDER_EXPIRED`,
+> `ORDER_RECOVERED`. `DokuService::providerStatus()` memetakan `ORDER_EXPIRED`
+> menjadi `EXPIRED` selama `transaction.status` masih `PENDING`/kosong, supaya
+> sesi yang tidak dibayar tidak tertahan `pending` selamanya.
 
 > **Penting — lokasi `amount` pada payload DOKU.** Check Status API dan
 > webhook DOKU Checkout menaruh nominal di **`order.amount`**, bukan
