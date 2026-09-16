@@ -344,7 +344,7 @@ class DokuPaymentTest extends TestCase
         ]);
 
         Http::fake([
-            '*/checkout/v1/payment/INV-003' => Http::response([
+            '*/orders/v1/status/INV-003' => Http::response([
                 'order' => ['invoice_number' => 'INV-003'],
                 'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
             ], 200),
@@ -376,7 +376,7 @@ class DokuPaymentTest extends TestCase
         ]);
 
         Http::fake([
-            '*/checkout/v1/payment/*' => Http::response([
+            '*/orders/v1/status/*' => Http::response([
                 'order' => ['invoice_number' => 'DMB-'.$order->id.'-abcdef123456'],
                 'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
             ], 200),

@@ -23,7 +23,7 @@ class PaymentRetryTest extends TestCase
     {
         $order = Order::factory()->create(['payment_status' => 'pending', 'doku_order_id' => 'invoice-404']);
         $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'invoice-404', 'invoice_number' => 'invoice-404', 'merchant_request_id' => 'invoice-404-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown', 'settlement_status' => 'unknown']);
-        Http::fake(['*/checkout/v1/payment/invoice-404' => Http::response('', 404)]);
+        Http::fake(['*/orders/v1/status/invoice-404' => Http::response('', 404)]);
 
         $status = app(DokuService::class)->syncStatusFromDoku($attempt);
 
@@ -36,7 +36,7 @@ class PaymentRetryTest extends TestCase
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
         $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'legacy-deadline', 'invoice_number' => 'legacy-deadline', 'merchant_request_id' => 'legacy-deadline-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown', 'settlement_status' => 'unknown']);
-        Http::fake(['*/checkout/v1/payment/legacy-deadline' => Http::response('', 404)]);
+        Http::fake(['*/orders/v1/status/legacy-deadline' => Http::response('', 404)]);
 
         $result = app(DokuService::class)->reconcilePaymentAttempt($attempt);
 
@@ -66,7 +66,7 @@ class PaymentRetryTest extends TestCase
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
         $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'reconcile-404', 'invoice_number' => 'reconcile-404', 'merchant_request_id' => 'reconcile-404-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown', 'settlement_status' => 'unknown']);
-        Http::fake(['*/checkout/v1/payment/reconcile-404' => Http::response('', 404)]);
+        Http::fake(['*/orders/v1/status/reconcile-404' => Http::response('', 404)]);
 
         $result = app(DokuService::class)->reconcilePaymentAttempt($attempt);
 
@@ -79,7 +79,7 @@ class PaymentRetryTest extends TestCase
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
         $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'definitive-failure', 'invoice_number' => 'definitive-failure', 'merchant_request_id' => 'definitive-failure-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'failed', 'settlement_status' => 'unknown']);
-        Http::fake(['*/checkout/v1/payment/definitive-failure' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'REJECTED', 'amount' => $order->total]], 200)]);
+        Http::fake(['*/orders/v1/status/definitive-failure' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'REJECTED', 'amount' => $order->total]], 200)]);
 
         $result = app(DokuService::class)->reconcilePaymentAttempt($attempt);
 
@@ -117,7 +117,7 @@ class PaymentRetryTest extends TestCase
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
         $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'reconcile-success', 'invoice_number' => 'reconcile-success-invoice', 'merchant_request_id' => 'reconcile-success-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Unknown]);
-        Http::fake(['*/checkout/v1/payment/reconcile-success-invoice' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total]], 200)]);
+        Http::fake(['*/orders/v1/status/reconcile-success-invoice' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total]], 200)]);
 
         app(DokuService::class)->reconcilePaymentAttempt($attempt);
 
@@ -142,7 +142,7 @@ class PaymentRetryTest extends TestCase
         $order = Order::factory()->create(['payment_status' => 'pending', 'paid_at' => now()->subHour()]);
         $paidAt = $order->paid_at;
         $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'duplicate-paid-at', 'invoice_number' => 'duplicate-paid-at', 'merchant_request_id' => 'duplicate-paid-at-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'unknown']);
-        Http::fake(['*/checkout/v1/payment/duplicate-paid-at' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total]], 200)]);
+        Http::fake(['*/orders/v1/status/duplicate-paid-at' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total]], 200)]);
 
         app(DokuService::class)->reconcilePaymentAttempt($attempt);
 
@@ -190,7 +190,7 @@ class PaymentRetryTest extends TestCase
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
         $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'pending-reconcile', 'invoice_number' => 'pending-reconcile', 'merchant_request_id' => 'pending-reconcile-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Unknown]);
-        Http::fake(['*/checkout/v1/payment/pending-reconcile' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'PENDING']], 200)]);
+        Http::fake(['*/orders/v1/status/pending-reconcile' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'PENDING']], 200)]);
 
         app(DokuService::class)->reconcilePaymentAttempt($attempt);
 
@@ -205,7 +205,7 @@ class PaymentRetryTest extends TestCase
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
         $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'unknown-status', 'invoice_number' => 'unknown-status', 'merchant_request_id' => 'unknown-status-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Unknown]);
-        Http::fake(['*/checkout/v1/payment/unknown-status' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'PROCESSING']], 200)]);
+        Http::fake(['*/orders/v1/status/unknown-status' => Http::response(['order' => ['invoice_number' => $attempt->invoice_number], 'transaction' => ['status' => 'PROCESSING']], 200)]);
 
         app(DokuService::class)->reconcilePaymentAttempt($attempt);
 
@@ -231,7 +231,7 @@ class PaymentRetryTest extends TestCase
 
     public function test_reconciliation_failure_persists_bounded_backoff_state(): void
     {
-        Http::fake(['*/checkout/v1/payment/reconcile-failure' => Http::response('', 503)]);
+        Http::fake(['*/orders/v1/status/reconcile-failure' => Http::response('', 503)]);
         $order = Order::factory()->create();
         $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'reconcile-failure', 'invoice_number' => 'reconcile-failure', 'merchant_request_id' => 'reconcile-failure-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => PaymentAttemptCreationState::Unknown]);
 

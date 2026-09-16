@@ -212,7 +212,7 @@ class PaymentProductionInvariantTest extends TestCase
         // DOKU Check Status API reports the amount under `order.amount`; there is
         // no `transaction.amount`. Reading only the transaction path used to
         // leave the attempt in needs_review, so the order never became paid.
-        Http::fake(['*/checkout/v1/payment/*' => Http::response([
+        Http::fake(['*/orders/v1/status/*' => Http::response([
             'order' => ['invoice_number' => $attempt->invoice_number, 'amount' => 50000, 'currency' => 'IDR'],
             'transaction' => ['status' => 'SUCCESS', 'original_request_id' => 'provider-ref-1'],
         ])]);
@@ -235,7 +235,7 @@ class PaymentProductionInvariantTest extends TestCase
         ]);
 
         // JSON numbers with a decimal point decode to float in PHP.
-        Http::fake(['*/checkout/v1/payment/*' => Http::response([
+        Http::fake(['*/orders/v1/status/*' => Http::response([
             'order' => ['invoice_number' => $attempt->invoice_number, 'amount' => 50000.0, 'currency' => 'IDR'],
             'transaction' => ['status' => 'SUCCESS'],
         ])]);
@@ -264,6 +264,157 @@ class PaymentProductionInvariantTest extends TestCase
         $attempt = PaymentAttempt::where('order_id', $order->id)->sole();
         $this->assertSame(PaymentAttemptVerificationStatus::Verified, $attempt->verification_status);
         $this->assertSame('paid', $order->fresh()->payment_status);
+    }
+
+    public function test_status_sync_queries_documented_check_status_endpoint(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+
+        Http::fake(['*/orders/v1/status/*' => Http::response([
+            'order' => ['invoice_number' => 'ENDPOINT-1', 'amount' => 50000],
+            'transaction' => ['status' => 'PENDING'],
+        ])]);
+
+        app(DokuService::class)->checkStatus($order->forceFill(['doku_order_id' => 'ENDPOINT-1']));
+
+        Http::assertSent(fn ($request) => $request->method() === 'GET'
+            && str_ends_with($request->url(), '/orders/v1/status/ENDPOINT-1'));
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), '/checkout/v1/payment/'));
+    }
+
+    public function test_status_sync_signature_omits_digest_for_get_requests(): void
+    {
+        config(['doku.client_id' => 'test-client', 'doku.api_key' => 'test-key', 'doku.base_url' => 'https://api-sandbox.doku.com']);
+
+        $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $sent = [];
+
+        Http::fake(['*/orders/v1/status/*' => function ($request) use (&$sent) {
+            $sent[] = $request;
+
+            return Http::response([
+                'order' => ['invoice_number' => 'SIG-1', 'amount' => 50000],
+                'transaction' => ['status' => 'PENDING'],
+            ]);
+        }]);
+
+        app(DokuService::class)->checkStatus($order->forceFill(['doku_order_id' => 'SIG-1']));
+
+        $request = $sent[0];
+        $endpoint = '/orders/v1/status/SIG-1';
+        $timestamp = $request->header('Request-Timestamp')[0];
+        $requestId = $request->header('Request-Id')[0];
+
+        // DOKU rejects any Digest line on GET endpoints with 400
+        // invalid_signature; the component set must end at Request-Target.
+        $assembled = 'Client-Id:test-client'."\n"
+            .'Request-Id:'.$requestId."\n"
+            .'Request-Timestamp:'.$timestamp."\n"
+            .'Request-Target:'.$endpoint;
+        $expected = 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, 'test-key', true));
+
+        $this->assertSame($expected, $request->header('Signature')[0]);
+    }
+
+    public function test_payment_due_date_is_sent_inside_payment_object(): void
+    {
+        config(['doku.payment_timeout' => 30]);
+
+        $order = Order::factory()->create([
+            'payment_status' => 'pending',
+            'total' => 50000,
+            'confirmation_expires_at' => now()->addMinutes(30),
+        ]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'due-date-'.$order->id,
+            'invoice_number' => 'DUE-DATE-1', 'merchant_request_id' => 'due-date-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
+
+        Http::fake(['*/checkout/v1/payment' => Http::response([
+            'response' => ['payment' => ['url' => 'https://sandbox.doku.com/pay/due']],
+        ], 200)]);
+
+        app(DokuService::class)->createPayment($attempt);
+
+        // DOKU reads `payment.payment_due_date`. Placing it under `order` is
+        // silently ignored and DOKU falls back to its 60 minute default, which
+        // outlives Dombi's own expiry and invites late payments.
+        Http::assertSent(fn ($request) => $request['payment']['payment_due_date'] === 30
+            && ! isset($request['order']['payment_due_date']));
+    }
+
+    public function test_payment_due_date_never_exceeds_order_deadline(): void
+    {
+        config(['doku.payment_timeout' => 60]);
+
+        $order = Order::factory()->create([
+            'payment_status' => 'pending',
+            'total' => 50000,
+            'confirmation_expires_at' => now()->addMinutes(12),
+        ]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'due-date-cap-'.$order->id,
+            'invoice_number' => 'DUE-DATE-2', 'merchant_request_id' => 'due-date-cap-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
+
+        Http::fake(['*/checkout/v1/payment' => Http::response([
+            'response' => ['payment' => ['url' => 'https://sandbox.doku.com/pay/due2']],
+        ], 200)]);
+
+        app(DokuService::class)->createPayment($attempt);
+
+        // Exactly the remaining order window, not the 60 minute config value.
+        Http::assertSent(fn ($request) => $request['payment']['payment_due_date'] === 12);
+    }
+
+    public function test_status_sync_treats_order_expired_as_terminal_expiry(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'order-expired-'.$order->id,
+            'invoice_number' => 'ORDER-EXPIRED-1', 'merchant_request_id' => 'order-expired-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+            'creation_state' => 'created',
+        ]);
+
+        // DOKU keeps transaction.status at PENDING while order.status lapses to
+        // ORDER_EXPIRED. Without mapping the order-level status the attempt
+        // stays pending forever and the order never reaches a terminal state.
+        Http::fake(['*/orders/v1/status/*' => Http::response([
+            'order' => ['invoice_number' => $attempt->invoice_number, 'amount' => 50000, 'status' => 'ORDER_EXPIRED'],
+            'transaction' => ['status' => 'PENDING'],
+        ])]);
+
+        $result = app(DokuService::class)->syncStatusFromDoku($attempt);
+
+        $this->assertSame('expired', $result);
+        $this->assertSame(PaymentAttemptSettlementStatus::Expired, $attempt->fresh()->settlement_status);
+        // The provider retired the session, so the attempt must leave `created`.
+        // Otherwise pay() answers 409 "sedang diproses" forever and the
+        // customer can never start a fresh attempt.
+        $this->assertSame('failed', $attempt->fresh()->creation_state?->value);
+    }
+
+    public function test_status_sync_keeps_generated_order_pending(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'order-generated-'.$order->id,
+            'invoice_number' => 'ORDER-GENERATED-1', 'merchant_request_id' => 'order-generated-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
+
+        Http::fake(['*/orders/v1/status/*' => Http::response([
+            'order' => ['invoice_number' => $attempt->invoice_number, 'amount' => 50000, 'status' => 'ORDER_GENERATED'],
+            'transaction' => ['status' => 'PENDING'],
+        ])]);
+
+        $result = app(DokuService::class)->syncStatusFromDoku($attempt);
+
+        $this->assertSame('pending', $result);
+        $this->assertSame('pending', $order->fresh()->payment_status);
     }
 
     public function test_duplicate_refund_request_returns_null_without_second_obligation(): void
@@ -326,11 +477,11 @@ class PaymentProductionInvariantTest extends TestCase
             'settlement_status' => PaymentAttemptSettlementStatus::Paid,
             'verification_status' => PaymentAttemptVerificationStatus::Verified,
         ]);
-        Http::fake(['*/checkout/v1/payment/*' => Http::response(['order' => ['invoice_number' => $order->order_code], 'transaction' => ['status' => 'FAILED']])]);
+        Http::fake(['*/orders/v1/status/*' => Http::response(['order' => ['invoice_number' => $order->order_code], 'transaction' => ['status' => 'FAILED']])]);
 
         app(DokuService::class)->syncStatusFromDoku($attempt);
 
-        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/checkout/v1/payment/'.$attempt->invoice_number));
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/orders/v1/status/'.$attempt->invoice_number));
         $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
         $this->assertDatabaseHas('payment_attempts', [
             'id' => $attempt->id,
@@ -355,7 +506,7 @@ class PaymentProductionInvariantTest extends TestCase
             'settlement_status' => PaymentAttemptSettlementStatus::Paid,
             'verification_status' => PaymentAttemptVerificationStatus::Verified,
         ]);
-        Http::fake(['*/checkout/v1/payment/*' => Http::response(['order' => ['invoice_number' => $order->order_code], 'transaction' => ['status' => 'FAILED']])]);
+        Http::fake(['*/orders/v1/status/*' => Http::response(['order' => ['invoice_number' => $order->order_code], 'transaction' => ['status' => 'FAILED']])]);
 
         app(DokuService::class)->syncStatusFromDoku($attempt);
 
@@ -380,14 +531,14 @@ class PaymentProductionInvariantTest extends TestCase
             'settlement_status' => PaymentAttemptSettlementStatus::Paid,
             'verification_status' => PaymentAttemptVerificationStatus::Verified,
         ]);
-        Http::fake(['*/checkout/v1/payment/*' => Http::response([
+        Http::fake(['*/orders/v1/status/*' => Http::response([
             'order' => ['invoice_number' => $order->order_code],
             'transaction' => ['status' => 'PENDING_REVIEW'],
         ])]);
 
         app(DokuService::class)->syncStatusFromDoku($attempt);
 
-        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/checkout/v1/payment/'.$attempt->invoice_number));
+        Http::assertSent(fn ($request) => str_ends_with($request->url(), '/orders/v1/status/'.$attempt->invoice_number));
         $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
         $this->assertSame('paid', PaymentTransaction::where('order_id', $order->id)->sole()->status);
         $this->assertSame('paid', $order->fresh()->payment_status);

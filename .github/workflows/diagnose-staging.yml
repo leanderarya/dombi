@@ -95,6 +95,9 @@ jobs:
             echo '--- storage/logs/laravel.log (payment lines, last 25) ---'
             grep -iE "doku|payment" storage/logs/laravel.log 2>/dev/null | tail -25 || echo '(no log)'
 
+            echo '=== configured vs provider payment window ==='
+            php artisan tinker --execute='echo "doku.payment_timeout=".config("doku.payment_timeout").PHP_EOL; echo "order.payment_retry_window_minutes=".config("order.payment_retry_window_minutes").PHP_EOL; echo "order.confirmation_timeout_minutes=".config("order.confirmation_timeout_minutes").PHP_EOL; foreach (\App\Models\PaymentAttempt::latest("id")->limit(3)->get() as $a) { echo json_encode(["attempt_id" => $a->id, "due_date_echoed_by_doku" => data_get($a->raw_response, "response.payment.payment_due_date"), "expired_date" => data_get($a->raw_response, "response.payment.expired_date"), "amount_snapshot" => $a->amount_snapshot], JSON_UNESCAPED_SLASHES).PHP_EOL; }' 2>&1 | tail -8
+
             echo '=== migration state ==='
             php artisan migrate:status --no-ansi | tail -30
 

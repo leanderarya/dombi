@@ -26,7 +26,7 @@ class PaymentReliabilityTest extends TestCase
     public function test_check_status_retries_on_transient_failure_then_succeeds(): void
     {
         Http::fake([
-            'api-sandbox.doku.com/checkout/v1/payment/*' => Http::sequence()
+            'api-sandbox.doku.com/orders/v1/status/*' => Http::sequence()
                 ->push('', 503)
                 ->push(['transaction' => ['status' => 'SUCCESS']], 200),
         ]);
@@ -41,7 +41,7 @@ class PaymentReliabilityTest extends TestCase
     public function test_check_status_returns_null_after_max_retries_exhausted(): void
     {
         Http::fake([
-            'api-sandbox.doku.com/checkout/v1/payment/*' => Http::response('', 500),
+            'api-sandbox.doku.com/orders/v1/status/*' => Http::response('', 500),
         ]);
 
         $order = Order::factory()->create(['doku_order_id' => 'INV-FAIL', 'payment_status' => 'pending']);

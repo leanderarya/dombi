@@ -59,7 +59,7 @@ class DokuReconciliationTest extends TestCase
     {
         $attempt = $this->makeAttempt('pending');
         Http::fake([
-            '*/checkout/v1/payment/*' => Http::response([
+            '*/orders/v1/status/*' => Http::response([
                 'order' => ['invoice_number' => $attempt->invoice_number, 'currency' => 'IDR'],
                 'transaction' => ['status' => 'SUCCESS', 'amount' => (int) $attempt->amount_snapshot],
             ], 200),
@@ -76,7 +76,7 @@ class DokuReconciliationTest extends TestCase
     {
         $attempt = $this->makeAttempt('unknown');
         Http::fake([
-            '*/checkout/v1/payment/*' => Http::response([
+            '*/orders/v1/status/*' => Http::response([
                 'order' => ['invoice_number' => $attempt->invoice_number, 'currency' => 'IDR'],
                 'transaction' => ['status' => 'SUCCESS', 'amount' => (int) $attempt->amount_snapshot],
             ], 200),
@@ -95,7 +95,7 @@ class DokuReconciliationTest extends TestCase
         $now = now()->startOfSecond();
         $this->travelTo($now);
         $attempt = $this->makeAttempt('unknown');
-        Http::fake(['*/checkout/v1/payment/*' => Http::response(null, 500)]);
+        Http::fake(['*/orders/v1/status/*' => Http::response(null, 500)]);
 
         $this->reconciliation->reconcile($attempt);
 
@@ -129,7 +129,7 @@ class DokuReconciliationTest extends TestCase
         $now = now()->startOfSecond();
         $this->travelTo($now);
         $attempt = $this->makeAttempt('unknown');
-        Http::fake(['*/checkout/v1/payment/*' => Http::response(null, 500)]);
+        Http::fake(['*/orders/v1/status/*' => Http::response(null, 500)]);
 
         $this->reconciliation->reconcile($attempt);
 
@@ -141,7 +141,7 @@ class DokuReconciliationTest extends TestCase
     {
         $deadline = now()->addHours(3)->startOfSecond()->toIso8601String();
         $attempt = $this->makeAttempt('unknown', ['reconciliation_deadline_at' => $deadline]);
-        Http::fake(['*/checkout/v1/payment/*' => Http::response(null, 500)]);
+        Http::fake(['*/orders/v1/status/*' => Http::response(null, 500)]);
 
         $this->reconciliation->reconcile($attempt);
 
@@ -225,7 +225,7 @@ class DokuReconciliationTest extends TestCase
         $this->travelTo($now);
         $attempt = $this->makeAttempt('pending');
         Http::fake([
-            '*/checkout/v1/payment/*' => Http::response(null, 500),
+            '*/orders/v1/status/*' => Http::response(null, 500),
         ]);
 
         $this->reconciliation->reconcile($attempt);
@@ -244,7 +244,7 @@ class DokuReconciliationTest extends TestCase
         $this->travelTo($now);
         $attempt = $this->makeAttempt('pending');
         Http::fake([
-            '*/checkout/v1/payment/*' => function () {
+            '*/orders/v1/status/*' => function () {
                 throw new ConnectionException('Connection timed out');
             },
         ]);
@@ -265,7 +265,7 @@ class DokuReconciliationTest extends TestCase
         $this->travelTo($now);
         $attempt = $this->makeAttempt('pending');
         Http::fake([
-            '*/checkout/v1/payment/*' => Http::response(null, 404),
+            '*/orders/v1/status/*' => Http::response(null, 404),
         ]);
 
         $result = $this->reconciliation->reconcile($attempt);
@@ -286,7 +286,7 @@ class DokuReconciliationTest extends TestCase
     {
         $attempt = $this->makeAttempt('pending', ['reconciliation_attempts' => 5]);
         Http::fake([
-            '*/checkout/v1/payment/*' => Http::response(null, 500),
+            '*/orders/v1/status/*' => Http::response(null, 500),
         ]);
 
         $result = $this->reconciliation->reconcile($attempt);
@@ -377,7 +377,7 @@ class DokuReconciliationTest extends TestCase
     {
         $attempt = $this->makeAttempt('pending');
         Http::fake([
-            '*/checkout/v1/payment/*' => Http::response([
+            '*/orders/v1/status/*' => Http::response([
                 'order' => ['invoice_number' => $attempt->invoice_number, 'currency' => 'IDR'],
                 'transaction' => ['status' => 'SUCCESS', 'amount' => (int) $attempt->amount_snapshot],
             ], 200),
@@ -410,7 +410,7 @@ class DokuReconciliationTest extends TestCase
     {
         $attempt = $this->makeAttempt('pending', ['reconciliation_attempts' => 1]);
         Http::fake([
-            '*/checkout/v1/payment/*' => Http::response([
+            '*/orders/v1/status/*' => Http::response([
                 'order' => ['invoice_number' => $attempt->invoice_number, 'currency' => 'IDR'],
                 'transaction' => ['status' => 'PENDING'],
             ], 200),
@@ -469,7 +469,7 @@ class DokuReconciliationTest extends TestCase
     {
         $attempt = $this->makeAttempt('pending');
         Http::fake([
-            '*/checkout/v1/payment/*' => Http::response([
+            '*/orders/v1/status/*' => Http::response([
                 'order' => ['invoice_number' => $attempt->invoice_number, 'currency' => 'IDR'],
                 'transaction' => ['status' => 'SUCCESS', 'amount' => (int) $attempt->amount_snapshot],
             ], 200),
@@ -485,7 +485,7 @@ class DokuReconciliationTest extends TestCase
     {
         $attempt = $this->makeAttempt('pending');
         Http::fake([
-            '*/checkout/v1/payment/*' => Http::response([
+            '*/orders/v1/status/*' => Http::response([
                 'order' => ['invoice_number' => $attempt->invoice_number, 'currency' => 'IDR'],
                 'transaction' => ['status' => 'SUCCESS', 'amount' => (int) $attempt->amount_snapshot],
             ], 200),
@@ -518,7 +518,7 @@ class DokuReconciliationTest extends TestCase
         $requests = tempnam(sys_get_temp_dir(), 'doku-reconcile-');
         $outcomes = tempnam(sys_get_temp_dir(), 'doku-outcomes-');
         Http::fake([
-            '*/checkout/v1/payment/*' => function () use ($attempt, $requests) {
+            '*/orders/v1/status/*' => function () use ($attempt, $requests) {
                 file_put_contents($requests, "request\n", FILE_APPEND | LOCK_EX);
                 usleep(100_000);
 
