@@ -80,6 +80,13 @@ jobs:
             echo '=== providerAmount present at runtime? ==='
             php artisan tinker --execute='echo method_exists(\App\Services\DokuService::class, "providerAmount") ? "providerAmount: yes" : "providerAmount: NO";' 2>&1 | tail -3
 
+            echo '=== deployed file / opcache ==='
+            printf 'DokuService.php mtime: '; date -r app/Services/DokuService.php '+%Y-%m-%d %H:%M:%S %z' 2>/dev/null || stat -c '%y' app/Services/DokuService.php 2>/dev/null || echo unknown
+            printf 'providerAmount in file: '; grep -c 'providerAmount' app/Services/DokuService.php || true
+            printf 'order.amount read in file: '; grep -c "order.amount" app/Services/DokuService.php || true
+            php -r 'echo "opcache.enable=".ini_get("opcache.enable").PHP_EOL; echo "opcache.enable_cli=".ini_get("opcache.enable_cli").PHP_EOL; echo "opcache.validate_timestamps=".ini_get("opcache.validate_timestamps").PHP_EOL; echo "opcache.revalidate_freq=".ini_get("opcache.revalidate_freq").PHP_EOL;' 2>&1 | tail -6
+            php -r 'if (function_exists("opcache_get_status")) { $s=@opcache_get_status(false); if (is_array($s)) { $hit=$s["opcache_statistics"]["num_cached_scripts"] ?? "n/a"; echo "opcache cached scripts: ".$hit.PHP_EOL; echo "opcache last restart: ".(isset($s["opcache_statistics"]["last_restart_time"]) ? date("c", $s["opcache_statistics"]["last_restart_time"]) : "never").PHP_EOL; } else { echo "opcache status unavailable".PHP_EOL; } }' 2>&1 | tail -4
+
             echo '=== payment log tails ==='
             for f in reconcile-doku expire-unknown-payments; do
               echo "--- storage/logs/${f}.log (last 15) ---"
