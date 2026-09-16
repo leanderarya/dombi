@@ -282,7 +282,7 @@ class DokuService
                 app(CanonicalPaymentTransitionService::class)->apply($locked, new NormalizedPaymentEvent(
                     source: 'doku-reconciliation',
                     gatewayStatus: 'SUCCESS',
-                    amount: data_get($data, 'transaction.amount'),
+                    amount: $this->providerAmount($data),
                     currency: data_get($data, 'order.currency', 'IDR'),
                     gatewayReference: data_get($data, 'transaction.original_request_id') ?? data_get($data, 'transaction.id') ?? $locked->invoice_number,
                     receivedAt: now(),
@@ -305,7 +305,7 @@ class DokuService
                 app(CanonicalPaymentTransitionService::class)->apply($locked, new NormalizedPaymentEvent(
                     source: 'doku-reconciliation',
                     gatewayStatus: $status,
-                    amount: data_get($data, 'transaction.amount'),
+                    amount: $this->providerAmount($data),
                     currency: data_get($data, 'order.currency', 'IDR'),
                     gatewayReference: data_get($data, 'transaction.original_request_id') ?? data_get($data, 'transaction.id') ?? $locked->invoice_number,
                     receivedAt: now(),
@@ -455,7 +455,7 @@ class DokuService
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
                 source: 'doku-webhook',
                 gatewayStatus: $paymentStatus ?? 'UNKNOWN',
-                amount: data_get($payload, 'transaction.amount'),
+                amount: $this->providerAmount($payload),
                 currency: data_get($payload, 'order.currency', 'IDR'),
                 gatewayReference: data_get($payload, 'transaction.original_request_id') ?? data_get($payload, 'transaction.id') ?? $invoiceNumber,
                 receivedAt: now(),
@@ -646,7 +646,7 @@ class DokuService
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
                 source: 'doku-status-sync',
                 gatewayStatus: $providerStatus,
-                amount: data_get($dokuStatus, 'transaction.amount'),
+                amount: $this->providerAmount($dokuStatus),
                 currency: data_get($dokuStatus, 'order.currency', 'IDR'),
                 gatewayReference: data_get($dokuStatus, 'transaction.original_request_id') ?? data_get($dokuStatus, 'transaction.id') ?? $attempt->invoice_number,
                 receivedAt: now(),
@@ -655,6 +655,20 @@ class DokuService
 
             return $this->mapStatus($providerStatus);
         });
+    }
+
+    /**
+     * Read the authoritative amount from a DOKU payload.
+     *
+     * DOKU Checkout reports the amount under `order.amount` (both the Check
+     * Status API and the webhook payload). Older payloads may carry it under
+     * `transaction.amount`, so keep that as a fallback instead of reading only
+     * one location — a null amount is treated as an amount mismatch and blocks
+     * the order from ever settling.
+     */
+    private function providerAmount(array $payload): int|float|string|null
+    {
+        return data_get($payload, 'order.amount') ?? data_get($payload, 'transaction.amount');
     }
 
     /**
@@ -796,7 +810,7 @@ class DokuService
             app(CanonicalPaymentTransitionService::class)->apply($attempt, new NormalizedPaymentEvent(
                 source: 'doku',
                 gatewayStatus: $evidence['transaction']['status'] ?? $status,
-                amount: $evidence['transaction']['amount'] ?? null,
+                amount: $this->providerAmount($evidence),
                 currency: $evidence['order']['currency'] ?? 'IDR',
                 gatewayReference: $evidence['transaction']['original_request_id'] ?? $evidence['transaction']['id'] ?? $invoiceNumber,
                 receivedAt: now(),

@@ -26,6 +26,10 @@ const DOKU_FRAME_ORIGINS = [
 const CLOSE_ICON =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
 
+/** Drag handle shown on mobile so the sheet reads as a native modal. */
+const GRABBER =
+    '<div class="mx-auto mb-2 h-1 w-9 rounded-full bg-border-strong sm:hidden" aria-hidden="true"></div>';
+
 type ActiveModal = {
     root: HTMLDivElement;
     cleanup: () => void;
@@ -97,18 +101,27 @@ export function openDokuCheckout(paymentUrl: string): boolean {
 
     const header = document.createElement('div');
     header.className =
-        'flex shrink-0 items-center justify-between gap-3 bg-surface px-4 py-3 pt-safe shadow-sm';
+        'flex shrink-0 flex-col border-b border-border bg-surface px-4 pb-3 pt-safe';
+    header.innerHTML = GRABBER;
+
+    const headerRow = document.createElement('div');
+    headerRow.className = 'flex items-center justify-between gap-3';
 
     const title = document.createElement('p');
-    title.className = 'text-sm font-semibold text-text';
+    title.className = 'flex-1 text-center text-base font-semibold text-text';
     title.textContent = 'Pembayaran';
 
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
     closeButton.setAttribute('aria-label', 'Tutup pembayaran');
     closeButton.className =
-        'flex h-10 w-10 items-center justify-center rounded-lg text-text-muted active:opacity-70';
+        'flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-muted text-text transition-opacity active:opacity-70';
     closeButton.innerHTML = CLOSE_ICON;
+
+    // Balances the close button so the title stays optically centered.
+    const headerSpacer = document.createElement('div');
+    headerSpacer.className = 'h-11 w-11 shrink-0';
+    headerSpacer.setAttribute('aria-hidden', 'true');
 
     const stage = document.createElement('div');
     stage.className =
@@ -116,7 +129,7 @@ export function openDokuCheckout(paymentUrl: string): boolean {
 
     const panel = document.createElement('div');
     panel.className =
-        'flex h-full w-full flex-col overflow-hidden bg-white sm:h-[85vh] sm:max-w-lg sm:rounded-xl sm:shadow-xl';
+        'flex h-full w-full flex-col overflow-hidden bg-white pb-safe sm:h-[85vh] sm:max-w-lg sm:rounded-xl sm:pb-0 sm:shadow-xl';
 
     const frame = document.createElement('iframe');
     frame.src = buildDokuCheckoutUrl(paymentUrl);
@@ -126,7 +139,8 @@ export function openDokuCheckout(paymentUrl: string): boolean {
 
     panel.append(frame);
     stage.append(panel);
-    header.append(title, closeButton);
+    headerRow.append(headerSpacer, title, closeButton);
+    header.append(headerRow);
     root.append(header, stage);
     document.body.appendChild(root);
 

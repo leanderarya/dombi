@@ -200,6 +200,72 @@ class PaymentProductionInvariantTest extends TestCase
         $this->assertSame(0, PaymentTransaction::where('order_id', $order->id)->where('status', 'paid')->count());
     }
 
+    public function test_status_sync_reads_amount_from_order_payload_and_marks_paid(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'sync-order-amount-'.$order->id,
+            'invoice_number' => 'SYNC-ORDER-AMOUNT', 'merchant_request_id' => 'sync-order-amount-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
+
+        // DOKU Check Status API reports the amount under `order.amount`; there is
+        // no `transaction.amount`. Reading only the transaction path used to
+        // leave the attempt in needs_review, so the order never became paid.
+        Http::fake(['*/checkout/v1/payment/*' => Http::response([
+            'order' => ['invoice_number' => $attempt->invoice_number, 'amount' => 50000, 'currency' => 'IDR'],
+            'transaction' => ['status' => 'SUCCESS', 'original_request_id' => 'provider-ref-1'],
+        ])]);
+
+        app(DokuService::class)->syncStatusFromDoku($attempt);
+
+        $attempt = $attempt->fresh();
+        $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->settlement_status);
+        $this->assertSame(PaymentAttemptVerificationStatus::Verified, $attempt->verification_status);
+        $this->assertSame('paid', $order->fresh()->payment_status);
+    }
+
+    public function test_status_sync_accepts_float_amount_from_provider(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $attempt = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'sync-float-amount-'.$order->id,
+            'invoice_number' => 'SYNC-FLOAT-AMOUNT', 'merchant_request_id' => 'sync-float-amount-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
+
+        // JSON numbers with a decimal point decode to float in PHP.
+        Http::fake(['*/checkout/v1/payment/*' => Http::response([
+            'order' => ['invoice_number' => $attempt->invoice_number, 'amount' => 50000.0, 'currency' => 'IDR'],
+            'transaction' => ['status' => 'SUCCESS'],
+        ])]);
+
+        app(DokuService::class)->syncStatusFromDoku($attempt);
+
+        $attempt = $attempt->fresh();
+        $this->assertSame(PaymentAttemptVerificationStatus::Verified, $attempt->verification_status);
+        $this->assertSame('paid', $order->fresh()->payment_status);
+    }
+
+    public function test_webhook_success_reads_amount_from_order_payload(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'webhook-order-amount-'.$order->id,
+            'invoice_number' => 'WEBHOOK-ORDER-AMOUNT', 'merchant_request_id' => 'webhook-order-amount-request-'.$order->id,
+            'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
+        ]);
+
+        app(DokuService::class)->handleWebhook([
+            'order' => ['invoice_number' => 'WEBHOOK-ORDER-AMOUNT', 'amount' => 50000, 'currency' => 'IDR'],
+            'transaction' => ['status' => 'SUCCESS'],
+        ]);
+
+        $attempt = PaymentAttempt::where('order_id', $order->id)->sole();
+        $this->assertSame(PaymentAttemptVerificationStatus::Verified, $attempt->verification_status);
+        $this->assertSame('paid', $order->fresh()->payment_status);
+    }
+
     public function test_duplicate_refund_request_returns_null_without_second_obligation(): void
     {
         $order = Order::factory()->paid()->create(['total' => 50000]);
