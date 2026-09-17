@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
+import { Slot, Slottable } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
@@ -53,8 +53,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         aria-busy={loading}
         {...props}
       >
-        {Icon && <Icon className="size-4" />}
-        {children}
+        {/*
+          `Slottable` is what lets `asChild` coexist with the optional icon.
+          Radix Slot only slottable-izes a *single* child; without this wrapper
+          `{Icon && …}` emits a second child (the literal `undefined`), and
+          react-slot 1.3.0 throws "Slot failed to slot onto its children"
+          instead of silently ignoring it.
+        */}
+        {!asChild && Icon && <Icon className="size-4" />}
+        {asChild ? <Slottable>{children}</Slottable> : children}
       </Comp>
     )
   }
