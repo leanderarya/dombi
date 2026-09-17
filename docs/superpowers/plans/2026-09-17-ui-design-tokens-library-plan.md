@@ -7,7 +7,7 @@
 **Gate 1:** ✅ Lulus 2026-09-17 · **Change Request:** CR-1 (per-role), CR-2 (token & library)
 **Baseline:** `develop` @ `1d77a8d0`
 **Kanvas SSOT:** `pencil-new.pen` — 18 frame Order disetujui klien (D9)
-**Status:** 🟡 Fase A berjalan — A.1, A.2, A.4 selesai; A.3 ditunda. Fase B siap mulai.
+**Status:** 🟡 Fase A: A.1, A.2, A.4 selesai, A.3 ditunda. Fase B: selesai (6/6). Berikutnya Fase C — Customer Orders.
 
 ## Keputusan yang mengikat
 
@@ -103,7 +103,7 @@ Memindahkannya ke kelas komponen akan menghapus jaring itu dan membuat `text-xs`
 
 Urutan dipilih dari yang paling banyak dipakai ke paling sedikit, sehingga manfaatnya terasa paling awal.
 
-### Slice B.1 — Button
+### Slice B.1 — Button — ✅ `7b1e81ba`
 
 **Cluster file:** `resources/js/components/ui/button.tsx`
 
@@ -120,7 +120,7 @@ Urutan dipilih dari yang paling banyak dipakai ke paling sedikit, sehingga manfa
 
 **Commit:** `feat(ui): add mobile-first button sizes and token danger variant`
 
-### Slice B.2 — Notice
+### Slice B.2 — Notice — ✅ `9525428d`
 
 **Cluster file:** `resources/js/components/ui/notice.tsx` (baru), `resources/js/components/ui/index.ts`
 
@@ -134,7 +134,7 @@ Urutan dipilih dari yang paling banyak dipakai ke paling sedikit, sehingga manfa
 
 **Commit:** `feat(ui): add Notice component with semantic tones`
 
-### Slice B.3 — StatusBadge
+### Slice B.3 — StatusBadge — ✅ `a1a08869`
 
 **Cluster file:** `resources/js/components/ui/status-badge.tsx`, `resources/js/lib/order-status-config.ts`
 
@@ -150,7 +150,7 @@ Urutan dipilih dari yang paling banyak dipakai ke paling sedikit, sehingga manfa
 
 **Commit:** `refactor(ui): move status badge variants onto semantic tokens`
 
-### Slice B.4 — Card & Input
+### Slice B.4 — Card & Input — ✅ `d8f4db9f`
 
 **Cluster file:** `resources/js/components/ui/card.tsx`, `resources/js/components/ui/input.tsx`
 
@@ -164,7 +164,7 @@ Urutan dipilih dari yang paling banyak dipakai ke paling sedikit, sehingga manfa
 
 **Commit:** `refactor(ui): align Card and Input to radius and touch tokens`
 
-### Slice B.5 — Dialog & Sheet
+### Slice B.5 — Dialog & Sheet — ✅ `534ba049`
 
 **Cluster file:** `resources/js/components/ui/bottom-sheet.tsx`, `resources/js/components/ui/dialog.tsx`, `resources/js/components/ui/side-sheet.tsx`, `resources/js/components/owner/owner-modal-shell.tsx`
 
@@ -178,7 +178,7 @@ Urutan dipilih dari yang paling banyak dipakai ke paling sedikit, sehingga manfa
 
 **Commit:** `refactor(ui): unify dialog and sheet on single Radix primitive`
 
-### Slice B.6 — Hapus komponen mati + `@base-ui/react`
+### Slice B.6 — Hapus komponen mati + `@base-ui/react` — ✅ `69e5b5a8`
 
 **Cluster file:** `resources/js/components/ui/{badge,expandable-section,separator,sheet,tabs}.tsx`, `resources/js/components/ui/index.ts`, `package.json`
 
@@ -315,7 +315,7 @@ Catatan: jalankan PHP dan Vitest **terpisah** — suite penuh bersamaan time-out
 | Fase | Slice | Perkiraan | Status |
 |---|---|---|---|
 | A — Token | 4 | 3–4 jam | 3 selesai, 1 ditunda |
-| B — Library | 6 | 6–9 jam | siap mulai |
+| B — Library | 6 | 6–9 jam | selesai |
 | C — Customer Orders | 4 | 4–6 jam | terkunci |
 | D — Outlet/Courier/Owner | 12 | mengikuti plan induk | terkunci |
 | E — Penutupan | 3 | 2–3 jam | terkunci |
