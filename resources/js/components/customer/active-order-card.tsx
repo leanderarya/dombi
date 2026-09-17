@@ -10,6 +10,9 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
+import OrderItemRow from '@/components/ui/order-item-row';
+import OrderMetaRow from '@/components/ui/order-meta-row';
+import OrderTotalRow from '@/components/ui/order-total-row';
 import StatusBadge from '@/components/ui/status-badge';
 import { getActiveRefundPresentation } from '@/lib/active-order-card-state';
 import type { RefundBadge } from '@/lib/active-order-card-state';
@@ -375,44 +378,33 @@ export default function ActiveOrderCard({ order }: Props) {
                 <div className="h-px bg-border" />
                 {/* Product — icon + name (matches history card) */}
                 {firstItem && (
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-xl bg-surface-muted">
-                            <Package className="h-[22px] w-[22px] text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                            <div className="truncate text-[13px] font-semibold text-text">
-                                {firstItem.product_name}
-                            </div>
-                            {itemCount > 1 && (
-                                <div className="text-[11px] text-text-muted">
-                                    +{itemCount - 1} produk lainnya
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <OrderItemRow
+                        icon={Package}
+                        title={firstItem.product_name}
+                        subtitle={
+                            itemCount > 1
+                                ? `+${itemCount - 1} produk lainnya`
+                                : null
+                        }
+                    />
                 )}
 
                 {/* Outlet + via */}
-                <div className="flex items-center justify-between">
-                    <div className="text-xs font-semibold text-text">
-                        {order.outlet.name}
-                    </div>
-                    <div className="text-[11px] text-text-muted">
-                        {isPickup ? 'via Store' : 'via Aplikasi'}
-                    </div>
-                </div>
+                <OrderMetaRow
+                    primary={order.outlet.name}
+                    secondary={isPickup ? 'via Store' : 'via Aplikasi'}
+                />
 
                 {/* Total + actions */}
                 {cancelError && (
-                    <p className="flex items-center gap-1 text-[11px] text-danger-text">
+                    <p className="flex items-center gap-1 text-caption text-danger-text">
                         <AlertCircle className="h-3 w-3" />
                         {cancelError}
                     </p>
                 )}
-                <div className="flex items-center justify-between">
-                    <div className="text-[13px] text-text-muted tabular-nums">
-                        {itemCount} item · {formatCurrency(order.total)}
-                    </div>
+                <OrderTotalRow
+                    label={`${itemCount} item · ${formatCurrency(order.total)}`}
+                >
                     {!refundPresentation.suppressActions && (
                         <div className="flex items-center gap-2">
                             {/* Payment failed but order still active — retry payment */}
@@ -521,7 +513,7 @@ export default function ActiveOrderCard({ order }: Props) {
                             )}
                         </div>
                     )}
-                </div>
+                </OrderTotalRow>
             </OrderCardShell>
 
             {/* Cancel Reason Dialog */}

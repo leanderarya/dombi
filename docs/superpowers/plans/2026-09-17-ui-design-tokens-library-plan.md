@@ -310,6 +310,25 @@ bersih, Vitest 130/130, `build` hijau.
 
 **Commit:** `refactor(customer): extract shared order row primitives`
 
+**Catatan pelaksanaan (2026-09-17):**
+
+- Kanvas dikonfirmasi ulang lewat pen.dev: `Item Row` → thumbnail 54×54
+  `cornerRadius: 12`, `Meta Row` → outlet 12/600 + `via` 11/normal, `Total Row`
+  → teks 13/normal + slot aksi. Tiga primitif dibuat persis mengikuti itu.
+- Tile 54px di kanvas ber-radius **12**, bukan 16 (`--radius-card`) atau 10
+  (`--radius-control`). Tidak ada token yang cocok, jadi ditambahkan
+  `--radius-thumb: 0.75rem` di `@theme` — nilai kanvas, bukan nilai baru.
+- `OrderItemRow`/`OrderMetaRow`/`OrderTotalRow` diekspor dari `ui/index.ts` dan
+  dipakai di `active-order-card`, `order-history-card`, dan (nanti) item row
+  `order-info-card`. `order-info-card` belum disentuh: ia merender **daftar**
+  item yang dapat dilipat, bukan satu baris ringkas, jadi pemetaannya tidak
+  satu-ke-satu dan lebih baik masuk slice sendiri.
+- Props/handler di kedua kartu tidak berubah; hanya markup baris yang
+  diekstrak. Rantai `Link`/`Button` tetap sama persis.
+
+**Verifikasi:** `types:check` bersih, `prettier` bersih, Vitest 130/130,
+`build` hijau, `.rounded-thumb` ter-emit di CSS.
+
 ---
 
 ## Fase D — Slice Role 2–4

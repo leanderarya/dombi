@@ -1,6 +1,9 @@
 import { Link } from '@inertiajs/react';
 import { Package, RefreshCw, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import OrderItemRow from '@/components/ui/order-item-row';
+import OrderMetaRow from '@/components/ui/order-meta-row';
+import OrderTotalRow from '@/components/ui/order-total-row';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
 import {
@@ -130,40 +133,24 @@ export default function OrderHistoryCard({ order }: Props) {
 
             {/* Product info */}
             {firstItem && (
-                <div className="flex items-center gap-3">
-                    <div
-                        className={`flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-xl ${isDead ? 'bg-surface-muted/60' : 'bg-surface-muted'}`}
-                    >
-                        <Package
-                            className={`h-[22px] w-[22px] ${isDead ? 'text-text-subtle' : 'text-primary'}`}
-                        />
-                    </div>
-                    <div className="min-w-0">
-                        <div
-                            className={`truncate text-[13px] font-semibold ${isDead ? 'text-text-muted' : 'text-text'}`}
-                        >
-                            {firstItem.product_name}
-                        </div>
-                        {itemCount > 1 && (
-                            <div className="text-[11px] text-text-muted">
-                                +{itemCount - 1} produk lainnya
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <OrderItemRow
+                    icon={Package}
+                    muted={isDead}
+                    title={firstItem.product_name}
+                    subtitle={
+                        itemCount > 1
+                            ? `+${itemCount - 1} produk lainnya`
+                            : null
+                    }
+                />
             )}
 
             {/* Location + Via */}
-            <div className="flex items-center justify-between">
-                <div
-                    className={`text-xs font-semibold ${isDead ? 'text-text-subtle' : 'text-text'}`}
-                >
-                    {order.outlet?.name ?? 'Outlet'}
-                </div>
-                <div className="text-[11px] text-text-muted">
-                    {isPickup ? 'via Store' : 'via Aplikasi'}
-                </div>
-            </div>
+            <OrderMetaRow
+                primary={order.outlet?.name ?? 'Outlet'}
+                secondary={isPickup ? 'via Store' : 'via Aplikasi'}
+                muted={isDead}
+            />
 
             {/* Delivery address */}
             {!isPickup && order.customer_address && (
@@ -176,12 +163,10 @@ export default function OrderHistoryCard({ order }: Props) {
             )}
 
             {/* Total + action */}
-            <div className="flex items-center justify-between">
-                <div
-                    className={`text-[13px] tabular-nums ${isDead ? 'text-text-subtle' : 'text-text-muted'}`}
-                >
-                    {itemCount} item · {formatCurrency(order.total)}
-                </div>
+            <OrderTotalRow
+                label={`${itemCount} item · ${formatCurrency(order.total)}`}
+                muted={isDead}
+            >
                 {order.status === 'completed' && (
                     <Button asChild variant="link" size="sm" className="px-0">
                         <Link
@@ -202,7 +187,7 @@ export default function OrderHistoryCard({ order }: Props) {
                         </Link>
                     </Button>
                 )}
-            </div>
+            </OrderTotalRow>
         </OrderCardShell>
     );
 }
