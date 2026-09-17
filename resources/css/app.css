@@ -8,8 +8,9 @@
     --font-sans:
         'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-heading: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui,
-        sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    --font-heading:
+        'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
     /* Neutral — clean gray */
@@ -86,14 +87,29 @@
 
 /* ─── Role-Scoped Color Overrides ──────────────────────── */
 
+/* Customer: intentionally has no block — inherits the @theme defaults
+   verbatim (CR-1 consistency-only, D8). */
+
+html[data-role='outlet'] {
+    --color-primary: var(--color-emerald-700);
+    --color-primary-hover: var(--color-emerald-800);
+    --color-primary-light: var(--color-emerald-50);
+    --color-ring: var(--color-emerald-700);
+    /* Q-CR2-1: emerald family plus accent-orange */
+    --color-role-accent: var(--color-accent-orange);
+}
+
 html[data-role='owner'] {
-    --color-primary: #005d42;
-    --color-primary-hover: #004833;
-    --color-primary-light: #ecfdf5;
+    /* Q-CR2-3: aligned from #005d42 to emerald-800 */
+    --color-primary: var(--color-emerald-800);
+    --color-primary-hover: var(--color-emerald-900);
+    --color-primary-light: var(--color-emerald-50);
     --color-ring: var(--color-primary);
 }
 
 html[data-role='courier'] {
+    /* Q-CR2-2: blue retained as a deliberate exception to the emerald
+       brand family, not an oversight. */
     --color-primary: var(--color-blue-700);
     --color-primary-hover: var(--color-blue-800);
     --color-primary-light: var(--color-blue-50);
@@ -106,6 +122,10 @@ html[data-role='courier'] {
         0 8px 15px rgba(37, 99, 235, 0.12), 0 3px 6px rgba(37, 99, 235, 0.06);
 }
 
+/* TODO(courier slice): this patch is load-bearing — courier components still
+   emit .bg-emerald-50/.text-emerald-700, so removing it before migrating them
+   onto semantic tokens would turn those surfaces emerald. Delete together
+   with the courier migration in Fase D. */
 html[data-role='courier'] .bg-emerald-50 {
     background-color: var(--color-blue-50);
 }
