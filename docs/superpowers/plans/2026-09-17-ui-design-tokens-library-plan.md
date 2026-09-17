@@ -7,7 +7,7 @@
 **Gate 1:** ✅ Lulus 2026-09-17 · **Change Request:** CR-1 (per-role), CR-2 (token & library)
 **Baseline:** `develop` @ `1d77a8d0`
 **Kanvas SSOT:** `pencil-new.pen` — 18 frame Order disetujui klien (D9)
-**Status:** 🟡 Fase A: A.1, A.2, A.4 selesai, A.3 ditunda. Fase B: selesai (6/6). Berikutnya Fase C — Customer Orders.
+**Status:** 🟡 Fase A: A.1, A.2, A.4 selesai, A.3 ditunda. Fase B: selesai (6/6). Fase C: C.1 selesai, gate screenshot terbuka. Berikutnya C.2.
 
 ## Keputusan yang mengikat
 
@@ -198,7 +198,7 @@ Urutan dipilih dari yang paling banyak dipakai ke paling sedikit, sehingga manfa
 
 Pola mengikuti plan induk `Slice R.1–R.4`, tetapi **dikunci ke kanvas** dan **dibatasi ke layar Order** pada iterasi pertama.
 
-### Slice C.1 — Layar Orders: shell, badge, chips
+### Slice C.1 — Layar Orders: shell, badge, chips — ✅ `2023fc71`
 
 **Cluster file:** `resources/js/components/customer/order-card-shell.tsx`, `resources/js/components/customer/active-order-card.tsx`, `resources/js/components/customer/order-history-card.tsx`, `resources/js/components/customer/order-filter-chips.tsx`
 
@@ -211,6 +211,33 @@ Pola mengikuti plan induk `Slice R.1–R.4`, tetapi **dikunci ke kanvas** dan **
 **Wajib:** screenshot sebelum/sesudah per layar.
 
 **Commit:** `refactor(customer): align order list cards to shared components`
+
+**Catatan pelaksanaan (2026-09-17):**
+
+- Token radius **tidak diubah**. Kanvas punya variable `radius-card = 16`, sama
+  dengan `@theme`. Angka `18` pada `Order Card` adalah override mentah di dalam
+  frame, dan satu frame lain (`Order Detail`) memakai `16`. Variable dan
+  `Card/Base` menang; `18` dianggap drift.
+- Kanvas `Badge/*` + variables (`success-bg #ECFDF5`, dst.) **identik** dengan
+  token semantic kita. Pill literal `#FEF3C7`/`#DCFCE7` di frame Orders adalah
+  drift dari frame lama, bukan nilai yang diotorisasi.
+- `FilterChips` mendapat varian `neutral` + size `caption` (aditif). Varian
+  `solid` tidak diubah karena dipakai 19 konsumer Outlet/Courier/Owner.
+- `order-filter-chips.tsx` dihapus (satu konsumer, sudah dialihkan).
+- `order-status-config` menyimpan tone, bukan kelas; `StatusBadge` memetakannya
+  ke token. `StatusBadge` menerima `className` opsional.
+- **Deviasi sengaja dari kanvas:**
+  1. Kode order tetap dipertahankan di kartu aktif. Kanvas menggantinya dengan
+     label fulfillment; label fulfillment sudah dinaikkan ke judul sesuai
+     kanvas, tetapi kode tetap karena pembeli dengan pembayaran belum selesai
+     butuh nomor rujukan.
+  2. Tombol memakai `size="sm"` (36 px) mengikuti gambar kanvas. NFR-UI-2
+     menetapkan 44 px untuk kontrol utama mobile; kanvas adalah SSOT desain dan
+     menggambar tombol ini kompak, jadi ukuran tidak dinaikkan sendiri. Aksi
+     destruktif full-width di sheet pembatalan memakai default 44 px.
+- **Gate visual BELUM dijalankan.** Desktop browser tidak terhubung ke sesi ini
+  (`browser.disconnected`), jadi screenshot sebelum/sesudah tidak bisa diambil.
+  Gate ini terbuka, bukan lolos.
 
 ### Slice C.2 — Layar Order Detail: banner, notice, tombol
 
