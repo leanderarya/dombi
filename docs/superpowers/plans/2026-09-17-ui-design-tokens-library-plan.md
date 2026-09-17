@@ -268,6 +268,36 @@ Pola mengikuti plan induk `Slice R.1–R.4`, tetapi **dikunci ke kanvas** dan **
 
 **Commit:** `refactor(customer): align refund, terminal and detail cards`
 
+**Catatan pelaksanaan (2026-09-17):**
+
+- `guest-refund-status-card.tsx` **ditambahkan** ke cluster (tidak tertulis di
+  plan awal). Ia memakai palet mentah yang sama persis dengan
+  `refund-status-card` (29 kemunculan) dan satu-satunya konsumennya ada di
+  scope Customer; membiarkannya berarti dua kartu refund dengan warna berbeda.
+- Terminal cards sekarang memakai `Notice variant="block"` + `Button asChild`
+  (`variant="primary" size="lg"`). `Notice` level-2 sudah `text-caption`, jadi
+  paragraf di dalamnya memakai ukuran relatif (`text-sm`/`text-xs`) dan bukan
+  token ukuran lagi. Slot `action` menerima fragment agar kartu `failed_delivery`
+  bisa menampung dua tombol.
+- `qrcode.react` dan canvas 2D tidak bisa me-resolve `var(--token)`. QR di layar
+  memakai `fgColor="currentColor"` + wrapper `text-info`; PNG hasil unduh membaca
+  `--color-info` lewat `getComputedStyle` saat tombol simpan ditekan. `#ffffff`
+  pada QR adalah quiet zone yang memang harus putih murni, bukan token.
+- `text-[13px]` → `text-control` dan `text-[11px]` → `text-caption` di seluruh
+  file cluster. `text-[10px]` **dibiarkan**: belum ada token ukuran 10 px, dan
+  menambah token baru di luar plan bukan bagian slice ini (masuk Fase D).
+- **Kode mati dihapus:** cabang `if (order.status === 'completed')` di
+  `terminal-status-cards.tsx` tidak pernah tercapai karena early-return di atas
+  fungsi sudah mengembalikan `null`. Import `CheckCircle2` ikut dibuang.
+- C.3 **tidak dipecah** menjadi C.3a/C.3b. Perubahan bersifat mekanis dan
+  terverifikasi seluruhnya dalam satu siklus gate; memecah hanya menambah
+  commit tanpa menambah sinyal review.
+- **Gate screenshot tetap terbuka.** Sama seperti C.1, desktop browser tidak
+  terhubung ke sesi ini. Belum dijalankan, bukan lolos.
+
+**Verifikasi:** `types:check` bersih, `eslint` bersih pada 6 file, `prettier`
+bersih, Vitest 130/130, `build` hijau.
+
 ### Slice C.4 — Row primitif + kode mati Customer
 
 **Cluster file:** `resources/js/components/ui/order-item-row.tsx` (baru), `resources/js/components/ui/order-meta-row.tsx` (baru), `resources/js/components/ui/order-total-row.tsx` (baru), `resources/js/components/ui/index.ts`

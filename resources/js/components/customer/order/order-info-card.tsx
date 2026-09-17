@@ -106,14 +106,14 @@ export default function OrderInfoCard({
                     {isPickup ? 'Lokasi Pengambilan' : 'Alamat Pengiriman'}
                 </h2>
                 <div className="flex items-center gap-3.5">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF5ED] text-[#006241]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-light text-primary">
                         <Store className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
                         <h3 className="truncate text-sm font-bold text-text">
                             {outlet?.name ?? 'Dombi Store'}
                         </h3>
-                        <p className="mt-0.5 text-[11px] text-text-muted">
+                        <p className="mt-0.5 text-caption text-text-muted">
                             {isPickup
                                 ? 'Dombi Store • Standalone Outlet'
                                 : 'Delivery via Courier'}
@@ -121,7 +121,7 @@ export default function OrderInfoCard({
                     </div>
                 </div>
                 {outlet?.address && (
-                    <p className="mt-2 text-[11px] text-text-muted">
+                    <p className="mt-2 text-caption text-text-muted">
                         {outlet.address}
                     </p>
                 )}
@@ -131,7 +131,7 @@ export default function OrderInfoCard({
             {!isPickup && customerAddress && (
                 <section className="bg-surface p-4 shadow-card">
                     <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF5ED] text-[#006241]">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-light text-primary">
                             <MapPin className="h-5 w-5" />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -139,7 +139,7 @@ export default function OrderInfoCard({
                                 {customerAddress}
                             </div>
                             {customerAddressDetail && (
-                                <div className="mt-0.5 text-[11px] text-text-muted">
+                                <div className="mt-0.5 text-caption text-text-muted">
                                     {customerAddressDetail}
                                 </div>
                             )}
@@ -148,7 +148,7 @@ export default function OrderInfoCard({
                                     href={`https://www.google.com/maps?q=${latitude},${longitude}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-[#006241] active:opacity-80"
+                                    className="mt-1 inline-flex items-center gap-1 text-caption font-bold text-primary active:opacity-80"
                                 >
                                     <Navigation className="h-3 w-3" />
                                     Navigasi
@@ -177,7 +177,7 @@ export default function OrderInfoCard({
                             className="flex items-start justify-between gap-3"
                         >
                             <div className="flex min-w-0 items-center gap-3">
-                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-lg">
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-control bg-surface-muted text-lg">
                                     {item.product_name.charAt(0)}
                                 </div>
                                 <div className="min-w-0">
@@ -185,7 +185,7 @@ export default function OrderInfoCard({
                                         {item.product_name}
                                     </h3>
                                     {item.variant_name && (
-                                        <p className="mt-0.5 line-clamp-1 text-[11px] text-text-muted">
+                                        <p className="mt-0.5 line-clamp-1 text-caption text-text-muted">
                                             {item.variant_name}
                                         </p>
                                     )}
@@ -195,7 +195,7 @@ export default function OrderInfoCard({
                                 <span className="block text-xs font-bold text-text tabular-nums">
                                     {formatCurrency(item.subtotal)}
                                 </span>
-                                <span className="mt-0.5 block text-[11px] font-semibold text-text-muted">
+                                <span className="mt-0.5 block text-caption font-semibold text-text-muted">
                                     {item.quantity}x
                                 </span>
                             </div>
@@ -223,7 +223,7 @@ export default function OrderInfoCard({
                     <button
                         type="button"
                         onClick={() => setItemsOpen((v) => !v)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#006241] transition hover:underline"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-primary transition hover:underline"
                     >
                         <span>
                             {itemsOpen ? 'Sembunyikan' : 'Selengkapnya'}
@@ -251,7 +251,7 @@ export default function OrderInfoCard({
                 </div>
 
                 <div className="flex items-center gap-2 text-xs">
-                    <div className="flex h-4 w-6 items-center justify-center rounded bg-emerald-100 text-[10px] font-bold text-[#006241]">
+                    <div className="flex h-4 w-6 items-center justify-center rounded bg-primary-light text-[10px] font-bold text-primary">
                         <CreditCard className="h-3 w-3" />
                     </div>
                     <span className="font-medium text-text">
@@ -282,7 +282,7 @@ export default function OrderInfoCard({
                     <button
                         type="button"
                         onClick={() => setPaymentOpen((v) => !v)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#006241] transition hover:underline"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-primary transition hover:underline"
                     >
                         <span>
                             {paymentOpen ? 'Sembunyikan' : 'Selengkapnya'}
@@ -308,7 +308,7 @@ export default function OrderInfoCard({
                             type="button"
                             onClick={handleCopyOrderId}
                             aria-label="Salin ID pesanan"
-                            className="p-1 text-[#006241] transition active:scale-95"
+                            className="p-1 text-primary transition active:scale-95"
                         >
                             <Copy className="h-3.5 w-3.5" />
                         </button>
@@ -356,8 +356,8 @@ export default function OrderInfoCard({
             {delivery?.failed_reason && (
                 <section className="bg-surface p-4 shadow-card">
                     <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-                        <span className="text-xs font-semibold text-amber-700">
+                        <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />
+                        <span className="text-xs font-semibold text-warning-text">
                             Pengiriman Gagal: {delivery.failed_reason}
                         </span>
                     </div>
@@ -369,7 +369,7 @@ export default function OrderInfoCard({
                 <button
                     type="button"
                     onClick={() => setReceiptOpen(true)}
-                    className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#006241] bg-surface py-3.5 text-xs font-extrabold text-[#006241] shadow-card transition hover:bg-[#EAF5ED] active:scale-[0.98]"
+                    className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-primary bg-surface py-3.5 text-xs font-extrabold text-primary shadow-card transition hover:bg-primary-light active:scale-[0.98]"
                 >
                     <Receipt className="h-4 w-4" />
                     <span>Lihat E-Receipt</span>
@@ -405,7 +405,7 @@ function PriceRow({
         <div className="flex justify-between text-xs text-text-muted">
             <span>{label}</span>
             <span
-                className={`${strong ? 'font-bold text-text' : ''} ${accent ? 'font-bold text-emerald-600' : ''}`}
+                className={`${strong ? 'font-bold text-text' : ''} ${accent ? 'font-bold text-primary' : ''}`}
             >
                 {value}
             </span>
@@ -443,7 +443,7 @@ function ReceiptDialog({
                 <DialogHeader>
                     <DialogTitle>
                         <div className="flex items-center gap-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-xs font-bold text-white">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-chip bg-primary text-xs font-bold text-white">
                                 D
                             </div>
                             <span>E-Receipt Dombi</span>
@@ -451,7 +451,7 @@ function ReceiptDialog({
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-3 rounded-2xl border border-dashed border-border bg-surface-muted p-4 font-mono text-xs">
+                <div className="space-y-3 rounded-card border border-dashed border-border bg-surface-muted p-4 font-mono text-xs">
                     <div className="border-b border-border pb-2 text-center">
                         <h4 className="font-sans text-sm font-extrabold text-text">
                             DOMBI COFFEE - {outletName?.toUpperCase()}
@@ -478,7 +478,7 @@ function ReceiptDialog({
                                     </span>
                                 </div>
                                 {item.variant_name && (
-                                    <div className="flex justify-between pl-2 text-[11px] text-text-muted">
+                                    <div className="flex justify-between pl-2 text-caption text-text-muted">
                                         <span>— {item.variant_name}</span>
                                         <span />
                                     </div>
@@ -492,7 +492,7 @@ function ReceiptDialog({
                             <span>Subtotal</span>
                             <span>{subtotal.toLocaleString('id-ID')}</span>
                         </div>
-                        <div className="flex justify-between border-t border-dashed border-border pt-1 font-sans text-sm font-bold text-[#006241]">
+                        <div className="flex justify-between border-t border-dashed border-border pt-1 font-sans text-sm font-bold text-primary">
                             <span>TOTAL PAID</span>
                             <span>{formatCurrency(total)}</span>
                         </div>
@@ -500,7 +500,7 @@ function ReceiptDialog({
 
                     <div className="pt-2 text-center font-sans text-[10px] text-text-muted">
                         <p>Terima kasih telah menikmati Dombi Coffee!</p>
-                        <p className="mt-0.5 font-bold text-[#006241]">
+                        <p className="mt-0.5 font-bold text-primary">
                             #GrindTheEssentials
                         </p>
                     </div>
@@ -509,7 +509,7 @@ function ReceiptDialog({
                 <button
                     type="button"
                     onClick={handleDownload}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#006241] py-3 text-xs font-bold text-white transition hover:bg-[#004d33] active:opacity-80"
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-control bg-primary py-3 text-xs font-bold text-white transition hover:bg-primary-hover active:opacity-80"
                 >
                     <Download className="h-4 w-4" />
                     <span>Simpan Struk Digital</span>

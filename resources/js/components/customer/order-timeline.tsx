@@ -134,10 +134,10 @@ export default function OrderTimeline({
 
     if (defaultCollapsed) {
         return (
-            <details className="group rounded-xl border border-border bg-white">
+            <details className="group rounded-card border border-border bg-surface">
                 <summary className="flex cursor-pointer items-center justify-between p-4 active:opacity-80">
                     <div>
-                        <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                        <div className="text-caption font-bold tracking-wider text-text-subtle uppercase">
                             Perjalanan Pesanan
                         </div>
                         <div className="mt-1 text-sm font-medium text-text">
@@ -163,8 +163,8 @@ export default function OrderTimeline({
     }
 
     return (
-        <div className="rounded-xl border border-border bg-white p-4">
-            <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+        <div className="rounded-card border border-border bg-surface p-4">
+            <div className="text-caption font-bold tracking-wider text-text-subtle uppercase">
                 Perjalanan Pesanan
             </div>
             <div className="mt-4">
@@ -213,21 +213,21 @@ function TimelineSteps({
                     >
                         {!isLast && (
                             <div
-                                className={`absolute top-6 bottom-0 left-[11px] w-px ${isCompleted ? 'bg-emerald-200' : 'bg-border'}`}
+                                className={`absolute top-6 bottom-0 left-[11px] w-px ${isCompleted ? 'bg-primary/30' : 'bg-border'}`}
                             />
                         )}
 
                         <div className="relative shrink-0 pt-0.5">
                             {isCompleted ? (
-                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600">
+                                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
                                     <CheckCircle2 className="h-3.5 w-3.5 text-white" />
                                 </div>
                             ) : isCurrent ? (
                                 <div
-                                    className={`flex h-6 w-6 items-center justify-center rounded-full ${isTerminal ? 'bg-red-100 ring-2 ring-red-500' : 'bg-emerald-100 ring-2 ring-emerald-500'}`}
+                                    className={`flex h-6 w-6 items-center justify-center rounded-full ${isTerminal ? 'bg-danger-bg ring-2 ring-danger' : 'bg-primary-light ring-2 ring-primary'}`}
                                 >
                                     <Icon
-                                        className={`h-3 w-3 ${isTerminal ? 'text-red-600' : 'text-emerald-600'}`}
+                                        className={`h-3 w-3 ${isTerminal ? 'text-danger' : 'text-primary'}`}
                                     />
                                 </div>
                             ) : (
@@ -240,13 +240,13 @@ function TimelineSteps({
                         <div className="min-w-0 flex-1 pt-0.5">
                             <div className="flex items-start justify-between gap-2">
                                 <div
-                                    className={`text-sm font-semibold ${isCurrent ? (isTerminal ? 'text-red-700' : 'text-emerald-700') : isCompleted ? 'text-text' : 'text-text-subtle'}`}
+                                    className={`text-sm font-semibold ${isCurrent ? (isTerminal ? 'text-danger-text' : 'text-primary') : isCompleted ? 'text-text' : 'text-text-subtle'}`}
                                 >
                                     {getStepLabel(step, fulfillmentType)}
                                 </div>
                                 {history?.created_at && (
                                     <span
-                                        className={`shrink-0 text-xs tabular-nums ${isCurrent ? (isTerminal ? 'font-semibold text-red-700' : 'font-semibold text-emerald-700') : 'text-text-subtle'}`}
+                                        className={`shrink-0 text-xs tabular-nums ${isCurrent ? (isTerminal ? 'font-semibold text-danger-text' : 'font-semibold text-primary') : 'text-text-subtle'}`}
                                     >
                                         {formatTime(history.created_at)}
                                     </span>
@@ -286,11 +286,11 @@ function CompactTimeline({
                 return (
                     <div key={step.key} className="flex items-center gap-1">
                         <div
-                            className={`h-2 w-2 rounded-full ${isCompleted ? 'bg-emerald-500' : isCurrent ? 'bg-emerald-400 ring-2 ring-emerald-200' : 'bg-border'}`}
+                            className={`h-2 w-2 rounded-full ${isCompleted ? 'bg-primary' : isCurrent ? 'bg-primary ring-2 ring-primary-light' : 'bg-border'}`}
                         />
                         {index < steps.length - 1 && (
                             <div
-                                className={`h-px w-3 ${isCompleted ? 'bg-emerald-300' : 'bg-border'}`}
+                                className={`h-px w-3 ${isCompleted ? 'bg-primary/40' : 'bg-border'}`}
                             />
                         )}
                     </div>

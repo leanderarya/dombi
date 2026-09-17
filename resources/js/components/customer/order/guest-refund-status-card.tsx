@@ -41,16 +41,16 @@ export default function GuestRefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-amber-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
-                            <Clock className="h-4 w-4 text-amber-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-warning-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-warning-bg">
+                            <Clock className="h-4 w-4 text-warning" />
                         </span>
                         Informasi Refund
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} />
-                    <p className="rounded-xl bg-amber-50 px-4 py-3.5 text-[13px] text-amber-800">
+                    <p className="rounded-card bg-warning-bg px-4 py-3.5 text-control text-warning-text">
                         {guidance}
                     </p>
                     <TimelineToggle
@@ -67,16 +67,16 @@ export default function GuestRefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-amber-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
-                            <Clock className="h-4 w-4 text-amber-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-warning-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-warning-bg">
+                            <Clock className="h-4 w-4 text-warning" />
                         </span>
                         Menunggu Diproses
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} />
-                    <p className="rounded-xl bg-amber-50 px-4 py-3.5 text-[13px] text-amber-800">
+                    <p className="rounded-card bg-warning-bg px-4 py-3.5 text-control text-warning-text">
                         {guidance}
                     </p>
                     <TimelineToggle
@@ -93,16 +93,16 @@ export default function GuestRefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-blue-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100">
-                            <Clock className="h-4 w-4 text-blue-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-info-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-info-bg">
+                            <Clock className="h-4 w-4 text-info" />
                         </span>
                         Refund Sedang Diproses
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} />
-                    <p className="rounded-xl bg-muted px-4 py-3.5 text-xs text-text-muted">
+                    <p className="rounded-card bg-surface-muted px-4 py-3.5 text-xs text-text-muted">
                         {guidance}
                     </p>
                     <TimelineToggle
@@ -119,16 +119,16 @@ export default function GuestRefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-green-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-success-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-success-bg">
+                            <CheckCircle2 className="h-4 w-4 text-success" />
                         </span>
                         Refund Selesai
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} variant="success" />
-                    <p className="rounded-xl bg-green-50 px-4 py-3.5 text-[13px] text-green-800">
+                    <p className="rounded-card bg-success-bg px-4 py-3.5 text-control text-success-text">
                         Silakan cek mutasi rekening/e-wallet Anda. Jika belum
                         masuk dalam 1×24 jam, hubungi CS.
                     </p>
@@ -146,24 +146,24 @@ export default function GuestRefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-red-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100">
-                            <XCircle className="h-4 w-4 text-red-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-danger-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-danger-bg">
+                            <XCircle className="h-4 w-4 text-danger" />
                         </span>
                         Refund Ditolak
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} />
-                    <div className="space-y-1 rounded-xl bg-red-50 px-4 py-3.5 text-[13px] text-red-800">
+                    <div className="space-y-1 rounded-card bg-danger-bg px-4 py-3.5 text-control text-danger-text">
                         <p className="font-medium">
                             {rejection?.label || rejection?.code}
                         </p>
                         {rejection?.note && (
-                            <p className="text-red-600">{rejection.note}</p>
+                            <p className="text-danger">{rejection.note}</p>
                         )}
                     </div>
-                    <p className="rounded-xl bg-surface-muted px-4 py-3.5 text-xs text-text-muted">
+                    <p className="rounded-card bg-surface-muted px-4 py-3.5 text-xs text-text-muted">
                         Silakan hubungi customer service untuk bantuan lebih
                         lanjut.
                     </p>
@@ -181,16 +181,16 @@ export default function GuestRefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-red-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100">
-                            <AlertCircle className="h-4 w-4 text-red-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-danger-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-danger-bg">
+                            <AlertCircle className="h-4 w-4 text-danger" />
                         </span>
                         Refund Gagal
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} />
-                    <p className="rounded-xl bg-red-50 px-4 py-3.5 text-xs text-red-700">
+                    <p className="rounded-card bg-danger-bg px-4 py-3.5 text-xs text-danger-text">
                         Refund gagal diproses. Tim kami akan menghubungi Anda.
                     </p>
                     <TimelineToggle
@@ -213,12 +213,12 @@ function AmountBlock({
     amount: string;
     variant?: 'default' | 'success';
 }) {
-    const textColor = variant === 'success' ? 'text-emerald-700' : 'text-text';
+    const textColor = variant === 'success' ? 'text-primary' : 'text-text';
     const bgColor =
-        variant === 'success' ? 'bg-emerald-50' : 'bg-surface-muted';
+        variant === 'success' ? 'bg-primary-light' : 'bg-surface-muted';
 
     return (
-        <div className={`rounded-xl ${bgColor} px-4 py-3.5`}>
+        <div className={`rounded-card ${bgColor} px-4 py-3.5`}>
             <p className="text-xs text-text-muted">Total Refund</p>
             <p className={`mt-0.5 text-xl font-bold tabular-nums ${textColor}`}>
                 {amount}
@@ -286,9 +286,9 @@ function TimelineItem({ item }: { item: RefundHistoryItem }) {
                     {EVENT_LABELS[item.event] ?? item.event}
                 </p>
                 {item.note && (
-                    <p className="text-[11px] text-text-subtle">{item.note}</p>
+                    <p className="text-caption text-text-subtle">{item.note}</p>
                 )}
-                <p className="text-[11px] text-text-subtle">
+                <p className="text-caption text-text-subtle">
                     {item.created_at
                         ? new Date(item.created_at).toLocaleString('id-ID')
                         : ''}
