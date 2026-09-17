@@ -39,7 +39,7 @@ function ChartTooltip({ active, payload }: ChartTooltipProps) {
     const { product_name, total_qty, total_revenue } = payload[0].payload;
 
     return (
-        <div className="bg-card rounded-lg border border-border px-3 py-2 text-sm shadow-lg">
+        <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-lg">
             <p className="font-medium text-foreground">{product_name}</p>
             <p className="mt-1 text-text-muted">
                 {total_qty} unit &mdash; {formatCurrency(total_revenue)}

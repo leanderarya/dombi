@@ -151,7 +151,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 absorb), CC selalu customer.
                             </div>
                         </div>
-                        <div className="font-heading mt-2 rounded-xl border border-border bg-surface-muted/50 p-3 text-right text-base font-bold tabular-nums">
+                        <div className="mt-2 rounded-xl border border-border bg-surface-muted/50 p-3 text-right font-heading text-base font-bold tabular-nums">
                             {formatCurrency(order.total)}
                         </div>
                     </div>
