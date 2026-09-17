@@ -78,6 +78,10 @@
     --radius-control: 0.625rem;
     --radius-chip: 0.5rem;
 
+    /* Control typography — button, chip and input labels */
+    --text-control: 0.8125rem;
+    --text-control-sm: 0.75rem;
+
     /* Shadows — layered for depth */
     --shadow-card:
         0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
