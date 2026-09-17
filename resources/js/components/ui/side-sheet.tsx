@@ -76,14 +76,14 @@ export default function SideSheet({ open, onClose, side = 'left', width = '80%',
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true">
             {/* Overlay */}
             <div
-                className="absolute inset-0 bg-slate-950/50"
+                className="absolute inset-0 bg-overlay"
                 onClick={onClose}
                 style={{ opacity: isDragging ? Math.max(0, 1 - Math.abs(translateX) / 300) : 1 }}
             />
 
             {/* Sheet */}
             <div
-                className={`absolute top-0 bottom-0 ${side === 'left' ? 'left-0' : 'right-0'} flex flex-col bg-white shadow-xl`}
+                className={`absolute top-0 bottom-0 ${side === 'left' ? 'left-0' : 'right-0'} flex flex-col bg-surface shadow-elevated`}
                 style={{
                     width,
                     maxWidth,
