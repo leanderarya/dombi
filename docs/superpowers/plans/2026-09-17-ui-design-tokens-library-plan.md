@@ -198,6 +198,11 @@ Urutan dipilih dari yang paling banyak dipakai ke paling sedikit, sehingga manfa
 
 Pola mengikuti plan induk `Slice R.1–R.4`, tetapi **dikunci ke kanvas** dan **dibatasi ke layar Order** pada iterasi pertama.
 
+**Status Fase C (2026-09-17): SELESAI.** C.1 `2023fc71`, C.2 `723dcde8`,
+C.3 `204d5cc2`, C.4 `c87f1307`. Yang belum ditutup hanya **gate screenshot**
+(C.1 dan C.3): desktop browser tidak terhubung ke sesi ini. Gate itu terbuka,
+bukan lolos.
+
 ### Slice C.1 — Layar Orders: shell, badge, chips — ✅ `2023fc71`
 
 **Cluster file:** `resources/js/components/customer/order-card-shell.tsx`, `resources/js/components/customer/active-order-card.tsx`, `resources/js/components/customer/order-history-card.tsx`, `resources/js/components/customer/order-filter-chips.tsx`
@@ -392,7 +397,7 @@ Catatan: jalankan PHP dan Vitest **terpisah** — suite penuh bersamaan time-out
 |---|---|---|---|
 | A — Token | 4 | 3–4 jam | 3 selesai, 1 ditunda |
 | B — Library | 6 | 6–9 jam | selesai |
-| C — Customer Orders | 4 | 4–6 jam | terkunci |
+| C — Customer Orders | 4 | 4–6 jam | selesai (screenshot gate terbuka) |
 | D — Outlet/Courier/Owner | 12 | mengikuti plan induk | terkunci |
 | E — Penutupan | 3 | 2–3 jam | terkunci |
 
