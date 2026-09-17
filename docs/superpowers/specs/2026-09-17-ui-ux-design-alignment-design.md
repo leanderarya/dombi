@@ -4,7 +4,8 @@
 **Peserta:** Arya Ajisadda (Pengembang) & Klien (Owner Dombi)
 **Agenda:** Evaluasi desain, komponen, dan pengalaman pengguna antar-role (Customer, Outlet, Owner, Courier)
 **Jenis:** Change Request / delta sprint — **bukan** inisialisasi ulang sistem
-**Baseline yang tidak ditulis ulang:** `docs/PRD.md` v0.2 (2026-08-06), `docs/PRODUCT_SCOPE.md`
+**Baseline yang tidak ditulis ulang:** `docs/PRD.md` v0.3 §9 (delta UI/UX), `docs/PRODUCT_SCOPE.md`
+**Change Request:** CR-1 (2026-09-17) — Q5 dipersempit untuk Customer → lihat §1a
 
 **Status Gate 1:** ✅ **LULUS 2026-09-17** — Q1–Q5 terjawab, timeline terkunci, scope beku.
 **Delta PRD:** `docs/PRD.md` §9 — NFR-UI-1, NFR-UI-2, NFR-UI-3.
@@ -19,9 +20,31 @@
 | D2 | Konsolidasi komponen dasar bersama untuk **semua** panel role (Button, Modal/Dialog, Card, Badge status, Input) | Panel role tidak lagi punya varian komponen sendiri untuk peran yang sama |
 | D3 | Layout mengikuti breakpoint mobile-first dengan **touch target minimum 44×44 px** dan padding/margin seragam | Termasuk panel Owner yang saat ini desktop-berat |
 | D4 | Identitas warna antar-role tetap berada dalam **satu keluarga tema brand**, dengan aksen berbeda per role | Jawaban Q2=B → aksen per-role diturunkan dari palet brand |
-| D5 | Cakupan pekerjaan: **visual refresh + konsistensi** (bukan consistency-only) | Jawaban Q5=B |
+| D5 | Cakupan pekerjaan: **visual refresh + konsistensi** (bukan consistency-only) | Jawaban Q5=B. **Diamandemen CR-1:** refresh berlaku untuk Outlet, Courier, Owner; **Customer consistency-only** |
 | D6 | Panel Owner dikecualikan dari jaminan touch target 44 px pada perangkat pointer presisi | Jawaban Q4; Owner tetap terikat token & komponen |
-| D7 | Implementasi bertahap per role (Customer → Outlet → Courier → Owner) | Jawaban Q1; tiap role satu slice review |
+| D7 | Implementasi bertahap per role (Customer → Outlet → Courier → Owner) | Jawaban Q1; tiap role satu slice review. Urutan tidak berubah (CR-1) |
+| D8 | **Customer: consistency only.** Bahasa visual Customer dipertahankan; hanya token, komponen, dan layout yang diseragamkan | CR-1; melindungi alur checkout/pembayaran yang baru stabil |
+
+## 1a. Change Request CR-1 — Q5 dipersempit untuk Customer
+
+**Tanggal:** 2026-09-17 · **Status:** ✅ Diterima (Gate 1 tetap berlaku, timeline tetap 1 + 4 minggu)
+
+**Delta:** Q5=B diterapkan **per role**, bukan lagi global.
+
+| Role | Q5 | Artinya |
+|---|---|---|
+| Customer | **Consistency only** | Bahasa visual dipertahankan; warna/tipografi/radius/elevasi yang terlihat tidak berubah. Yang berubah hanya: token, konsolidasi komponen, layout/spacing, dan touch target 44 px |
+| Outlet | Visual refresh + konsistensi | Boleh berubah bahasa visual, diturunkan dari palet brand |
+| Courier | Visual refresh + konsistensi | Boleh berubah bahasa visual, diturunkan dari palet brand |
+| Owner | Visual refresh + konsistensi | Boleh berubah bahasa visual, diturunkan dari palet brand |
+
+**Konsekuensi teknis:**
+- Aksen per-role (Q2=B) untuk **Customer harus memetakan ke warna Customer yang sudah ada** (emerald dominan), bukan warna baru. Customer tetap dapat `data-role` agar token berlaku, tetapi nilai tokennya setara tampilan sekarang.
+- **Slice 0.1 tidak boleh mengusulkan bahasa visual baru untuk Customer.** Pratinjau arah visual Customer = bukti bahwa tampilan lama tetap utuh.
+- Untuk Customer, "visual refresh" diganti menjadi **"zero visual regression"** sebagai kriteria terima: perbandingan sebelum/sesudah harus sama secara tampilan.
+- Refresh Outlet/Courier/Owner tetap memakai gerbang review draf (Slice 0.3).
+
+**Alasan:** Customer adalah panel yang paling dilihat klien dan alur checkout/pembayaran DOKU baru stabil dan sudah tervalidasi end-to-end di staging. Membekukan tampilannya menghilangkan risiko regresi visual di jalur pembayaran.
 
 ## 2. Action Items
 
@@ -36,12 +59,12 @@
 
 | Item | Target | Status |
 |---|---|---|
-| Draf revisi desain (token, spek komponen, mapping warna) | **1 minggu** sejak Gate 1 | Terkunci |
-| Implementasi staging — Customer | minggu ke-2 | Terkunci |
-| Implementasi staging — Outlet | minggu ke-3 | Terkunci |
-| Implementasi staging — Courier | minggu ke-4 | Terkunci |
-| Implementasi staging — Owner | minggu ke-5 | Terkunci |
-| **Gate 1 (scope beku)** | **2026-09-17** | ✅ **LULUS** — Q1–Q5 terjawab |
+| Draf revisi desain (token, spek komponen, mapping warna) | **1 minggu** sejak Gate 1 | Terkunci (tidak berubah oleh CR-1) |
+| Implementasi staging — Customer (**consistency only**) | minggu ke-2 | Terkunci |
+| Implementasi staging — Outlet (refresh) | minggu ke-3 | Terkunci |
+| Implementasi staging — Courier (refresh) | minggu ke-4 | Terkunci |
+| Implementasi staging — Owner (refresh) | minggu ke-5 | Terkunci |
+| **Gate 1 (scope beku)** | **2026-09-17** | ✅ **LULUS** — Q1–Q5 terjawab; CR-1 tidak membuka ulang Gate 1 |
 
 ---
 
@@ -102,7 +125,8 @@ PRD v0.2 §9 (Non-Functional Requirements) hanya menyebut "Mobile-first design d
 - Baseline PRD, Product Scope, dan alur fungsional tidak ditulis ulang.
 - Perubahan bersifat presentasional; **tidak** mengubah kontrak API, skema data, atau logika pembayaran/settlement yang sudah tervalidasi.
 - Item di luar lingkup: fitur baru, redesign informasi (IA), atau perubahan alur order.
-- **Q5=B (visual refresh)** menambah satu risko eksplisit: bahasa desain berubah, sehingga tampilan yang sudah disetujui klien sebelumnya akan ikut berubah. Draf 1 minggu (Q1) adalah gerbang review untuk menyetujui arah visual **sebelum** eksekusi dimulai.
+- **Q5=B (visual refresh)** menambah satu risiko eksplisit: bahasa desain berubah, sehingga tampilan yang sudah disetujui klien sebelumnya akan ikut berubah. Draf 1 minggu (Q1) adalah gerbang review untuk menyetujui arah visual **sebelum** eksekusi dimulai.
+- **CR-1 mempersempit risiko itu ke 3 role.** Customer dijalankan sebagai *consistency only* dengan kriteria terima **zero visual regression**, sehingga jalur checkout/pembayaran yang baru stabil tidak terpapar perubahan bahasa visual.
 
 ---
 
@@ -114,7 +138,7 @@ PRD v0.2 §9 (Non-Functional Requirements) hanya menyebut "Mobile-first design d
 | **Q2** | Identitas warna per-role | **B — satu keluarga tema brand + aksen berbeda per role** |
 | **Q3** | Luas konsolidasi komponen | **B — 5 komponen inti + varian badge/chip/modal/input duplikat + hapus komponen mati** |
 | **Q4** | Cakupan panel Owner | **Owner exempt dari 44 px pada pointer presisi**; tetap ikut token & komponen |
-| **Q5** | Jenis pekerjaan | **B — visual refresh + konsistensi** |
+| **Q5** | Jenis pekerjaan | **B — visual refresh + konsistensi**, **per role**: Customer = *consistency only*, Outlet/Courier/Owner = *refresh* (CR-1) |
 
 ---
 
