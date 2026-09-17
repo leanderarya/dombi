@@ -50,20 +50,20 @@ export default function RefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-amber-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
-                            <Clock className="h-4 w-4 text-amber-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-warning-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-warning-bg">
+                            <Clock className="h-4 w-4 text-warning" />
                         </span>
                         Informasi Refund
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} label="Total Refund" />
-                    <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-[13px] text-amber-800">
+                    <div className="rounded-card bg-warning-bg px-4 py-3.5 text-control text-warning-text">
                         Masukkan data tujuan transfer agar refund dapat
                         diproses.
                     </div>
-                    <div className="rounded-xl bg-surface-muted px-4 py-3.5">
+                    <div className="rounded-card bg-surface-muted px-4 py-3.5">
                         <RefundDestinationForm orderId={order_id} />
                     </div>
                 </CardContent>
@@ -75,9 +75,9 @@ export default function RefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-amber-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
-                            <Clock className="h-4 w-4 text-amber-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-warning-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-warning-bg">
+                            <Clock className="h-4 w-4 text-warning" />
                         </span>
                         Menunggu Diproses Owner
                     </CardTitle>
@@ -100,7 +100,7 @@ export default function RefundStatusCard({ refund }: Props) {
                         </Button>
                     )}
                     {editing && (
-                        <div className="rounded-xl bg-surface-muted px-4 py-3.5">
+                        <div className="rounded-card bg-surface-muted px-4 py-3.5">
                             <RefundDestinationForm
                                 orderId={order_id}
                                 initialType={destination.type}
@@ -124,9 +124,9 @@ export default function RefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-blue-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100">
-                            <Clock className="h-4 w-4 text-blue-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-info-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-info-bg">
+                            <Clock className="h-4 w-4 text-info" />
                         </span>
                         Refund Sedang Diproses
                     </CardTitle>
@@ -151,9 +151,9 @@ export default function RefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-green-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-success-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-success-bg">
+                            <CheckCircle2 className="h-4 w-4 text-success" />
                         </span>
                         Refund Selesai
                     </CardTitle>
@@ -170,14 +170,14 @@ export default function RefundStatusCard({ refund }: Props) {
                             href={proof_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-50 text-sm font-semibold text-emerald-700 active:opacity-80"
+                            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-primary-light text-sm font-semibold text-primary active:opacity-80"
                         >
                             <ExternalLink className="h-4 w-4" />
                             Lihat Bukti Transfer
                         </a>
                     )}
                     {(transfer_reference || transfer_note) && (
-                        <div className="space-y-1 rounded-lg bg-muted p-3 text-xs text-text-muted">
+                        <div className="space-y-1 rounded-control bg-surface-muted p-3 text-xs text-text-muted">
                             {transfer_reference && (
                                 <p>
                                     Referensi:{' '}
@@ -203,21 +203,21 @@ export default function RefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-red-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100">
-                            <AlertCircle className="h-4 w-4 text-red-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-danger-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-danger-bg">
+                            <AlertCircle className="h-4 w-4 text-danger" />
                         </span>
                         Data Perlu Diperbaiki
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} label="Total Refund" />
-                    <div className="space-y-1 rounded-xl bg-red-50 px-4 py-3.5 text-[13px] text-red-800">
+                    <div className="space-y-1 rounded-card bg-danger-bg px-4 py-3.5 text-control text-danger-text">
                         <p className="font-medium">
                             {rejection?.label || rejection?.code}
                         </p>
                         {rejection?.note && (
-                            <p className="text-red-600">{rejection.note}</p>
+                            <p className="text-danger">{rejection.note}</p>
                         )}
                     </div>
                     {!resubmitting && (
@@ -231,7 +231,7 @@ export default function RefundStatusCard({ refund }: Props) {
                         </Button>
                     )}
                     {resubmitting && (
-                        <div className="rounded-xl bg-surface-muted px-4 py-3.5">
+                        <div className="rounded-card bg-surface-muted px-4 py-3.5">
                             <RefundDestinationForm
                                 orderId={order_id}
                                 initialType={destination?.type}
@@ -254,24 +254,24 @@ export default function RefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-red-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100">
-                            <XCircle className="h-4 w-4 text-red-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-danger-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-danger-bg">
+                            <XCircle className="h-4 w-4 text-danger" />
                         </span>
                         Refund Ditolak
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} label="Total Refund" />
-                    <div className="space-y-1 rounded-xl bg-red-50 px-4 py-3.5 text-[13px] text-red-800">
+                    <div className="space-y-1 rounded-card bg-danger-bg px-4 py-3.5 text-control text-danger-text">
                         <p className="font-medium">
                             {rejection?.label || rejection?.code}
                         </p>
                         {rejection?.note && (
-                            <p className="text-red-600">{rejection.note}</p>
+                            <p className="text-danger">{rejection.note}</p>
                         )}
                     </div>
-                    <p className="rounded-xl bg-surface-muted px-4 py-3.5 text-xs text-text-muted">
+                    <p className="rounded-card bg-surface-muted px-4 py-3.5 text-xs text-text-muted">
                         Silakan hubungi customer service untuk bantuan lebih
                         lanjut.
                     </p>
@@ -289,9 +289,9 @@ export default function RefundStatusCard({ refund }: Props) {
         return (
             <Card className={cardClass}>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm text-red-700">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100">
-                            <AlertCircle className="h-4 w-4 text-red-600" />
+                    <CardTitle className="flex items-center gap-2 text-sm text-danger-text">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-danger-bg">
+                            <AlertCircle className="h-4 w-4 text-danger" />
                         </span>
                         Refund Gagal
                     </CardTitle>
@@ -299,7 +299,7 @@ export default function RefundStatusCard({ refund }: Props) {
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} label="Total Refund" />
                     {destination && <DestinationSummary dest={destination} />}
-                    <p className="rounded-xl bg-red-50 px-4 py-3.5 text-xs text-red-700">
+                    <p className="rounded-card bg-danger-bg px-4 py-3.5 text-xs text-danger-text">
                         Refund gagal diproses. Tim kami akan menghubungi Anda
                         untuk proses ulang. Jika tidak dihubungi dalam 1×24 jam,
                         silakan hubungi CS.
@@ -330,14 +330,14 @@ function DestinationSummary({ dest }: DestProps) {
     const Icon = dest.type === 'ewallet' ? Smartphone : Banknote;
 
     return (
-        <div className="flex items-start gap-3 rounded-xl border border-border bg-surface p-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
+        <div className="flex items-start gap-3 rounded-card border border-border bg-surface p-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-surface-muted">
                 <Icon className="h-4 w-4 text-text-muted" />
             </span>
             <div className="min-w-0 flex-1 text-sm">
                 <p className="truncate font-medium text-text">{dest.label}</p>
                 <p className="truncate text-text-muted">{dest.holder}</p>
-                <p className="truncate font-mono text-[13px] text-text-subtle">
+                <p className="truncate font-mono text-control text-text-subtle">
                     {dest.masked_number}
                 </p>
             </div>
@@ -354,12 +354,12 @@ function AmountBlock({
     label: string;
     variant?: 'default' | 'success';
 }) {
-    const textColor = variant === 'success' ? 'text-emerald-700' : 'text-text';
+    const textColor = variant === 'success' ? 'text-primary' : 'text-text';
     const bgColor =
-        variant === 'success' ? 'bg-emerald-50' : 'bg-surface-muted';
+        variant === 'success' ? 'bg-primary-light' : 'bg-surface-muted';
 
     return (
-        <div className={`rounded-xl ${bgColor} px-4 py-3.5`}>
+        <div className={`rounded-card ${bgColor} px-4 py-3.5`}>
             <p className="text-xs text-text-muted">{label}</p>
             <p className={`mt-0.5 text-xl font-bold tabular-nums ${textColor}`}>
                 {amount}
@@ -427,9 +427,9 @@ function TimelineItem({ item }: { item: RefundHistoryItem }) {
                     {EVENT_LABELS[item.event] ?? item.event}
                 </p>
                 {item.note && (
-                    <p className="text-[11px] text-text-subtle">{item.note}</p>
+                    <p className="text-caption text-text-subtle">{item.note}</p>
                 )}
-                <p className="text-[11px] text-text-subtle">
+                <p className="text-caption text-text-subtle">
                     {item.created_at
                         ? new Date(item.created_at).toLocaleString('id-ID')
                         : ''}
