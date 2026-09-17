@@ -2,25 +2,20 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     Clock,
+    Package,
     RefreshCw,
     RotateCcw,
     Shield,
-    Store,
-    Truck,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
+import StatusBadge from '@/components/ui/status-badge';
 import { getActiveRefundPresentation } from '@/lib/active-order-card-state';
 import type { RefundBadge } from '@/lib/active-order-card-state';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { getOrderStatusConfig } from '@/lib/order-status-config';
 import OrderCardShell from './order-card-shell';
-
-/* ------------------------------------------------------------------ */
-/*  Constants                                                          */
-/* ------------------------------------------------------------------ */
-
-const BADGE_BASE = 'rounded-full px-2.5 py-0.5 text-[11px] font-bold';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -277,29 +272,23 @@ export default function ActiveOrderCard({ order }: Props) {
 
     // Override status config for payment issues and pending payment
     const displayStatus = refundPresentation.active
-        ? {
-              label: refundPresentation.primaryLabel,
-              className: `${BADGE_BASE} bg-blue-50 text-blue-700`,
-          }
+        ? { label: refundPresentation.primaryLabel, variant: 'info' as const }
         : canRetryPayment
           ? {
                 label: isPaymentFailed
                     ? 'Pembayaran Gagal'
                     : 'Pembayaran Kadaluarsa',
-                className: `${BADGE_BASE} bg-red-50 text-red-700`,
+                variant: 'danger' as const,
             }
           : hasPaymentIssue
             ? {
                   label: isPaymentFailed
                       ? 'Pembayaran Gagal'
                       : 'Pembayaran Kadaluarsa',
-                  className: `${BADGE_BASE} bg-red-50 text-red-700`,
+                  variant: 'danger' as const,
               }
             : isWaitingForPayment
-              ? {
-                    label: 'Menunggu Pembayaran',
-                    className: `${BADGE_BASE} bg-amber-50 text-amber-700`,
-                }
+              ? { label: 'Menunggu Pembayaran', variant: 'warning' as const }
               : statusCfg;
 
     return (
@@ -310,30 +299,32 @@ export default function ActiveOrderCard({ order }: Props) {
                 status={order.status}
                 clickable={refundPresentation.forceClickable ? true : undefined}
             >
-                {/* Header: Logo + Order code + Status badge + Date */}
+                {/* Header: Mark + Fulfillment + Status badge + Date */}
                 <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-light">
-                        <span className="text-sm font-bold text-primary">
+                    <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-primary-light">
+                        <span className="font-heading text-lg font-extrabold text-primary">
                             D
                         </span>
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
                         <div className="flex items-center justify-between gap-2">
-                            <span className="truncate text-sm font-bold text-text">
-                                {order.order_code}
+                            <span className="truncate font-heading text-[15px] font-extrabold text-text">
+                                {isPickup ? 'Pick Up' : 'Delivery'}
                             </span>
-                            <span
-                                className={`shrink-0 ${displayStatus.className}`}
+                            <StatusBadge
+                                variant={displayStatus.variant}
+                                size="sm"
+                                className="shrink-0"
                             >
                                 {displayStatus.label}
-                            </span>
+                            </StatusBadge>
                         </div>
                         <div className="text-[11px] text-text-muted">
                             {dateStr}
                         </div>
                         {refundPresentation.active && (
                             <div
-                                className={`mt-1 flex items-center gap-1.5 text-[11px] font-semibold ${refundPresentation.detailClassName}`}
+                                className={`flex items-center gap-1.5 text-[11px] font-semibold ${refundPresentation.detailClassName}`}
                             >
                                 <RefreshCw className="h-3 w-3 shrink-0" />
                                 <span>{refundPresentation.detailLabel}</span>
@@ -345,7 +336,7 @@ export default function ActiveOrderCard({ order }: Props) {
                             countdown &&
                             !refundPresentation.suppressActions && (
                                 <div
-                                    className={`mt-0.5 flex items-center gap-1.5 text-[11px] ${canRetryPayment ? 'text-red-500' : 'text-amber-600'}`}
+                                    className={`flex items-center gap-1.5 text-[11px] ${canRetryPayment ? 'text-danger' : 'text-warning-text'}`}
                                 >
                                     <Clock className="h-3 w-3 shrink-0" />
                                     <span className="font-mono">
@@ -363,7 +354,7 @@ export default function ActiveOrderCard({ order }: Props) {
                         {/* Payment issue message */}
                         {canRetryPayment &&
                             !refundPresentation.suppressActions && (
-                                <div className="mt-0.5 text-[11px] text-red-600">
+                                <div className="text-[11px] text-danger-text">
                                     {isPaymentFailed
                                         ? 'Silakan coba bayar lagi'
                                         : 'Batas waktu pembayaran habis'}
@@ -373,59 +364,53 @@ export default function ActiveOrderCard({ order }: Props) {
                         {isWaitingForPayment &&
                             !hasPaymentIssue &&
                             !refundPresentation.suppressActions && (
-                                <div className="mt-0.5 text-[11px] text-amber-600">
+                                <div className="text-[11px] text-warning-text">
                                     Selesaikan pembayaran untuk melanjutkan
                                 </div>
                             )}
-                    </div>{' '}
-                    {/* close flex-1 */}
-                </div>{' '}
-                {/* close flex items-start */}
+                    </div>
+                </div>
+
+                {/* Divider — the kanvas separates the header from the item row */}
+                <div className="h-px bg-border" />
                 {/* Product — icon + name (matches history card) */}
                 {firstItem && (
-                    <div className="mt-3 flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
-                            <span className="text-lg">&#129371;</span>
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-xl bg-surface-muted">
+                            <Package className="h-[22px] w-[22px] text-primary" />
                         </div>
                         <div className="min-w-0">
-                            <div className="truncate text-sm font-medium text-text">
+                            <div className="truncate text-[13px] font-semibold text-text">
                                 {firstItem.product_name}
                             </div>
                             {itemCount > 1 && (
                                 <div className="text-[11px] text-text-muted">
-                                    +{itemCount - 1} lainnya
+                                    +{itemCount - 1} produk lainnya
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
-                {/* Dotted divider */}
-                <div className="fore-divider-dotted my-3" />
-                {/* Outlet + via icon */}
+
+                {/* Outlet + via */}
                 <div className="flex items-center justify-between">
-                    <div className="text-xs text-text-muted">
+                    <div className="text-xs font-semibold text-text">
                         {order.outlet.name}
                     </div>
-                    <div className="flex items-center gap-1 text-[11px] text-text-subtle">
-                        {isPickup ? (
-                            <Store className="h-3 w-3" />
-                        ) : (
-                            <Truck className="h-3 w-3" />
-                        )}
-                        <span>{isPickup ? 'Pickup' : 'Delivery'}</span>
+                    <div className="text-[11px] text-text-muted">
+                        {isPickup ? 'via Store' : 'via Aplikasi'}
                     </div>
                 </div>
-                {/* Solid divider */}
-                <div className="my-3 h-px bg-border" />
-                {/* Error + Total + Actions */}
+
+                {/* Total + actions */}
                 {cancelError && (
-                    <p className="mb-2 flex items-center gap-1 text-[11px] text-red-600">
+                    <p className="flex items-center gap-1 text-[11px] text-danger-text">
                         <AlertCircle className="h-3 w-3" />
                         {cancelError}
                     </p>
                 )}
                 <div className="flex items-center justify-between">
-                    <div className="text-sm font-bold text-text tabular-nums">
+                    <div className="text-[13px] text-text-muted tabular-nums">
                         {itemCount} item · {formatCurrency(order.total)}
                     </div>
                     {!refundPresentation.suppressActions && (
@@ -433,61 +418,66 @@ export default function ActiveOrderCard({ order }: Props) {
                             {/* Payment failed but order still active — retry payment */}
                             {canRetryPayment && (
                                 <>
-                                    <button
+                                    <Button
                                         type="button"
+                                        variant="outline"
+                                        size="sm"
                                         disabled={cancelLoading}
                                         onClick={(e) => {
                                             e.preventDefault();
                                             handleCancelClick();
                                         }}
-                                        className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80 disabled:opacity-40"
                                     >
                                         {cancelLoading
                                             ? 'Membatalkan...'
                                             : 'Batalkan'}
-                                    </button>
-                                    <Link
-                                        href={`/customer/orders/confirm/${order.order_code}`}
-                                        className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white active:opacity-80"
-                                    >
-                                        Bayar Ulang
-                                    </Link>
+                                    </Button>
+                                    <Button asChild variant="primary" size="sm">
+                                        <Link
+                                            href={`/customer/orders/confirm/${order.order_code}`}
+                                        >
+                                            Bayar Ulang
+                                        </Link>
+                                    </Button>
                                 </>
                             )}
                             {/* Payment issue but order is terminal (expired status) — restore cart */}
                             {hasPaymentIssue && !canRetryPayment && (
-                                <Link
-                                    href={`/customer/orders/${order.id}/restore-cart`}
-                                    className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white active:opacity-80"
-                                >
-                                    <RotateCcw className="h-3 w-3" />
-                                    Coba Lagi
-                                </Link>
+                                <Button asChild variant="primary" size="sm">
+                                    <Link
+                                        href={`/customer/orders/${order.id}/restore-cart`}
+                                    >
+                                        <RotateCcw className="h-3 w-3" />
+                                        Coba Lagi
+                                    </Link>
+                                </Button>
                             )}
                             {/* Waiting for payment — show pay + cancel buttons (logged-in only) */}
                             {isWaitingForPayment && !hasPaymentIssue && (
                                 <>
                                     {isLoggedIn && (
-                                        <button
+                                        <Button
                                             type="button"
+                                            variant="outline"
+                                            size="sm"
                                             disabled={cancelLoading}
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 handleCancelClick();
                                             }}
-                                            className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80 disabled:opacity-40"
                                         >
                                             {cancelLoading
                                                 ? 'Membatalkan...'
                                                 : 'Batalkan'}
-                                        </button>
+                                        </Button>
                                     )}
-                                    <Link
-                                        href={`/customer/orders/confirm/${order.order_code}`}
-                                        className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white active:opacity-80"
-                                    >
-                                        Bayar Sekarang
-                                    </Link>
+                                    <Button asChild variant="primary" size="sm">
+                                        <Link
+                                            href={`/customer/orders/confirm/${order.order_code}`}
+                                        >
+                                            Bayar Sekarang
+                                        </Link>
+                                    </Button>
                                 </>
                             )}
                             {/* Pending (paid, waiting outlet) — show cancel + continue buttons (logged-in only) */}
@@ -497,36 +487,37 @@ export default function ActiveOrderCard({ order }: Props) {
                                 !isWaitingForPayment && (
                                     <>
                                         {isLoggedIn && (
-                                            <button
+                                            <Button
                                                 type="button"
+                                                variant="outline"
+                                                size="sm"
                                                 disabled={cancelLoading}
                                                 onClick={(e) => {
                                                     e.preventDefault();
                                                     handleCancelClick();
                                                 }}
-                                                className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80 disabled:opacity-40"
                                             >
                                                 {cancelLoading
                                                     ? 'Membatalkan...'
                                                     : 'Batalkan'}
-                                            </button>
+                                            </Button>
                                         )}
-                                        <Link
-                                            href={href}
-                                            className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white active:opacity-80"
+                                        <Button
+                                            asChild
+                                            variant="primary"
+                                            size="sm"
                                         >
-                                            Detail Pesanan
-                                        </Link>
+                                            <Link href={href}>
+                                                Detail Pesanan
+                                            </Link>
+                                        </Button>
                                     </>
                                 )}
                             {/* Other statuses — show track button */}
                             {!isPending && !hasPaymentIssue && (
-                                <Link
-                                    href={href}
-                                    className="rounded-full border-2 border-primary px-4 py-1.5 text-xs font-bold text-primary active:opacity-80"
-                                >
-                                    Lacak Pesanan
-                                </Link>
+                                <Button asChild variant="outline" size="sm">
+                                    <Link href={href}>Lacak Pesanan</Link>
+                                </Button>
                             )}
                         </div>
                     )}
@@ -549,7 +540,7 @@ export default function ActiveOrderCard({ order }: Props) {
                             key={reason}
                             type="button"
                             onClick={() => setCancelReason(reason)}
-                            className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
+                            className={`flex min-h-11 w-full items-center rounded-control border px-4 text-left text-sm font-medium transition-all ${
                                 cancelReason === reason
                                     ? 'border-primary bg-primary-light text-primary'
                                     : 'border-border text-text active:opacity-80'
@@ -567,27 +558,30 @@ export default function ActiveOrderCard({ order }: Props) {
                             onChange={(e) => setCancelNote(e.target.value)}
                             placeholder="Jelaskan alasan pembatalan..."
                             rows={2}
-                            className="w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
+                            className="w-full rounded-control border border-border px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
                     </div>
                 )}
 
                 {cancelError && (
-                    <p className="mt-2 text-xs text-red-600">{cancelError}</p>
+                    <p className="mt-2 text-xs text-danger-text">
+                        {cancelError}
+                    </p>
                 )}
 
-                <button
+                <Button
                     type="button"
+                    variant="danger"
+                    className="mt-4 w-full"
                     onClick={handleCancelConfirm}
                     disabled={
                         !cancelReason ||
                         cancelLoading ||
                         (cancelReason === 'Lainnya' && cancelNote.trim() === '')
                     }
-                    className="mt-4 flex min-h-11 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                 >
                     {cancelLoading ? 'Membatalkan...' : 'Batalkan Pesanan'}
-                </button>
+                </Button>
             </Dialog>
 
             {/* Login prompt for guests trying to cancel */}
@@ -597,7 +591,7 @@ export default function ActiveOrderCard({ order }: Props) {
                 title="Login Diperlukan"
             >
                 <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-light">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-card bg-primary-light">
                         <Shield className="h-6 w-6 text-primary" />
                     </div>
                     <p className="text-xs text-text-muted">
@@ -605,38 +599,38 @@ export default function ActiveOrderCard({ order }: Props) {
                     </p>
                 </div>
 
-                <a
-                    href="/oauth/google"
-                    className="mt-6 flex min-h-11 w-full items-center justify-center gap-3 rounded-xl bg-primary text-sm font-bold text-white active:bg-primary-hover"
-                >
-                    <svg className="h-5 w-5" viewBox="0 0 24 24">
-                        <path
-                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-                            fill="#4285F4"
-                        />
-                        <path
-                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                            fill="#34A853"
-                        />
-                        <path
-                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                            fill="#FBBC05"
-                        />
-                        <path
-                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                            fill="#EA4335"
-                        />
-                    </svg>
-                    Masuk dengan Google
-                </a>
+                <Button asChild variant="primary" className="mt-6 w-full">
+                    <a href="/oauth/google">
+                        <svg className="h-5 w-5" viewBox="0 0 24 24">
+                            <path
+                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                                fill="#4285F4"
+                            />
+                            <path
+                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                fill="#34A853"
+                            />
+                            <path
+                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                                fill="#FBBC05"
+                            />
+                            <path
+                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                fill="#EA4335"
+                            />
+                        </svg>
+                        Masuk dengan Google
+                    </a>
+                </Button>
 
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
+                    className="mt-3 w-full"
                     onClick={clearError}
-                    className="mt-3 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-text-muted active:text-text"
                 >
                     Batal
-                </button>
+                </Button>
             </Dialog>
         </>
     );

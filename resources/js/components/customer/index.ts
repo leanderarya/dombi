@@ -16,7 +16,6 @@ export { default as FulfillmentToggle } from './fulfillment-toggle';
 export { default as LeafletPicker } from './leaflet-picker';
 export { default as LocationSearchPanel } from './location-search-panel';
 export { default as LocationSheet } from './location-sheet';
-export { default as OrderFilterChips } from './order-filter-chips';
 export { default as OrderHistoryCard } from './order-history-card';
 export { default as OrderQrCard } from './order-qr-card';
 export { default as OrderTimeline } from './order-timeline';

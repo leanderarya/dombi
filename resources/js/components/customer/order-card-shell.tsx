@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
+import { Card } from '@/components/ui/card';
 import { isTerminalStatus } from '@/lib/order-status-config';
 
 /* ------------------------------------------------------------------ */
@@ -14,6 +15,19 @@ interface Props extends PropsWithChildren {
     clickable?: boolean;
 }
 
+/**
+ * The kanvas draws the order card as a surface fill with a 1px border and
+ * no shadow; `Card` already carries that — surface, `--radius-card`,
+ * `ring-border`. The previous shell hardcoded its own radius and a soft
+ * drop shadow, so it disagreed with every other card in the app.
+ *
+ * Padding is set by overriding the card's own spacing variable rather
+ * than passing `p-4`. `Card` ships `py-(--card-spacing)` and that utility
+ * is emitted after `.p-4` in the stylesheet, so a plain `p-4` loses on
+ * block padding and the card silently becomes 24px tall. Overriding
+ * `--card-spacing` moves padding and gap together, which is what the
+ * kanvas draws: 16px padding, 12px between rows.
+ */
 export default function OrderCardShell({
     orderId,
     recoveryToken,
@@ -32,21 +46,19 @@ export default function OrderCardShell({
         : `/track/${recoveryToken}`;
 
     const cardClass = [
-        'rounded-2xl border bg-white p-4',
-        'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)]',
-        isDead ? 'border-border/60 opacity-70' : 'border-border',
-    ].join(' ');
+        '[--card-spacing:--spacing(4)] gap-3',
+        isDead ? 'opacity-70' : '',
+    ]
+        .filter(Boolean)
+        .join(' ');
 
     if (isClickable) {
         return (
-            <Link
-                href={href}
-                className={`block ${cardClass} active:opacity-80`}
-            >
-                {children}
+            <Link href={href} className="block active:opacity-80">
+                <Card className={cardClass}>{children}</Card>
             </Link>
         );
     }
 
-    return <div className={cardClass}>{children}</div>;
+    return <Card className={cardClass}>{children}</Card>;
 }
