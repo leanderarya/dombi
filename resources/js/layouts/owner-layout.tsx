@@ -6,7 +6,7 @@ import {
     Truck,
     Wallet,
 } from 'lucide-react';
-import { useState, useLayoutEffect } from 'react';
+import { useState } from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import OwnerCommandSheet from '@/components/owner/owner-command-sheet';
 import OwnerPageSkeleton from '@/components/owner/owner-page-skeleton';
@@ -18,6 +18,7 @@ import UpdateBanner from '@/components/shared/update-banner';
 import { SidebarProvider, useSidebar } from '@/contexts/sidebar-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
+import { useRoleTheme } from '@/hooks/use-role-theme';
 
 interface NavGroup {
     label: string;
@@ -139,20 +140,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
 
 function OwnerLayoutInner({ children }: PropsWithChildren) {
     useFlashToast();
-    useLayoutEffect(() => {
-        const root = document.documentElement;
-        const previousRole = root.dataset.role;
-
-        root.dataset.role = 'owner';
-
-        return () => {
-            if (previousRole) {
-                root.dataset.role = previousRole;
-            } else {
-                delete root.dataset.role;
-            }
-        };
-    }, []);
+    useRoleTheme('owner');
     const { loading } = useInertiaLoading();
     const page = usePage<any>();
     const { ownerOperationalCounts } = page.props;
