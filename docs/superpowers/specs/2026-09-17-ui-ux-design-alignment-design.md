@@ -6,8 +6,8 @@
 **Jenis:** Change Request / delta sprint — **bukan** inisialisasi ulang sistem
 **Baseline yang tidak ditulis ulang:** `docs/PRD.md` v0.2 (2026-08-06), `docs/PRODUCT_SCOPE.md`
 
-**Status Gate 1:** ⏳ **BELUM DIVALIDASI** — 5 pertanyaan blocking di §7 harus dijawab sebelum scope dibekukan.
-**Aturan:** Tidak ada kode sebelum Gate 1.
+**Status Gate 1:** ✅ **LULUS 2026-09-17** — Q1–Q5 terjawab, timeline terkunci, scope beku.
+**Delta PRD:** `docs/PRD.md` §9 — NFR-UI-1, NFR-UI-2, NFR-UI-3.
 
 ---
 
@@ -18,7 +18,10 @@
 | D1 | Standardisasi design tokens Tailwind v4 sebagai satu-satunya sumber warna/spacing/radius | Menghapus pemakaian palette hardcoded yang mem-bypass token |
 | D2 | Konsolidasi komponen dasar bersama untuk **semua** panel role (Button, Modal/Dialog, Card, Badge status, Input) | Panel role tidak lagi punya varian komponen sendiri untuk peran yang sama |
 | D3 | Layout mengikuti breakpoint mobile-first dengan **touch target minimum 44×44 px** dan padding/margin seragam | Termasuk panel Owner yang saat ini desktop-berat |
-| D4 | Identitas warna antar-role tetap berada dalam **satu keluarga tema brand** | Detail "satu brand vs aksen per-role" belum diputuskan → Q2 |
+| D4 | Identitas warna antar-role tetap berada dalam **satu keluarga tema brand**, dengan aksen berbeda per role | Jawaban Q2=B → aksen per-role diturunkan dari palet brand |
+| D5 | Cakupan pekerjaan: **visual refresh + konsistensi** (bukan consistency-only) | Jawaban Q5=B |
+| D6 | Panel Owner dikecualikan dari jaminan touch target 44 px pada perangkat pointer presisi | Jawaban Q4; Owner tetap terikat token & komponen |
+| D7 | Implementasi bertahap per role (Customer → Outlet → Courier → Owner) | Jawaban Q1; tiap role satu slice review |
 
 ## 2. Action Items
 
@@ -27,15 +30,18 @@
 | **DS-1** | Tetapkan palet primer/sekunder global + aksen role (jika ada) dalam design tokens Tailwind v4 | ⬜ Open | §4.1, §4.3 |
 | **DS-2** | Reuse komponen dasar bersama (Button, Modal/Dialog, Card, Badge status, Input) di seluruh panel role | ⬜ Open | §4.2 |
 | **DS-3** | Rapikan layout: breakpoint mobile-first, touch target min. 44×44 px, konsistensi padding/margin | ⬜ Open | §4.4 |
-| **DS-4** | Timeline pengerjaan draf revisi desain / implementasi staging | ⬜ Open | **Target tanggal KOSONG → Q1** |
+| **DS-4** | Timeline: draf revisi desain **1 minggu**, implementasi staging **4 minggu** (bertahap per role) | ✅ Terjawab (Q1) | §3 |
 
 ## 3. Timeline & Status
 
 | Item | Target | Status |
 |---|---|---|
-| Draf revisi desain | **TBD → Q1** | Belum ditetapkan |
-| Implementasi staging | **TBD → Q1** | Belum ditetapkan |
-| Gate 1 (scope beku) | Menunggu jawaban Q1–Q5 | ⏳ |
+| Draf revisi desain (token, spek komponen, mapping warna) | **1 minggu** sejak Gate 1 | Terkunci |
+| Implementasi staging — Customer | minggu ke-2 | Terkunci |
+| Implementasi staging — Outlet | minggu ke-3 | Terkunci |
+| Implementasi staging — Courier | minggu ke-4 | Terkunci |
+| Implementasi staging — Owner | minggu ke-5 | Terkunci |
+| **Gate 1 (scope beku)** | **2026-09-17** | ✅ **LULUS** — Q1–Q5 terjawab |
 
 ---
 
@@ -96,46 +102,33 @@ PRD v0.2 §9 (Non-Functional Requirements) hanya menyebut "Mobile-first design d
 - Baseline PRD, Product Scope, dan alur fungsional tidak ditulis ulang.
 - Perubahan bersifat presentasional; **tidak** mengubah kontrak API, skema data, atau logika pembayaran/settlement yang sudah tervalidasi.
 - Item di luar lingkup: fitur baru, redesign informasi (IA), atau perubahan alur order.
+- **Q5=B (visual refresh)** menambah satu risko eksplisit: bahasa desain berubah, sehingga tampilan yang sudah disetujui klien sebelumnya akan ikut berubah. Draf 1 minggu (Q1) adalah gerbang review untuk menyetujui arah visual **sebelum** eksekusi dimulai.
 
 ---
 
-## 7. Pertanyaan Blocking (wajib dijawab sebelum Gate 1)
+## 7. Pertanyaan Blocking — TERJAWAB (2026-09-17)
 
-### Q1 — Timeline (Action Item DS-4)
-Target tanggal untuk (a) draf revisi desain dan (b) implementasi staging belum diisi di MoM. Mohon tanggal konkret, atau periode relatif (mis. "draf 2 minggu, staging 4 minggu setelah Gate 1").
-
-### Q2 — Identitas warna per-role
-MoM menulis "aksen khusus (**jika ada** identitas warna per-role)". Pilih salah satu:
-- **(A)** Satu palet brand untuk semua role; perbedaan role hanya lewat label/ikon, bukan warna.
-- **(B)** Satu keluarga tema + satu warna aksen berbeda per role (Customer / Outlet / Owner / Courier).
-- **(C)** Pertahankan 4 warna berbeda seperti sekarang, tapi dirapikan agar tetap harmonis.
-
-### Q3 — Cakupan konsolidasi komponen
-MoM menyebut "reuse komponen dasar bersama". Seberapa luas?
-- **(A)** Terbatas pada 5 komponen yang disebut (Button, Modal/Dialog, Card, Badge, Input).
-- **(B)** Lima komponen + varian badge/chip/mod/input yang duplikat.
-- **(C)** Menyapu seluruh komponen UI (termasuk menghapus komponen mati dan menyatukan primitive dialog/sheet).
-
-### Q4 — Cakupan perangkat
-"Mobile-first, touch target 44 px". Apakah standardisasi ini juga mengikat **panel Owner yang desktop-berat** (57 halaman, sidebar + tabel), atau panel Owner dikecualikan dan hanya dirapikan alignment/spacing-nya?
-
-### Q5 — Jenis pekerjaan
-Apakah klien menginginkan:
-- **(A)** **Consistency only** — tampilan tetap seperti sekarang, hanya diseragamkan token/komponen/layout.
-- **(B)** **Visual refresh** — bahasa desain baru (warna, tipografi, radius, elevasi) sekaligus konsistensi.
+| # | Pertanyaan | Jawaban |
+|---|---|---|
+| **Q1** | Timeline draf & staging | **Draf 1 minggu; staging 4 minggu**, bertahap per role (D7) |
+| **Q2** | Identitas warna per-role | **B — satu keluarga tema brand + aksen berbeda per role** |
+| **Q3** | Luas konsolidasi komponen | **B — 5 komponen inti + varian badge/chip/modal/input duplikat + hapus komponen mati** |
+| **Q4** | Cakupan panel Owner | **Owner exempt dari 44 px pada pointer presisi**; tetap ikut token & komponen |
+| **Q5** | Jenis pekerjaan | **B — visual refresh + konsistensi** |
 
 ---
 
-## 8. Status Blocker Eksplisit
+## 8. Status Blocker
 
-| Blocker | Alasan |
+| Blocker | Status |
 |---|---|
-| Gate 1 belum tercapai | Q1–Q5 belum dijawab; timeline kosong |
-| Implementasi belum boleh mulai | Aturan Phase 0: tidak ada kode sebelum Gate 1 |
+| Gate 1 | ✅ **LULUS 2026-09-17** — Q1–Q5 terjawab, timeline terkunci |
+| Implementasi | ✅ Boleh mulai — menunggu rencana implementasi tertulis |
 
 ## 9. Langkah Berikutnya
 
-1. Klien & developer menjawab Q1–Q5.
-2. Delta PRD §5 difinalkan sesuai jawaban.
-3. Scope dibekukan → **Gate 1**.
-4. Baru setelah itu: rencana implementasi (`docs/superpowers/plans/`) dan eksekusi per slice vertikal.
+1. ✅ Klien & developer menjawab Q1–Q5.
+2. ✅ Delta PRD §9 (NFR-UI-1..3) ditetapkan.
+3. ✅ Scope dibekukan → **Gate 1 lulus**.
+4. ⬜ Susun `docs/superpowers/plans/` — satu rencana, slice vertikal per role.
+5. ⬜ Eksekusi slice Customer (minggu ke-2), review, lalu lanjut role berikutnya.
