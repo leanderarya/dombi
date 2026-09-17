@@ -1,85 +1,85 @@
 /* ------------------------------------------------------------------ */
-/*  Single source of truth for order status labels + badge classes      */
+/*  Single source of truth for order status labels + tone               */
 /* ------------------------------------------------------------------ */
+
+import type { BadgeVariant } from '@/components/ui/status-badge';
 
 interface StatusConfig {
     label: string;
-    className: string;
+    variant: BadgeVariant;
     reason?: string;
 }
-
-const BADGE_BASE = 'rounded-full px-2.5 py-0.5 text-[11px] font-bold';
 
 const STATUS_CONFIG: Record<string, StatusConfig> = {
     // Active statuses
     pending_confirmation: {
         label: 'Menunggu Konfirmasi',
-        className: `${BADGE_BASE} bg-amber-50 text-amber-700`,
+        variant: 'warning',
     },
     pending_payment: {
         label: 'Menunggu Pembayaran',
-        className: `${BADGE_BASE} bg-amber-50 text-amber-700`,
+        variant: 'warning',
     },
     confirmed: {
         label: 'Diterima',
-        className: `${BADGE_BASE} bg-blue-50 text-blue-700`,
+        variant: 'info',
     },
     preparing: {
         label: 'Disiapkan',
-        className: `${BADGE_BASE} bg-orange-50 text-orange-700`,
+        variant: 'info',
     },
     ready_for_pickup: {
         label: 'Siap Diambil',
-        className: `${BADGE_BASE} bg-blue-50 text-blue-700`,
+        variant: 'info',
     },
     picked_up: {
         label: 'Diambil Kurir',
-        className: `${BADGE_BASE} bg-purple-50 text-purple-700`,
+        variant: 'info',
     },
     delivering: {
         label: 'Dalam Pengiriman',
-        className: `${BADGE_BASE} bg-purple-50 text-purple-700`,
+        variant: 'info',
     },
 
     // History / terminal statuses
     completed: {
         label: 'Selesai',
-        className: `${BADGE_BASE} bg-emerald-50 text-emerald-700`,
+        variant: 'success',
     },
     cancelled_by_customer: {
         label: 'Dibatalkan Customer',
-        className: `${BADGE_BASE} bg-red-50 text-red-700`,
+        variant: 'danger',
         reason: 'Dibatalkan oleh Anda',
     },
     cancelled_by_outlet: {
         label: 'Dibatalkan Outlet',
-        className: `${BADGE_BASE} bg-red-50 text-red-700`,
+        variant: 'danger',
         reason: 'Dibatalkan oleh outlet',
     },
     rejected_by_outlet: {
         label: 'Ditolak Outlet',
-        className: `${BADGE_BASE} bg-red-50 text-red-700`,
+        variant: 'danger',
         reason: 'Ditolak oleh outlet',
     },
     failed_delivery: {
         label: 'Pengiriman Gagal',
-        className: `${BADGE_BASE} bg-amber-50 text-amber-700`,
+        variant: 'danger',
         reason: 'Pengiriman gagal',
     },
     expired: {
         label: 'Kadaluarsa',
-        className: `${BADGE_BASE} bg-gray-100 text-gray-600`,
+        variant: 'neutral',
         reason: 'Outlet tidak konfirmasi tepat waktu',
     },
 };
 
 const FALLBACK: StatusConfig = {
     label: 'Unknown',
-    className: `${BADGE_BASE} bg-gray-50 text-gray-700`,
+    variant: 'neutral',
 };
 
 /**
- * Get status label + badge class for an order status.
+ * Get status label + tone for an order status.
  */
 export function getOrderStatusConfig(status: string): StatusConfig {
     return (

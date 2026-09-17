@@ -6,12 +6,14 @@ interface VariantProps {
     variant: BadgeVariant;
     children: React.ReactNode;
     size?: 'sm' | 'md';
+    className?: string;
     status?: never;
 }
 
 interface StatusProps {
     status: string;
     size?: 'sm' | 'md';
+    className?: string;
     variant?: never;
     children?: never;
 }
@@ -48,7 +50,7 @@ function resolveStatus(status: string): { variant: BadgeVariant; label: string }
 }
 
 export default function StatusBadge(props: Props) {
-    const { size = 'md' } = props;
+    const { size = 'md', className } = props;
 
     let variant: BadgeVariant;
     let label: React.ReactNode;
@@ -64,7 +66,7 @@ export default function StatusBadge(props: Props) {
 
     return (
         <span
-            className={`${BADGE_BASE} ${BADGE_VARIANT_CLASSES[variant]} ${sizeStyles[size]}`}
+            className={`${BADGE_BASE} ${BADGE_VARIANT_CLASSES[variant]} ${sizeStyles[size]} ${className ?? ''}`}
         >
             {label}
         </span>

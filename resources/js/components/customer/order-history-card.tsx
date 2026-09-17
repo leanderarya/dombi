@@ -1,5 +1,7 @@
 import { Link } from '@inertiajs/react';
-import { RotateCcw, Smartphone, Store, RefreshCw } from 'lucide-react';
+import { Package, RefreshCw, RotateCcw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
 import {
     getOrderStatusConfig,
@@ -38,14 +40,17 @@ interface Props {
     };
 }
 
-const REFUND_BADGE_STYLES: Record<string, string> = {
-    awaiting_customer: 'bg-amber-100 text-amber-800 border-amber-200',
-    awaiting_guest: 'bg-amber-100 text-amber-800 border-amber-200',
-    ready: 'bg-blue-100 text-blue-800 border-blue-200',
-    in_progress: 'bg-blue-100 text-blue-800 border-blue-200',
-    action_required: 'bg-red-100 text-red-800 border-red-200',
-    completed: 'bg-green-100 text-green-800 border-green-200',
-    rejected: 'bg-red-100 text-red-800 border-red-200',
+const REFUND_BADGE_VARIANT: Record<
+    string,
+    'warning' | 'info' | 'danger' | 'success'
+> = {
+    awaiting_customer: 'warning',
+    awaiting_guest: 'warning',
+    ready: 'info',
+    in_progress: 'info',
+    action_required: 'danger',
+    completed: 'success',
+    rejected: 'danger',
 };
 
 export default function OrderHistoryCard({ order }: Props) {
@@ -71,62 +76,71 @@ export default function OrderHistoryCard({ order }: Props) {
         >
             {/* Refund badge row */}
             {refundBadge && (
-                <div className="mb-2 flex">
-                    <span
-                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${REFUND_BADGE_STYLES[refundBadge.queue_state] ?? 'border-amber-200 bg-amber-100 text-amber-800'}`}
+                <div className="flex">
+                    <StatusBadge
+                        variant={
+                            REFUND_BADGE_VARIANT[refundBadge.queue_state] ??
+                            'warning'
+                        }
+                        size="sm"
                     >
-                        <RefreshCw className="h-3 w-3" />
+                        <RefreshCw className="mr-1 h-3 w-3" />
                         {refundBadge.status_label}
-                    </span>
+                    </StatusBadge>
                 </div>
             )}
 
-            {/* Header: Logo + Order Type + Date + Status Badge */}
+            {/* Header: Mark + Fulfillment + Status badge + Date */}
             <div className="flex items-start gap-3">
                 <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isDead ? 'bg-gray-100' : 'bg-primary-light'}`}
+                    className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full ${isDead ? 'bg-surface-muted' : 'bg-primary-light'}`}
                 >
                     <span
-                        className={`text-sm font-bold ${isDead ? 'text-gray-400' : 'text-primary'}`}
+                        className={`font-heading text-lg font-extrabold ${isDead ? 'text-text-subtle' : 'text-primary'}`}
                     >
                         D
                     </span>
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex items-center justify-between gap-2">
                         <span
-                            className={`truncate text-sm font-bold ${isDead ? 'text-text-muted' : 'text-text'}`}
+                            className={`truncate font-heading text-[15px] font-extrabold ${isDead ? 'text-text-muted' : 'text-text'}`}
                         >
                             {isPickup ? 'Pick Up' : 'Delivery'}
                         </span>
-                        <span className={`shrink-0 ${statusCfg.className}`}>
+                        <StatusBadge
+                            variant={statusCfg.variant}
+                            size="sm"
+                            className="shrink-0"
+                        >
                             {statusCfg.label}
-                        </span>
+                        </StatusBadge>
                     </div>
                     <div className="text-[11px] text-text-muted">{dateStr}</div>
                     {statusCfg.reason && (
-                        <div className="mt-0.5 text-[11px] text-text-subtle">
+                        <div className="text-[11px] text-text-subtle">
                             {statusCfg.reason}
                         </div>
                     )}
                 </div>
             </div>
 
+            {/* Divider — the kanvas separates the header from the item row */}
+            <div className="h-px bg-border" />
+
             {/* Product info */}
             {firstItem && (
-                <div className="mt-3 flex items-center gap-3">
+                <div className="flex items-center gap-3">
                     <div
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${isDead ? 'bg-gray-50' : 'bg-surface-muted'}`}
+                        className={`flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-xl ${isDead ? 'bg-surface-muted/60' : 'bg-surface-muted'}`}
                     >
-                        <span
-                            className={`text-lg ${isDead ? 'opacity-50' : ''}`}
-                        >
-                            &#129371;
-                        </span>
+                        <Package
+                            className={`h-[22px] w-[22px] ${isDead ? 'text-text-subtle' : 'text-primary'}`}
+                        />
                     </div>
                     <div className="min-w-0">
                         <div
-                            className={`truncate text-sm font-medium ${isDead ? 'text-text-muted' : 'text-text'}`}
+                            className={`truncate text-[13px] font-semibold ${isDead ? 'text-text-muted' : 'text-text'}`}
                         >
                             {firstItem.product_name}
                         </div>
@@ -139,23 +153,15 @@ export default function OrderHistoryCard({ order }: Props) {
                 </div>
             )}
 
-            {/* Dotted divider */}
-            <div className="fore-divider-dotted my-3" />
-
             {/* Location + Via */}
             <div className="flex items-center justify-between">
                 <div
-                    className={`text-xs ${isDead ? 'text-text-subtle' : 'text-text-muted'}`}
+                    className={`text-xs font-semibold ${isDead ? 'text-text-subtle' : 'text-text'}`}
                 >
                     {order.outlet?.name ?? 'Outlet'}
                 </div>
-                <div className="flex items-center gap-1 text-[11px] text-text-subtle">
-                    {isPickup ? (
-                        <Store className="h-3 w-3" />
-                    ) : (
-                        <Smartphone className="h-3 w-3" />
-                    )}
-                    <span>{isPickup ? 'via Store' : 'via Aplikasi'}</span>
+                <div className="text-[11px] text-text-muted">
+                    {isPickup ? 'via Store' : 'via Aplikasi'}
                 </div>
             </div>
 
@@ -169,33 +175,32 @@ export default function OrderHistoryCard({ order }: Props) {
                 </div>
             )}
 
-            {/* Solid divider */}
-            <div className="my-3 h-px bg-border" />
-
             {/* Total + action */}
             <div className="flex items-center justify-between">
                 <div
-                    className={`text-sm font-bold tabular-nums ${isDead ? 'text-text-muted' : 'text-text'}`}
+                    className={`text-[13px] tabular-nums ${isDead ? 'text-text-subtle' : 'text-text-muted'}`}
                 >
                     {itemCount} item · {formatCurrency(order.total)}
                 </div>
                 {order.status === 'completed' && (
-                    <Link
-                        href={`/customer/orders/${order.id}/restore-cart`}
-                        className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white active:opacity-80"
-                    >
-                        <RotateCcw className="h-3.5 w-3.5" />
-                        Beli Lagi
-                    </Link>
+                    <Button asChild variant="link" size="sm" className="px-0">
+                        <Link
+                            href={`/customer/orders/${order.id}/restore-cart`}
+                        >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            Beli Lagi
+                        </Link>
+                    </Button>
                 )}
                 {order.status === 'expired' && (
-                    <Link
-                        href={`/customer/orders/${order.id}/restore-cart`}
-                        className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80"
-                    >
-                        <RotateCcw className="h-3 w-3" />
-                        Pesan Ulang
-                    </Link>
+                    <Button asChild variant="primary" size="sm">
+                        <Link
+                            href={`/customer/orders/${order.id}/restore-cart`}
+                        >
+                            <RotateCcw className="h-3 w-3" />
+                            Pesan Ulang
+                        </Link>
+                    </Button>
                 )}
             </div>
         </OrderCardShell>

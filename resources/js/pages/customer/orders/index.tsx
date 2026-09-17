@@ -3,9 +3,9 @@ import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ActiveOrderCard from '@/components/customer/active-order-card';
 import EmptyOrderState from '@/components/customer/empty-order-state';
-import OrderFilterChips from '@/components/customer/order-filter-chips';
 import OrderHistoryCard from '@/components/customer/order-history-card';
 import RecoverySheet from '@/components/customer/recovery-sheet';
+import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonList } from '@/components/ui/skeleton';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
@@ -134,10 +134,12 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                 {viewState === 'recovered' &&
                     (hasActiveOrders || hasHistory) && (
                         <div className="mx-auto max-w-lg px-4 pb-3">
-                            <OrderFilterChips
+                            <FilterChips
                                 options={filterOptions}
                                 active={filter}
                                 onChange={handleFilterChange}
+                                variant="neutral"
+                                size="caption"
                             />
                         </div>
                     )}
