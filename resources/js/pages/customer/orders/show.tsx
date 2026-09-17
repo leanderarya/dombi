@@ -10,7 +10,11 @@ import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
 import BottomSheet from '@/components/ui/bottom-sheet';
+import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
+import Notice from '@/components/ui/notice';
+import StatusBadge from '@/components/ui/status-badge';
+import type { BadgeVariant } from '@/components/ui/status-badge';
 import {
     useOrderCancel,
     useOrderPay,
@@ -164,13 +168,14 @@ export default function OrderShow({
                 />
 
                 {order.status === 'completed' && (
-                    <Link
-                        href={`/customer/orders/${order.id}/restore-cart`}
-                        className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-6 text-xs font-bold text-white active:opacity-80"
-                    >
-                        <RotateCcw className="h-3.5 w-3.5" />
-                        Beli Lagi
-                    </Link>
+                    <Button asChild variant="primary" className="w-full">
+                        <Link
+                            href={`/customer/orders/${order.id}/restore-cart`}
+                        >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            Beli Lagi
+                        </Link>
+                    </Button>
                 )}
 
                 <OrderInfoCard
@@ -260,51 +265,55 @@ function PaymentIssueBanner({
     loading: boolean;
 }) {
     return (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-            <div className="flex items-start gap-3">
-                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-                <div>
-                    <div className="text-sm font-semibold text-red-800">
-                        {isFailed
-                            ? 'Pembayaran Gagal'
-                            : 'Pembayaran Kadaluarsa'}
-                    </div>
-                    <div className="mt-1 text-xs text-red-600">
-                        {isFailed
-                            ? 'Pembayaran tidak berhasil diproses. Silakan coba bayar ulang.'
-                            : 'Batas waktu pembayaran telah habis. Silakan coba bayar ulang.'}
-                    </div>
-                    <button
-                        type="button"
-                        onClick={onPay}
-                        disabled={loading}
-                        className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
-                    >
-                        {loading ? 'Memproses...' : 'Bayar Ulang'}
-                    </button>
-                </div>
-            </div>
-        </div>
+        <Notice
+            variant="block"
+            tone="danger"
+            icon={AlertCircle}
+            title={isFailed ? 'Pembayaran Gagal' : 'Pembayaran Kadaluarsa'}
+            action={
+                <Button
+                    type="button"
+                    variant="danger"
+                    className="w-full"
+                    onClick={onPay}
+                    disabled={loading}
+                >
+                    {loading ? 'Memproses...' : 'Bayar Ulang'}
+                </Button>
+            }
+        >
+            {isFailed
+                ? 'Pembayaran tidak berhasil diproses. Silakan coba bayar ulang.'
+                : 'Batas waktu pembayaran telah habis. Silakan coba bayar ulang.'}
+        </Notice>
     );
 }
 
 function CancelButton({ onClick }: { onClick: () => void }) {
     return (
-        <>
-            <button
+        <div>
+            <Button
                 type="button"
+                variant="outline"
+                className="w-full border-danger-border text-danger-text"
                 onClick={onClick}
-                className="flex h-10 w-full items-center justify-center rounded-lg border border-red-200 text-xs font-semibold text-red-600 active:opacity-80"
             >
                 Batalkan Pesanan
-            </button>
+            </Button>
             <p className="mt-1.5 text-center text-[10px] text-text-subtle">
                 Hanya jika pesanan belum diproses
             </p>
-        </>
+        </div>
     );
 }
 
+/**
+ * Deliberately not `Notice`. The kanvas strip is the same shape — quiet
+ * neutral, no border — but this one carries a working WhatsApp link on the
+ * right, and `Notice`'s strip only renders children plus a trailing icon.
+ * Forcing it in would drop the link. Geometry and colours match the strip
+ * token for token instead.
+ */
 function NonCancellableNotice({
     phone,
     outletName,
@@ -334,8 +343,8 @@ function NonCancellableNotice({
         : null;
 
     return (
-        <div className="flex items-center justify-between gap-2 rounded-lg bg-surface-muted px-3 py-2">
-            <span className="text-[11px] text-text-muted">
+        <div className="flex items-center justify-between gap-2.5 rounded-control bg-surface-muted px-3 py-2.5 text-caption text-text-muted">
+            <span className="min-w-0">
                 Pesanan diproses, tidak dapat dibatalkan
             </span>
             {href && (
@@ -347,7 +356,7 @@ function NonCancellableNotice({
                         e.preventDefault();
                         window.open(href, '_blank', 'noopener,noreferrer');
                     }}
-                    className="flex items-center gap-1 text-[11px] font-semibold text-primary active:opacity-80"
+                    className="flex shrink-0 items-center gap-1 font-semibold text-primary active:opacity-80"
                 >
                     <Phone className="h-3 w-3" />
                     WA Outlet
@@ -364,30 +373,20 @@ function ReportStatusCard({ report }: { report: any }) {
     };
     const isResolved =
         report.status === 'resolved' || report.status === 'rejected';
-    const variantClass =
-        status.variant === 'success'
-            ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
-            : status.variant === 'danger'
-              ? 'bg-red-50 text-red-700 ring-1 ring-red-200'
-              : status.variant === 'info'
-                ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
-                : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200';
 
     return (
-        <div className="rounded-xl border border-border bg-white p-4">
+        <div className="rounded-card border border-border bg-surface p-4">
             <div className="flex items-center justify-between">
-                <span className="text-[13px] text-text-subtle">
+                <span className="text-caption text-text-subtle">
                     Laporan Anda
                 </span>
-                <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${variantClass}`}
-                >
+                <StatusBadge variant={status.variant as BadgeVariant}>
                     {status.label}
-                </span>
+                </StatusBadge>
             </div>
             <div className="mt-1.5 text-sm text-text">{report.type_label}</div>
             {isResolved && report.resolution_notes && (
-                <div className="mt-2 rounded-lg bg-surface-muted p-3 text-xs text-text-muted">
+                <div className="mt-2 rounded-control bg-surface-muted p-3 text-xs text-text-muted">
                     <span className="font-semibold text-text">Resolusi: </span>
                     {report.resolution_notes}
                 </div>
@@ -404,14 +403,15 @@ function ReportStatusCard({ report }: { report: any }) {
 function ReportButton({ onClick }: { onClick: () => void }) {
     return (
         <div className="mt-4">
-            <button
+            <Button
                 type="button"
+                variant="outline"
+                className="w-full"
                 onClick={onClick}
-                className="flex h-11 w-full items-center justify-center rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
             >
                 <AlertTriangle className="mr-2 h-4 w-4 text-text-muted" />
                 Laporkan Masalah
-            </button>
+            </Button>
         </div>
     );
 }
@@ -472,7 +472,7 @@ function CancelDialog({
                         key={reason}
                         type="button"
                         onClick={() => form.setData('reason', reason)}
-                        className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${form.data.reason === reason ? 'border-primary bg-primary-light text-primary' : 'border-border text-text active:opacity-80'}`}
+                        className={`flex min-h-11 w-full items-center rounded-control border px-4 text-left text-sm font-medium transition-all ${form.data.reason === reason ? 'border-primary bg-primary-light text-primary' : 'border-border text-text active:opacity-80'}`}
                     >
                         {reason}
                     </button>
@@ -484,41 +484,47 @@ function CancelDialog({
                         value={form.data.note}
                         onChange={(e) => form.setData('note', e.target.value)}
                         placeholder="Jelaskan alasan pembatalan..."
-                        className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="min-h-20 w-full rounded-control border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
             )}
             {error && (
-                <p className="mt-2 text-sm font-medium text-red-600">{error}</p>
+                <p className="mt-2 text-sm font-medium text-danger-text">
+                    {error}
+                </p>
             )}
             {form.errors.reason && (
-                <p className="mt-2 text-xs text-red-600">
+                <p className="mt-2 text-xs text-danger-text">
                     {form.errors.reason}
                 </p>
             )}
             {form.errors.note && (
-                <p className="mt-1 text-xs text-red-600">{form.errors.note}</p>
+                <p className="mt-1 text-xs text-danger-text">
+                    {form.errors.note}
+                </p>
             )}
             <div className="mt-4 flex gap-2">
-                <button
+                <Button
                     type="button"
+                    variant="outline"
+                    className="flex-1"
                     onClick={onClose}
-                    className="flex h-12 flex-1 items-center justify-center rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
                 >
                     Kembali
-                </button>
-                <button
+                </Button>
+                <Button
                     type="button"
+                    variant="danger"
+                    className="flex-1"
                     onClick={onSubmit}
                     disabled={
                         !form.data.reason ||
                         form.processing ||
                         (isPickup && isConfirmation && last4Hp.length !== 4)
                     }
-                    className="flex h-12 flex-1 items-center justify-center rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
                 >
                     {form.processing ? 'Membatalkan...' : 'Ya, Batalkan'}
-                </button>
+                </Button>
             </div>
         </Dialog>
     );
@@ -536,7 +542,7 @@ function ReportSheet({ open, onClose, form, error, onSubmit }: any) {
                         key={type.value}
                         type="button"
                         onClick={() => form.setData('type', type.value)}
-                        className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${form.data.type === type.value ? 'border-primary bg-primary-light text-primary' : 'border-border text-text active:opacity-80'}`}
+                        className={`flex min-h-11 w-full items-center rounded-control border px-4 text-left text-sm font-medium transition-all ${form.data.type === type.value ? 'border-primary bg-primary-light text-primary' : 'border-border text-text active:opacity-80'}`}
                     >
                         {type.label}
                     </button>
@@ -547,20 +553,23 @@ function ReportSheet({ open, onClose, form, error, onSubmit }: any) {
                     value={form.data.notes}
                     onChange={(e) => form.setData('notes', e.target.value)}
                     placeholder="Jelaskan masalah Anda (opsional)..."
-                    className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                    className="min-h-20 w-full rounded-control border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                 />
             </div>
             {error && (
-                <p className="mt-2 text-sm font-medium text-red-600">{error}</p>
+                <p className="mt-2 text-sm font-medium text-danger-text">
+                    {error}
+                </p>
             )}
-            <button
+            <Button
                 type="button"
+                variant="primary"
+                className="mt-4 w-full"
                 onClick={onSubmit}
                 disabled={!form.data.type || form.processing}
-                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
             >
                 {form.processing ? 'Mengirim...' : 'Kirim Laporan'}
-            </button>
+            </Button>
         </BottomSheet>
     );
 }

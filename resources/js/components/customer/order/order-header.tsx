@@ -21,6 +21,13 @@ const BANNER_DANGER = [
     'expired',
 ];
 
+/**
+ * The status banner is full-bleed under the app bar, so it keeps its own
+ * frame instead of using `Notice` — every Notice shape is a rounded panel,
+ * and rounding this edge-to-edge strip would read as a floating card.
+ * Only the hardcoded #EAF5ED / #006241 (a brand shade that predates the
+ * token set) is replaced; the geometry is unchanged.
+ */
 export default function OrderHeader({
     trackingUrl,
     isConfirmation = false,
@@ -34,7 +41,7 @@ export default function OrderHeader({
     const isDanger = status ? BANNER_DANGER.includes(status) : false;
 
     return (
-        <header className="sticky top-0 z-30 border-b border-border bg-white/95 pt-safe backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-border bg-surface/95 pt-safe backdrop-blur">
             <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                 <button
                     type="button"
@@ -48,7 +55,7 @@ export default function OrderHeader({
                         }
                     }}
                     aria-label="Kembali"
-                    className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
+                    className="flex h-11 w-11 items-center justify-center rounded-control text-text active:opacity-80"
                 >
                     <ChevronLeft className="h-5 w-5" />
                 </button>
@@ -58,7 +65,7 @@ export default function OrderHeader({
                         type="button"
                         onClick={handleShare}
                         aria-label="Bagikan lacak pesanan"
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-emerald-600 active:opacity-80"
+                        className="flex h-11 w-11 items-center justify-center rounded-control text-primary active:opacity-80"
                     >
                         <Share2 className="h-5 w-5" />
                     </button>
@@ -71,8 +78,8 @@ export default function OrderHeader({
                 <div
                     className={`border-t px-4 py-3 text-center ${
                         isDanger
-                            ? 'border-red-100 bg-red-50 text-red-600'
-                            : 'border-emerald-100 bg-[#EAF5ED] text-[#006241]'
+                            ? 'border-danger-border bg-danger-bg text-danger'
+                            : 'border-success-border bg-success-bg text-success-text'
                     }`}
                 >
                     <p className="flex items-center justify-center gap-2 text-sm font-bold">
