@@ -7,7 +7,7 @@
 **Gate 1:** ✅ Lulus 2026-09-17 · **Change Request:** CR-1 (per-role), CR-2 (token & library)
 **Baseline:** `develop` @ `1d77a8d0`
 **Kanvas SSOT:** `pencil-new.pen` — 18 frame Order disetujui klien (D9)
-**Status:** ⬜ Menunggu gerbang review draf — belum boleh eksekusi
+**Status:** 🟡 Fase A berjalan — A.1, A.2, A.4 selesai; A.3 ditunda. Fase B siap mulai.
 
 ## Keputusan yang mengikat
 
@@ -40,7 +40,7 @@
 
 Memblokir semua fase lain. Semua slice di fase ini menyentuh file yang sama (`app.css`) sehingga **wajib berurutan**, bukan paralel.
 
-### Slice A.1 — Deklarasikan token yang hilang
+### Slice A.1 — Deklarasikan token yang hilang — ✅ `0bd39384`
 
 **Cluster file:** `resources/css/app.css`
 
@@ -56,7 +56,7 @@ Memblokir semua fase lain. Semua slice di fase ini menyentuh file yang sama (`ap
 
 **Commit:** `feat(tokens): declare card, heading, overlay and semantic tint tokens`
 
-### Slice A.2 — Token aksen Outlet
+### Slice A.2 — Token aksen Outlet — ✅ `c6892bb2`
 
 **Cluster file:** `resources/css/app.css`
 
@@ -67,31 +67,35 @@ Memblokir semua fase lain. Semua slice di fase ini menyentuh file yang sama (`ap
 
 **Commit:** `feat(tokens): add outlet role accent scope`
 
-### Slice A.4 — Pindahkan `data-role` ke root view
+### Slice A.4 — Pindahkan `data-role` ke root view — ✅ `ee882261`
 
-**Cluster file:** `resources/views/customer-app.blade.php`, `resources/views/internal-app.blade.php`, `resources/views/app.blade.php`, `resources/js/layouts/owner-layout.tsx`, `resources/js/layouts/courier-layout.tsx`
+**Cluster file:** `resources/views/customer-app.blade.php`, `resources/views/internal-app.blade.php`, `resources/views/app.blade.php`, `resources/js/hooks/use-role-theme.ts` (baru), `resources/js/layouts/{owner,courier,outlet,customer-mobile}-layout.tsx`
 
-- Set `data-role` pada `<html>` dari blade root view, bukan dari layout React.
-- Hapus `useLayoutEffect` penulis `dataset.role` di `owner-layout.tsx:144` dan `courier-layout.tsx:39`.
+- Set `data-role` pada `<html>` dari blade root view, **dan** sematkan lewat hook `useRoleTheme` di keempat layout panel.
+- Hapus `useLayoutEffect` penulis `dataset.role` di `owner-layout.tsx` dan `courier-layout.tsx`.
 - Tujuan: `data-role` tersedia sebelum hydrate dan tidak bergantung layout yang ter-mount.
 
-**Verifikasi:** `npm run build`, `npm run types:check`, `npm run lint:check`. Muat keempat panel — inspeksi `<html data-role>`.
+**Deviasi dari draf awal (terverifikasi):** blade saja **tidak cukup**. Inertia berpindah halaman tanpa memuat ulang dokumen, jadi login, logout, dan redirect antar-panel menukar layout tanpa mengganti elemen `<html>` — atribut hasil render server menjadi basi. Karena itu hook tetap dipertahankan sebagai mekanisme otoritatif, ditambah blade untuk menghindari kedip di muat pertama. Slice ini sekaligus menambal bug: sebelumnya hanya Owner dan Courier yang menulis `data-role`, sehingga Outlet tidak pernah mendapat cakupan tokennya.
 
-**Commit:** `refactor(theme): set data-role from root view`
+**Verifikasi:** `npm run build`, `npm run types:check`, `npm run lint:check` — hijau. Keempat blok role ter-emit dengan nilai yang diharapkan.
+
+**Commit:** `refactor(theme): set data-role from root view and shared hook`
 
 
-### Slice A.3 — Buang tambalan `!important` input
+### Slice A.3 — Buang tambalan `!important` input — ⏸️ DITUNDA
 
-**Cluster file:** `resources/css/app.css`, `resources/js/components/ui/input.tsx`
+**Alasan penundaan (audit 2026-09-17):** aturan `input[type='text']…{font-size:16px !important}` adalah **jaring anti-zoom iOS** untuk **89 `<input>` mentah** di 43 file (Outlet 35, Owner 33, Customer 12, Courier 4). Hanya **4** input yang mendeklarasikan utility sizing sendiri; sisanya mengandalkan aturan global. Karena aturan itu **unlayered** (di luar `@layer`), ia juga saat ini mengalahkan semua utility `text-*` pada input mentah — jadi `text-xs`/`text-sm` di sana hari ini tidak berefek.
 
-- Ganti selector tag global `input[type='text']...{font-size:16px !important}` menjadi kelas komponen.
-- Pindahkan `border-radius: 10px` dan padding ke token (`--radius-control`).
-- Kurangi jumlah `!important` (sekarang **61** di `app.css`).
+Memindahkannya ke kelas komponen akan menghapus jaring itu dan membuat `text-xs` (12 px) mulai berlaku → **zoom otomatis iOS** di Customer, Outlet, Courier, dan Owner.
 
-**Verifikasi:** `npm run types:check`, `npm run lint:check`, `npm run build`.
-**Bukti:** input di iOS/emulator tidak memicu zoom (font-size tetap ≥16 px efektif).
+**Keputusan:** tunda, gabung ke Slice B.4 saat input mentah dimigrasikan ke `<Input>`. Baru setelah itu kelas komponen aman menjadi satu-satunya sumber normalisasi input.
 
-**Commit:** `refactor(css): scope input normalisation to component class`
+**Cluster file (nanti):** `resources/css/app.css`, `resources/js/components/ui/input.tsx`, ditambah seluruh file ber-`<input>` mentah.
+
+**Verifikasi (nanti):** `npm run types:check`, `npm run lint:check`, `npm run build`.
+**Bukti (nanti):** input di iOS/emulator tidak memicu zoom (font-size tetap ≥16 px efektif).
+
+**Commit (nanti):** `refactor(css): scope input normalisation to component class`
 
 ---
 
@@ -308,13 +312,13 @@ Catatan: jalankan PHP dan Vitest **terpisah** — suite penuh bersamaan time-out
 
 ## Estimasi
 
-| Fase | Slice | Perkiraan |
-|---|---|---|
-| A — Token | 4 | 3–4 jam |
-| B — Library | 6 | 6–9 jam |
-| C — Customer Orders | 4 | 4–6 jam |
-| D — Outlet/Courier/Owner | 12 | mengikuti plan induk |
-| E — Penutupan | 3 | 2–3 jam |
+| Fase | Slice | Perkiraan | Status |
+|---|---|---|---|
+| A — Token | 4 | 3–4 jam | 3 selesai, 1 ditunda |
+| B — Library | 6 | 6–9 jam | siap mulai |
+| C — Customer Orders | 4 | 4–6 jam | terkunci |
+| D — Outlet/Courier/Owner | 12 | mengikuti plan induk | terkunci |
+| E — Penutupan | 3 | 2–3 jam | terkunci |
 
 Fase A + B + C menghasilkan satu paket yang bisa di-review end-to-end dan sesuai dengan kanvas yang sudah disetujui.
 
