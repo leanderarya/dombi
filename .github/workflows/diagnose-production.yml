@@ -1,0 +1,45 @@
+name: Diagnose Production Environment
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: diagnose-production
+  cancel-in-progress: true
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Read safe production metadata via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          script: |
+            set -eu
+            APP_PATH='domains/dombicenter.com/public_html/app'
+            cd "$APP_PATH"
+
+            echo '=== deployment identity ==='
+            printf 'path: '; pwd
+            printf 'branch: '; git branch --show-current 2>/dev/null || echo 'unavailable'
+            printf 'commit: '; git rev-parse HEAD
+
+            echo '=== document root layout ==='
+            printf 'public/index.php: '; test -f public/index.php && echo present || echo MISSING
+            printf 'public/build: '; test -d public/build && echo present || echo MISSING
+            printf 'root .env: '; test -f .env && echo present || echo MISSING
+            printf 'root index.php: '; test -f index.php && echo 'PRESENT (exposed!)' || echo absent
+
+            echo '=== Laravel environment (allowlist, no values beyond these) ==='
+            php -r "require 'vendor/autoload.php'; \$app=require 'bootstrap/app.php'; \$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo 'app_env: '.config('app.env').PHP_EOL; echo 'app_debug: '.(config('app.debug') ? 'true' : 'false').PHP_EOL; echo 'app_url: '.config('app.url').PHP_EOL; echo 'doku_sandbox: '.(config('doku.sandbox') ? 'true' : 'false').PHP_EOL; echo 'doku_base_url: '.config('doku.base_url').PHP_EOL; echo 'legacy_writes_enabled: '.(config('doku.legacy_writes_enabled') ? 'true' : 'false').PHP_EOL; echo 'session_secure: '.(config('session.secure') ? 'true' : 'false').PHP_EOL; echo 'log_level: '.config('logging.channels.'.config('logging.default').'.level').PHP_EOL;"
+
+            echo '=== configured DOKU callback / notification shape ==='
+            php -r "require 'vendor/autoload.php'; \$app=require 'bootstrap/app.php'; \$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo 'doku.callback_url: '.(config('doku.callback_url') ?? 'unset').PHP_EOL; echo 'route doku.notify: '.(app('router')->has('doku.notify') ? url('/payment/doku/notify') : 'ROUTE MISSING').PHP_EOL; echo 'route doku.redirect: '.(app('router')->has('doku.redirect') ? url('/payment/doku/redirect') : 'ROUTE MISSING').PHP_EOL;"
+
+            echo '=== recent doku/payment log lines (last 10) ==='
+            grep -iE 'doku|payment' storage/logs/laravel.log 2>/dev/null | tail -10 || echo '(no log)'
