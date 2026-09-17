@@ -17,7 +17,10 @@
   },
   "lint-staged": {
     "*.php": "./vendor/bin/pint",
-    "resources/**/*.{js,ts,tsx}": ["eslint --fix", "prettier --write"],
+    "resources/**/*.{js,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
     "resources/**/*.{css,json,md}": "prettier --write"
   },
   "devDependencies": {
@@ -42,7 +45,6 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "@base-ui/react": "^1.6.0",
     "@capacitor/android": "^8.4.2",
     "@capacitor/app": "^8.1.1",
     "@capacitor/barcode-scanner": "^3.1.0",

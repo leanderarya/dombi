@@ -4,7 +4,6 @@ export { default as CustomSelect } from './custom-select';
 export { default as DeliveryStatusBadge } from './delivery-status-badge';
 export { default as Dialog } from './dialog';
 export { default as EmptyState } from './empty-state';
-export * from './expandable-section';
 export { default as FilterChips } from './filter-chips';
 export * from './input';
 export { default as MobileRoleLayout } from './mobile-role-layout';
