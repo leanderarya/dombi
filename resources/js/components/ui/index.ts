@@ -8,6 +8,7 @@ export * from './expandable-section';
 export { default as FilterChips } from './filter-chips';
 export * from './input';
 export { default as MobileRoleLayout } from './mobile-role-layout';
+export { default as Notice } from './notice';
 export { default as OrderStatusBadge } from './order-status-badge';
 export { default as OtpInput } from './otp-input';
 export { default as PageHeader } from './page-header';

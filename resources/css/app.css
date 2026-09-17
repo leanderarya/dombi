@@ -59,6 +59,12 @@
     --color-info-bg: #eff6ff;
     --color-info-text: #1d4ed8;
 
+    /* Semantic — tint borders (Notice block outline) */
+    --color-success-border: #a7f3d0;
+    --color-warning-border: #fde68a;
+    --color-danger-border: #fecaca;
+    --color-info-border: #bfdbfe;
+
     /* shadcn/ui compatible mappings */
     --color-foreground: var(--color-text);
     --color-muted-foreground: var(--color-text-muted);
@@ -81,6 +87,7 @@
     /* Control typography — button, chip and input labels */
     --text-control: 0.8125rem;
     --text-control-sm: 0.75rem;
+    --text-caption: 0.6875rem;
 
     /* Shadows — layered for depth */
     --shadow-card:
