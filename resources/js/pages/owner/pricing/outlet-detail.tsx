@@ -272,7 +272,7 @@ export default function OutletDetail({
                     <div className="text-[11px] font-medium text-text-muted">
                         Total Produk
                     </div>
-                    <div className="font-heading mt-1 text-xl font-bold text-text tabular-nums">
+                    <div className="mt-1 font-heading text-xl font-bold text-text tabular-nums">
                         {prices.length}
                     </div>
                 </div>
@@ -280,7 +280,7 @@ export default function OutletDetail({
                     <div className="text-[11px] font-medium text-text-muted">
                         Harga Custom
                     </div>
-                    <div className="font-heading mt-1 text-xl font-bold text-text tabular-nums">
+                    <div className="mt-1 font-heading text-xl font-bold text-text tabular-nums">
                         {customCount}
                     </div>
                     <div className="text-[11px] text-text-muted">
@@ -293,7 +293,7 @@ export default function OutletDetail({
                     <div className="text-[11px] font-medium text-text-muted">
                         Rata-rata Margin
                     </div>
-                    <div className="font-heading mt-1 text-xl font-bold text-text tabular-nums">
+                    <div className="mt-1 font-heading text-xl font-bold text-text tabular-nums">
                         {formatCurrency(Math.round(avgMargin))}
                     </div>
                 </div>
@@ -302,7 +302,7 @@ export default function OutletDetail({
                         Margin Negatif
                     </div>
                     <div
-                        className={`font-heading mt-1 text-xl font-bold tabular-nums ${negativeCount > 0 ? 'text-red-600' : 'text-text'}`}
+                        className={`mt-1 font-heading text-xl font-bold tabular-nums ${negativeCount > 0 ? 'text-red-600' : 'text-text'}`}
                     >
                         {negativeCount}
                     </div>

@@ -212,12 +212,12 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                         className={`${collapsed ? 'px-3 py-5' : 'px-4 pt-6 pb-5'}`}
                     >
                         {collapsed ? (
-                            <div className="font-heading flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/20 text-lg font-bold text-emerald-300">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/20 font-heading text-lg font-bold text-emerald-300">
                                 D
                             </div>
                         ) : (
                             <div className="flex items-center gap-3 border-b border-emerald-800/60 pb-4">
-                                <div className="font-heading flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/20 text-lg font-bold text-emerald-300">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/20 font-heading text-lg font-bold text-emerald-300">
                                     D
                                 </div>
                                 <div>

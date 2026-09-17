@@ -364,7 +364,7 @@ export default function OutletShow({
                                         <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Outstanding
                                         </div>
-                                        <div className="font-heading mt-0.5 text-base font-bold text-red-600 tabular-nums">
+                                        <div className="mt-0.5 font-heading text-base font-bold text-red-600 tabular-nums">
                                             {formatCurrency(
                                                 settlementSummary.outstanding,
                                             )}
@@ -374,7 +374,7 @@ export default function OutletShow({
                                         <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Terlambat
                                         </div>
-                                        <div className="font-heading mt-0.5 text-base font-bold text-amber-600 tabular-nums">
+                                        <div className="mt-0.5 font-heading text-base font-bold text-amber-600 tabular-nums">
                                             {settlementSummary.overdue_count}
                                         </div>
                                     </div>
@@ -382,7 +382,7 @@ export default function OutletShow({
                                         <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Dibayar
                                         </div>
-                                        <div className="font-heading mt-0.5 text-base font-bold text-emerald-600 tabular-nums">
+                                        <div className="mt-0.5 font-heading text-base font-bold text-emerald-600 tabular-nums">
                                             {formatCurrency(
                                                 settlementSummary.paid_this_month,
                                             )}

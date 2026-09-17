@@ -55,7 +55,7 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
     });
 
     return (
-        <div className="bg-card rounded-lg border border-border px-3 py-2 text-sm shadow-lg">
+        <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-lg">
             <p className="text-text-muted">{formattedDate}</p>
             <p className="font-semibold text-foreground">
                 {formatCurrency(payload[0].value)}
