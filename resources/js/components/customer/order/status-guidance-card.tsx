@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Clock, MapPin, Phone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/status-badge';
 import type { BadgeVariant } from '@/components/ui/status-badge';
 import { useCountdown } from '@/hooks/use-countdown';
@@ -153,23 +154,27 @@ export default function StatusGuidanceCard({
         countdown.totalSeconds > 0;
 
     return (
-        <div className="rounded-xl border border-border bg-white p-3">
+        <div className="flex flex-col gap-2.5 rounded-card border border-border bg-surface p-4">
             {badge.badgeVariant && badge.badgeLabel ? (
-                <StatusBadge variant={badge.badgeVariant}>
-                    {badge.badgeLabel}
-                </StatusBadge>
+                <div className="flex">
+                    <StatusBadge variant={badge.badgeVariant}>
+                        {badge.badgeLabel}
+                    </StatusBadge>
+                </div>
             ) : badge.badgeFallbackStatus ? (
-                <StatusBadge status={badge.badgeFallbackStatus} />
+                <div className="flex">
+                    <StatusBadge status={badge.badgeFallbackStatus} />
+                </div>
             ) : null}
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0">
                     <div className="text-xs font-semibold text-text">
                         {guidance.description}
                     </div>
                     {showCountdown && (
                         <div className="mt-1 flex items-center gap-1.5">
-                            <Clock className="h-3 w-3 text-amber-600" />
-                            <span className="text-xs font-bold text-amber-700 tabular-nums">
+                            <Clock className="h-3 w-3 text-warning" />
+                            <span className="text-xs font-bold text-warning-text tabular-nums">
                                 {String(countdown.minutes).padStart(2, '0')}:
                                 {String(countdown.seconds).padStart(2, '0')}
                             </span>
@@ -184,32 +189,22 @@ export default function StatusGuidanceCard({
                 {guidance.cta && (
                     <div className="shrink-0">
                         {isPickupReady && guidance.cta.action === 'navigate' ? (
-                            <a
-                                href={`${MAPS_LINK}${outletLatitude},${outletLongitude}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80"
-                            >
-                                <MapPin className="h-3.5 w-3.5" />
-                                {guidance.cta.label}
-                            </a>
+                            <Button asChild size="sm" variant="primary">
+                                <a
+                                    href={`${MAPS_LINK}${outletLatitude},${outletLongitude}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <MapPin className="h-3.5 w-3.5" />
+                                    {guidance.cta.label}
+                                </a>
+                            </Button>
                         ) : guidance.cta.action === 'wa_outlet' &&
                           outletPhone ? (
-                            <a
-                                href={waLinkWithText(
-                                    outletPhone,
-                                    whatsAppDefaultMessage({
-                                        order_code: orderCode ?? '',
-                                        status,
-                                        fulfillment_type: isPickup
-                                            ? 'pickup'
-                                            : 'delivery',
-                                        customer_name: customerName,
-                                        outlet_name: outletName,
-                                    }),
-                                )}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                            <Button
+                                asChild
+                                size="sm"
+                                variant="primary"
                                 onClick={(e) => {
                                     e.preventDefault();
                                     window.open(
@@ -229,18 +224,33 @@ export default function StatusGuidanceCard({
                                         'noopener,noreferrer',
                                     );
                                 }}
-                                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80"
                             >
-                                <Phone className="h-3.5 w-3.5" />
-                                {guidance.cta.label}
-                            </a>
+                                <a
+                                    href={waLinkWithText(
+                                        outletPhone,
+                                        whatsAppDefaultMessage({
+                                            order_code: orderCode ?? '',
+                                            status,
+                                            fulfillment_type: isPickup
+                                                ? 'pickup'
+                                                : 'delivery',
+                                            customer_name: customerName,
+                                            outlet_name: outletName,
+                                        }),
+                                    )}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <Phone className="h-3.5 w-3.5" />
+                                    {guidance.cta.label}
+                                </a>
+                            </Button>
                         ) : guidance.cta.href ? (
-                            <Link
-                                href={guidance.cta.href}
-                                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80"
-                            >
-                                {guidance.cta.label}
-                            </Link>
+                            <Button asChild size="sm" variant="primary">
+                                <Link href={guidance.cta.href}>
+                                    {guidance.cta.label}
+                                </Link>
+                            </Button>
                         ) : null}
                     </div>
                 )}
