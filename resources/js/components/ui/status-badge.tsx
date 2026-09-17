@@ -18,21 +18,33 @@ interface StatusProps {
 
 type Props = VariantProps | StatusProps;
 
-const variantStyles: Record<BadgeVariant, string> = {
-    success: 'bg-emerald-50 text-emerald-700',
-    warning: 'bg-amber-50 text-amber-700',
-    danger: 'bg-red-50 text-red-700',
-    info: 'bg-blue-50 text-blue-700',
+/**
+ * The one canonical pill in the app. Both modes — resolve from a status
+ * string, or pass a variant directly — share these classes so a badge can
+ * never drift from the token set.
+ */
+export const BADGE_BASE = 'inline-flex items-center rounded-full font-bold';
+
+export const BADGE_VARIANT_CLASSES: Record<BadgeVariant, string> = {
+    success: 'bg-success-bg text-success-text',
+    warning: 'bg-warning-bg text-warning-text',
+    danger: 'bg-danger-bg text-danger-text',
+    info: 'bg-info-bg text-info-text',
     neutral: 'bg-surface-muted text-text-muted',
 };
 
 const sizeStyles = {
-    sm: 'px-1.5 py-0.5 text-[11px]',
-    md: 'px-2.5 py-1 text-[12px]',
+    sm: 'px-1.5 py-0.5 text-caption',
+    md: 'px-2.5 py-1 text-caption',
 };
 
 function resolveStatus(status: string): { variant: BadgeVariant; label: string } {
-    return ALL_STATUSES[status] ?? { variant: 'neutral', label: status.replaceAll('_', ' ') };
+    return (
+        ALL_STATUSES[status] ?? {
+            variant: 'neutral',
+            label: status.replaceAll('_', ' '),
+        }
+    );
 }
 
 export default function StatusBadge(props: Props) {
@@ -51,7 +63,9 @@ export default function StatusBadge(props: Props) {
     }
 
     return (
-        <span className={`inline-flex items-center rounded-full font-medium ${variantStyles[variant]} ${sizeStyles[size]}`}>
+        <span
+            className={`${BADGE_BASE} ${BADGE_VARIANT_CLASSES[variant]} ${sizeStyles[size]}`}
+        >
             {label}
         </span>
     );
