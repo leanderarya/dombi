@@ -11,6 +11,7 @@ import PageHeader from '@/components/ui/page-header';
 import { useOrderAlert } from '@/hooks/use-order-alert';
 import { useOutletBadges } from '@/hooks/use-outlet-badges';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
+import { useRoleTheme } from '@/hooks/use-role-theme';
 
 interface Props extends PropsWithChildren {
     title?: string;
@@ -42,6 +43,7 @@ export default function OutletLayout({
     const { pendingCount } = useOrderAlert();
     const { badgeCounts } = useOutletBadges();
     usePushSubscription();
+    useRoleTheme('outlet');
 
     const rightSlot = (
         <div className="flex items-center gap-1">

@@ -9,6 +9,7 @@ import CustomerTopBar from '@/components/customer/customer-top-bar';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import OfflineBanner from '@/components/shared/offline-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
+import { useRoleTheme } from '@/hooks/use-role-theme';
 import { useCart } from '@/lib/use-cart';
 import FavoritesProvider from '@/providers/favorites-provider';
 import { NavigationProvider } from '@/providers/navigation-provider';
@@ -38,6 +39,7 @@ export default function CustomerMobileLayout({
     hideBottomNav = false,
 }: Props) {
     useFlashToast();
+    useRoleTheme('customer');
     const { totalItems } = useCart();
     const [dismissedOrderCode, setDismissedOrderCode] = useState(
         getDismissedOrderCode,

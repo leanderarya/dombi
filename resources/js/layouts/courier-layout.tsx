@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { ChevronLeft, LogOut } from 'lucide-react';
-import { useLayoutEffect, useState } from 'react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { PropsWithChildren } from 'react';
 import CourierBottomNav from '@/components/courier/bottom-nav';
@@ -8,6 +8,7 @@ import NotificationBell from '@/components/shared/notification-bell';
 import NotificationSheet from '@/components/shared/notification-sheet';
 import MobileRoleLayout from '@/components/ui/mobile-role-layout';
 import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
+import { useRoleTheme } from '@/hooks/use-role-theme';
 
 interface Props extends PropsWithChildren {
     title?: string;
@@ -34,20 +35,7 @@ export default function CourierLayout({
     const [notificationOpen, setNotificationOpen] = useState(false);
     const { visible } = useHideOnScroll();
 
-    useLayoutEffect(() => {
-        const root = document.documentElement;
-        const previousRole = root.dataset.role;
-
-        root.dataset.role = 'courier';
-
-        return () => {
-            if (previousRole) {
-                root.dataset.role = previousRole;
-            } else {
-                delete root.dataset.role;
-            }
-        };
-    }, []);
+    useRoleTheme('courier');
 
     const isOnline = auth?.user?.is_online;
     const onlineLabel =
