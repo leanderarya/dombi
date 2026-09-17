@@ -109,17 +109,17 @@ transaksi yang masuk setelah deploy.
 
 | Evidence | Link/output | Waktu | Operator | Hasil |
 |---|---|---|---|---|
-| DNS/SSL/document root production |  |  |  |  |
-| Runtime `.env` production |  |  |  |  |
-| DOKU Live dan Google OAuth |  |  |  |  |
-| Known-good rollback SHA/tag |  |  |  |  |
-| Production health `/up` + `/api/health` |  |  |  |  |
-| CI commit release |  |  |  |  |
-| Migration rehearsal |  |  |  |  |
-| DOKU sandbox |  |  |  |  |
-| Backup restore |  |  |  |  |
-| Staging smoke |  |  |  |  |
-| Production canary |  |  |  |  |
+| DNS/SSL/document root production | `app.dombicenter.com` → `145.79.14.13` (Hostinger); SSL Let's Encrypt `CN=app.dombicenter.com` valid s/d 2026-12-15. Docroot: `/.env`→403, `/composer.json`,`/artisan`,`/vendor/autoload.php`→404, `/index.php`+`/build/assets/*.js`→200 | 2026-09-17 | agent | PASS |
+| Runtime `.env` production | Assertion in-workflow pada run deploy `32940687531` (`e48b6288`): `app.env=production`, `app.debug=false`, `doku.sandbox=false`, `legacy_writes_enabled=false` + health 200 | 2026-09-17 | agent | PASS (via deploy assertion) |
+| DOKU Live dan Google OAuth | Callback URL production (`DOKU_CALLBACK_URL`) dan URL Notification di DOKU Back Office belum diverifikasi | — | — | ⬜ perlu cek Back Office |
+| Known-good rollback SHA/tag | `e48b6288` (`origin/main`, merge promote terakhir) | 2026-09-17 | agent | PASS |
+| Production health `/up` + `/api/health` | `https://app.dombicenter.com/up` → 200, `/api/health` → 200 | 2026-09-17 | agent | PASS |
+| CI commit release | deploy-staging run `35062841734` pada `ab33f6ea` → success (quality + deploy); production last green run `32940687531` pada `e48b6288` | 2026-09-17 | agent | PASS |
+| Migration rehearsal | belum dijalankan terpisah | — | — | ⬜ |
+| DOKU sandbox | Skenario 1 PASS pada build `ab33f6ea`; Skenario 2–5 belum | 2026-09-17 | agent + tester | sebagian |
+| Backup restore | di-WAIVE untuk scope Hostinger (2026-07-27) | — | owner | WAIVED |
+| Staging smoke | Skenario 1 PASS; 2–5 belum | 2026-09-17 | agent + tester | sebagian |
+| Production canary | belum dijalankan | — | — | ⬜ |
 
 ## Blocker yang Diketahui Saat Audit
 
