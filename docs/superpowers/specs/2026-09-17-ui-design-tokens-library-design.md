@@ -170,7 +170,7 @@ Warna solid untuk border/ikon: `--color-success` `#16A34A`, `--color-warning` `#
 |---|---|---|
 | `--color-card` | `#FFFFFF` | `ui/card.tsx` memakai `bg-card` — belum terdeklarasi |
 | `--color-card-foreground` | `#1E1E1E` | `ui/card.tsx` memakai `text-card-foreground` |
-| `--color-overlay` | `rgba(0,0,0,0.40)` | backdrop sheet/dialog, sekarang hex inline |
+| `--color-overlay` | `rgba(0,0,0,0.40)` → **`0.133`** | backdrop sheet/dialog, sekarang hex inline. Lihat koreksi di bawah |
 | `--color-input` | `#E4E4E7` | sudah ada, tapi `ui/input.tsx` masih `border-input` + `shadow-sm` bawaan |
 
 ### 3.4 Tipografi
