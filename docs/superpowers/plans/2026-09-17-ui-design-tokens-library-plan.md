@@ -60,15 +60,25 @@ Memblokir semua fase lain. Semua slice di fase ini menyentuh file yang sama (`ap
 
 **Cluster file:** `resources/css/app.css`
 
-- Tambah blok `html[data-role='outlet']`.
-- Tetapkan aksen Outlet sesuai jawaban **Q-CR2-1**.
+- Tambah blok `html[data-role='outlet']` dengan primary `#047857` dan accent `#FF8A3D` (Q-CR2-1).
 - Pastikan blok ini **tidak** mengubah Customer (Customer tidak memakai `data-role`).
 
-**Verifikasi:** `npm run build`. Muat halaman Outlet — primary harus ikut berubah; halaman Customer tidak.
+**Verifikasi:** `npm run build`. Muat halaman Outlet — primary dan accent harus ikut berubah; halaman Customer tidak.
 
 **Commit:** `feat(tokens): add outlet role accent scope`
 
-**Blocker:** Q-CR2-1. Slice ini boleh ditunda sampai Outlet slice; **tidak** memblokir Fase B/C.
+### Slice A.4 — Pindahkan `data-role` ke root view
+
+**Cluster file:** `resources/views/customer-app.blade.php`, `resources/views/internal-app.blade.php`, `resources/views/app.blade.php`, `resources/js/layouts/owner-layout.tsx`, `resources/js/layouts/courier-layout.tsx`
+
+- Set `data-role` pada `<html>` dari blade root view, bukan dari layout React.
+- Hapus `useLayoutEffect` penulis `dataset.role` di `owner-layout.tsx:144` dan `courier-layout.tsx:39`.
+- Tujuan: `data-role` tersedia sebelum hydrate dan tidak bergantung layout yang ter-mount.
+
+**Verifikasi:** `npm run build`, `npm run types:check`, `npm run lint:check`. Muat keempat panel — inspeksi `<html data-role>`.
+
+**Commit:** `refactor(theme): set data-role from root view`
+
 
 ### Slice A.3 — Buang tambalan `!important` input
 
@@ -245,13 +255,13 @@ Pola mengikuti plan induk `Slice R.1–R.4`, tetapi **dikunci ke kanvas** dan **
 
 Mengikuti plan induk `Slice R.1–R.4` per role, dengan Components Library dari Fase B sebagai target.
 
-| # | Role | Cakupan | Blocker |
-|---|---|---|---|
-| 2 | Outlet | Refresh | Q-CR2-1 (aksen Outlet) |
-| 3 | Courier | Refresh | Q-CR2-2 (biru vs keluarga brand) |
-| 4 | Owner | Refresh, exempt 44 px | Q-CR2-3 (`#005D42` vs `#065F46`) |
+| # | Role | Cakupan | Aksen final | Blocker |
+|---|---|---|---|---|
+| 2 | Outlet | Refresh | emerald `#047857` + accent-orange `#FF8A3D` | — |
+| 3 | Courier | Refresh | biru dipertahankan | — |
+| 4 | Owner | Refresh, exempt 44 px | `#065F46` (dari `#005D42`) | — |
 
-Satu role tidak mulai sebelum role sebelumnya lolos review.
+Satu role tidak mulai sebelum role sebelumnya lolos review. Semua pertanyaan aksen sudah terjawab (Q-CR2-1..3); tidak ada blocker terbuka.
 
 ---
 
@@ -300,7 +310,7 @@ Catatan: jalankan PHP dan Vitest **terpisah** — suite penuh bersamaan time-out
 
 | Fase | Slice | Perkiraan |
 |---|---|---|
-| A — Token | 3 | 2–3 jam |
+| A — Token | 4 | 3–4 jam |
 | B — Library | 6 | 6–9 jam |
 | C — Customer Orders | 4 | 4–6 jam |
 | D — Outlet/Courier/Owner | 12 | mengikuti plan induk |

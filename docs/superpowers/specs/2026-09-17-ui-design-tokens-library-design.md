@@ -219,14 +219,32 @@ Padding tepi layar kanvas = **16 px**. Gap antar-kartu = **14 px**. Gap dalam ka
 | Customer, Outlet, Courier | semua elemen interaktif ≥ **44×44 px** pada viewport mobile |
 | Owner | dikecualikan pada pointer presisi (D6); tetap terikat token & komponen |
 
-### 3.9 Aksen Per-Role
+### 3.9 Aksen Per-Role (Final)
+
+Dijawab 2026-09-17. Lihat §3.9a untuk blok CSS yang mengikat.
 
 | Role | Primary | Aksen | Status |
 |---|---|---|---|
-| Customer | `#047857` emerald | — | tetap, konsistensi (D8) |
-| Courier | blue (sudah ada) | — | tetap |
-| Owner | `#005D42` (sudah ada) | — | tetap |
-| Outlet | `#047857` emerald | **⬜ belum ditetapkan** | lihat §8 Q-CR2-1 |
+| Customer | `#047857` emerald | — | **tetap** — konsistensi (D8), tidak ada `data-role` |
+| Outlet | `#047857` emerald | `#FF8A3D` accent-orange | **baru** — blok `data-role='outlet'` |
+| Courier | biru `#1D4ED8` / `#1E40AF` | — | **dipertahankan** — tidak ditarik ke keluarga brand |
+| Owner | **`#065F46`** (`--color-primary-hover`) | — | **diselaraskan** dari `#005D42` |
+
+Catatan Owner: `#005D42` diganti `#065F46`. Perubahan ini menyatukan Owner ke keluarga brand yang sama dengan Customer, dengan satu tingkat lebih gelap sebagai pembeda role. `#065F46` sudah menjadi `--color-primary-hover` global, jadi tidak ada nilai baru yang diperkenalkan.
+
+Catatan Courier: biru tetap. Konsekuensinya Courier adalah **satu-satunya role di luar keluarga brand emerald**. Ini diterima secara sadar, bukan kelalaian. Tambalan CSS `.bg-emerald-50`/`.text-emerald-700` khusus Courier tetap harus dibuang (diganti token), tetapi **nilai akhirnya tetap biru**.
+
+### 3.9a Blok Role Scope (Mengikat)
+
+| Role | Selector | Primary | Aksen | Surface |
+|---|---|---|---|---|
+| Customer | *(tanpa selector)* | `--color-primary` | — | default `@theme` |
+| Outlet | `html[data-role='outlet']` | `#047857` | `#FF8A3D` | default |
+| Courier | `html[data-role='courier']` | `#1D4ED8` | — | `#F8FAFC` |
+| Owner | `html[data-role='owner']` | `#065F46` | — | `#F4F4F2` |
+
+**Perubahan mekanisme:** `data-role` saat ini di-set oleh layout React. Itu rapuh — Customer dan Outlet tidak pernah di-set. Mekanisme final men-set `data-role` pada `<html>` dari **blade root view**, sehingga nilainya tersedia sebelum React hydrate dan tidak bergantung pada layout yang ter-mount.
+
 
 ---
 
@@ -394,15 +412,15 @@ Catatan: `app.css` memaksa `font-size: 16px !important` pada semua input untuk m
 
 ---
 
-## 8. Pertanyaan Terbuka
+## 8. Pertanyaan — TERJAWAB (2026-09-17)
 
-| # | Pertanyaan | Blocking? |
+| # | Pertanyaan | Jawaban |
 |---|---|---|
-| **Q-CR2-1** | Aksen Outlet: emerald + accent-orange, atau warna lain dalam keluarga brand? | ⬜ Blocking untuk slice Outlet saja. Customer tidak terpengaruh |
-| **Q-CR2-2** | Courier: biru tidak berada dalam keluarga brand emerald. Dipertahankan sebagai aksen role, atau ditarik ke keluarga brand? | ⬜ Tidak blocking — Courier slice terakhir sebelum Owner |
-| **Q-CR2-3** | Owner `#005D42` dipertahankan atau diselaraskan ke `primary-hover` `#065F46`? | ⬜ Tidak blocking untuk Customer |
+| **Q-CR2-1** | Aksen Outlet | **Emerald `#047857` + accent-orange `#FF8A3D`** |
+| **Q-CR2-2** | Courier biru | **Dipertahankan biru** — tidak ditarik ke keluarga brand |
+| **Q-CR2-3** | Owner `#005D42` | **Diselaraskan ke `#065F46`** (`--color-primary-hover`) |
 
-Ketiganya **tidak memblokir slice Customer**, yang berjalan lebih dulu dan hanya butuh token emerald yang sudah ada.
+Ketiganya kini terkunci. Tidak ada pertanyaan terbuka yang tersisa; aksen per-role final ada di §3.9 dan §3.9a.
 
 ## 9. Status Blocker
 
@@ -415,6 +433,6 @@ Ketiganya **tidak memblokir slice Customer**, yang berjalan lebih dulu dan hanya
 
 ## 10. Langkah Berikutnya
 
-1. ⬜ Klien menyetujui dokumen ini (gerbang review draf).
-2. ⬜ Jawab Q-CR2-1..3 bila ingin slice Outlet/Courier/Owner ikut jalan.
+1. ✅ Q-CR2-1..3 terjawab (2026-09-17).
+2. ⬜ Klien menyetujui dokumen ini (gerbang review draf).
 3. ⬜ Eksekusi menurut `docs/superpowers/plans/2026-09-17-ui-design-tokens-library-plan.md`.
