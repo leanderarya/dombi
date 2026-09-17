@@ -1,8 +1,8 @@
 # UI/UX Design Alignment — Implementation Plan
 
 **Spec:** `docs/superpowers/specs/2026-09-17-ui-ux-design-alignment-design.md`
-**PRD delta:** `docs/PRD.md` §9 — NFR-UI-1, NFR-UI-2, NFR-UI-3
-**Gate 1:** ✅ Lulus 2026-09-17
+**PRD delta:** `docs/PRD.md` §9 — NFR-UI-1, NFR-UI-2, NFR-UI-3, NFR-UI-4
+**Gate 1:** ✅ Lulus 2026-09-17 · **Change Request:** CR-1 (Q5 per-role, Customer consistency-only)
 **Baseline:** `develop` @ `59f07a74` (implementasi mulai dari commit setelah ini)
 **Durasi:** draf 1 minggu → staging 4 minggu (1 slice per role)
 
@@ -13,9 +13,10 @@
 | D1/D4 | Satu keluarga tema brand + aksen berbeda per role, lewat token CSS global |
 | D2/D5 | Konsolidasi 5 komponen inti + varian badge/chip/modal/input duplikat + hapus komponen mati |
 | D3 | Mobile-first, touch target ≥ 44×44 px |
-| D5 | **Visual refresh + konsistensi** — bahasa desain baru diizinkan |
+| D5 | **Visual refresh + konsistensi**, diterapkan **per role**: Customer = *consistency only* (CR-1); Outlet/Courier/Owner = refresh |
 | D6 | Owner exempt 44 px pada pointer presisi; tetap ikut token & komponen |
 | D7 | Bertahap per role: Customer → Outlet → Courier → Owner |
+| D8 | **Customer — consistency only**, kriteria terima *zero visual regression* |
 
 ## Prinsip eksekusi
 
@@ -35,12 +36,13 @@
 
 - Tetapkan palet brand tunggal: primary, secondary, neutral ramp, semantic (success/warning/danger/info), surface, border, text.
 - Tetapkan aksen per role **berasal dari palet brand** (bukan warna acak):
-  - Customer — aksen konsumen (paling ramah/terang)
+  - Customer — **dipatok ke warna Customer yang sudah ada (emerald dominan). Bukan warna baru.** CR-1: Customer consistency-only, jadi token Customer harus menghasilkan tampilan yang setara dengan sekarang
   - Outlet — aksen operasional
   - Courier — aksen biru (pertahankan identitas yang sudah dipakai)
   - Owner — aksen hijau tua (pertahankan identitas yang sudah dipakai)
 - Tetapkan skala radius, spacing, elevasi, dan tipografi.
 - **Bukti selesai:** tabel token final + pratinjau visual (boleh screenshot/spec, tidak wajib kode).
+- **Batas CR-1:** tidak boleh mengusulkan bahasa visual baru untuk Customer.
 
 ### Slice 0.2 — Spek komponen
 
@@ -72,21 +74,25 @@
 
 ## Fase 2 — Slice per Role (minggu ke-2 s/d ke-5)
 
-Pola tiap role identik. Wajib diselesaikan berurutan; satu role tidak mulai sebelum role sebelumnya lolos review.
+Pola tiap role identik **kecuali Customer**, yang dijalankan sebagai consistency-only (CR-1). Wajib diselesaikan berurutan; satu role tidak mulai sebelum role sebelumnya lolos review.
 
 ### Slice R.1 — Konsolidasi komponen dasar
 - Ganti `<button>` mentah → `Button` pada modul role.
 - Ganti badge/chip ad-hoc → komponen Badge bervarian.
 - Ganti modal/dialog → primitive tunggal.
 - Hapus komponen duplikat milik role setelah migrasi.
+- **Customer (CR-1):** bentuk, ukuran, dan warna tombol/badge/modal yang terlihat harus tetap sama. Konsolidasi hanya boleh mengubah *implementasi*, bukan penampilan.
 
 ### Slice R.2 — Migrasi warna ke token
 - Ganti palette mentah & hex inline → token.
 - Ganti override per-halaman (mis. `.owner-filter-card`) → token/utility bersama.
+- **Customer (CR-1):** token harus mengevaluasi ke warna yang sama seperti sebelumnya. Override `.owner-filter-card` tidak berlaku untuk Customer.
 
-### Slice R.3 — Kerapian layout
+### Slice R.3 — Kerapian layout & refresh visual
 - Seragamkan spacing, alignment, dan visual hierarchy antar halaman role.
 - Terapkan touch target 44 px (Customer/Outlet/Courier).
+- **Refresh visual hanya untuk Outlet, Courier, Owner.**
+- **Customer (CR-1):** spacing boleh dirapikan, tetapi tidak boleh mengubah bahasa visual. Tidak ada perubahan tipografi/radius/elevasi/warna yang terlihat.
 
 ### Slice R.4 — Hapus kode mati
 - Hapus komponen role yang sudah tidak dipakai.
@@ -94,12 +100,12 @@ Pola tiap role identik. Wajib diselesaikan berurutan; satu role tidak mulai sebe
 
 Urutan role:
 
-| # | Role | Minggu | Catatan risiko |
-|---|---|---|---|
-| 1 | Customer | 2 | Alur checkout & pembayaran — **jangan** ubah kontrak/status |
-| 2 | Outlet | 3 | Banyak dialog exch/ret/restock |
-| 3 | Courier | 4 | Kecil (4 halaman) — slice cepat, sekaligus validasi pola |
-| 4 | Owner | 5 | Terbesar (57 halaman), sidebar + tabel, exempt 44 px |
+| # | Role | Minggu | Cakupan Q5 | Catatan risiko |
+|---|---|---|---|---|
+| 1 | Customer | 2 | **Consistency only** (CR-1) | Alur checkout & pembayaran — **zero visual regression**; jangan ubah kontrak/status |
+| 2 | Outlet | 3 | Refresh | Banyak dialog exch/ret/restock |
+| 3 | Courier | 4 | Refresh | Kecil (4 halaman) — slice cepat, sekaligus validasi pola |
+| 4 | Owner | 5 | Refresh | Terbesar (57 halaman), sidebar + tabel, exempt 44 px |
 
 ---
 
@@ -130,6 +136,7 @@ Urutan role:
 | Unit/JS | `npm run test` | semua lolos |
 | Build | `npm run build` | sukses |
 | PHP | `php artisan test` | semua lolos (dijalankan terpisah) |
+| **Customer visual** (CR-1) | perbandingan screenshot sebelum/sesudah | **identik** — tidak ada regresi visual |
 
 Catatan: jalankan PHP dan Vitest **terpisah** — suite penuh bersamaan time-out.
 

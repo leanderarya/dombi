@@ -7,10 +7,10 @@
 | | |
 | --- | --- |
 | **Nama Produk** | Dombi — Platform Operasional Bisnis Susu Kambing |
-| **Versi Dokumen** | v0.3 |
+| **Versi Dokumen** | v0.4 |
 | **Disusun oleh** | Arya Ajisadda (Pengembang) |
 | **Untuk** | Arya Ajisadda (Klien / Owner) |
-| **Tanggal** | 2026-08-06 (delta UI/UX: 2026-09-17) |
+| **Tanggal** | 2026-08-06 (delta UI/UX: 2026-09-17; CR-1: 2026-09-17) |
 | **Dokumen Terkait** | Product Scope (2026-07-27), Progress Roadmap (2026-07-22), DOKU Payment Docs (2026-08-05), UI/UX Design Alignment MoM (2026-09-17) |
 
 ---
@@ -305,6 +305,7 @@ Lihat Bab 11 untuk penjelasan masing-masing fitur.
 - **Responsivitas :** Seluruh antarmuka harus berfungsi sempurna pada mobile (360px+), tablet, dan desktop. Mobile-first design dengan breakpoint Tailwind standar.
 - **Konsistensi Visual (NFR-UI-1) :** Seluruh warna, radius, dan spacing UI berasal dari design token Tailwind v4 (`@theme`). Pemakaian palette mentah Tailwind dan nilai hex inline pada komponen UI tidak diizinkan. Satu keluarga tema brand dengan aksen berbeda per role; perbedaan role diterapkan lewat token CSS global, bukan override per-kelas atau per-halaman.
 - **Touch Target (NFR-UI-2) :** Semua elemen interaktif pada panel Customer, Outlet, dan Courier memiliki area sentuh minimum 44×44 px pada viewport mobile. Panel Owner dikecualikan dari jaminan 44 px pada perangkat pointer presisi (desktop), namun tetap terikat NFR-UI-1 dan NFR-UI-3.
+- **Cakupan Perubahan Visual (NFR-UI-4) :** Panel Customer dijalankan sebagai *consistency only* — bahasa visual (warna, tipografi, radius, elevasi) yang terlihat dipertahankan, dengan kriteria terima *zero visual regression*. Panel Outlet, Courier, dan Owner menjalani *visual refresh* bersamaan dengan konsistensi, diturunkan dari satu keluarga tema brand.
 - **Reuse Komponen (NFR-UI-3) :** Komponen dasar bersama (Button, Modal/Dialog, Card, Badge, Input) merupakan satu-satunya implementasi yang dipakai semua panel role. Varian badge/chip, primitive dialog/sheet, dan komponen mati dikonsolidasikan.
 - **Keamanan :** Rate limiting pada endpoint sensitif (guest cancel: 3/min IP, 10/10min token). Hash verification untuk guest token (hash_equals). Webhook signature verification DOKU. CSRF protection pada semua mutation. Role-based access control pada setiap route.
 - **Ketahanan Koneksi :** Push notification via VAPID + FCM agar user tetap mendapat informasi meskipun tidak membuka web. PWA service worker untuk caching aset statis.
