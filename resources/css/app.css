@@ -27,8 +27,8 @@
     --color-card: #ffffff;
     --color-card-foreground: #1e1e1e;
 
-    /* Overlay — modal/sheet backdrop */
-    --color-overlay: rgba(0, 0, 0, 0.4);
+    /* Overlay — modal/sheet backdrop (matches the kanvas scrim #00000022) */
+    --color-overlay: rgba(0, 0, 0, 0.133);
 
     /* Brand — emerald (ceria, fresh) */
     --color-primary: var(--color-emerald-700);
@@ -83,6 +83,7 @@
     --radius-card: 1rem;
     --radius-control: 0.625rem;
     --radius-chip: 0.5rem;
+    --radius-sheet: 1.25rem;
 
     /* Control typography — button, chip and input labels */
     --text-control: 0.8125rem;

@@ -71,10 +71,10 @@ export default function BottomSheet({ open, onClose, title, children, maxHeight 
     // Portal to body — avoids containing-block issues
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">
-            <div className="absolute inset-0 bg-black/15 backdrop-blur-[2px]" onClick={onClose} />
+            <div className="absolute inset-0 bg-overlay" onClick={onClose} />
             <div
                 ref={sheetRef}
-                className="relative flex w-full max-w-lg flex-col rounded-t-3xl bg-white pb-safe"
+                className="relative flex w-full max-w-lg flex-col rounded-t-sheet bg-surface pb-safe"
                 style={{
                     maxHeight,
                     transform: `translateY(${translateY}px)`,
@@ -84,23 +84,23 @@ export default function BottomSheet({ open, onClose, title, children, maxHeight 
             >
                 {/* Drag Handle — touch target for swipe */}
                 <div
-                    className="flex justify-center pt-3 pb-2 shrink-0 cursor-grab active:cursor-grabbing"
+                    className="flex shrink-0 cursor-grab justify-center pt-3 pb-2 active:cursor-grabbing"
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                 >
-                    <div className="h-1 w-10 rounded-full bg-slate-200" />
+                    <div className="h-1 w-10 rounded-full bg-border-strong" />
                 </div>
 
                 {/* Header */}
                 {title && (
-                    <div className="flex items-center justify-between px-5 pb-3 shrink-0">
-                        <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
+                    <div className="flex shrink-0 items-center justify-between px-4 pb-3">
+                        <h2 className="font-heading text-lg font-bold text-text">{title}</h2>
                         <button
                             type="button"
                             onClick={onClose}
                             aria-label="Tutup"
-                            className="flex h-11 w-11 items-center justify-center rounded-full text-slate-400 active:bg-slate-100"
+                            className="flex h-11 w-11 items-center justify-center rounded-full text-text-subtle active:bg-surface-muted"
                         >
                             <X className="h-4 w-4" />
                         </button>
@@ -108,7 +108,7 @@ export default function BottomSheet({ open, onClose, title, children, maxHeight 
                 )}
 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto px-5 pb-4">
+                <div className="flex-1 overflow-y-auto px-4 pb-6">
                     {children}
                 </div>
             </div>
