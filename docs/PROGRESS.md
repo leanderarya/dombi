@@ -72,9 +72,10 @@ Stock (no oversell, exact-once reservation release), payment idempotency (CAS + 
 - Fase A–C plan token selesai untuk scope Customer Orders (putaran koreksi
   C.5–C.7, lalu F.1–F.4 untuk isi kartu daftar pesanan). Detail:
   `docs/superpowers/plans/2026-09-17-ui-design-tokens-library-plan.md`.
-- **Gate visual Orders 1/2 dijalankan dan lolos** (2026-09-18) — render lokal
-  vs frame `op1pF`/`fjKWV`: `docs/ORDERS_LIST_VISUAL_GATE_20260918.md`,
-  screenshot di `docs/evidence/orders-list-20260918/`.
+- **Gate visual Orders 1–4 dijalankan** (2026-09-18) — render lokal vs frame
+  `op1pF`/`fjKWV`/`ZXG0E`/`p0C6Ta`: `docs/ORDERS_LIST_VISUAL_GATE_20260918.md`,
+  screenshot di `docs/evidence/orders-list-20260918/`. Tiga frame setara; frame
+  Kosong (`ZXG0E`) belum — pita section hilang (F-2), dijadwalkan.
 - Pemetaan kanvas: **dua frame Orders (1 & 2) = satu route**
   (`GET /customer/orders`) — pita `Pesanan Aktif` muncul bila ada order aktif,
   pita riwayat selalu tampil. Jangan membangun layar kedua.
