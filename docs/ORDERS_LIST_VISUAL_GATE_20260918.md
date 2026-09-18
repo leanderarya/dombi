@@ -20,6 +20,8 @@ Bukti: [`docs/evidence/orders-list-20260918/`](evidence/orders-list-20260918/)
 
 > Pemetaan yang berlaku: **dua frame = satu route** (`GET /customer/orders`). State A muncul saat `activeOrders` tidak kosong; State B saat kosong. Tidak ada layar kedua yang perlu dibangun.
 
+> **Perubahan header (2026-09-18, setelah gate).** Pengguna menyeleksi komponen baru di kanvas: `hasMu` — **`Page Header/Customer`** (belum tersimpan ke `.pen` saat dibaca). Isinya: `fill=$surface`, `padding=[12,20,16,20]`, satu teks `Riwayat Pesanan` **16/700 `$font-body`, rata tengah, tanpa subtitle**. Implementasi sudah mengikuti komponen itu. Karena frame `op1pF`/`fjKWV`/`ZXG0E`/`p0C6Ta` masih menggambar header lama (judul 24/800 rata kiri + subtitle 12), baris "Judul + subjudul" pada tabel State A di bawah menggambarkan keadaan **sebelum** perubahan ini dan kanvas perlu diperbarui agar konsisten.
+
 ## 1. Cara render ulang
 
 Fixture memakai customer khusus (`gate-customer@example.com`) dengan 3 order per state supaya tidak mencampur data dummy lokal:
