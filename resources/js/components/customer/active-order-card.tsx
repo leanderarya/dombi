@@ -8,7 +8,7 @@ import OrderTotalRow from '@/components/ui/order-total-row';
 import StatusBadge from '@/components/ui/status-badge';
 import { getActiveRefundPresentation } from '@/lib/active-order-card-state';
 import type { RefundBadge } from '@/lib/active-order-card-state';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { formatCurrency, formatRelativeOrderDate } from '@/lib/format';
 import { fulfillmentLabel, fulfillmentVia } from '@/lib/order-fulfillment';
 import { getOrderStatusConfig } from '@/lib/order-status-config';
 import OrderCardShell from './order-card-shell';
@@ -153,7 +153,9 @@ export default function ActiveOrderCard({ order }: Props) {
 
     const firstItem = order.items?.[0];
     const itemCount = order.items?.length ?? 0;
-    const dateStr = order.created_at ? formatDate(order.created_at) : '';
+    const dateStr = order.created_at
+        ? formatRelativeOrderDate(order.created_at)
+        : '';
 
     // Override status config for payment issues and pending payment
     const displayStatus = refundPresentation.active
