@@ -6,6 +6,11 @@ import OrderMetaRow from '@/components/ui/order-meta-row';
 import OrderTotalRow from '@/components/ui/order-total-row';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
+import {
+    fulfillmentLabel,
+    fulfillmentVia,
+    isPickupOrder,
+} from '@/lib/order-fulfillment';
 import { getOrderStatusConfig } from '@/lib/order-status-config';
 import OrderCardShell from './order-card-shell';
 
@@ -54,7 +59,7 @@ const REFUND_BADGE_VARIANT: Record<
 };
 
 export default function OrderHistoryCard({ order }: Props) {
-    const isPickup = order.fulfillment_type !== 'delivery_dombi';
+    const isPickup = isPickupOrder(order.fulfillment_type);
     const itemCount = order.items?.length ?? 0;
     const firstItem = order.items?.[0];
     const statusCfg = getOrderStatusConfig(order.status);
@@ -102,7 +107,7 @@ export default function OrderHistoryCard({ order }: Props) {
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex items-center justify-between gap-2">
                         <span className="truncate font-heading text-[15px] font-extrabold text-text">
-                            {isPickup ? 'Pick Up' : 'Delivery'}
+                            {fulfillmentLabel(order.fulfillment_type)}
                         </span>
                         <StatusBadge
                             variant={statusCfg.variant}
@@ -142,7 +147,7 @@ export default function OrderHistoryCard({ order }: Props) {
             {/* Location + Via */}
             <OrderMetaRow
                 primary={order.outlet?.name ?? 'Outlet'}
-                secondary={isPickup ? 'via Store' : 'via Aplikasi'}
+                secondary={fulfillmentVia(order.fulfillment_type)}
             />
 
             {/* Delivery address */}
