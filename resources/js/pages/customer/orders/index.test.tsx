@@ -120,4 +120,73 @@ describe('OrdersIndex', () => {
 
         expect(container.textContent).toContain('Pernah pesan sebelumnya?');
     });
+
+    it('gives a completed history order the outlined `Beli Lagi` action', () => {
+        render({
+            activeOrders: [],
+            historyOrders: {
+                data: [{ ...baseOrder, id: 2, status: 'completed' }],
+                links: [],
+                current_page: 1,
+                last_page: 1,
+                per_page: 10,
+                total: 1,
+            },
+        });
+
+        const text = container.textContent ?? '';
+
+        expect(text).toContain('Beli Lagi');
+        expect(text).not.toContain('Pesan Ulang');
+    });
+
+    it('gives a cancelled history order the solid `Pesan Ulang` action', () => {
+        render({
+            activeOrders: [],
+            historyOrders: {
+                data: [
+                    { ...baseOrder, id: 2, status: 'cancelled_by_customer' },
+                ],
+                links: [],
+                current_page: 1,
+                last_page: 1,
+                per_page: 10,
+                total: 1,
+            },
+        });
+
+        const text = container.textContent ?? '';
+
+        expect(text).toContain('Dibatalkan Customer');
+        expect(text).toContain('Pesan Ulang');
+        expect(text).not.toContain('Beli Lagi');
+    });
+
+    it('labels `delivery_ojol` as Delivery on both the active and history card', () => {
+        render({
+            activeOrders: [{ ...baseOrder, fulfillment_type: 'delivery_ojol' }],
+            historyOrders: {
+                data: [
+                    {
+                        ...baseOrder,
+                        id: 2,
+                        status: 'completed',
+                        fulfillment_type: 'delivery_ojol',
+                    },
+                ],
+                links: [],
+                current_page: 1,
+                last_page: 1,
+                per_page: 10,
+                total: 1,
+            },
+        });
+
+        const text = container.textContent ?? '';
+
+        expect(text.match(/Delivery/g)).toHaveLength(2);
+        expect(text.match(/via Aplikasi/g)).toHaveLength(2);
+        expect(text).not.toContain('Pick Up');
+        expect(text).not.toContain('via Store');
+    });
 });
