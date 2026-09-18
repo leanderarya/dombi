@@ -140,8 +140,8 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
             {/* Page Title — kanvas draws the title left-aligned at 24/800 with
                 a 12px subtitle, and keeps the filter row visible in every
                 state (Orders 1–4), including the empty ones. */}
-            <header className="sticky top-0 z-30 bg-surface/95 pt-safe backdrop-blur">
-                <div className="mx-auto max-w-lg px-5 pt-3 pb-4">
+            <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
+                <div className="mx-auto max-w-lg px-5 pb-4">
                     <h1 className="font-heading text-2xl font-extrabold text-text">
                         Riwayat Pesanan
                     </h1>
@@ -149,7 +149,7 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                         Lacak dan lihat riwayat pesananmu
                     </p>
                 </div>
-                <div className="mx-auto max-w-lg px-5 pb-4">
+                <div className="mx-auto max-w-lg px-5 pb-3">
                     <FilterChips
                         options={filterOptions}
                         active={filter}

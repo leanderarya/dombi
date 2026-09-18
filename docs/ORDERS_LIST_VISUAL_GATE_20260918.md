@@ -126,6 +126,14 @@ Catatan: frame `p0C6Ta` menggambar chip **Semua** sebagai aktif padahal isinya k
 
 Frame `ZXG0E`/`p0C6Ta` menggambar kartu state tanpa `cornerRadius` (siku), sedangkan implementasi memakai `rounded-card` (16 px) — konsisten dengan `Card/Base` dan seluruh kartu lain di kanvas. Kemungkinan besar ini kelalaian frame, bukan maksud desain; kalau kanvas dianggap mengikat, perlu koreksi `EmptyOrderState`, kalau tidak, frame yang perlu dirapikan.
 
+### F-4 — Ukuran pil filter & label tombol (✅ diperbaiki 2026-09-18)
+
+- **Dilaporkan pengguna:** "pil filter besar pada mobile" (header ikut terlihat terlalu tinggi).
+- **Sebab:** `tailwind-merge` tidak mengenal skala teks kustom proyek (`--text-control`, `--text-control-sm`, `--text-caption`) dan menganggapnya kelas **warna**. Akibatnya `cn('text-caption', 'text-text-muted')` membuang `text-caption` → pil jatuh ke 16 px warisan (tinggi 42 px), dan `cn('text-control', 'text-white')` membuang `text-white` → label tombol primary ber-`size="sm"` mewarisi warna teks gelap, bukan putih.
+- **Perbaikan:** `resources/js/lib/utils.ts` — `extendTailwindMerge` dengan `font-size: [{ text: ['control', 'control-sm', 'caption'] }]`. Terukur di halaman ini: pil **16 px/42 px → 11 px/31,75 px**; label tombol primary kembali putih.
+- **Ikut dirapikan agar header sama dengan kanvas:** `pt-safe-header` (inset minimum 12 px; sebelumnya `pt-safe` 8 px **ditambah** `pt-3` 12 px = 20 px), padding bawah baris filter 16 px (sebelumnya 16 px + 4 px bawaan `FilterChips`), dan `leading-tight` pada pil. Header **142,5 px → 127,75 px** (kanvas ≈ 125 px; blok judul 80 px persis sama).
+- **Efek samping yang perlu diketahui:** tombol berukuran selain `sm` kini memakai `text-control` 13 px (sebelumnya `text-control` ikut dibuang sehingga jatuh ke 16 px). Itu nilai yang memang dideklarasikan di `Button`, tetapi **kanvas menggambar label tombol 14/600** (`Button/Primary`, `Button/Secondary`, `Button/Primary CTA`) — selisih 1 px dan bobot 500 vs 600 ini keputusan token terpisah, belum diubah.
+
 ## 8. Hasil gate
 
 | Gate         | Perintah                                          | Target      | Hasil                                             |

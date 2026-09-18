@@ -370,6 +370,11 @@ select:focus {
 @utility pt-safe {
     padding-top: max(0.5rem, env(safe-area-inset-top, 0.5rem));
 }
+/* Same as `pt-safe`, but the kanvas draws a 12px minimum inset above a page
+   header (Orders 1–4 `Page Header` padding-top), so the floor is 0.75rem. */
+@utility pt-safe-header {
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0.75rem));
+}
 @utility pb-safe {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem));
 }

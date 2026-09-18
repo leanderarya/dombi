@@ -21,7 +21,9 @@ export const FILTER_CHIP_BASE =
 const sizeStyles = {
     sm: 'px-3.5 py-1.5 text-xs',
     md: 'px-4 py-2 text-xs',
-    caption: 'px-3.5 py-2 text-caption',
+    /* `leading-tight` keeps the pill at the kanvas height (8/8 padding + 11px
+       label) — the inherited 1.5 line-height made it several px taller. */
+    caption: 'px-3.5 py-2 text-caption leading-tight',
 };
 
 export const FILTER_CHIP_VARIANT_CLASSES = {
