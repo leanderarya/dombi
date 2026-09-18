@@ -7,7 +7,7 @@
 **Gate 1:** ✅ Lulus 2026-09-17 · **Change Request:** CR-1 (per-role), CR-2 (token & library)
 **Baseline:** `develop` @ `1d77a8d0`
 **Kanvas SSOT:** `pencil-new.pen` — 18 frame Order disetujui klien (D9)
-**Status:** 🟡 Fase A: A.1, A.2, A.4 selesai, A.3 ditunda. Fase B: selesai (6/6). Fase C: C.1 selesai, gate screenshot terbuka. Berikutnya C.2.
+**Status:** 🟡 Fase A: A.1, A.2, A.4 selesai, A.3 ditunda. Fase B: selesai (6/6). Fase C: selesai lewat putaran koreksi C.5–C.7 (gate visual terbuka). Berikutnya Fase D — menunggu review staging pengguna.
 
 ## Keputusan yang mengikat
 
@@ -198,10 +198,17 @@ Urutan dipilih dari yang paling banyak dipakai ke paling sedikit, sehingga manfa
 
 Pola mengikuti plan induk `Slice R.1–R.4`, tetapi **dikunci ke kanvas** dan **dibatasi ke layar Order** pada iterasi pertama.
 
-**Status Fase C (2026-09-17): SELESAI.** C.1 `2023fc71`, C.2 `723dcde8`,
-C.3 `204d5cc2`, C.4 `c87f1307`. Yang belum ditutup hanya **gate screenshot**
-(C.1 dan C.3): desktop browser tidak terhubung ke sesi ini. Gate itu terbuka,
-bukan lolos.
+**Status Fase C (2026-09-18): SELESAI lewat dua putaran.**
+
+Putaran pertama: C.1 `2023fc71`, C.2 `723dcde8`, C.3 `204d5cc2`, C.4
+`c87f1307`.
+
+**Gate visual C.1/C.4 dinyatakan GAGAL (2026-09-18).** Implementasi tidak
+menyamai frame Orders yang dipilih klien. Audit delta penuh menghasilkan
+delapan temuan yang dijadwalkan sebagai C.5–C.7 (lihat bawah). Ini contoh
+gate yang benar-benar bisa merah — bukan formalitas.
+
+Putaran kedua (perbaikan): C.5 `824a8925`, C.6 `56159a4f`, C.7 `efe97a84`.
 
 ### Slice C.1 — Layar Orders: shell, badge, chips — ✅ `2023fc71`
 
@@ -334,6 +341,99 @@ bersih, Vitest 130/130, `build` hijau.
 **Verifikasi:** `types:check` bersih, `prettier` bersih, Vitest 130/130,
 `build` hijau, `.rounded-thumb` ter-emit di CSS.
 
+### Putaran koreksi C.5–C.7 (2026-09-18)
+
+Gate visual C.1/C.4 gagal. Audit delta membandingkan render dengan frame
+Orders 1–4 dan menemukan delapan penyimpangan; delapan itu dikerjakan
+sebagai tiga slice tambahan. Semua kluster file berbeda, jadi tiap slice
+punya commit sendiri.
+
+| # | Temuan (kanvas vs kode) | Slice |
+|---|---|---|
+| 1 | Judul 20/800 tengah; kanvas 24/800 kiri + subjudul 12 | C.5 |
+| 2 | Tidak ada pita `Section Label` (12/700 `$text-muted`) | C.5 |
+| 3 | Empty state beda anatomi (tanpa ikon, judul, CTA) | C.5 |
+| 4 | Page plane putih; kanvas `#F7F7F5` | C.5 |
+| 5 | Pill badge `sm` [6,10]; library `md` [4,10] | C.6 |
+| 6 | Kartu terminal diredupkan `opacity-70`; kanvas tidak | C.6 |
+| 7 | Dua aksi per kartu + tombol `Batalkan` di list | C.6 |
+| 8 | Bottom nav: SVG isian, 20px, label 12, `shadow` + blur | C.7 |
+
+**Keputusan yang menyertai audit:**
+
+- Element `#F7F7F5` dideklarasikan sekali sebagai `--color-canvas`, terpisah
+  dari `--color-surface-muted` `#F4F4F2` (tile thumbnail, pill netral).
+- `Button` mendapat varian `secondary-brand` (surface + outline 2px brand +
+  label brand) karena kanvas menggambar `Beli Lagi` dengan aksen brand,
+  bukan netral seperti `outline`.
+- Kanvas mengalahkan literal frame. Literal `#FEF3C7`/`#DCFCE7`/`#DBEAFE`,
+  `r=18` pada kartu, `r=999` pada tombol, dan padding pill `[6,10]` adalah
+  drift dari frame lama; yang menang adalah Components Library + variables.
+- Aksi yang tidak ada di kanvas **tetap ada, tidak dihapus**, hanya
+  dirapikan: kartu pemulihan "Pernah pesan sebelumnya?", strip nomor
+  terpulihkan, badge refund, baris alamat kirim, dan baris `reason` status.
+- `Batalkan` keluar dari kartu daftar. Pembatalan tetap terjangkau di layar
+  detail pesanan (`show.tsx`) dan route track untuk pengguna login — di sana
+  ada ruang untuk menjelaskan konsekuensinya.
+- Bottom nav memakai ikon lucide 20px (House/Heart/ReceiptText/User) sesuai
+  nama di kanvas dan `text-caption` untuk label; tidak ada shadow.
+
+### Slice C.5 — Page chrome daftar pesanan — ✅ `824a8925`
+
+**Cluster file:** `resources/css/app.css` (token `--color-canvas`),
+`resources/js/pages/customer/orders/index.tsx`,
+`resources/js/layouts/customer-mobile-layout.tsx` (prop `pageClassName`),
+`resources/js/components/customer/empty-order-state.tsx`
+
+- Judul 24/800 rata kiri + subjudul 12; filter selalu tampil (termasuk
+  state kosong, sesuai Orders 3/4).
+- `SectionLabel` lokal: 12/700 `text-text-muted` di pita `bg-canvas`.
+- Empty state mengikuti anatomi kanvas; konten dibungkus `max-w-lg`.
+- Layout dapat prop opt-in `pageClassName` (default `bg-background`) supaya
+  hanya Orders yang memakai `bg-canvas`.
+
+**Verifikasi:** `tsc` bersih, `format:check` bersih, eslint bersih (1
+peringatan pra-ada di `checkout/customer.tsx`), Vitest 136/136, `build` hijau.
+
+### Slice C.6 — Kartu pesanan — ✅ `56159a4f`
+
+**Cluster file:** `resources/js/components/ui/button.tsx` (varian
+`secondary-brand`), `resources/js/components/customer/order-history-card.tsx`,
+`resources/js/components/customer/active-order-card.tsx`,
+`resources/js/components/customer/order-card-shell.tsx`
+
+- `StatusBadge size="md"`; tanggal, alasan dan pesan memakai `text-caption`.
+- Shell tidak lagi meredupkan kartu terminal; mark dan judul penuh di semua
+  status. `isDead` tetap dipakai untuk default `isClickable`.
+- Satu aksi solid primary per kartu. `Beli Lagi` memakai `secondary-brand`,
+  `Pesan Ulang` tetap primary; keduanya tanpa ikon.
+- Dialog batal dan dialog prompt login dihapus dari kartu beserta hook
+  `useCancelOrder`; pembatalan tetap ada di detail/track.
+
+**Deviasi yang disengaja:** `size="sm"` (36px) dipertahankan mengikuti gambar
+kanvas meski NFR-UI-2 menetapkan 44px. Kanvas adalah SSOT desain.
+
+**Verifikasi:** `tsc` bersih, `format:check` bersih, eslint bersih (1
+peringatan pra-ada), Vitest 136/136, `build` hijau.
+
+### Slice C.7 — Bottom nav — ✅ `efe97a84`
+
+**Cluster file:** `resources/js/components/customer/bottom-nav.tsx`
+
+- Ikon lucide 20px (House/Heart/ReceiptText/User) menggantikan SVG buatan
+  tangan yang mengisi warna saat aktif; kanvas mempertahankan satu glyph
+  outline dan hanya menukar warna.
+- Label 10/500 (aktif 700), `text-text-subtle` saat nonaktif; bar setinggi
+  64px (`h-16`) dengan `border-t` sebagai ganti `shadow` + `backdrop-blur`.
+- Offset bar mengambang tetap `4.5rem`: 64px + minimum safe-area.
+
+**Verifikasi:** `tsc` bersih, `prettier` bersih, eslint bersih, Vitest
+136/136, `build` hijau.
+
+**Gate visual masih terbuka.** Desktop browser tidak terhubung ke sesi ini,
+jadi screenshot sebelum/sesudah tidak bisa diambil; verifikasi visual
+dilakukan pengguna di staging. Gate ini terbuka, bukan lolos.
+
 ---
 
 ## Fase D — Slice Role 2–4
@@ -397,7 +497,7 @@ Catatan: jalankan PHP dan Vitest **terpisah** — suite penuh bersamaan time-out
 |---|---|---|---|
 | A — Token | 4 | 3–4 jam | 3 selesai, 1 ditunda |
 | B — Library | 6 | 6–9 jam | selesai |
-| C — Customer Orders | 4 | 4–6 jam | selesai (screenshot gate terbuka) |
+| C — Customer Orders | 4 + 3 koreksi | 4–6 jam | selesai (gate visual terbuka) |
 | D — Outlet/Courier/Owner | 12 | mengikuti plan induk | terkunci |
 | E — Penutupan | 3 | 2–3 jam | terkunci |
 
@@ -407,5 +507,10 @@ Fase A + B + C menghasilkan satu paket yang bisa di-review end-to-end dan sesuai
 
 - Fitur baru, perubahan IA, perubahan alur order.
 - Perubahan kontrak API, skema data, logika pembayaran/settlement.
-- Beranda, Favorit, Akun, product detail, bottom nav global (tidak ada di kanvas).
+- Beranda, Favorit, Akun, product detail (tidak ada di kanvas).
+- **Catatan revisi:** bottom nav awalnya tercantum di sini sebagai di luar
+  lingkup. Frame Orders 1–4 ternyata menggambarnya, jadi C.7 mengubah
+  komponennya. Karena `bottom-nav.tsx` dipakai global di scope Customer,
+  perubahan itu ikut terlihat di Beranda/Favorit/Akun — konsisten, tetapi
+  layar-layar itu belum punya frame pembanding.
 - Promosi `develop` → `main` (proses terpisah, butuh konfirmasi eksplisit).
