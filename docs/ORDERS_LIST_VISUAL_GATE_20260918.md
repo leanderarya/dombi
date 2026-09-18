@@ -106,15 +106,15 @@ Catatan: frame `p0C6Ta` menggambar chip **Semua** sebagai aktif padahal isinya k
 
 ## 7. Temuan
 
-### F-1 — Badge refund muncul pada pesanan yang belum dibayar 🔴
+### F-1 — Badge refund muncul pada pesanan yang belum dibayar ✅ diperbaiki (slice F.5)
 
 - **Bukti:** `finding-f1-refund-badge.png`
 - **Perilaku:** pesanan dengan `payment_status = 'pending'` merender badge **`Proses Refund`** plus baris refund berlabel mentah `pending`, dan **tombol bayar hilang** (`refundPresentation.suppressActions`). Frame `op1pF` menggambar kartu itu dengan badge `Menunggu Pembayaran` dan tombol `Bayar Sekarang`.
 - **Sebab:** `RefundPayloadService::uiStatus()` memetakan `RefundObligationStatus::Pending` (enum value `pending`) → `refund_pending`. `queueState()` memakai `payment_status` sebagai fallback saat tidak ada refund obligation, sehingga `PaymentStatus::Pending` (value yang sama: `pending`) terbaca sebagai refund pending. `paid` dan `null` tidak terpengaruh.
 - **Dampak:** order yang menunggu pembayaran kehilangan CTA bayar di daftar pesanan dan salah tampil sebagai proses refund. Terverifikasi juga pada order terminal ber-`payment_status` `pending` (badge `pending` di riwayat). 11 order di DB lokal terdampak.
 - **Bukan regresi Fase F** — F.1–F.3 hanya menyentuh label, tanggal, dan aksi kartu; queue refund tidak disentuh. Ditemukan oleh gate ini.
-- **Usulan koreksi (slice F.5, dijadwalkan — belum dieksekusi):** batasi fallback ke status refund saja (`str_starts_with($status, 'refund_')`) atau jadikan `selectedRefundObligation()` satu-satunya sumber; tambah test `payment_status = 'pending'` → `queueState() === null` dan `payment_status = 'refund_pending'` → bukan `null`.
-- **Kenapa tidak langsung diperbaiki:** menyentuh logika refund/pembayaran, di luar lingkup plan ini ("Tidak menyentuh … logika pembayaran/settlement").
+- **Perbaikan (izin pengguna 2026-09-18):** `queueState()` hanya memakai `payment_status` sebagai pengganti obligation bila nilainya salah satu status refund eksplisit (`REFUND_PAYMENT_STATUSES`: `refund_pending`, `refund_in_progress`, `refunded`, `refund_rejected`, `refund_failed`). Nilai `pending` dan `failed` — dua-duanya bertabrakan dengan `RefundObligationStatus` — tidak lagi dibaca sebagai refund. Semua status refund sungguhan tetap berperilaku sama.
+- **Verifikasi:** test baru `test_unpaid_order_has_no_refund_queue`, `test_failed_payment_has_no_refund_queue` (`RefundPayloadPrivacyTest`) dan `test_unpaid_active_order_carries_no_refund_badge` (`ActiveRefundOrderVisibilityTest`, lewat endpoint `/customer/orders`); `php artisan test --filter=Refund` **221 test lolos**.
 
 ### F-2 — Pita `Riwayat Pesanan` hilang pada state kosong ✅ diperbaiki (slice F.6)
 
@@ -125,9 +125,9 @@ Catatan: frame `p0C6Ta` menggambar chip **Semua** sebagai aktif padahal isinya k
 - **Perbaikan:** cabang `'empty'` kini dibungkus `<section>` + `<SectionLabel>Riwayat Pesanan</SectionLabel>`, sama seperti cabang `'recovered'`. Test `index.test.tsx` menambahkan penjaga: teks `Riwayat Pesanan` muncul **dua kali** di state kosong (judul halaman + pita).
 - **Verifikasi:** render ulang state kosong (fixture akun tanpa order) menunjukkan urutan judul → chip → pita → kartu kosong; `npm test` 148/148.
 
-### Catatan F-3 — sudut kartu state kosong (butuh keputusan, bukan bug)
+### Catatan F-3 — sudut kartu state kosong ✅ diputuskan: pakai token
 
-Frame `ZXG0E`/`p0C6Ta` menggambar kartu state tanpa `cornerRadius` (siku), sedangkan implementasi memakai `rounded-card` (16 px) — konsisten dengan `Card/Base` dan seluruh kartu lain di kanvas. Kemungkinan besar ini kelalaian frame, bukan maksud desain; kalau kanvas dianggap mengikat, perlu koreksi `EmptyOrderState`, kalau tidak, frame yang perlu dirapikan.
+Frame `ZXG0E`/`p0C6Ta` menggambar kartu state tanpa `cornerRadius` (siku), sedangkan implementasi memakai `rounded-card` (16 px) — konsisten dengan `Card/Base` dan seluruh kartu lain di kanvas. **Keputusan pengguna 2026-09-18:** tetap memakai token `rounded-card`; ketiadaan radius di frame dianggap kelalaian kanvas, bukan maksud desain. Tidak ada perubahan kode.
 
 ### F-4 — Ukuran pil filter & label tombol (✅ diperbaiki 2026-09-18)
 
@@ -135,7 +135,18 @@ Frame `ZXG0E`/`p0C6Ta` menggambar kartu state tanpa `cornerRadius` (siku), sedan
 - **Sebab:** `tailwind-merge` tidak mengenal skala teks kustom proyek (`--text-control`, `--text-control-sm`, `--text-caption`) dan menganggapnya kelas **warna**. Akibatnya `cn('text-caption', 'text-text-muted')` membuang `text-caption` → pil jatuh ke 16 px warisan (tinggi 42 px), dan `cn('text-control', 'text-white')` membuang `text-white` → label tombol primary ber-`size="sm"` mewarisi warna teks gelap, bukan putih.
 - **Perbaikan:** `resources/js/lib/utils.ts` — `extendTailwindMerge` dengan `font-size: [{ text: ['control', 'control-sm', 'caption'] }]`. Terukur di halaman ini: pil **16 px/42 px → 11 px/31,75 px**; label tombol primary kembali putih.
 - **Ikut dirapikan agar header sama dengan kanvas:** `pt-safe-header` (inset minimum 12 px; sebelumnya `pt-safe` 8 px **ditambah** `pt-3` 12 px = 20 px), padding bawah baris filter 16 px (sebelumnya 16 px + 4 px bawaan `FilterChips`), dan `leading-tight` pada pil. Header **142,5 px → 127,75 px** (kanvas ≈ 125 px; blok judul 80 px persis sama).
-- **Efek samping yang perlu diketahui:** tombol berukuran selain `sm` kini memakai `text-control` 13 px (sebelumnya `text-control` ikut dibuang sehingga jatuh ke 16 px). Itu nilai yang memang dideklarasikan di `Button`, tetapi **kanvas menggambar label tombol 14/600** (`Button/Primary`, `Button/Secondary`, `Button/Primary CTA`) — selisih 1 px dan bobot 500 vs 600 ini keputusan token terpisah, belum diubah.
+- **Efek samping & keputusan lanjutan (2026-09-18):** tombol berukuran selain `sm` kini memakai skala tombol; **pengguna memilih menyelaraskan ke kanvas** — `Button` base menjadi `text-sm font-semibold` (**14/600**, sesuai `Button/Primary`, `Button/Secondary`, `Button/Primary CTA`), menggantikan `text-control` 13/500. Terukur setelah perubahan: CTA `size="cta"` = 14/600, tombol `size="sm"` di kartu = 12/600 (kanvas menggambar aksi dalam kartu 12/700 — selisih bobot ini masih ada dan belum diputuskan).
+
+### F-5 — Layar konfirmasi pembayaran belum ikut migrasi ✅ diperbaiki 2026-09-18
+
+- **Temuan audit:** `resources/js/pages/customer/orders/confirm.tsx` adalah satu-satunya layar alur order customer yang belum pakai token/komponen bersama — 23 kelas palette mentah (`emerald`/`amber`/`red`/`slate`/`blue`/`gray`) dan 12 `<button>` mentah.
+- **Perbaikan:** seluruh warna dipindah ke token (`success`/`warning`/`danger`/`info`/`text-*`/`surface*`), radius ke `rounded-card`/`rounded-control`, dan 12 `<button>` menjadi `Button` (varian `primary`+`cta`, `outline`+`cta`, `danger`+`cta`, `ghost`+`lg`, `secondary-brand`+`lg`, `ghost`+`icon`). Tombol ikon kembali (chevron) diberi `aria-label="Kembali"` — sebelumnya tanpa nama aksesibel.
+- **Verifikasi:** `types:check`, `lint:check`, `format:check`, Vitest 148/148, `build` hijau; render lokal `/customer/orders/confirm/DOMBI-GATE-A1` — CTA 14/600 h 48, "Salin" 12/600, tidak ada kelas palette tersisa di file.
+
+### Catatan F-6 — Tombol "Batalkan Pesanan" di layar konfirmasi tidak pernah tampil 🟡 (belum diperbaiki)
+
+- Layar konfirmasi menjaga tombol itu dengan `isLoggedIn && order.status === 'pending_confirmation'`, tetapi `OrderController::confirm()` **tidak mengirim** `status` di payload `order` (hanya id, kode, items, total, fulfillment, expiry, payment_method, payment_status, recovery_token, outlet). Jadi `order.status` selalu `undefined` dan tombolnya dead code — di cabang `pending` maupun `paid`.
+- **Bukan regresi migrasi F-5** (kondisi itu sudah ada sebelumnya dan markup-nya dipertahankan apa adanya). Diperbaiki = mengirim `'status' => $order->status` dari controller; itu memunculkan tombol baru bagi customer, jadi keputusan produk — belum dieksekusi.
 
 ## 8. Hasil gate
 
