@@ -156,12 +156,15 @@ export default function OrderHistoryCard({ order }: Props) {
             )}
 
             {/* Total + action. The kanvas draws one action per card and no
-                icon inside it: the outdated card gets the brand-outlined
-                `Beli Lagi`, the expired one the solid `Pesan Ulang`. */}
+                icon inside it: `completed` gets the brand-outlined `Beli Lagi`,
+                every other terminal status — `Kadaluarsa` and
+                `Dibatalkan Customer` included — the solid `Pesan Ulang`.
+                Deliberately not `TERMINAL_STATUSES`: that set omits
+                `failed_delivery`, which is also reorderable history. */}
             <OrderTotalRow
                 label={`${itemCount} item · ${formatCurrency(order.total)}`}
             >
-                {order.status === 'completed' && (
+                {order.status === 'completed' ? (
                     <Button asChild variant="secondary-brand" size="sm">
                         <Link
                             href={`/customer/orders/${order.id}/restore-cart`}
@@ -169,8 +172,7 @@ export default function OrderHistoryCard({ order }: Props) {
                             Beli Lagi
                         </Link>
                     </Button>
-                )}
-                {order.status === 'expired' && (
+                ) : (
                     <Button asChild variant="primary" size="sm">
                         <Link
                             href={`/customer/orders/${order.id}/restore-cart`}
