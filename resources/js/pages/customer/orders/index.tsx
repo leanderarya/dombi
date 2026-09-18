@@ -5,6 +5,7 @@ import ActiveOrderCard from '@/components/customer/active-order-card';
 import EmptyOrderState from '@/components/customer/empty-order-state';
 import OrderHistoryCard from '@/components/customer/order-history-card';
 import RecoverySheet from '@/components/customer/recovery-sheet';
+import { Button } from '@/components/ui/button';
 import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonList } from '@/components/ui/skeleton';
@@ -72,6 +73,18 @@ const filterOptions = [
 
 type ViewState = 'recovered' | 'empty';
 
+/**
+ * Section heading band from the kanvas: 12/700 on `$text-muted`, raised off
+ * the page plane so it reads as a divider rather than a floating caption.
+ */
+function SectionLabel({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="bg-canvas px-5 pt-[18px] pb-2 text-xs font-bold text-text-muted">
+            {children}
+        </div>
+    );
+}
+
 export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
     const { maskedPhone, clearRecovery } = useOrderRecovery();
     const [filter, setFilter] = useState(
@@ -122,35 +135,37 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
     const hasHistory = displayHistory.length > 0;
 
     return (
-        <CustomerMobileLayout hideTopBar>
+        <CustomerMobileLayout hideTopBar pageClassName="bg-canvas">
             <Head title="Pesanan Saya" />
-            {/* Page Title */}
-            <header className="sticky top-0 z-30 bg-white/95 pt-safe backdrop-blur">
-                <div className="mx-auto flex max-w-lg items-center justify-center px-4 py-3">
-                    <h1 className="text-base font-bold text-text">
+            {/* Page Title — kanvas draws the title left-aligned at 24/800 with
+                a 12px subtitle, and keeps the filter row visible in every
+                state (Orders 1–4), including the empty ones. */}
+            <header className="sticky top-0 z-30 bg-surface/95 pt-safe backdrop-blur">
+                <div className="mx-auto max-w-lg px-5 pt-3 pb-4">
+                    <h1 className="font-heading text-2xl font-extrabold text-text">
                         Riwayat Pesanan
                     </h1>
+                    <p className="mt-1 text-xs text-text-muted">
+                        Lacak dan lihat riwayat pesananmu
+                    </p>
                 </div>
-                {viewState === 'recovered' &&
-                    (hasActiveOrders || hasHistory) && (
-                        <div className="mx-auto max-w-lg px-4 pb-3">
-                            <FilterChips
-                                options={filterOptions}
-                                active={filter}
-                                onChange={handleFilterChange}
-                                variant="neutral"
-                                size="caption"
-                            />
-                        </div>
-                    )}
+                <div className="mx-auto max-w-lg px-5 pb-4">
+                    <FilterChips
+                        options={filterOptions}
+                        active={filter}
+                        onChange={handleFilterChange}
+                        variant="neutral"
+                        size="caption"
+                    />
+                </div>
             </header>
-            <div className="pt-4">
+            <div className="mx-auto max-w-lg">
                 {/* STATE: Recovered — show orders with info card */}
                 {viewState === 'recovered' && !recoveryLoading && (
                     <>
-                        {/* Recovery info card */}
+                        {/* Recovery info card — app-only, not in the kanvas */}
                         {recoveredActive !== null && maskedPhone && (
-                            <div className="mb-4 flex items-center justify-between rounded-lg border border-border bg-emerald-50 px-3 py-2">
+                            <div className="mx-5 mb-3 flex items-center justify-between rounded-card border border-border bg-surface px-3 py-2">
                                 <div className="text-xs text-text">
                                     Pesanan ditemukan menggunakan nomor:{' '}
                                     <span className="font-semibold">
@@ -165,7 +180,7 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                                         setRecoveredHistory(null);
                                         setRecoverySheetOpen(true);
                                     }}
-                                    className="min-h-[44px] shrink-0 px-2 text-[13px] text-text-subtle active:opacity-80"
+                                    className="min-h-[44px] shrink-0 px-2 text-control text-text-subtle active:opacity-80"
                                 >
                                     Ganti
                                 </button>
@@ -175,10 +190,8 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                         {/* Active Orders */}
                         {hasActiveOrders && (
                             <section>
-                                <div className="text-[13px] text-text-subtle">
-                                    Pesanan Aktif
-                                </div>
-                                <div className="mt-2 space-y-3">
+                                <SectionLabel>Pesanan Aktif</SectionLabel>
+                                <div className="space-y-3 px-5 pb-3">
                                     {displayActive.map((order: any) => (
                                         <ActiveOrderCard
                                             key={order.id}
@@ -190,15 +203,15 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                         )}
 
                         {/* History */}
-                        <section className={hasActiveOrders ? 'mt-6' : ''}>
-                            <div className="text-[13px] text-text-subtle">
+                        <section>
+                            <SectionLabel>
                                 {recoveredActive !== null
                                     ? 'Riwayat Pesanan Terbaru'
                                     : 'Riwayat Pesanan'}
-                            </div>
+                            </SectionLabel>
 
                             {!hasHistory ? (
-                                <div className="mt-2">
+                                <div className="px-5 pb-3">
                                     <EmptyOrderState
                                         type={
                                             filter === 'all'
@@ -208,7 +221,7 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                                     />
                                 </div>
                             ) : (
-                                <div className="mt-2 space-y-3">
+                                <div className="space-y-3 px-5 pb-3">
                                     {displayHistory.map((order: any) => (
                                         <OrderHistoryCard
                                             key={order.id}
@@ -223,17 +236,20 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
 
                 {/* STATE: Loading recovery */}
                 {recoveryLoading && (
-                    <div className="px-4">
+                    <div className="px-5">
                         <SkeletonList count={3} />
                     </div>
                 )}
 
                 {/* STATE: Empty — no data, no recovery candidate */}
                 {viewState === 'empty' && (
-                    <div className="mt-8 flex flex-col items-center px-4 text-center">
+                    <div className="px-5 pb-3">
                         <EmptyOrderState type="no-orders" />
 
-                        <div className="mt-8 w-full max-w-sm rounded-xl border border-border bg-white p-5 shadow-sm">
+                        {/* Recovery is an app-only escape hatch — the kanvas
+                            draws no equivalent block, so it sits below the
+                            drawn empty state as a quiet card. */}
+                        <div className="mt-4 rounded-card border border-border bg-surface p-5">
                             <p className="text-sm font-semibold text-text">
                                 Pernah pesan sebelumnya?
                             </p>
@@ -241,19 +257,20 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                                 Cari pesananmu menggunakan nomor WhatsApp yang
                                 dipakai saat memesan.
                             </p>
-                            <button
+                            <Button
                                 type="button"
+                                variant="primary"
+                                size="md"
+                                className="mt-4 w-full"
                                 onClick={() => setRecoverySheetOpen(true)}
-                                className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 text-sm font-bold text-white active:opacity-80"
                             >
                                 <Search className="h-4 w-4" />
                                 Cari Pesanan Saya
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 )}
-            </div>{' '}
-            {/* close pt-4 px-4 wrapper */}
+            </div>
             {/* Pagination — only for server-side results */}
             {viewState === 'recovered' &&
                 recoveredActive === null &&
