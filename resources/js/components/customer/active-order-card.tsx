@@ -9,6 +9,7 @@ import StatusBadge from '@/components/ui/status-badge';
 import { getActiveRefundPresentation } from '@/lib/active-order-card-state';
 import type { RefundBadge } from '@/lib/active-order-card-state';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { fulfillmentLabel, fulfillmentVia } from '@/lib/order-fulfillment';
 import { getOrderStatusConfig } from '@/lib/order-status-config';
 import OrderCardShell from './order-card-shell';
 
@@ -128,7 +129,6 @@ export default function ActiveOrderCard({ order }: Props) {
     const countdown = useCountdown(order.confirmation_expires_at);
     const isExpired = countdown !== null && countdown.total <= 0;
     const isPending = order.status === 'pending_confirmation';
-    const isPickup = order.fulfillment_type === 'pickup';
     const isPaymentFailed = order.payment_status === 'failed';
     const isPaymentExpired = order.payment_status === 'expired';
     const isPaymentPending = order.payment_status === 'pending';
@@ -193,7 +193,7 @@ export default function ActiveOrderCard({ order }: Props) {
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex items-center justify-between gap-2">
                         <span className="truncate font-heading text-[15px] font-extrabold text-text">
-                            {isPickup ? 'Pick Up' : 'Delivery'}
+                            {fulfillmentLabel(order.fulfillment_type)}
                         </span>
                         <StatusBadge
                             variant={displayStatus.variant}
@@ -272,7 +272,7 @@ export default function ActiveOrderCard({ order }: Props) {
             {/* Outlet + via */}
             <OrderMetaRow
                 primary={order.outlet.name}
-                secondary={isPickup ? 'via Store' : 'via Aplikasi'}
+                secondary={fulfillmentVia(order.fulfillment_type)}
             />
 
             {/* Total + action. The kanvas draws exactly one solid action
