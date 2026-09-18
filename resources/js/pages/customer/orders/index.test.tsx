@@ -118,7 +118,12 @@ describe('OrdersIndex', () => {
             },
         });
 
-        expect(container.textContent).toContain('Pernah pesan sebelumnya?');
+        const text = container.textContent ?? '';
+
+        expect(text).toContain('Pernah pesan sebelumnya?');
+        // The kanvas `Orders 3 — Kosong` keeps the history band above the
+        // empty card: once in the page header, once as the section label.
+        expect(text.match(/Riwayat Pesanan/g)).toHaveLength(2);
     });
 
     it('gives a completed history order the outlined `Beli Lagi` action', () => {

@@ -239,34 +239,39 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                     </div>
                 )}
 
-                {/* STATE: Empty — no data, no recovery candidate */}
+                {/* STATE: Empty — no data, no recovery candidate. The kanvas
+                    `Orders 3 — Kosong` still draws the history band above the
+                    empty card, so the band is not tied to having rows. */}
                 {viewState === 'empty' && (
-                    <div className="px-5 pb-3">
-                        <EmptyOrderState type="no-orders" />
+                    <section>
+                        <SectionLabel>Riwayat Pesanan</SectionLabel>
+                        <div className="px-5 pb-3">
+                            <EmptyOrderState type="no-orders" />
 
-                        {/* Recovery is an app-only escape hatch — the kanvas
-                            draws no equivalent block, so it sits below the
-                            drawn empty state as a quiet card. */}
-                        <div className="mt-4 rounded-card border border-border bg-surface p-5">
-                            <p className="text-sm font-semibold text-text">
-                                Pernah pesan sebelumnya?
-                            </p>
-                            <p className="mt-1 text-xs text-text-muted">
-                                Cari pesananmu menggunakan nomor WhatsApp yang
-                                dipakai saat memesan.
-                            </p>
-                            <Button
-                                type="button"
-                                variant="primary"
-                                size="md"
-                                className="mt-4 w-full"
-                                onClick={() => setRecoverySheetOpen(true)}
-                            >
-                                <Search className="h-4 w-4" />
-                                Cari Pesanan Saya
-                            </Button>
+                            {/* Recovery is an app-only escape hatch — the kanvas
+                                draws no equivalent block, so it sits below the
+                                drawn empty state as a quiet card. */}
+                            <div className="mt-4 rounded-card border border-border bg-surface p-5">
+                                <p className="text-sm font-semibold text-text">
+                                    Pernah pesan sebelumnya?
+                                </p>
+                                <p className="mt-1 text-xs text-text-muted">
+                                    Cari pesananmu menggunakan nomor WhatsApp
+                                    yang dipakai saat memesan.
+                                </p>
+                                <Button
+                                    type="button"
+                                    variant="primary"
+                                    size="md"
+                                    className="mt-4 w-full"
+                                    onClick={() => setRecoverySheetOpen(true)}
+                                >
+                                    <Search className="h-4 w-4" />
+                                    Cari Pesanan Saya
+                                </Button>
+                            </div>
                         </div>
-                    </div>
+                    </section>
                 )}
             </div>
             {/* Pagination — only for server-side results */}
