@@ -28,6 +28,44 @@ export function formatDate(value?: string | null) {
     });
 }
 
+/**
+ * The kanvas `Orders 1 — Aktif` draws today's orders as `Hari ini, 14.20`
+ * and yesterday's as `Kemarin, 14.20`, while `Orders 2 — Riwayat` keeps the
+ * absolute `27 Mei 2025, 14.49`. Same clock format as `formatDate` (id-ID,
+ * `HH.mm`), only the day part is relative.
+ */
+export function formatRelativeOrderDate(value?: string | null): string {
+    if (!value) {
+        return '-';
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return '-';
+    }
+
+    const now = new Date();
+    const startOfDay = (d: Date) =>
+        new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const daysApart = Math.round(
+        (startOfDay(now) - startOfDay(date)) / 86400000,
+    );
+
+    if (daysApart === 0 || daysApart === 1) {
+        const day = daysApart === 0 ? 'Hari ini' : 'Kemarin';
+        const time = date.toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        });
+
+        return `${day}, ${time}`;
+    }
+
+    return formatDate(value);
+}
+
 export function formatDeliveryAge(minutes: number | null | undefined): string {
     if (minutes === null || minutes === undefined) {
         return '-';
