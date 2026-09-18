@@ -65,16 +65,16 @@ Ini menutup F.1: kartu `Dibatalkan Customer` sekarang punya aksi, dan `Kadaluars
 
 Render diambil dengan akun tanpa pesanan sama sekali (`viewState === 'empty'`).
 
-| Elemen       | Frame `ZXG0E`                                                      | Render (orders-3-kosong.png)                        | Hasil              |
-| ------------ | ------------------------------------------------------------------ | --------------------------------------------------- | ------------------ |
-| Pita section | `Riwayat Pesanan` 12/700 di pita `bg-canvas`, di atas kartu kosong | **tidak dirender**                                  | ❌ F-2             |
-| Kartu kosong | putih, padding 28, gap 8, rata tengah                              | sama (`p-7`, `gap-2`, `bg-surface`)                 | ✅                 |
-| Ikon         | `package` 38 px `#A1A1AA`                                          | sama (38 px, `text-text-subtle`)                    | ✅                 |
-| Judul        | `Yuk belanja lagi` 15/700 heading                                  | sama                                                | ✅                 |
-| Salinan      | 11 px, tengah, lebar 300                                           | sama (`text-caption` 11 px, `max-w-[300px]`)        | ✅                 |
-| CTA          | `Lihat Menu` fill `#047857`, r=12, padding `[10,18]`, label 12/700 | `Button primary size="md"`: h 40, r token 10, px 16 | ~ literal vs token |
-| Sudut kartu  | tanpa `cornerRadius` → siku                                        | `rounded-card` 16 px                                | ~ perlu keputusan  |
-| Tambahan app | —                                                                  | kartu "Pernah pesan sebelumnya?" di bawah           | diterima (C.5–C.7) |
+| Elemen       | Frame `ZXG0E`                                                      | Render (orders-3-kosong.png)                                     | Hasil              |
+| ------------ | ------------------------------------------------------------------ | ---------------------------------------------------------------- | ------------------ |
+| Pita section | `Riwayat Pesanan` 12/700 di pita `bg-canvas`, di atas kartu kosong | **tidak dirender** → kini dirender (`orders-3-kosong-after.png`) | ✅ F-2 diperbaiki  |
+| Kartu kosong | putih, padding 28, gap 8, rata tengah                              | sama (`p-7`, `gap-2`, `bg-surface`)                              | ✅                 |
+| Ikon         | `package` 38 px `#A1A1AA`                                          | sama (38 px, `text-text-subtle`)                                 | ✅                 |
+| Judul        | `Yuk belanja lagi` 15/700 heading                                  | sama                                                             | ✅                 |
+| Salinan      | 11 px, tengah, lebar 300                                           | sama (`text-caption` 11 px, `max-w-[300px]`)                     | ✅                 |
+| CTA          | `Lihat Menu` fill `#047857`, r=12, padding `[10,18]`, label 12/700 | `Button primary size="md"`: h 40, r token 10, px 16              | ~ literal vs token |
+| Sudut kartu  | tanpa `cornerRadius` → siku                                        | `rounded-card` 16 px                                             | ~ perlu keputusan  |
+| Tambahan app | —                                                                  | kartu "Pernah pesan sebelumnya?" di bawah                        | diterima (C.5–C.7) |
 
 ## 5. State Tanpa Hasil vs `p0C6Ta`
 
@@ -116,13 +116,14 @@ Catatan: frame `p0C6Ta` menggambar chip **Semua** sebagai aktif padahal isinya k
 - **Usulan koreksi (slice F.5, dijadwalkan — belum dieksekusi):** batasi fallback ke status refund saja (`str_starts_with($status, 'refund_')`) atau jadikan `selectedRefundObligation()` satu-satunya sumber; tambah test `payment_status = 'pending'` → `queueState() === null` dan `payment_status = 'refund_pending'` → bukan `null`.
 - **Kenapa tidak langsung diperbaiki:** menyentuh logika refund/pembayaran, di luar lingkup plan ini ("Tidak menyentuh … logika pembayaran/settlement").
 
-### F-2 — Pita `Riwayat Pesanan` hilang pada state kosong 🟡
+### F-2 — Pita `Riwayat Pesanan` hilang pada state kosong ✅ diperbaiki (slice F.6)
 
-- **Bukti:** `orders-3-kosong.png` vs frame `ZXG0E`.
+- **Bukti:** `orders-3-kosong.png` (sebelum) vs `orders-3-kosong-after.png` (sesudah) vs frame `ZXG0E`.
 - **Perilaku:** pada akun tanpa pesanan sama sekali (`viewState === 'empty'`), kartu kosong dirender tanpa pita section di atasnya, padahal frame menggambar pita `Riwayat Pesanan` (12/700 di `bg-canvas`, padding `[18,20,8,20]`) di antara chip filter dan kartu.
 - **Sebab:** `resources/js/pages/customer/orders/index.tsx` hanya membungkus kartu kosong dengan `SectionLabel` di cabang `viewState === 'recovered'`. Cabang `'empty'` merender `EmptyOrderState` langsung di dalam `<div className="px-5 pb-3">`.
 - **Dampak:** kosmetik — tinggi/urutan elemen berbeda dari kanvas pada state pertama kali pengguna membuka halaman; tidak ada perilaku yang salah.
-- **Usulan koreksi (slice F.6, dijadwalkan — belum dieksekusi):** bungkus cabang `'empty'` dengan `<section><SectionLabel>Riwayat Pesanan</SectionLabel>…</SectionLabel></section>` seperti cabang `'recovered'`.
+- **Perbaikan:** cabang `'empty'` kini dibungkus `<section>` + `<SectionLabel>Riwayat Pesanan</SectionLabel>`, sama seperti cabang `'recovered'`. Test `index.test.tsx` menambahkan penjaga: teks `Riwayat Pesanan` muncul **dua kali** di state kosong (judul halaman + pita).
+- **Verifikasi:** render ulang state kosong (fixture akun tanpa order) menunjukkan urutan judul → chip → pita → kartu kosong; `npm test` 148/148.
 
 ### Catatan F-3 — sudut kartu state kosong (butuh keputusan, bukan bug)
 
@@ -147,11 +148,11 @@ Frame `ZXG0E`/`p0C6Ta` menggambar kartu state tanpa `cornerRadius` (siku), sedan
 | Build        | `npm run build`                                   | sukses      | ✅                                                |
 | Hex literal  | grep `#[0-9a-f]{6}` pada file tersentuh           | 0           | ✅                                                |
 | Palet mentah | grep `bg-emerald-\|text-red-` pada file tersentuh | 0           | ✅                                                |
-| Kanvas       | render vs `op1pF`/`fjKWV`/`ZXG0E`/`p0C6Ta`        | setara      | ⚠️ 3 dari 4 frame setara; 1 pita hilang (F-2)     |
+| Kanvas       | render vs `op1pF`/`fjKWV`/`ZXG0E`/`p0C6Ta`        | setara      | ✅ 4 dari 4 frame setara (F-2 diperbaiki)         |
 
 ## 9. Kesimpulan
 
 1. Fase F terverifikasi visual: label fulfillment seragam (`Pick Up`/`Delivery`, `via Store`/`via Aplikasi`), tanggal relatif hanya di kartu aktif (`Hari ini, 14.20`) sementara riwayat tetap absolut (`27 Mei 2025, 14.49`), dan aksi kartu terminal lengkap (`Beli Lagi` outlined vs `Pesan Ulang` solid).
-2. Tiga dari empat frame yang dipilih setara dengan render: `op1pF`, `fjKWV`, dan `p0C6Ta`. Frame `ZXG0E` (Kosong) belum setara karena pita section hilang (F-2); anatomi kartu kosongnya sendiri sudah sesuai.
-3. Dua temuan: **F-1** (badge refund pada order belum dibayar — serius, memblokir rilis) dan **F-2** (pita section hilang di state kosong — kosmetik). Keduanya dijadwalkan sebagai slice koreksi, belum dieksekusi.
+2. Keempat frame yang dipilih setara dengan render: `op1pF`, `fjKWV`, `p0C6Ta`, dan `ZXG0E` (pita section-nya kini dirender — F-2 diperbaiki lewat slice F.6).
+3. Satu temuan masih terbuka: **F-1** (badge refund pada order belum dibayar — serius, memblokir rilis), dijadwalkan sebagai slice F.5 dan belum dieksekusi.
 4. Satu hal menunggu keputusan (bukan temuan): radius kartu state kosong — kanvas menggambar siku, implementasi memakai token `rounded-card`.
