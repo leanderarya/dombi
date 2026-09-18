@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { Package, Search, CheckCircle } from 'lucide-react';
+import { CheckCircle, Package, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Props {
     type?: 'no-orders' | 'no-active' | 'no-results';
@@ -44,17 +45,20 @@ export default function EmptyOrderState({ type = 'no-orders' }: Props) {
     } = content[type];
 
     return (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-white py-12 text-center shadow-sm">
-            <Icon className="h-10 w-10 text-text-subtle" />
-            <p className="mt-3 text-sm font-semibold text-text">{title}</p>
-            <p className="mt-1 text-xs text-text-muted">{description}</p>
+        <div className="flex flex-col items-center justify-center gap-2 rounded-card bg-surface p-7 text-center">
+            <Icon className="h-[38px] w-[38px] text-text-subtle" />
+            <p className="font-heading text-[15px] font-bold text-text">
+                {title}
+            </p>
+            <p className="max-w-[300px] text-caption text-text-muted">
+                {description}
+            </p>
             {showCta && (
-                <Link
-                    href={ctaHref ?? '/customer/checkout'}
-                    className="mt-4 flex min-h-10 items-center rounded-lg bg-emerald-700 px-5 text-sm font-semibold text-white active:bg-emerald-800"
-                >
-                    {ctaLabel ?? 'Pesan Sekarang'}
-                </Link>
+                <Button asChild variant="primary" size="md" className="mt-2">
+                    <Link href={ctaHref ?? '/customer/checkout'}>
+                        {ctaLabel ?? 'Pesan Sekarang'}
+                    </Link>
+                </Button>
             )}
         </div>
     );

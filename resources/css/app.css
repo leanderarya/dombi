@@ -17,6 +17,10 @@
     --color-surface: #ffffff;
     --color-surface-muted: #f4f4f2;
     --color-background: #ffffff;
+    /* Page plane behind cards — the kanvas `$page` fill (#F7F7F5). Distinct
+       from `--color-surface-muted` (#F4F4F2), which is the kanvas tint for
+       thumbnails and neutral pills. */
+    --color-canvas: #f7f7f5;
     --color-border: #e4e4e7;
     --color-border-strong: #d4d4d4;
     --color-text: #1e1e1e;

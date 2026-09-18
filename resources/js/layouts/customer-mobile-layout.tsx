@@ -26,6 +26,13 @@ interface Props extends PropsWithChildren {
     hideTopBar?: boolean;
     hideCartBar?: boolean;
     hideBottomNav?: boolean;
+    /**
+     * Background of the page plane. Defaults to `bg-background` so every
+     * existing caller is unaffected; the Orders screens opt into
+     * `bg-canvas` because the kanvas raises its section labels off a
+     * `#F7F7F5` plane instead of a white one.
+     */
+    pageClassName?: string;
 }
 
 export default function CustomerMobileLayout({
@@ -37,6 +44,7 @@ export default function CustomerMobileLayout({
     hideTopBar = false,
     hideCartBar = false,
     hideBottomNav = false,
+    pageClassName = 'bg-background',
 }: Props) {
     useFlashToast();
     useRoleTheme('customer');
@@ -57,7 +65,7 @@ export default function CustomerMobileLayout({
     return (
         <FavoritesProvider>
             <NavigationProvider rootUrl="/customer/home">
-                <div className="min-h-dvh bg-background text-text">
+                <div className={`min-h-dvh text-text ${pageClassName}`}>
                     <CustomerLocationBootstrap />
                     <OfflineBanner />
                     {!hideTopBar && (
