@@ -74,16 +74,17 @@ Stock (no oversell, exact-once reservation release), payment idempotency (CAS + 
   `docs/superpowers/plans/2026-09-17-ui-design-tokens-library-plan.md`.
 - **Gate visual Orders 1–4 dijalankan** (2026-09-18) — render lokal vs frame
   `op1pF`/`fjKWV`/`ZXG0E`/`p0C6Ta`: `docs/ORDERS_LIST_VISUAL_GATE_20260918.md`,
-  screenshot di `docs/evidence/orders-list-20260918/`. Tiga frame setara; frame
-  Kosong (`ZXG0E`) belum — pita section hilang (F-2), dijadwalkan.
+  screenshot di `docs/evidence/orders-list-20260918/`. **Keempat frame setara**
+  (pita section state kosong diperbaiki lewat slice F.6).
 - Pemetaan kanvas: **dua frame Orders (1 & 2) = satu route**
   (`GET /customer/orders`) — pita `Pesanan Aktif` muncul bila ada order aktif,
   pita riwayat selalu tampil. Jangan membangun layar kedua.
-- Temuan terbuka **F-1**: order dengan `payment_status = 'pending'` tampil
-  "Proses Refund" dan tombol bayarnya hilang (tabrakan nilai
-  `RefundObligationStatus::Pending` vs `PaymentStatus::Pending` di
-  `RefundPayloadService::queueState()`). Dijadwalkan sebagai slice F.5; belum
-  diperbaiki.
+- **Putaran penutup Customer (2026-09-18):** `confirm.tsx` dimigrasikan ke token
+  + `Button` (layar order terakhir yang belum ikut); temuan **F-1** diperbaiki
+  di `RefundPayloadService::queueState()` (order belum bayar tidak lagi tampil
+  "Proses Refund"); tombol diselaraskan ke kanvas **14/600**; kartu state kosong
+  tetap memakai token `rounded-card`. Sisa Customer: layar di luar alur order
+  (home, produk, keranjang, akun) — menunggu slice role berikutnya.
 
 ---
 
