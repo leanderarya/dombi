@@ -83,6 +83,32 @@ class ActiveRefundOrderVisibilityTest extends TestCase
         });
     }
 
+    public function test_unpaid_active_order_carries_no_refund_badge(): void
+    {
+        [$user, $customer] = $this->registeredCustomer();
+
+        $unpaid = Order::factory()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'pending',
+        ]);
+
+        $failedPayment = Order::factory()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'failed',
+        ]);
+
+        $response = $this->actingAs($user)->get('/customer/orders')->assertOk();
+        $activeOrders = collect($response->viewData('page')['props']['activeOrders'])->keyBy('id');
+
+        // `pending` and `failed` share their values with `RefundObligationStatus`,
+        // so an unpaid order must not read as a refund queue — that badge also
+        // hides the pay action on the card.
+        foreach ([$unpaid, $failedPayment] as $order) {
+            $this->assertTrue($activeOrders->has($order->id));
+            $this->assertNull($activeOrders->get($order->id)['refund_badge'] ?? null);
+        }
+    }
+
     public function test_customer_home_includes_active_refund_orders(): void
     {
         [$user, $customer] = $this->registeredCustomer();

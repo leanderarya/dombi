@@ -159,6 +159,20 @@ class RefundPayloadPrivacyTest extends TestCase
         $this->assertSame('action_required', $state);
     }
 
+    public function test_unpaid_order_has_no_refund_queue(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+
+        $this->assertNull(app(RefundPayloadService::class)->queueState($order));
+    }
+
+    public function test_failed_payment_has_no_refund_queue(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'failed']);
+
+        $this->assertNull(app(RefundPayloadService::class)->queueState($order));
+    }
+
     public function test_registered_customer_awaiting_separation(): void
     {
         $customer = Customer::factory()->create(['user_id' => User::factory()->create()->id]);

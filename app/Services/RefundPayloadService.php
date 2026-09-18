@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PaymentStatus;
 use App\Enums\RefundObligationStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Order;
@@ -43,6 +44,20 @@ class RefundPayloadService
         'rollback_mode', 'proof_present', 'reference_present',
     ];
 
+    /**
+     * Payment statuses that carry refund meaning. `pending` and `failed` are
+     * deliberately absent: they share their values with
+     * `RefundObligationStatus`, so treating them as a refund fallback made
+     * every unpaid order read as a refund in progress.
+     */
+    private const REFUND_PAYMENT_STATUSES = [
+        PaymentStatus::RefundPending->value,
+        PaymentStatus::RefundInProgress->value,
+        PaymentStatus::Refunded->value,
+        PaymentStatus::RefundRejected->value,
+        PaymentStatus::RefundFailed->value,
+    ];
+
     private function uiStatus(?string $status): ?string
     {
         return match ($status) {
@@ -58,7 +73,11 @@ class RefundPayloadService
     public function queueState(Order $order): ?string
     {
         $obligation = $order->selectedRefundObligation();
-        $status = $this->uiStatus($obligation?->status?->value ?? $order->payment_status);
+        // Only a refund payment status may stand in for a missing obligation.
+        $fallback = in_array($order->payment_status, self::REFUND_PAYMENT_STATUSES, true)
+            ? $order->payment_status
+            : null;
+        $status = $this->uiStatus($obligation?->status?->value ?? $fallback);
         $destination = $obligation
             ? ($obligation->destination_type !== null ? Order::REFUND_DESTINATION_VALID : Order::REFUND_DESTINATION_MISSING)
             : $order->refund_destination_status;
