@@ -137,17 +137,15 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
     return (
         <CustomerMobileLayout hideTopBar pageClassName="bg-canvas">
             <Head title="Pesanan Saya" />
-            {/* Page Title — kanvas draws the title left-aligned at 24/800 with
-                a 12px subtitle, and keeps the filter row visible in every
-                state (Orders 1–4), including the empty ones. */}
+            {/* Page header — the kanvas component `Page Header/Customer`
+                (`hasMu`): surface fill, padding 12/20/16/20, one centred
+                16/700 title in the body font and no subtitle. The filter row
+                stays visible in every state (Orders 1–4), empty ones included. */}
             <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
                 <div className="mx-auto max-w-lg px-5 pb-4">
-                    <h1 className="font-heading text-2xl font-extrabold text-text">
+                    <h1 className="text-center text-base font-bold text-text">
                         Riwayat Pesanan
                     </h1>
-                    <p className="mt-1 text-xs text-text-muted">
-                        Lacak dan lihat riwayat pesananmu
-                    </p>
                 </div>
                 <div className="mx-auto max-w-lg px-5 pb-3">
                     <FilterChips
