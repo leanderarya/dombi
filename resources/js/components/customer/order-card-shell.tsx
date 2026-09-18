@@ -45,12 +45,7 @@ export default function OrderCardShell({
         ? `/customer/orders/${orderId}`
         : `/track/${recoveryToken}`;
 
-    const cardClass = [
-        '[--card-spacing:--spacing(4)] gap-3',
-        isDead ? 'opacity-70' : '',
-    ]
-        .filter(Boolean)
-        .join(' ');
+    const cardClass = '[--card-spacing:--spacing(4)] gap-3';
 
     if (isClickable) {
         return (
