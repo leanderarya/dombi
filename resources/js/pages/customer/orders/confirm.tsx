@@ -316,7 +316,7 @@ export default function ConfirmPage({
             icon: CheckCircle2,
             color: 'text-success-text',
             bg: 'bg-success-bg',
-            border: 'border-success-text/20',
+            border: 'border-success-border',
             title: 'Pembayaran Berhasil',
             message: 'Pesanan Anda sedang diproses oleh outlet.',
         },
@@ -324,7 +324,7 @@ export default function ConfirmPage({
             icon: Clock,
             color: 'text-warning-text',
             bg: 'bg-warning-bg',
-            border: 'border-warning-text/20',
+            border: 'border-warning-border',
             title: 'Menunggu Pembayaran',
             message: 'Selesaikan pembayaran dalam waktu yang ditentukan.',
         },
@@ -332,7 +332,7 @@ export default function ConfirmPage({
             icon: XCircle,
             color: 'text-danger-text',
             bg: 'bg-danger-bg',
-            border: 'border-danger-text/20',
+            border: 'border-danger-border',
             title: 'Pembayaran Gagal',
             message:
                 'Pembayaran tidak berhasil diproses. Anda bisa mencoba lagi.',
@@ -350,7 +350,7 @@ export default function ConfirmPage({
             icon: XCircle,
             color: 'text-danger-text',
             bg: 'bg-danger-bg',
-            border: 'border-danger-text/20',
+            border: 'border-danger-border',
             title: 'Dibatalkan',
             message: needsRefund
                 ? 'Pesanan dibatalkan. Refund sedang diproses.'
@@ -426,7 +426,7 @@ export default function ConfirmPage({
 
                     {/* Error Message */}
                     {payError && (
-                        <div className="mt-3 rounded-control border border-danger-text/20 bg-danger-bg p-3 text-sm text-danger-text">
+                        <div className="mt-3 rounded-control border border-danger-border bg-danger-bg p-3 text-sm text-danger-text">
                             {payError}
                         </div>
                     )}
@@ -636,7 +636,7 @@ export default function ConfirmPage({
 
                         {/* Guest recovery — more prominent */}
                         {!isLoggedIn && (
-                            <div className="mt-4 rounded-card border border-info-text/20 bg-info-bg p-4 text-center">
+                            <div className="mt-4 rounded-card border border-info-border bg-info-bg p-4 text-center">
                                 <p className="text-sm font-medium text-info-text">
                                     Simpan kode pesanan Anda
                                 </p>
