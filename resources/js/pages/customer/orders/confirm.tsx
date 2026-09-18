@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import PushBanner from '@/components/shared/push-banner';
+import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -313,43 +314,43 @@ export default function ConfirmPage({
     > = {
         paid: {
             icon: CheckCircle2,
-            color: 'text-emerald-600',
-            bg: 'bg-emerald-50',
-            border: 'border-emerald-200',
+            color: 'text-success-text',
+            bg: 'bg-success-bg',
+            border: 'border-success-text/20',
             title: 'Pembayaran Berhasil',
             message: 'Pesanan Anda sedang diproses oleh outlet.',
         },
         pending: {
             icon: Clock,
-            color: 'text-amber-600',
-            bg: 'bg-amber-50',
-            border: 'border-amber-200',
+            color: 'text-warning-text',
+            bg: 'bg-warning-bg',
+            border: 'border-warning-text/20',
             title: 'Menunggu Pembayaran',
             message: 'Selesaikan pembayaran dalam waktu yang ditentukan.',
         },
         failed: {
             icon: XCircle,
-            color: 'text-red-600',
-            bg: 'bg-red-50',
-            border: 'border-red-200',
+            color: 'text-danger-text',
+            bg: 'bg-danger-bg',
+            border: 'border-danger-text/20',
             title: 'Pembayaran Gagal',
             message:
                 'Pembayaran tidak berhasil diproses. Anda bisa mencoba lagi.',
         },
         expired: {
             icon: XCircle,
-            color: 'text-gray-600',
-            bg: 'bg-gray-50',
-            border: 'border-gray-200',
+            color: 'text-text-muted',
+            bg: 'bg-surface-muted',
+            border: 'border-border',
             title: 'Waktu Habis',
             message:
                 'Batas waktu pembayaran telah berakhir. Silakan buat pesanan baru.',
         },
         cancelled: {
             icon: XCircle,
-            color: 'text-red-600',
-            bg: 'bg-red-50',
-            border: 'border-red-200',
+            color: 'text-danger-text',
+            bg: 'bg-danger-bg',
+            border: 'border-danger-text/20',
             title: 'Dibatalkan',
             message: needsRefund
                 ? 'Pesanan dibatalkan. Refund sedang diproses.'
@@ -364,9 +365,13 @@ export default function ConfirmPage({
         <CustomerMobileLayout hideTopBar hideCartBar hideBottomNav>
             <div className="flex min-h-[80dvh] flex-col">
                 {/* Header */}
-                <header className="sticky top-0 z-30 bg-white/95 pt-safe backdrop-blur">
+                <header className="sticky top-0 z-30 bg-surface/95 pt-safe backdrop-blur">
                     <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Kembali"
+                            className="h-11 w-11"
                             onClick={() =>
                                 router.visit(
                                     isLoggedIn
@@ -374,10 +379,9 @@ export default function ConfirmPage({
                                         : '/customer/home',
                                 )
                             }
-                            className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
                         >
                             <ChevronLeft className="h-5 w-5" />
-                        </button>
+                        </Button>
                         <h1 className="text-base font-bold text-text">
                             Konfirmasi Pesanan
                         </h1>
@@ -389,7 +393,7 @@ export default function ConfirmPage({
                 <div className="px-4">
                     {/* Status Card */}
                     <div
-                        className={`rounded-2xl border ${status.border} ${status.bg} p-6 text-center`}
+                        className={`rounded-card border ${status.border} ${status.bg} p-6 text-center`}
                     >
                         <StatusIcon
                             className={`mx-auto mb-3 h-12 w-12 ${status.color}`}
@@ -397,7 +401,7 @@ export default function ConfirmPage({
                         <h2 className={`text-lg font-bold ${status.color}`}>
                             {status.title}
                         </h2>
-                        <p className="mt-1 text-sm text-slate-600">
+                        <p className="mt-1 text-sm text-text-muted">
                             {status.message}
                         </p>
 
@@ -405,7 +409,7 @@ export default function ConfirmPage({
                         {paymentStatus === 'pending' &&
                             countdown !== null &&
                             countdown > 0 && (
-                                <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs font-medium text-slate-600">
+                                <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-surface/80 px-3 py-1.5 text-xs font-medium text-text-muted">
                                     <Clock className="h-3 w-3" />
                                     <span>
                                         Sisa waktu: {formatTime(countdown)}
@@ -422,7 +426,7 @@ export default function ConfirmPage({
 
                     {/* Error Message */}
                     {payError && (
-                        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        <div className="mt-3 rounded-control border border-danger-text/20 bg-danger-bg p-3 text-sm text-danger-text">
                             {payError}
                         </div>
                     )}
@@ -431,30 +435,34 @@ export default function ConfirmPage({
                     <div className="mt-4 space-y-3">
                         {paymentStatus === 'pending' && (
                             <>
-                                <button
+                                <Button
+                                    variant="primary"
+                                    size="cta"
+                                    className="w-full"
                                     onClick={() => handlePay()}
                                     disabled={payLoading}
-                                    className="min-h-12 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-sm active:opacity-80 disabled:opacity-50"
                                 >
                                     {payLoading ? (
-                                        <span className="flex items-center justify-center gap-2">
+                                        <>
                                             <Loader2 className="h-4 w-4 animate-spin" />
                                             Memproses...
-                                        </span>
+                                        </>
                                     ) : (
                                         'Lanjutkan Pembayaran'
                                     )}
-                                </button>
+                                </Button>
                                 {isLoggedIn &&
                                     order.status === 'pending_confirmation' && (
-                                        <button
+                                        <Button
+                                            variant="ghost"
+                                            size="lg"
+                                            className="w-full text-xs text-text-subtle active:text-danger"
                                             onClick={() =>
                                                 setCancelDialogOpen(true)
                                             }
-                                            className="min-h-11 w-full text-xs font-medium text-slate-400 active:text-red-500"
                                         >
                                             Batalkan Pesanan
-                                        </button>
+                                        </Button>
                                     )}
                             </>
                         )}
@@ -462,16 +470,21 @@ export default function ConfirmPage({
                         {paymentStatus === 'paid' &&
                             isLoggedIn &&
                             order.status === 'pending_confirmation' && (
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="lg"
+                                    className="w-full text-xs text-text-subtle active:text-danger"
                                     onClick={() => setCancelDialogOpen(true)}
-                                    className="min-h-11 w-full text-xs font-medium text-slate-400 active:text-red-500"
                                 >
                                     Batalkan Pesanan
-                                </button>
+                                </Button>
                             )}
 
                         {paymentStatus === 'paid' && (
-                            <button
+                            <Button
+                                variant="primary"
+                                size="cta"
+                                className="w-full"
                                 onClick={() =>
                                     isLoggedIn
                                         ? router.visit(
@@ -481,35 +494,36 @@ export default function ConfirmPage({
                                               `/track/${order.recovery_token}`,
                                           )
                                 }
-                                className="min-h-12 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-sm active:opacity-80"
                             >
                                 Lihat Pesanan
-                            </button>
+                            </Button>
                         )}
 
                         {(paymentStatus === 'failed' ||
                             paymentStatus === 'expired') && (
                             <>
                                 {paymentStatus === 'failed' && (
-                                    <button
+                                    <Button
+                                        variant="primary"
+                                        size="cta"
+                                        className="w-full"
                                         onClick={() => handlePay()}
                                         disabled={payLoading}
-                                        className="min-h-12 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-sm active:opacity-80 disabled:opacity-50"
                                     >
                                         {payLoading ? (
-                                            <span className="flex items-center justify-center gap-2">
+                                            <>
                                                 <Loader2 className="h-4 w-4 animate-spin" />
                                                 Memproses...
-                                            </span>
+                                            </>
                                         ) : (
                                             'Bayar Sekarang'
                                         )}
-                                    </button>
+                                    </Button>
                                 )}
                                 {(paymentStatus === 'failed' ||
                                     paymentStatus === 'expired') && (
                                     <div className="space-y-2">
-                                        <p className="text-center text-xs font-medium text-slate-500">
+                                        <p className="text-center text-xs font-medium text-text-muted">
                                             Atau pilih metode pembayaran lain
                                         </p>
                                         <div className="grid grid-cols-2 gap-2">
@@ -528,21 +542,26 @@ export default function ConfirmPage({
                                                     label: 'Kartu Kredit',
                                                 },
                                             ].map((m) => (
-                                                <button
+                                                <Button
                                                     key={m.key}
+                                                    variant="secondary-brand"
+                                                    size="lg"
+                                                    className="w-full text-xs font-bold"
                                                     onClick={() =>
                                                         handlePay(m.key)
                                                     }
                                                     disabled={payLoading}
-                                                    className="min-h-11 rounded-xl border border-emerald-200 bg-white text-xs font-bold text-emerald-700 active:opacity-80 disabled:opacity-50"
                                                 >
                                                     {m.label}
-                                                </button>
+                                                </Button>
                                             ))}
                                         </div>
                                     </div>
                                 )}
-                                <button
+                                <Button
+                                    variant="outline"
+                                    size="cta"
+                                    className="w-full"
                                     onClick={() =>
                                         router.visit(
                                             isLoggedIn
@@ -550,57 +569,56 @@ export default function ConfirmPage({
                                                 : '/customer/home',
                                         )
                                     }
-                                    className="min-h-12 w-full rounded-xl bg-white text-sm font-bold text-slate-600 shadow-sm active:opacity-80"
                                 >
                                     {paymentStatus === 'expired'
                                         ? 'Pesan Ulang'
                                         : 'Kembali'}
-                                </button>
+                                </Button>
                             </>
                         )}
                     </div>
 
                     {/* Order Summary */}
                     <div className="mt-auto pt-6">
-                        <div className="rounded-2xl bg-white p-4 shadow-sm">
+                        <div className="rounded-card border border-border bg-surface p-4">
                             <div className="mb-3 flex items-center justify-between">
-                                <span className="text-xs font-medium text-slate-500">
+                                <span className="text-xs font-medium text-text-muted">
                                     Kode Pesanan
                                 </span>
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-primary"
                                     onClick={handleCopy}
-                                    className="flex min-h-10 items-center gap-1 rounded-lg px-2 text-xs font-medium text-emerald-600 active:opacity-80"
                                 >
                                     <Copy className="h-3.5 w-3.5" />
                                     {copied ? 'Disalin!' : 'Salin'}
-                                </button>
+                                </Button>
                             </div>
-                            <p className="mb-4 text-center font-mono text-lg font-bold tracking-widest text-slate-900">
+                            <p className="mb-4 text-center font-mono text-lg font-bold tracking-widest text-text">
                                 {order.order_code}
                             </p>
-                            <div className="space-y-2 border-t border-slate-100 pt-3">
+                            <div className="space-y-2 border-t border-border pt-3">
                                 {order.items?.map((item: any, idx: number) => (
                                     <div
                                         key={idx}
                                         className="flex justify-between text-sm"
                                     >
-                                        <span className="text-slate-600">
+                                        <span className="text-text-muted">
                                             {item.product_name}
                                             {item.variant_name
                                                 ? ` - ${item.variant_name}`
                                                 : ''}{' '}
                                             x{item.quantity}
                                         </span>
-                                        <span className="font-medium text-slate-900">
+                                        <span className="font-medium text-text">
                                             {formatCurrency(item.subtotal)}
                                         </span>
                                     </div>
                                 ))}
-                                <div className="flex justify-between border-t border-slate-100 pt-2 text-sm font-bold">
-                                    <span className="text-slate-900">
-                                        Total
-                                    </span>
-                                    <span className="text-emerald-600">
+                                <div className="flex justify-between border-t border-border pt-2 text-sm font-bold">
+                                    <span className="text-text">Total</span>
+                                    <span className="text-primary">
                                         {formatCurrency(order.total)}
                                     </span>
                                 </div>
@@ -608,8 +626,8 @@ export default function ConfirmPage({
                         </div>
 
                         {/* Trust badge — single, meaningful */}
-                        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500">
-                            <Shield className="h-4 w-4 text-emerald-600" />
+                        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-text-muted">
+                            <Shield className="h-4 w-4 text-primary" />
                             <span>
                                 Pembayaran diproses oleh DOKU, payment gateway
                                 terpercaya di Indonesia
@@ -618,11 +636,11 @@ export default function ConfirmPage({
 
                         {/* Guest recovery — more prominent */}
                         {!isLoggedIn && (
-                            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
-                                <p className="text-sm font-medium text-blue-800">
+                            <div className="mt-4 rounded-card border border-info-text/20 bg-info-bg p-4 text-center">
+                                <p className="text-sm font-medium text-info-text">
                                     Simpan kode pesanan Anda
                                 </p>
-                                <p className="mt-1 text-xs text-blue-600">
+                                <p className="mt-1 text-xs text-info-text">
                                     Gunakan kode ini untuk melacak pesanan di
                                     halaman Lacak Pesanan.
                                 </p>
@@ -633,7 +651,7 @@ export default function ConfirmPage({
                         <div className="mt-4 text-center">
                             <a
                                 href="/customer/help"
-                                className="text-xs text-slate-400 underline underline-offset-2 active:text-slate-600"
+                                className="text-xs text-text-subtle underline underline-offset-2 active:text-text-muted"
                             >
                                 Butuh bantuan?
                             </a>
@@ -647,41 +665,47 @@ export default function ConfirmPage({
                     onClose={() => setCancelDialogOpen(false)}
                     title="Batalkan Pesanan"
                 >
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-text-muted">
                         Pesanan yang dibatalkan tidak dapat dipulihkan.
                     </p>
                     <div className="mt-4 space-y-2">
                         {cancellationReasons.map((reason: string) => (
-                            <button
+                            <Button
                                 key={reason}
                                 type="button"
-                                onClick={() => setCancelReason(reason)}
-                                className={`flex min-h-11 w-full items-center rounded-lg border px-4 text-left text-sm font-medium transition-all ${
+                                variant="outline"
+                                size="lg"
+                                className={`w-full justify-start ${
                                     cancelReason === reason
-                                        ? 'border-red-300 bg-red-50 text-red-700'
-                                        : 'border-slate-200 text-slate-700 active:bg-slate-50'
+                                        ? 'border-danger bg-danger-bg text-danger-text'
+                                        : ''
                                 }`}
+                                onClick={() => setCancelReason(reason)}
                             >
                                 {reason}
-                            </button>
+                            </Button>
                         ))}
                     </div>
                     <div className="mt-4 flex gap-2">
-                        <button
+                        <Button
                             type="button"
+                            variant="outline"
+                            size="cta"
+                            className="flex-1"
                             onClick={() => setCancelDialogOpen(false)}
-                            className="min-h-12 flex-1 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 active:bg-slate-50"
                         >
                             Kembali
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            variant="danger"
+                            size="cta"
+                            className="flex-1"
                             onClick={handleCancel}
                             disabled={!cancelReason || cancelLoading}
-                            className="min-h-12 flex-1 rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                         >
                             {cancelLoading ? 'Membatalkan...' : 'Ya, Batalkan'}
-                        </button>
+                        </Button>
                     </div>
                 </Dialog>
             </div>
