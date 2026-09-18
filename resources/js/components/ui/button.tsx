@@ -16,6 +16,13 @@ const buttonVariants = cva(
         ghost: "text-text-muted hover:bg-surface-muted hover:text-text",
         link: "text-primary underline-offset-4 hover:underline",
         primary: "bg-primary text-white hover:bg-primary-hover focus-visible:ring-primary",
+        /**
+         * The kanvas `Action Button / Beli Lagi` treatment: surface fill with a
+         * 2px brand outline and brand label. Kept separate from `outline`
+         * (neutral border, text-coloured label) because the history card's
+         * secondary action is brand-accented, not neutral.
+         */
+        "secondary-brand": "border-2 border-primary bg-surface text-primary hover:bg-primary-light",
         danger: "bg-danger text-white hover:bg-danger/90",
       },
       size: {

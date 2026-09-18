@@ -1,15 +1,12 @@
 import { Link } from '@inertiajs/react';
-import { Package, RefreshCw, RotateCcw } from 'lucide-react';
+import { Package, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import OrderItemRow from '@/components/ui/order-item-row';
 import OrderMetaRow from '@/components/ui/order-meta-row';
 import OrderTotalRow from '@/components/ui/order-total-row';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
-import {
-    getOrderStatusConfig,
-    isTerminalStatus,
-} from '@/lib/order-status-config';
+import { getOrderStatusConfig } from '@/lib/order-status-config';
 import OrderCardShell from './order-card-shell';
 
 interface OrderItem {
@@ -61,7 +58,6 @@ export default function OrderHistoryCard({ order }: Props) {
     const itemCount = order.items?.length ?? 0;
     const firstItem = order.items?.[0];
     const statusCfg = getOrderStatusConfig(order.status);
-    const isDead = isTerminalStatus(order.status);
     const refundBadge = order.refund_badge ?? order.refund ?? null;
 
     const dateStr = order.ordered_at
@@ -93,35 +89,34 @@ export default function OrderHistoryCard({ order }: Props) {
                 </div>
             )}
 
-            {/* Header: Mark + Fulfillment + Status badge + Date */}
+            {/* Header: Mark + Fulfillment + Status badge + Date. The kanvas
+                draws the mark and title at full strength in every frame,
+                including `Kadaluarsa` and `Dibatalkan Customer`, so terminal
+                cards carry no dimming. */}
             <div className="flex items-start gap-3">
-                <div
-                    className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full ${isDead ? 'bg-surface-muted' : 'bg-primary-light'}`}
-                >
-                    <span
-                        className={`font-heading text-lg font-extrabold ${isDead ? 'text-text-subtle' : 'text-primary'}`}
-                    >
+                <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-primary-light">
+                    <span className="font-heading text-lg font-extrabold text-primary">
                         D
                     </span>
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex items-center justify-between gap-2">
-                        <span
-                            className={`truncate font-heading text-[15px] font-extrabold ${isDead ? 'text-text-muted' : 'text-text'}`}
-                        >
+                        <span className="truncate font-heading text-[15px] font-extrabold text-text">
                             {isPickup ? 'Pick Up' : 'Delivery'}
                         </span>
                         <StatusBadge
                             variant={statusCfg.variant}
-                            size="sm"
+                            size="md"
                             className="shrink-0"
                         >
                             {statusCfg.label}
                         </StatusBadge>
                     </div>
-                    <div className="text-[11px] text-text-muted">{dateStr}</div>
+                    <div className="text-caption text-text-muted">
+                        {dateStr}
+                    </div>
                     {statusCfg.reason && (
-                        <div className="text-[11px] text-text-subtle">
+                        <div className="text-caption text-text-muted">
                             {statusCfg.reason}
                         </div>
                     )}
@@ -135,7 +130,6 @@ export default function OrderHistoryCard({ order }: Props) {
             {firstItem && (
                 <OrderItemRow
                     icon={Package}
-                    muted={isDead}
                     title={firstItem.product_name}
                     subtitle={
                         itemCount > 1
@@ -149,7 +143,6 @@ export default function OrderHistoryCard({ order }: Props) {
             <OrderMetaRow
                 primary={order.outlet?.name ?? 'Outlet'}
                 secondary={isPickup ? 'via Store' : 'via Aplikasi'}
-                muted={isDead}
             />
 
             {/* Delivery address */}
@@ -162,17 +155,17 @@ export default function OrderHistoryCard({ order }: Props) {
                 </div>
             )}
 
-            {/* Total + action */}
+            {/* Total + action. The kanvas draws one action per card and no
+                icon inside it: the outdated card gets the brand-outlined
+                `Beli Lagi`, the expired one the solid `Pesan Ulang`. */}
             <OrderTotalRow
                 label={`${itemCount} item · ${formatCurrency(order.total)}`}
-                muted={isDead}
             >
                 {order.status === 'completed' && (
-                    <Button asChild variant="link" size="sm" className="px-0">
+                    <Button asChild variant="secondary-brand" size="sm">
                         <Link
                             href={`/customer/orders/${order.id}/restore-cart`}
                         >
-                            <RotateCcw className="h-3.5 w-3.5" />
                             Beli Lagi
                         </Link>
                     </Button>
@@ -182,7 +175,6 @@ export default function OrderHistoryCard({ order }: Props) {
                         <Link
                             href={`/customer/orders/${order.id}/restore-cart`}
                         >
-                            <RotateCcw className="h-3 w-3" />
                             Pesan Ulang
                         </Link>
                     </Button>
