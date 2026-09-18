@@ -1,6 +1,6 @@
 # Dombi — Progress Roadmap
 
-**Updated:** 2026-08-09
+**Updated:** 2026-09-18
 **Current Branch:** `develop`
 **Status:** Implementation near-complete (62/64 PRD requirements DONE). Both release blockers resolved. Release is **GO** pending operational release evidence. See [PRD Gap Report](PRD_GAP_REPORT.md) for the full evidence-backed audit.
 
@@ -24,7 +24,7 @@
 | Product Scope launch invariants | ✅ 10/10 verified in code |
 | **PRD functional coverage** | ✅ **62/64 DONE, 2 PARTIAL, 0 NOT DONE** |
 | Test Suite | ✅ 1210 tests, 1210 passed, 4270 assertions |
-| Frontend tests | ✅ 18 files, 62 tests |
+| Frontend tests | ✅ 33 files, 148 tests (incl. perilaku kartu daftar pesanan) |
 | Frontend format/lint | ✅ format:check + lint:check pass |
 | Build | ✅ `npm run build` passes |
 | **TypeScript** | ✅ `npm run types:check` passes (fixture fixed) |
@@ -66,6 +66,23 @@ Stock (no oversell, exact-once reservation release), payment idempotency (CAS + 
 - **Phase 7** (courier management v2) — ✅
 - **Phase 8** (UI polish) — ✅ most; residual polish in PRD_GAP_REPORT non-blockers
 - **Phase 9** (production deploy) — 🔄 **blocked on release evidence** (see below)
+
+### Desain: Kanvas & Daftar Pesanan (2026-09-17 → 18) — ✅
+
+- Fase A–C plan token selesai untuk scope Customer Orders (putaran koreksi
+  C.5–C.7, lalu F.1–F.4 untuk isi kartu daftar pesanan). Detail:
+  `docs/superpowers/plans/2026-09-17-ui-design-tokens-library-plan.md`.
+- **Gate visual Orders 1/2 dijalankan dan lolos** (2026-09-18) — render lokal
+  vs frame `op1pF`/`fjKWV`: `docs/ORDERS_LIST_VISUAL_GATE_20260918.md`,
+  screenshot di `docs/evidence/orders-list-20260918/`.
+- Pemetaan kanvas: **dua frame Orders (1 & 2) = satu route**
+  (`GET /customer/orders`) — pita `Pesanan Aktif` muncul bila ada order aktif,
+  pita riwayat selalu tampil. Jangan membangun layar kedua.
+- Temuan terbuka **F-1**: order dengan `payment_status = 'pending'` tampil
+  "Proses Refund" dan tombol bayarnya hilang (tabrakan nilai
+  `RefundObligationStatus::Pending` vs `PaymentStatus::Pending` di
+  `RefundPayloadService::queueState()`). Dijadwalkan sebagai slice F.5; belum
+  diperbaiki.
 
 ---
 
