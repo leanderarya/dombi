@@ -224,7 +224,7 @@ export default function OutletDashboard({
                                                 </div>
                                             )}
                                             <svg
-                                                className="h-5 w-5 text-success"
+                                                className="h-5 w-5 text-success-text"
                                                 viewBox="0 0 20 20"
                                                 fill="currentColor"
                                             >

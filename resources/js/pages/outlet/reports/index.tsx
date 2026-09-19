@@ -154,7 +154,7 @@ export default function OutletReports({ outlet, preview }: Props) {
                                 <div className="text-lg font-bold text-emerald-700 tabular-nums">
                                     {formatCurrency(preview.total_revenue)}
                                 </div>
-                                <div className="text-[10px] text-success">
+                                <div className="text-[10px] text-success-text">
                                     Total Penjualan
                                 </div>
                             </div>
@@ -162,7 +162,7 @@ export default function OutletReports({ outlet, preview }: Props) {
                                 <div className="text-lg font-bold text-warning-text tabular-nums">
                                     {formatCurrency(preview.total_margin)}
                                 </div>
-                                <div className="text-[10px] text-warning">
+                                <div className="text-[10px] text-warning-text">
                                     Total Margin
                                 </div>
                             </div>

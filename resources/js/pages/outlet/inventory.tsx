@@ -601,7 +601,7 @@ function InventoryRow({
                             <span
                                 className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
                                     (centerStocks[item.product_id] ?? 0) <= 0
-                                        ? 'bg-danger-bg text-danger'
+                                        ? 'bg-danger-bg text-danger-text'
                                         : 'bg-surface-muted text-text-muted'
                                 }`}
                             >

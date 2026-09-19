@@ -68,7 +68,7 @@ export default function SettlementShow({
                     </div>
                     <div
                         className={`mt-1 text-[11px] font-semibold ${
-                            isOwnerPay ? 'text-success' : 'text-danger'
+                            isOwnerPay ? 'text-success-text' : 'text-danger'
                         }`}
                     >
                         {isOwnerPay
@@ -177,7 +177,7 @@ export default function SettlementShow({
                                             <div
                                                 className={`text-sm font-medium ${
                                                     isPayout
-                                                        ? 'text-success'
+                                                        ? 'text-success-text'
                                                         : 'text-text'
                                                 }`}
                                             >

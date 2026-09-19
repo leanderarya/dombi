@@ -70,7 +70,7 @@ export default function OutletRestockShow({ restock }: any) {
                     {restock.status === 'requested' && (
                         <button
                             onClick={() => setShowCancelDialog(true)}
-                            className="rounded-lg border border-danger-border px-3 py-1.5 text-xs font-semibold text-danger hover:bg-danger-bg"
+                            className="rounded-lg border border-danger-border px-3 py-1.5 text-xs font-semibold text-danger-text hover:bg-danger-bg"
                         >
                             Batalkan
                         </button>

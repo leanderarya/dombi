@@ -358,7 +358,7 @@ export default function AssignCourierSheet({
 
                                                         <div className="mt-1.5 flex items-center gap-2">
                                                             <span
-                                                                className={`text-[11px] ${courier.active_delivery_count === 0 ? 'text-success' : isBusy ? 'text-warning' : 'text-info'}`}
+                                                                className={`text-[11px] ${courier.active_delivery_count === 0 ? 'text-success-text' : isBusy ? 'text-warning-text' : 'text-info'}`}
                                                             >
                                                                 {courier.active_delivery_count ===
                                                                 0
@@ -462,7 +462,7 @@ export default function AssignCourierSheet({
                                         </span>
                                     </div>
                                     <div
-                                        className={`mt-1 flex justify-between border-t pt-1 text-sm font-bold ${isLoss ? 'text-danger' : 'text-success'}`}
+                                        className={`mt-1 flex justify-between border-t pt-1 text-sm font-bold ${isLoss ? 'text-danger' : 'text-success-text'}`}
                                     >
                                         <span>Selisih</span>
                                         <span>

@@ -286,7 +286,7 @@ export default function OutletSettlement({
                                     <div className="mt-3 rounded-lg border border-warning-border bg-warning-bg p-3">
                                         <div className="flex items-center gap-2">
                                             <svg
-                                                className="h-4 w-4 text-warning"
+                                                className="h-4 w-4 text-warning-text"
                                                 viewBox="0 0 20 20"
                                                 fill="currentColor"
                                             >
@@ -669,7 +669,7 @@ function BreakdownRow({
                 {label}
             </span>
             <span
-                className={`text-sm font-semibold tabular-nums ${negative ? 'text-success' : accent ? 'text-emerald-700' : muted ? 'text-text-subtle' : 'text-text'}`}
+                className={`text-sm font-semibold tabular-nums ${negative ? 'text-success-text' : accent ? 'text-emerald-700' : muted ? 'text-text-subtle' : 'text-text'}`}
             >
                 {negative && value > 0 ? '- ' : ''}
                 {isCurrency ? formatCurrency(Math.abs(value)) : value}
@@ -745,7 +745,7 @@ function TimelineItem({
                             {formatCurrency(entry.amount)}
                         </div>
                         {entry.direction === 'owner_pays_outlet' && (
-                            <div className="text-[11px] font-medium text-success tabular-nums">
+                            <div className="text-[11px] font-medium text-success-text tabular-nums">
                                 Owner bayar
                             </div>
                         )}
