@@ -468,14 +468,15 @@ function CancelDialog({
             )}
             <div className="mt-4 space-y-2">
                 {reasons.map((reason: string) => (
-                    <button
+                    <Button
                         key={reason}
                         type="button"
+                        variant="ghost"
                         onClick={() => form.setData('reason', reason)}
-                        className={`flex min-h-11 w-full items-center rounded-control border px-4 text-left text-sm font-medium transition-all ${form.data.reason === reason ? 'border-primary bg-primary-light text-primary' : 'border-border text-text active:opacity-80'}`}
+                        className={`h-auto min-h-11 w-full justify-start rounded-control border px-4 text-left text-sm font-medium whitespace-normal transition-all ${form.data.reason === reason ? 'border-primary bg-primary-light text-primary hover:bg-primary-light hover:text-primary' : 'border-border text-text hover:bg-transparent hover:text-text active:opacity-80'}`}
                     >
                         {reason}
-                    </button>
+                    </Button>
                 ))}
             </div>
             {form.data.reason === 'Lainnya' && (
@@ -538,14 +539,15 @@ function ReportSheet({ open, onClose, form, error, onSubmit }: any) {
             </p>
             <div className="mt-4 space-y-2">
                 {REPORT_TYPES.map((type) => (
-                    <button
+                    <Button
                         key={type.value}
                         type="button"
+                        variant="ghost"
                         onClick={() => form.setData('type', type.value)}
-                        className={`flex min-h-11 w-full items-center rounded-control border px-4 text-left text-sm font-medium transition-all ${form.data.type === type.value ? 'border-primary bg-primary-light text-primary' : 'border-border text-text active:opacity-80'}`}
+                        className={`h-auto min-h-11 w-full justify-start rounded-control border px-4 text-left text-sm font-medium whitespace-normal transition-all ${form.data.type === type.value ? 'border-primary bg-primary-light text-primary hover:bg-primary-light hover:text-primary' : 'border-border text-text hover:bg-transparent hover:text-text active:opacity-80'}`}
                     >
                         {type.label}
-                    </button>
+                    </Button>
                 ))}
             </div>
             <div className="mt-3">

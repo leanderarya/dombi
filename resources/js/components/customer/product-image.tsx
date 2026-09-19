@@ -16,8 +16,8 @@ const fallbackColors = [
     'from-primary-light to-primary/20',
     'from-warning-bg to-warning-border',
     'from-info-bg to-info-border',
-    'from-rose-100 to-rose-200',
-    'from-purple-100 to-purple-200',
+    'from-primary-light to-primary/20',
+    'from-info-bg to-info-border',
 ];
 
 export default function ProductImage({

@@ -1,6 +1,7 @@
 import { Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useCallback, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface Props {
     orderCode: string;
@@ -115,14 +116,15 @@ export default function OrderQRCard({ orderCode }: Props) {
                     Tunjukkan QR ini ke kasir
                 </div>
             </div>
-            <button
+            <Button
                 type="button"
+                variant="secondary"
                 onClick={handleSave}
-                className="mt-3 flex h-10 items-center gap-2 rounded-control bg-surface-muted px-4 text-xs font-semibold text-text active:opacity-80"
+                className="mt-3 h-10 text-xs hover:bg-surface-muted active:opacity-80 [&_svg]:size-3.5"
             >
                 <Download className="h-3.5 w-3.5" />
                 Simpan QR
-            </button>
+            </Button>
         </div>
     );
 }
