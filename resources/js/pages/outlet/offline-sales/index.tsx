@@ -106,7 +106,7 @@ export default function OfflineSalesIndex({
                                         <Link
                                             key={sale.id}
                                             href={`/outlet/offline-sales/${sale.id}`}
-                                            className="block rounded-xl border border-border bg-white px-3.5 py-2.5 active:bg-surface-muted"
+                                            className="block rounded-xl border border-border bg-surface px-3.5 py-2.5 active:bg-surface-muted"
                                         >
                                             <div className="flex items-center justify-between">
                                                 <span className="text-sm font-semibold text-text">
@@ -142,7 +142,7 @@ export default function OfflineSalesIndex({
                                                             );
                                                         }}
                                                         aria-label="Hapus penjualan"
-                                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle active:bg-red-50 active:text-red-600"
+                                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle active:bg-danger-bg active:text-danger"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </button>
@@ -215,7 +215,7 @@ export default function OfflineSalesIndex({
                     <button
                         type="button"
                         onClick={handleDelete}
-                        className="flex h-12 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80"
+                        className="flex h-12 flex-1 items-center justify-center rounded-xl bg-danger text-sm font-bold text-white active:opacity-80"
                     >
                         Hapus
                     </button>

@@ -136,7 +136,7 @@ export default function OutletDeliveriesIndex({
                             onClick={() => handleTabChange('aktif')}
                             className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
                                 isAktif
-                                    ? 'bg-white text-text shadow-sm'
+                                    ? 'bg-surface text-text shadow-sm'
                                     : 'text-text-muted'
                             }`}
                         >
@@ -149,7 +149,7 @@ export default function OutletDeliveriesIndex({
                             onClick={() => handleTabChange('riwayat')}
                             className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
                                 !isAktif
-                                    ? 'bg-white text-text shadow-sm'
+                                    ? 'bg-surface text-text shadow-sm'
                                     : 'text-text-muted'
                             }`}
                         >
@@ -267,7 +267,7 @@ export default function OutletDeliveriesIndex({
                                         <Link
                                             key={d.id}
                                             href={`/outlet/deliveries/${d.id}`}
-                                            className="flex items-center gap-3 rounded-xl border border-border bg-white p-3 active:bg-surface-muted"
+                                            className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 active:bg-surface-muted"
                                         >
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2">

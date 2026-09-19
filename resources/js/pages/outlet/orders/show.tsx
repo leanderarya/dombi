@@ -187,7 +187,7 @@ export default function OutletOrderShow({
                 {/* Items */}
                 <SectionCard label="Pesanan">
                     {errors?.status && (
-                        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        <div className="mb-4 rounded-lg border border-danger-border bg-danger-bg p-3 text-sm text-danger-text">
                             {errors.status}
                         </div>
                     )}
@@ -226,7 +226,7 @@ export default function OutletOrderShow({
                     label={isDifferentRecipient(order) ? 'Pemesan' : 'Customer'}
                 >
                     {isDifferentRecipient(order) && (
-                        <div className="mb-3 inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-700 ring-1 ring-red-200">
+                        <div className="mb-3 inline-flex items-center gap-1.5 rounded-lg bg-danger-bg px-2.5 py-1 text-[11px] font-bold text-danger-text ring-1 ring-danger-border">
                             <AlertTriangle className="h-3 w-3" />
                             Dikirim ke orang lain
                         </div>
@@ -419,7 +419,7 @@ export default function OutletOrderShow({
                                         <StatusBadge variant="danger" size="sm">
                                             Ditolak
                                         </StatusBadge>
-                                        <span className="text-sm font-medium text-red-700">
+                                        <span className="text-sm font-medium text-danger-text">
                                             Pesanan Ditolak
                                         </span>
                                     </div>
@@ -612,7 +612,7 @@ export default function OutletOrderShow({
                         </select>
                         {(assignForm.errors.courier_id ||
                             assignForm.errors.courier_type) && (
-                            <div className="mt-1 space-y-1 text-xs text-red-600">
+                            <div className="mt-1 space-y-1 text-xs text-danger">
                                 {[
                                     assignForm.errors.courier_type,
                                     assignForm.errors.courier_id,
@@ -679,12 +679,12 @@ export default function OutletOrderShow({
                 )}
 
                 {rejectForm.errors.reason && (
-                    <p className="mt-2 text-xs text-red-600">
+                    <p className="mt-2 text-xs text-danger">
                         {rejectForm.errors.reason}
                     </p>
                 )}
                 {rejectForm.errors.note && (
-                    <p className="mt-1 text-xs text-red-600">
+                    <p className="mt-1 text-xs text-danger">
                         {rejectForm.errors.note}
                     </p>
                 )}
@@ -693,7 +693,7 @@ export default function OutletOrderShow({
                     type="button"
                     onClick={handleReject}
                     disabled={!rejectForm.data.reason || rejectForm.processing}
-                    className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                    className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-danger text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                 >
                     {rejectForm.processing ? 'Menolak...' : 'Tolak Pesanan'}
                 </button>
@@ -740,7 +740,7 @@ export default function OutletOrderShow({
                 )}
 
                 {cancelForm.errors.reason && (
-                    <p className="mt-2 text-xs text-red-600">
+                    <p className="mt-2 text-xs text-danger">
                         {cancelForm.errors.reason}
                     </p>
                 )}
@@ -749,7 +749,7 @@ export default function OutletOrderShow({
                     type="button"
                     onClick={handleCancel}
                     disabled={!cancelForm.data.reason || cancelForm.processing}
-                    className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                    className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-danger text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                 >
                     {cancelForm.processing
                         ? 'Membatalkan...'

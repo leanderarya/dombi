@@ -165,8 +165,8 @@ export default function OutletScanPage() {
                         className="relative aspect-square w-full"
                     >
                         {!scanning && !loading && (
-                            <div className="flex h-full flex-col items-center justify-center gap-4 bg-zinc-900 p-6 text-center">
-                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10">
+                            <div className="flex h-full flex-col items-center justify-center gap-4 bg-foreground p-6 text-center">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface/10">
                                     <Camera className="h-8 w-8 text-white" />
                                 </div>
                                 <div>
@@ -190,7 +190,7 @@ export default function OutletScanPage() {
                         )}
 
                         {loading && (
-                            <div className="flex h-full flex-col items-center justify-center gap-3 bg-zinc-900">
+                            <div className="flex h-full flex-col items-center justify-center gap-3 bg-foreground">
                                 <Loader2 className="h-8 w-8 animate-spin text-white" />
                                 <div className="text-sm text-white">
                                     Memeriksa pesanan...
@@ -216,10 +216,10 @@ export default function OutletScanPage() {
 
                 {/* Error */}
                 {error && (
-                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                    <div className="mt-4 rounded-xl border border-danger-border bg-danger-bg p-4">
                         <div className="flex items-center gap-2">
-                            <XCircle className="h-4 w-4 text-red-500" />
-                            <div className="text-sm font-semibold text-red-800">
+                            <XCircle className="h-4 w-4 text-danger" />
+                            <div className="text-sm font-semibold text-danger-text">
                                 {error}
                             </div>
                         </div>
@@ -236,7 +236,7 @@ export default function OutletScanPage() {
                 </div>
 
                 {/* Manual Input */}
-                <div className="rounded-2xl border border-border bg-white p-4">
+                <div className="rounded-2xl border border-border bg-surface p-4">
                     <div className="mb-3 flex items-center gap-2">
                         <Keyboard className="h-4 w-4 text-text-muted" />
                         <span className="text-sm font-semibold text-text">

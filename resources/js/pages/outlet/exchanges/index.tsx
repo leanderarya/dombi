@@ -84,7 +84,7 @@ export default function OutletExchangesIndex({ exchanges, filters }: any) {
                                     <Link
                                         key={ex.id}
                                         href={`/outlet/exchanges/${ex.id}`}
-                                        className="block rounded-xl border border-border bg-white p-4 active:opacity-80"
+                                        className="block rounded-xl border border-border bg-surface p-4 active:opacity-80"
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="text-sm font-semibold text-text">

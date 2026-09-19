@@ -142,21 +142,21 @@ export default function OutletInventory({
                     <>
                         {/* Summary Bar + Restock CTA */}
                         <div className="flex items-center gap-3">
-                            <div className="flex flex-1 items-center divide-x divide-border rounded-xl border border-border bg-white">
+                            <div className="flex flex-1 items-center divide-x divide-border rounded-xl border border-border bg-surface">
                                 <SummaryCell
                                     label="Kritis"
                                     value={criticalFamilies.length}
-                                    dot="bg-red-400"
+                                    dot="bg-danger"
                                 />
                                 <SummaryCell
                                     label="Rendah"
                                     value={lowStockFamilies.length}
-                                    dot="bg-amber-400"
+                                    dot="bg-warning"
                                 />
                                 <SummaryCell
                                     label="Sehat"
                                     value={healthyFamilies.length}
-                                    dot="bg-emerald-400"
+                                    dot="bg-success"
                                 />
                             </div>
                             <Button
@@ -185,7 +185,7 @@ export default function OutletInventory({
                         {filteredCriticalFamilies.length > 0 && (
                             <div>
                                 <div className="mb-3 flex items-center gap-2">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                                    <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                                     <h2 className="text-xs font-semibold tracking-wider text-text-subtle uppercase">
                                         Stok Kritis
                                     </h2>
@@ -213,7 +213,7 @@ export default function OutletInventory({
                         {filteredLowStockFamilies.length > 0 && (
                             <div>
                                 <div className="mb-3 flex items-center gap-2">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                                    <span className="h-1.5 w-1.5 rounded-full bg-warning" />
                                     <h2 className="text-xs font-semibold tracking-wider text-text-subtle uppercase">
                                         Stok Rendah
                                     </h2>
@@ -436,7 +436,7 @@ function VariantDetailSheet({
                     </div>
                 </div>
                 {active && (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <div className="rounded-lg border border-warning-border bg-warning-bg p-3">
                         <div className="text-xs font-semibold">
                             Restock Aktif
                         </div>
@@ -496,7 +496,7 @@ function FamilyGroup({
     onDetail?: (item: any) => void;
 }) {
     return (
-        <div className="overflow-hidden rounded-xl border border-border bg-white">
+        <div className="overflow-hidden rounded-xl border border-border bg-surface">
             <div className="border-b border-border bg-surface-muted px-4 py-2">
                 <span className="text-xs font-semibold text-text-muted">
                     {group.family?.name ?? 'Produk'}
@@ -578,7 +578,7 @@ function InventoryRow({
         <>
             <div
                 onClick={() => onDetail?.(item)}
-                className={`group flex cursor-pointer items-center justify-between ${compact ? 'px-4 py-2.5' : 'rounded-xl border border-border bg-white p-3'} transition-all hover:bg-surface-muted`}
+                className={`group flex cursor-pointer items-center justify-between ${compact ? 'px-4 py-2.5' : 'rounded-xl border border-border bg-surface p-3'} transition-all hover:bg-surface-muted`}
             >
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
@@ -601,7 +601,7 @@ function InventoryRow({
                             <span
                                 className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
                                     (centerStocks[item.product_id] ?? 0) <= 0
-                                        ? 'bg-red-50 text-red-600'
+                                        ? 'bg-danger-bg text-danger'
                                         : 'bg-surface-muted text-text-muted'
                                 }`}
                             >
@@ -713,7 +713,7 @@ function OpnameSheet({
                         autoFocus
                     />
                     {errors.actual_count && (
-                        <p className="mt-1 text-xs text-red-500">
+                        <p className="mt-1 text-xs text-danger">
                             {errors.actual_count}
                         </p>
                     )}
@@ -731,7 +731,7 @@ function OpnameSheet({
                         placeholder="Alasan penyesuaian stok"
                     />
                     {errors.notes && (
-                        <p className="mt-1 text-xs text-red-500">
+                        <p className="mt-1 text-xs text-danger">
                             {errors.notes}
                         </p>
                     )}

@@ -174,7 +174,7 @@ export default function OutletExchangesCreate({
                     pairs.map((pair, index) => (
                         <div
                             key={index}
-                            className="rounded-xl border border-border bg-white p-4"
+                            className="rounded-xl border border-border bg-surface p-4"
                         >
                             <div className="mb-3 flex items-center justify-between">
                                 <span className="text-xs font-bold tracking-wider text-text-subtle uppercase">
@@ -183,7 +183,7 @@ export default function OutletExchangesCreate({
                                 {pairs.length > 1 && (
                                     <button
                                         onClick={() => removePair(index)}
-                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle hover:bg-red-50 hover:text-red-600"
+                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle hover:bg-danger-bg hover:text-danger"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </button>
@@ -192,11 +192,11 @@ export default function OutletExchangesCreate({
 
                             {/* Return side - read-only */}
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-red-600">
+                                <label className="mb-1 block text-xs font-medium text-danger">
                                     Dikembalikan (Produk Lama)
                                 </label>
-                                <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/50 px-3 py-2.5 text-sm">
-                                    <span className="font-medium text-red-800">
+                                <div className="flex items-center justify-between rounded-lg border border-danger-border bg-danger-bg/50 px-3 py-2.5 text-sm">
+                                    <span className="font-medium text-danger-text">
                                         {getReturnItemName(pair.product_id)} x
                                         {pair.return_quantity}
                                     </span>
@@ -212,7 +212,7 @@ export default function OutletExchangesCreate({
 
                             {/* Replacement side */}
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-emerald-600">
+                                <label className="mb-1 block text-xs font-medium text-success">
                                     Diganti Dengan (Produk Baru)
                                 </label>
                                 <select
@@ -298,7 +298,7 @@ export default function OutletExchangesCreate({
 
                 {Object.keys(form.errors).length > 0 && (
                     <div className="mt-2">
-                        <div className="rounded-lg bg-red-50 p-3 text-xs text-red-700">
+                        <div className="rounded-lg bg-danger-bg p-3 text-xs text-danger-text">
                             {Object.values(form.errors).flat().join(', ')}
                         </div>
                     </div>
@@ -306,7 +306,7 @@ export default function OutletExchangesCreate({
             </div>
 
             {/* Sticky Submit */}
-            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 pt-3 pb-3 backdrop-blur">
+            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 pt-3 pb-3 backdrop-blur">
                 <div className="mx-auto max-w-lg px-4">
                     <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-surface-muted px-3 py-2">
                         <div>

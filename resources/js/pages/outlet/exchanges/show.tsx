@@ -21,7 +21,7 @@ export default function OutletExchangesShow({ exchange }: any) {
             <Head title={`Tukar Produk #${exchange.id}`} />
 
             <div className="mt-4 pb-24">
-                <div className="rounded-xl border border-border bg-white p-4">
+                <div className="rounded-xl border border-border bg-surface p-4">
                     <div className="flex items-start justify-between gap-3">
                         <div>
                             <div className="text-sm font-bold text-text">

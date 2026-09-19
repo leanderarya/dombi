@@ -31,18 +31,18 @@ const historyFilters = [
 ];
 
 const statusDotColors: Record<string, string> = {
-    pending_confirmation: 'bg-amber-400',
-    confirmed: 'bg-blue-400',
-    preparing: 'bg-orange-400',
-    ready_for_pickup: 'bg-emerald-400',
-    picked_up: 'bg-emerald-500',
-    delivering: 'bg-indigo-400',
-    completed: 'bg-zinc-400',
-    cancelled_by_customer: 'bg-red-400',
-    cancelled_by_outlet: 'bg-red-400',
-    rejected_by_outlet: 'bg-red-400',
-    failed_delivery: 'bg-red-400',
-    expired: 'bg-zinc-300',
+    pending_confirmation: 'bg-warning',
+    confirmed: 'bg-info',
+    preparing: 'bg-accent-orange',
+    ready_for_pickup: 'bg-success',
+    picked_up: 'bg-primary',
+    delivering: 'bg-status-transit',
+    completed: 'bg-border-strong',
+    cancelled_by_customer: 'bg-danger',
+    cancelled_by_outlet: 'bg-danger',
+    rejected_by_outlet: 'bg-danger',
+    failed_delivery: 'bg-danger',
+    expired: 'bg-border-strong',
 };
 
 function getWaitMinutes(orderedAt: string): number {
@@ -93,7 +93,7 @@ export default function OutletOrdersIndex({
                             onClick={() => handleTabChange('aktif')}
                             className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
                                 isAktif
-                                    ? 'bg-white text-text shadow-sm'
+                                    ? 'bg-surface text-text shadow-sm'
                                     : 'text-text-muted'
                             }`}
                         >
@@ -103,7 +103,7 @@ export default function OutletOrdersIndex({
                             onClick={() => handleTabChange('riwayat')}
                             className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
                                 !isAktif
-                                    ? 'bg-white text-text shadow-sm'
+                                    ? 'bg-surface text-text shadow-sm'
                                     : 'text-text-muted'
                             }`}
                         >
@@ -132,12 +132,12 @@ export default function OutletOrdersIndex({
                                 onClick={() =>
                                     handleFilterChange('pending_confirmation')
                                 }
-                                className="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-left text-sm transition-colors hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none active:bg-amber-200"
+                                className="w-full rounded-xl border border-warning-border bg-warning-bg px-4 py-2.5 text-left text-sm transition-colors hover:bg-warning-bg focus-visible:ring-2 focus-visible:ring-warning focus-visible:outline-none active:bg-warning-border"
                             >
-                                <span className="font-semibold text-amber-800">
+                                <span className="font-semibold text-warning-text">
                                     {count} pesanan menunggu konfirmasi
                                 </span>
-                                <span className="ml-1 text-amber-600">
+                                <span className="ml-1 text-warning">
                                     &rarr;
                                 </span>
                             </button>
@@ -175,7 +175,7 @@ export default function OutletOrdersIndex({
                                 {orders.data.map((order: any) => {
                                     const dotColor =
                                         statusDotColors[order.status] ??
-                                        'bg-zinc-400';
+                                        'bg-border-strong';
                                     const statusLabel = getOrderStatus(
                                         order.status,
                                     ).label;
@@ -193,7 +193,7 @@ export default function OutletOrdersIndex({
                                         <Link
                                             key={order.id}
                                             href={`/outlet/orders/${order.id}`}
-                                            className="block rounded-xl border border-border bg-white px-3.5 py-2.5 transition-all hover:shadow-sm active:opacity-80"
+                                            className="block rounded-xl border border-border bg-surface px-3.5 py-2.5 transition-all hover:shadow-sm active:opacity-80"
                                         >
                                             {/* Row 1: Code + Fulfillment + Status */}
                                             <div className="flex items-center justify-between gap-2">
@@ -209,7 +209,7 @@ export default function OutletOrdersIndex({
                                                     </span>
                                                     {isPending && (
                                                         <span
-                                                            className={`h-1.5 w-1.5 rounded-full ${isUrgent ? 'animate-pulse bg-danger' : 'animate-pulse bg-amber-400'}`}
+                                                            className={`h-1.5 w-1.5 rounded-full ${isUrgent ? 'animate-pulse bg-danger' : 'animate-pulse bg-warning'}`}
                                                         />
                                                     )}
                                                 </div>

@@ -136,7 +136,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                         ))}
                     </select>
                     {form.errors.reason && (
-                        <div className="mt-1 text-xs text-red-600">
+                        <div className="mt-1 text-xs text-danger">
                             {form.errors.reason}
                         </div>
                     )}
@@ -178,7 +178,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                                 <button
                                     type="button"
                                     onClick={() => removeImage(index)}
-                                    className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white"
+                                    className="bg-danger-bg0 absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full text-white"
                                 >
                                     <X className="h-3.5 w-3.5" />
                                 </button>
@@ -216,7 +216,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                         className="hidden"
                     />
                     {form.errors.evidence_images && (
-                        <div className="mt-1 text-xs text-red-600">
+                        <div className="mt-1 text-xs text-danger">
                             {form.errors.evidence_images}
                         </div>
                     )}
@@ -244,7 +244,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                             return (
                                 <div
                                     key={v.id}
-                                    className={`rounded-xl border p-3 transition-colors ${isSelected ? 'border-primary bg-primary-light' : 'border-border bg-white'}`}
+                                    className={`rounded-xl border p-3 transition-colors ${isSelected ? 'border-primary bg-primary-light' : 'border-border bg-surface'}`}
                                 >
                                     <button
                                         onClick={() => toggleVariant(v.id)}
@@ -320,7 +320,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                                     {form.errors[
                                         `items.${Array.from(selectedVariants.keys()).indexOf(v.id)}.quantity` as keyof typeof form.errors
                                     ] && (
-                                        <div className="mt-1 text-xs text-red-600">
+                                        <div className="mt-1 text-xs text-danger">
                                             {
                                                 form.errors[
                                                     `items.${Array.from(selectedVariants.keys()).indexOf(v.id)}.quantity` as keyof typeof form.errors
@@ -333,14 +333,14 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                         })}
                     </div>
                     {form.errors.items && (
-                        <div className="mt-1 text-xs text-red-600">
+                        <div className="mt-1 text-xs text-danger">
                             {form.errors.items}
                         </div>
                     )}
                     {Object.keys(form.errors)
                         .filter((k) => k !== 'items')
                         .map((k) => (
-                            <div key={k} className="mt-1 text-xs text-red-600">
+                            <div key={k} className="mt-1 text-xs text-danger">
                                 {form.errors[k as keyof typeof form.errors]}
                             </div>
                         ))}
@@ -348,7 +348,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
             </div>
 
             {/* Sticky Submit */}
-            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 pt-3 pb-3 backdrop-blur">
+            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 pt-3 pb-3 backdrop-blur">
                 <div className="mx-auto max-w-lg px-4">
                     <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-surface-muted px-3 py-2">
                         <div>

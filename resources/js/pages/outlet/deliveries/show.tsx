@@ -116,8 +116,8 @@ export default function OutletDeliveryShow({ delivery }: any) {
                                 }
                                 className={`min-h-11 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
                                     action.destructive
-                                        ? 'bg-red-600 text-white hover:bg-red-700'
-                                        : 'bg-emerald-700 text-white hover:bg-emerald-800'
+                                        ? 'bg-danger text-white hover:bg-danger'
+                                        : 'bg-primary text-white hover:bg-primary-hover'
                                 }`}
                             >
                                 {action.label}
@@ -185,7 +185,7 @@ export default function OutletDeliveryShow({ delivery }: any) {
                             <span
                                 className={
                                     delivery.delivery_age > 60
-                                        ? 'font-medium text-red-600'
+                                        ? 'font-medium text-danger'
                                         : ''
                                 }
                             >
