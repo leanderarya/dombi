@@ -320,7 +320,10 @@ function ProductDetailInner({
         <>
             <Head title={family.name} />
             <div className="min-h-dvh bg-background">
-                <div className="bg-primary">
+                {/* Stays on screen: this is the screen's only way back and its
+                    cart affordance, and detail pages have no collapsed bar to
+                    take over once the header scrolls away. */}
+                <div className="sticky top-0 z-30 bg-primary">
                     <div className="px-4 pt-safe pb-4">
                         <div className="relative pt-3">
                             <ForeGreenHeader
