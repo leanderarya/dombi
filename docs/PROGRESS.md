@@ -83,8 +83,13 @@ Stock (no oversell, exact-once reservation release), payment idempotency (CAS + 
   + `Button` (layar order terakhir yang belum ikut); temuan **F-1** diperbaiki
   di `RefundPayloadService::queueState()` (order belum bayar tidak lagi tampil
   "Proses Refund"); tombol diselaraskan ke kanvas **14/600**; kartu state kosong
-  tetap memakai token `rounded-card`. Sisa Customer: layar di luar alur order
-  (home, produk, keranjang, akun) — menunggu slice role berikutnya.
+  tetap memakai token `rounded-card`.
+- **Layar Customer non-Order (2026-09-19):** konsolidasi token & komponen untuk
+  beranda, katalog, detail produk, keranjang/checkout, sheet lokasi, akun,
+  lacak, dan halaman kecil — **palette mentah 0, `<button>` mentah 0** di scope
+  itu. Token baru untuk permukaan gelap (`brand-deep*`, `-bright`), `GoogleIcon`
+  diekstrak, dan `cn()` diperluas untuk grup radius. Sisa: input mentah → `Input`
+  (Slice H.7) dan screenshot banding per layar (H.8).
 
 ---
 
