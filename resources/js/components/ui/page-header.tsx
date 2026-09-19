@@ -67,7 +67,7 @@ export default function PageHeader({ title, titleClassName, subtitle, backHref, 
                 {right ?? <div className="w-11" />}
             </div>
             {below && (
-                <div className={`mx-auto ${isCustomer ? 'max-w-lg px-5 pb-4' : 'max-w-2xl px-4 pb-3 lg:max-w-4xl'}`}>
+                <div className={`mx-auto ${isCustomer ? 'max-w-lg px-5 pb-3' : 'max-w-2xl px-4 pb-3 lg:max-w-4xl'}`}>
                     {below}
                 </div>
             )}

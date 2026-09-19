@@ -7,6 +7,7 @@ import OrderHistoryCard from '@/components/customer/order-history-card';
 import RecoverySheet from '@/components/customer/recovery-sheet';
 import { Button } from '@/components/ui/button';
 import FilterChips from '@/components/ui/filter-chips';
+import PageHeader from '@/components/ui/page-header';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonList } from '@/components/ui/skeleton';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
@@ -141,13 +142,10 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                 (`hasMu`): surface fill, padding 12/20/16/20, one centred
                 16/700 title in the body font and no subtitle. The filter row
                 stays visible in every state (Orders 1–4), empty ones included. */}
-            <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
-                <div className="mx-auto max-w-lg px-5 pb-4">
-                    <h1 className="text-center text-base font-bold text-text">
-                        Riwayat Pesanan
-                    </h1>
-                </div>
-                <div className="mx-auto max-w-lg px-5 pb-3">
+            <PageHeader
+                variant="customer"
+                title="Riwayat Pesanan"
+                below={
                     <FilterChips
                         options={filterOptions}
                         active={filter}
@@ -155,8 +153,8 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                         variant="neutral"
                         size="caption"
                     />
-                </div>
-            </header>
+                }
+            />
             <div className="mx-auto max-w-lg">
                 {/* STATE: Recovered — show orders with info card */}
                 {viewState === 'recovered' && !recoveryLoading && (
