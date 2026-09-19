@@ -2,6 +2,7 @@ import { useForm } from '@inertiajs/react';
 import { MapPin, Truck, Phone, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Button } from '@/components/ui/button';
 
 interface NearestCourier {
     id: number;
@@ -146,18 +147,18 @@ export default function AssignCourierSheet({
 
     function getVehicleIcon(type: string | null) {
         if (!type) {
-            return <Truck className="h-4 w-4 text-slate-400" />;
+            return <Truck className="h-4 w-4 text-text-subtle" />;
         }
 
         switch (type.toLowerCase()) {
             case 'motorcycle':
             case 'motor':
-                return <Truck className="h-4 w-4 text-blue-500" />;
+                return <Truck className="h-4 w-4 text-info" />;
             case 'car':
             case 'mobil':
-                return <Truck className="h-4 w-4 text-emerald-500" />;
+                return <Truck className="h-4 w-4 text-primary" />;
             default:
-                return <Truck className="h-4 w-4 text-slate-400" />;
+                return <Truck className="h-4 w-4 text-text-subtle" />;
         }
     }
 
@@ -170,37 +171,42 @@ export default function AssignCourierSheet({
             className="fixed inset-0 z-50 flex items-end justify-center"
             role="dialog"
             aria-modal="true"
+            aria-labelledby="assign-courier-title"
         >
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
             <div
-                className="relative w-full max-w-lg animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-safe"
+                className="relative w-full max-w-lg animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-surface pb-safe"
                 style={{ maxHeight: '80vh', overflowY: 'auto' }}
             >
                 {/* Handle */}
-                <div className="sticky top-0 z-10 flex justify-center rounded-t-2xl bg-white pt-3 pb-2">
-                    <div className="h-1 w-12 rounded-full bg-slate-300" />
+                <div className="sticky top-0 z-10 flex justify-center rounded-t-2xl bg-surface pt-3 pb-2">
+                    <div className="h-1 w-12 rounded-full bg-border-strong" />
                 </div>
 
                 <div className="px-4 pb-4">
                     {/* Header */}
                     <div>
-                        <h2 className="text-base font-bold text-slate-900">
+                        <h2
+                            id="assign-courier-title"
+                            className="text-base font-bold text-text"
+                        >
                             Assign Kurir
                         </h2>
-                        <p className="mt-0.5 text-[11px] text-slate-500">
+                        <p className="mt-0.5 text-[11px] text-text-muted">
                             Pilih kurir terdekat untuk mengambil pesanan.
                         </p>
                     </div>
 
                     {/* Tab Switch */}
-                    <div className="mt-3 flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+                    <div className="mt-3 flex rounded-lg border border-border bg-surface-muted p-0.5">
                         <button
                             type="button"
                             onClick={() => setCourierType('dombi')}
+                            aria-pressed={courierType === 'dombi'}
                             className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
                                 courierType === 'dombi'
-                                    ? 'bg-white text-slate-900 shadow-sm'
-                                    : 'text-slate-500'
+                                    ? 'bg-surface text-text shadow-sm'
+                                    : 'text-text-muted'
                             }`}
                         >
                             Kurir Dombi
@@ -208,10 +214,11 @@ export default function AssignCourierSheet({
                         <button
                             type="button"
                             onClick={() => setCourierType('eksternal')}
+                            aria-pressed={courierType === 'eksternal'}
                             className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
                                 courierType === 'eksternal'
-                                    ? 'bg-white text-slate-900 shadow-sm'
-                                    : 'text-slate-500'
+                                    ? 'bg-surface text-text shadow-sm'
+                                    : 'text-text-muted'
                             }`}
                         >
                             Gojek / Grab
@@ -223,39 +230,39 @@ export default function AssignCourierSheet({
                         <div className="mt-4">
                             {loading ? (
                                 <div className="flex items-center justify-center py-8">
-                                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-600" />
-                                    <span className="ml-2 text-sm text-slate-500">
+                                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-primary" />
+                                    <span className="ml-2 text-sm text-text-muted">
                                         Memuat kurir...
                                     </span>
                                 </div>
                             ) : error ? (
-                                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
-                                    <p className="text-sm text-red-600">
+                                <div className="rounded-lg border border-danger-border bg-danger-bg p-4 text-center">
+                                    <p className="text-sm text-danger">
                                         {error}
                                     </p>
                                     <button
                                         type="button"
                                         onClick={fetchNearestCouriers}
-                                        className="mt-2 text-sm font-medium text-red-700 underline"
+                                        className="mt-2 text-sm font-medium text-danger-text underline"
                                     >
                                         Coba lagi
                                     </button>
                                 </div>
                             ) : couriers.length === 0 ? (
-                                <div className="rounded-lg border border-slate-200 bg-white p-4 text-center">
-                                    <User className="mx-auto h-8 w-8 text-slate-300" />
-                                    <p className="mt-2 text-sm text-slate-500">
+                                <div className="rounded-lg border border-border bg-surface p-4 text-center">
+                                    <User className="mx-auto h-8 w-8 text-text-subtle" />
+                                    <p className="mt-2 text-sm text-text-muted">
                                         Tidak ada kurir tersedia di sekitar
                                         outlet.
                                     </p>
-                                    <p className="mt-1 text-[11px] text-slate-400">
+                                    <p className="mt-1 text-[11px] text-text-subtle">
                                         Pastikan kurir online dan dalam radius
                                         50km.
                                     </p>
                                 </div>
                             ) : (
                                 <>
-                                    <div className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                                    <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                                         Kurir Terdekat ({couriers.length})
                                     </div>
                                     <div className="mt-2 space-y-2">
@@ -275,23 +282,24 @@ export default function AssignCourierSheet({
                                                             courier.id,
                                                         )
                                                     }
+                                                    aria-pressed={isSelected}
                                                     className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-all duration-150 active:opacity-80 ${
                                                         isSelected
-                                                            ? 'border-emerald-300 bg-emerald-50/30'
-                                                            : 'border-slate-200 bg-white'
+                                                            ? 'border-primary/30 bg-primary-light/30'
+                                                            : 'border-border bg-surface'
                                                     } ${isBusy ? 'opacity-60' : ''}`}
                                                 >
                                                     {/* Radio */}
                                                     <div
-                                                        className={`mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}
+                                                        className={`mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-primary bg-primary' : 'border-border-strong'}`}
                                                     >
                                                         {isSelected && (
-                                                            <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                                                            <div className="h-1.5 w-1.5 rounded-full bg-surface" />
                                                         )}
                                                     </div>
 
                                                     {/* Avatar */}
-                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100">
+                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-muted">
                                                         {courier.photo ? (
                                                             <img
                                                                 src={
@@ -303,7 +311,7 @@ export default function AssignCourierSheet({
                                                                 className="h-10 w-10 rounded-full object-cover"
                                                             />
                                                         ) : (
-                                                            <span className="text-sm font-bold text-slate-600">
+                                                            <span className="text-sm font-bold text-text-muted">
                                                                 {courier.name.charAt(
                                                                     0,
                                                                 )}
@@ -314,10 +322,10 @@ export default function AssignCourierSheet({
                                                     {/* Info */}
                                                     <div className="min-w-0 flex-1">
                                                         <div className="flex items-center justify-between">
-                                                            <div className="text-sm font-semibold text-slate-900">
+                                                            <div className="text-sm font-semibold text-text">
                                                                 {courier.name}
                                                             </div>
-                                                            <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                                                            <div className="flex items-center gap-1 text-[11px] text-text-muted">
                                                                 <MapPin className="h-3 w-3" />
                                                                 {getDistanceText(
                                                                     courier.distance,
@@ -325,7 +333,7 @@ export default function AssignCourierSheet({
                                                             </div>
                                                         </div>
 
-                                                        <div className="mt-1 flex items-center gap-3 text-[11px] text-slate-500">
+                                                        <div className="mt-1 flex items-center gap-3 text-[11px] text-text-muted">
                                                             {courier.phone && (
                                                                 <div className="flex items-center gap-1">
                                                                     <Phone className="h-3 w-3" />
@@ -350,7 +358,7 @@ export default function AssignCourierSheet({
 
                                                         <div className="mt-1.5 flex items-center gap-2">
                                                             <span
-                                                                className={`text-[11px] ${courier.active_delivery_count === 0 ? 'text-emerald-600' : isBusy ? 'text-amber-600' : 'text-blue-600'}`}
+                                                                className={`text-[11px] ${courier.active_delivery_count === 0 ? 'text-success' : isBusy ? 'text-warning' : 'text-info'}`}
                                                             >
                                                                 {courier.active_delivery_count ===
                                                                 0
@@ -358,7 +366,7 @@ export default function AssignCourierSheet({
                                                                     : `${courier.active_delivery_count} tugas aktif`}
                                                             </span>
                                                             {isBusy && (
-                                                                <span className="rounded bg-amber-100 px-1 py-0.5 text-[11px] font-bold text-amber-700">
+                                                                <span className="rounded bg-warning-bg px-1 py-0.5 text-[11px] font-bold text-warning-text">
                                                                     Sibuk
                                                                 </span>
                                                             )}
@@ -374,7 +382,7 @@ export default function AssignCourierSheet({
                     ) : (
                         <div className="mt-4 space-y-3">
                             <div>
-                                <label className="text-xs font-semibold text-slate-500">
+                                <label className="text-xs font-semibold text-text-muted">
                                     Nama Kurir
                                 </label>
                                 <input
@@ -383,13 +391,13 @@ export default function AssignCourierSheet({
                                     onChange={(e) =>
                                         setExternalName(e.target.value)
                                     }
-                                    className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                    className="mt-1 w-full rounded-lg border border-border p-3 text-sm"
                                     placeholder="Nama driver Gojek/Grab"
                                 />
                             </div>
                             <div className="flex gap-2">
                                 <div className="flex-1">
-                                    <label className="text-xs font-semibold text-slate-500">
+                                    <label className="text-xs font-semibold text-text-muted">
                                         No. HP
                                     </label>
                                     <input
@@ -398,12 +406,12 @@ export default function AssignCourierSheet({
                                         onChange={(e) =>
                                             setExternalPhone(e.target.value)
                                         }
-                                        className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                        className="mt-1 w-full rounded-lg border border-border p-3 text-sm"
                                         placeholder="0812..."
                                     />
                                 </div>
                                 <div className="flex-1">
-                                    <label className="text-xs font-semibold text-slate-500">
+                                    <label className="text-xs font-semibold text-text-muted">
                                         Plat
                                     </label>
                                     <input
@@ -412,13 +420,13 @@ export default function AssignCourierSheet({
                                         onChange={(e) =>
                                             setExternalPlate(e.target.value)
                                         }
-                                        className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                        className="mt-1 w-full rounded-lg border border-border p-3 text-sm"
                                         placeholder="B 1234 ABC"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-slate-500">
+                                <label className="text-xs font-semibold text-text-muted">
                                     Biaya Ongkir (Gojek)
                                 </label>
                                 <input
@@ -427,7 +435,7 @@ export default function AssignCourierSheet({
                                     onChange={(e) =>
                                         setCourierCost(e.target.value)
                                     }
-                                    className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                    className="mt-1 w-full rounded-lg border border-border p-3 text-sm"
                                     placeholder="25000"
                                     min={0}
                                 />
@@ -435,10 +443,10 @@ export default function AssignCourierSheet({
 
                             {costNum > 0 && (
                                 <div
-                                    className={`rounded-lg border p-3 ${isLoss ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50'}`}
+                                    className={`rounded-lg border p-3 ${isLoss ? 'border-danger-border bg-danger-bg' : 'border-success-border bg-success-bg'}`}
                                 >
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-600">
+                                        <span className="text-text-muted">
                                             Ongkir Customer
                                         </span>
                                         <span className="font-semibold">
@@ -446,7 +454,7 @@ export default function AssignCourierSheet({
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-600">
+                                        <span className="text-text-muted">
                                             Biaya Gojek
                                         </span>
                                         <span className="font-semibold">
@@ -454,7 +462,7 @@ export default function AssignCourierSheet({
                                         </span>
                                     </div>
                                     <div
-                                        className={`mt-1 flex justify-between border-t pt-1 text-sm font-bold ${isLoss ? 'text-red-600' : 'text-emerald-600'}`}
+                                        className={`mt-1 flex justify-between border-t pt-1 text-sm font-bold ${isLoss ? 'text-danger' : 'text-success'}`}
                                     >
                                         <span>Selisih</span>
                                         <span>
@@ -464,7 +472,7 @@ export default function AssignCourierSheet({
                                         </span>
                                     </div>
                                     {isLoss && (
-                                        <p className="mt-2 text-xs text-red-600">
+                                        <p className="mt-2 text-xs text-danger">
                                             Pengiriman ini merugi. Lanjutkan?
                                         </p>
                                     )}
@@ -474,22 +482,25 @@ export default function AssignCourierSheet({
                     )}
 
                     {form.errors.courier_id && (
-                        <p className="mt-2 text-xs text-red-600">
+                        <p className="mt-2 text-xs text-danger">
                             {form.errors.courier_id}
                         </p>
                     )}
 
                     {/* Actions */}
                     <div className="mt-4 flex gap-2">
-                        <button
+                        <Button
                             type="button"
+                            variant="outline"
+                            size="cta"
                             onClick={onClose}
-                            className="flex min-h-[48px] flex-1 items-center justify-center rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 transition-all duration-150 active:bg-slate-50 active:opacity-80"
+                            className="flex-1"
                         >
                             Batal
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            size="cta"
                             onClick={handleSubmit}
                             disabled={
                                 courierType === 'dombi'
@@ -500,10 +511,10 @@ export default function AssignCourierSheet({
                                       !courierCost ||
                                       form.processing
                             }
-                            className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-bold text-white transition-all duration-150 active:bg-emerald-800 active:opacity-80 disabled:bg-slate-300"
+                            className="flex-1"
                         >
                             {form.processing ? 'Mengassign...' : 'Assign Kurir'}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
