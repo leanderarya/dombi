@@ -170,18 +170,19 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
                                         {maskedPhone}
                                     </span>
                                 </div>
-                                <button
+                                <Button
                                     type="button"
+                                    variant="ghost"
                                     onClick={() => {
                                         clearRecovery();
                                         setRecoveredActive(null);
                                         setRecoveredHistory(null);
                                         setRecoverySheetOpen(true);
                                     }}
-                                    className="min-h-[44px] shrink-0 px-2 text-control text-text-subtle active:opacity-80"
+                                    className="min-h-[44px] shrink-0 px-2 text-control font-normal text-text-subtle hover:bg-transparent hover:text-text-subtle active:opacity-80"
                                 >
                                     Ganti
-                                </button>
+                                </Button>
                             </div>
                         )}
 

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -220,10 +221,11 @@ export default function OrderInfoCard({
                 )}
 
                 <div className="mt-3 border-t border-dashed border-border/70 pt-2 text-center">
-                    <button
+                    <Button
                         type="button"
+                        variant="link"
                         onClick={() => setItemsOpen((v) => !v)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-primary transition hover:underline"
+                        className="gap-1.5 text-xs font-bold transition [&_svg]:size-3.5"
                     >
                         <span>
                             {itemsOpen ? 'Sembunyikan' : 'Selengkapnya'}
@@ -231,7 +233,7 @@ export default function OrderInfoCard({
                         <ChevronDown
                             className={`h-3.5 w-3.5 transition-transform duration-300 ${itemsOpen ? 'rotate-180' : ''}`}
                         />
-                    </button>
+                    </Button>
                 </div>
             </section>
 
@@ -279,10 +281,11 @@ export default function OrderInfoCard({
                 )}
 
                 <div className="mt-3 border-t border-dashed border-border/70 pt-2 text-center">
-                    <button
+                    <Button
                         type="button"
+                        variant="link"
                         onClick={() => setPaymentOpen((v) => !v)}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-primary transition hover:underline"
+                        className="gap-1.5 text-xs font-bold transition [&_svg]:size-3.5"
                     >
                         <span>
                             {paymentOpen ? 'Sembunyikan' : 'Selengkapnya'}
@@ -290,7 +293,7 @@ export default function OrderInfoCard({
                         <ChevronDown
                             className={`h-3.5 w-3.5 transition-transform duration-300 ${paymentOpen ? 'rotate-180' : ''}`}
                         />
-                    </button>
+                    </Button>
                 </div>
             </section>
 
@@ -304,14 +307,16 @@ export default function OrderInfoCard({
                         <span className="font-bold tracking-tight text-text">
                             #{orderCode}
                         </span>
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={handleCopyOrderId}
                             aria-label="Salin ID pesanan"
-                            className="p-1 text-primary transition active:scale-95"
+                            className="h-auto w-auto p-1 text-primary transition hover:bg-transparent hover:text-primary active:scale-95 [&_svg]:size-3.5"
                         >
                             <Copy className="h-3.5 w-3.5" />
-                        </button>
+                        </Button>
                     </div>
                 </div>
                 <div className="flex items-center justify-between text-xs">
@@ -366,14 +371,15 @@ export default function OrderInfoCard({
 
             {/* In-Flow E-Receipt */}
             <section className="px-4 pt-2 pb-2">
-                <button
+                <Button
                     type="button"
+                    variant="secondary-brand"
                     onClick={() => setReceiptOpen(true)}
-                    className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-primary bg-surface py-3.5 text-xs font-extrabold text-primary shadow-card transition hover:bg-primary-light active:scale-[0.98]"
+                    className="h-auto w-full rounded-full py-3.5 text-xs font-extrabold shadow-card transition hover:bg-primary-light active:scale-[0.98]"
                 >
                     <Receipt className="h-4 w-4" />
                     <span>Lihat E-Receipt</span>
-                </button>
+                </Button>
             </section>
 
             <ReceiptDialog
@@ -506,14 +512,15 @@ function ReceiptDialog({
                     </div>
                 </div>
 
-                <button
+                <Button
                     type="button"
+                    variant="primary"
                     onClick={handleDownload}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-control bg-primary py-3 text-xs font-bold text-white transition hover:bg-primary-hover active:opacity-80"
+                    className="mt-4 h-auto w-full py-3 text-xs font-bold transition active:opacity-80"
                 >
                     <Download className="h-4 w-4" />
                     <span>Simpan Struk Digital</span>
-                </button>
+                </Button>
             </DialogContent>
         </Dialog>
     );

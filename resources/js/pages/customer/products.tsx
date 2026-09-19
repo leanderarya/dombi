@@ -152,7 +152,7 @@ function ProductsInner() {
                             variant="ghost"
                             size="icon"
                             onClick={handleBack}
-                            className="h-11 w-11 rounded-chip! text-white hover:bg-white/20 hover:text-white"
+                            className="h-11 w-11 rounded-chip text-white hover:bg-white/20 hover:text-white"
                             aria-label="Kembali"
                         >
                             <ChevronLeft className="h-5 w-5" />
@@ -212,7 +212,7 @@ function ProductsInner() {
                         type="button"
                         variant="ghost"
                         onClick={() => setOutletSheetOpen(true)}
-                        className="h-auto w-full justify-between gap-2 rounded-card! border border-border bg-surface p-3.5 text-left shadow-md hover:bg-surface"
+                        className="h-auto w-full justify-between gap-2 rounded-card border border-border bg-surface p-3.5 text-left shadow-md hover:bg-surface"
                     >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-thumb bg-primary-light text-primary">
                             <Store className="h-5 w-5" />
@@ -278,10 +278,10 @@ function ProductsInner() {
                     {/* ── 4. PROMO STRIP BANNER ── */}
                     <Link
                         href="/customer/coming-soon/merch"
-                        className="mx-4 mb-5 flex items-center justify-between rounded-card border border-sky-100 bg-sky-50 p-3"
+                        className="mx-4 mb-5 flex items-center justify-between rounded-card border border-info-border bg-info-bg p-3"
                     >
                         <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-chip bg-sky-100 text-sky-600">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-chip bg-info-bg text-info">
                                 <Store className="h-4 w-4" />
                             </div>
                             <div>
@@ -293,7 +293,7 @@ function ProductsInner() {
                                 </p>
                             </div>
                         </div>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-sky-500" />
+                        <ChevronRight className="h-4 w-4 shrink-0 text-info" />
                     </Link>
 
                     {/* ── 5. REKOMENDASI (horizontal scroll) ── */}
@@ -376,7 +376,7 @@ function ProductsInner() {
                             type="button"
                             variant="ghost"
                             onClick={() => setOutletSheetOpen(true)}
-                            className="h-auto w-full justify-start gap-2 rounded-card! border border-border bg-surface p-3 text-left shadow-xs hover:bg-surface"
+                            className="h-auto w-full justify-start gap-2 rounded-card border border-border bg-surface p-3 text-left shadow-xs hover:bg-surface"
                         >
                             <Store className="h-5 w-5 text-primary" />
                             <div className="min-w-0 flex-1">
@@ -407,7 +407,7 @@ function ProductsInner() {
 
                                 switchTo(next);
                             }}
-                            className="h-auto w-full justify-between rounded-card! border border-border bg-surface p-3 text-left shadow-xs hover:bg-surface"
+                            className="h-auto w-full justify-between rounded-card border border-border bg-surface p-3 text-left shadow-xs hover:bg-surface"
                         >
                             <span className="text-sm font-semibold text-text">
                                 {fulfillmentType === 'pickup'
@@ -422,7 +422,7 @@ function ProductsInner() {
                                 type="button"
                                 variant="ghost"
                                 onClick={() => setActiveFilter('all')}
-                                className={`h-auto w-full justify-between rounded-chip! px-3 py-2 text-sm ${
+                                className={`h-auto w-full justify-between rounded-chip px-3 py-2 text-sm ${
                                     activeFilter === 'all'
                                         ? 'bg-primary-light font-bold text-primary hover:bg-primary-light hover:text-primary'
                                         : 'text-text-muted hover:bg-surface-muted'
@@ -436,7 +436,7 @@ function ProductsInner() {
                                     type="button"
                                     variant="ghost"
                                     onClick={() => setActiveFilter(opt.key)}
-                                    className={`h-auto w-full justify-between rounded-chip! px-3 py-2 text-sm ${
+                                    className={`h-auto w-full justify-between rounded-chip px-3 py-2 text-sm ${
                                         activeFilter === opt.key
                                             ? 'bg-primary-light font-bold text-primary hover:bg-primary-light hover:text-primary'
                                             : 'text-text-muted hover:bg-surface-muted'
@@ -776,7 +776,7 @@ function VariantRow({
                     aria-label="Favorit"
                 >
                     <Heart
-                        className={`h-3 w-3 ${isFav ? 'fill-rose-500 text-rose-500' : 'text-text-subtle'}`}
+                        className={`h-3 w-3 ${isFav ? 'fill-danger text-danger' : 'text-text-subtle'}`}
                     />
                 </Button>
             </div>

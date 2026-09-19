@@ -306,17 +306,17 @@ function GreetingCard({
                         </Link>
                         <Link
                             href="/customer/coming-soon/my-dombi-plan"
-                            className="flex flex-1 items-center justify-between rounded-thumb border border-sky-100 bg-sky-50 px-3 py-2 text-left active:opacity-80"
+                            className="flex flex-1 items-center justify-between rounded-thumb border border-info-border bg-info-bg px-3 py-2 text-left active:opacity-80"
                         >
                             <div className="flex items-center gap-2">
-                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-sky-600 text-[10px] text-white">
+                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-info text-[10px] text-white">
                                     <Crown className="h-3 w-3" />
                                 </div>
-                                <span className="text-xs font-bold text-sky-950">
+                                <span className="text-xs font-bold text-info-text">
                                     MyDombi Plan
                                 </span>
                             </div>
-                            <ChevronRight className="h-3.5 w-3.5 text-sky-400" />
+                            <ChevronRight className="h-3.5 w-3.5 text-info" />
                         </Link>
                     </div>
                 )}
@@ -345,7 +345,7 @@ function QuickActions({
                     variant="ghost"
                     onClick={onPickup}
                     disabled={pickupLoading}
-                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-card! border border-primary/20 bg-primary-light p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-primary-light active:opacity-80 disabled:opacity-50"
+                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-card border border-primary/20 bg-primary-light p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-primary-light active:opacity-80 disabled:opacity-50"
                 >
                     <div className="relative z-10">
                         <h3 className="text-base font-extrabold text-primary transition-transform group-hover:translate-x-0.5">
@@ -369,10 +369,10 @@ function QuickActions({
                     type="button"
                     variant="ghost"
                     onClick={onDelivery}
-                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-card! border border-orange-200/70 bg-orange-50/60 p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-orange-50/60 active:opacity-80"
+                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-card border border-warning-border bg-warning-bg p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-warning-bg active:opacity-80"
                 >
                     <div className="relative z-10">
-                        <h3 className="text-base font-extrabold text-orange-700 transition-transform group-hover:translate-x-0.5">
+                        <h3 className="text-base font-extrabold text-warning-text transition-transform group-hover:translate-x-0.5">
                             Delivery
                         </h3>
                         <p className="mt-1 text-[11px] leading-snug font-medium text-text-muted">
@@ -382,11 +382,11 @@ function QuickActions({
                         </p>
                     </div>
                     <div className="relative z-10 flex items-end justify-end">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-700 text-xs text-white shadow-md">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-warning text-xs text-white shadow-md">
                             <Coffee className="h-3.5 w-3.5" />
                         </span>
                     </div>
-                    <div className="absolute -right-2 -bottom-2 h-20 w-20 rounded-full bg-orange-200/40 blur-md transition-transform group-hover:scale-110" />
+                    <div className="absolute -right-2 -bottom-2 h-20 w-20 rounded-full bg-warning-border blur-md transition-transform group-hover:scale-110" />
                 </Button>
             </div>
         </section>
@@ -417,7 +417,7 @@ const PROMO_BENTOS = [
         title: 'Catering & Event',
         subtitle: 'Rayakan momen bareng Dombi',
         icon: <Coffee className="h-4 w-4" />,
-        iconBg: 'bg-purple-100 text-purple-700',
+        iconBg: 'bg-primary-light text-primary',
         cta: 'Pesan Sekarang',
         href: '/customer/coming-soon/catering',
     },
@@ -453,7 +453,7 @@ function PromoBento() {
                                 {bento.icon}
                             </div>
                             {bento.badge && (
-                                <span className="absolute top-2 right-2 rounded bg-orange-700 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                                <span className="absolute top-2 right-2 rounded bg-warning px-1.5 py-0.5 text-[9px] font-bold text-white">
                                     {bento.badge}
                                 </span>
                             )}

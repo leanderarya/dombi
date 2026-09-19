@@ -385,14 +385,15 @@ function TimelineToggle({
 
     return (
         <div className="border-t border-border pt-3">
-            <button
+            <Button
                 type="button"
+                variant="ghost"
                 onClick={onToggle}
-                className="flex w-full items-center justify-between text-xs font-medium text-text-muted active:opacity-70"
+                className="h-auto w-full justify-between text-xs font-medium text-text-muted hover:bg-transparent hover:text-text-muted active:opacity-70 [&_svg]:size-3.5"
             >
                 Riwayat Refund ({items.length})
                 <Icon className="h-3.5 w-3.5" />
-            </button>
+            </Button>
             {open && (
                 <div className="mt-3 space-y-2">
                     {items.map((item) => (

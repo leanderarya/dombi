@@ -4,6 +4,7 @@ import { useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import NotificationBell from '@/components/shared/notification-bell';
 import NotificationSheet from '@/components/shared/notification-sheet';
+import { Button } from '@/components/ui/button';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { useCart } from '@/lib/use-cart';
 
@@ -48,17 +49,18 @@ export default function CustomerTopBar({
                                 Dombi
                             </div>
                         )}
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
                             onClick={() => setSheetOpen(true)}
-                            className="flex items-center gap-1 text-xs text-text-muted active:opacity-80"
+                            className="h-auto items-center gap-1 px-0 py-0 text-xs font-normal text-text-muted hover:bg-transparent hover:text-text-muted active:opacity-80 [&_svg]:size-3"
                         >
                             <MapPin className="h-3 w-3 shrink-0" />
                             <span className="truncate">
                                 {addressText || 'Tentukan Lokasi Anda'}
                             </span>
                             <ChevronDown className="h-3 w-3 shrink-0" />
-                        </button>
+                        </Button>
                     </div>
 
                     <div className="flex items-center gap-1">

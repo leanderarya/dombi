@@ -1,4 +1,5 @@
 import { CheckCircle2, ChevronLeft, Share2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useShareTracking } from '@/hooks/use-order-actions';
 import { getStatusLabel } from '@/lib/order-status';
 
@@ -43,8 +44,10 @@ export default function OrderHeader({
     return (
         <header className="sticky top-0 z-30 border-b border-border bg-surface/95 pt-safe backdrop-blur">
             <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => {
                         if (isConfirmation) {
                             window.location.href = fallbackHref;
@@ -55,20 +58,22 @@ export default function OrderHeader({
                         }
                     }}
                     aria-label="Kembali"
-                    className="flex h-11 w-11 items-center justify-center rounded-control text-text active:opacity-80"
+                    className="h-11 w-11 rounded-control text-text hover:bg-transparent hover:text-text active:opacity-80 [&_svg]:size-5"
                 >
                     <ChevronLeft className="h-5 w-5" />
-                </button>
+                </Button>
                 <h1 className="text-sm font-semibold text-text">{title}</h1>
                 {trackingUrl ? (
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={handleShare}
                         aria-label="Bagikan lacak pesanan"
-                        className="flex h-11 w-11 items-center justify-center rounded-control text-primary active:opacity-80"
+                        className="h-11 w-11 rounded-control text-primary hover:bg-transparent hover:text-primary active:opacity-80 [&_svg]:size-5"
                     >
                         <Share2 className="h-5 w-5" />
-                    </button>
+                    </Button>
                 ) : (
                     <div className="h-11 w-11" />
                 )}
