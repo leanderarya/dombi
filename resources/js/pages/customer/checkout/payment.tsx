@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import NoticeBanner from '@/components/customer/checkout/notice-banner';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
+import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
 import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
@@ -501,35 +502,36 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
                     {/* Waiting Payment Panel */}
                     {waitingPayment && (
-                        <section className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                        <section className="mt-4 rounded-thumb border border-warning-border bg-warning-bg p-4">
                             <div className="flex items-start gap-3">
-                                <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                                <Clock className="mt-0.5 h-5 w-5 shrink-0 text-warning-text" />
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-semibold text-amber-900">
+                                    <p className="text-sm font-semibold text-warning-text">
                                         Pembayaran sedang diproses di DOKU
                                     </p>
-                                    <p className="mt-1 text-xs text-amber-800">
+                                    <p className="mt-1 text-xs text-warning-text">
                                         {waitingTerminalMessage ??
                                             (pollTimedOut
                                                 ? 'Waktu pemantauan pembayaran habis. Jika Anda sudah menyelesaikan pembayaran, pesanan akan tetap diproses.'
                                                 : 'Selesaikan pembayaran di jendela DOKU. Status pesanan diperbarui otomatis.')}
                                     </p>
                                     {pendingOrder && (
-                                        <p className="mt-2 text-xs text-amber-800">
+                                        <p className="mt-2 text-xs text-warning-text">
                                             Kode pesanan:{' '}
-                                            <span className="font-mono font-semibold text-amber-900">
+                                            <span className="font-mono font-semibold text-warning-text">
                                                 {pendingOrder.order_code}
                                             </span>
                                         </p>
                                     )}
                                     {lastPaymentUrl && (
-                                        <button
+                                        <Button
                                             type="button"
+                                            variant="primary"
                                             onClick={handleRetryPayment}
-                                            className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-600 px-5 text-sm font-bold text-white active:opacity-80"
+                                            className="mt-3 min-h-11 rounded-thumb bg-warning px-5 font-bold hover:bg-warning/90"
                                         >
                                             Selesaikan Pembayaran
-                                        </button>
+                                        </Button>
                                     )}
                                 </div>
                             </div>
@@ -559,11 +561,12 @@ export default function CheckoutPayment({ draft, summary }: any) {
                     )}
 
                     {/* Pesanan — collapsible */}
-                    <section className="mt-4 rounded-xl border border-border bg-white p-4">
-                        <button
+                    <section className="mt-4 rounded-thumb border border-border bg-surface p-4">
+                        <Button
                             type="button"
+                            variant="ghost"
                             onClick={() => setItemsExpanded((value) => !value)}
-                            className="flex min-h-11 w-full items-center justify-between text-left active:opacity-80"
+                            className="min-h-11 w-full justify-between text-left whitespace-normal"
                         >
                             <div>
                                 <div className="text-[13px] text-text-subtle">
@@ -579,7 +582,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                             ) : (
                                 <ChevronDown className="h-4 w-4 text-text-muted" />
                             )}
-                        </button>
+                        </Button>
 
                         {itemsExpanded && (
                             <div className="mt-3 space-y-2 border-t border-border pt-3">
@@ -611,7 +614,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                     </section>
 
                     {/* Pengiriman */}
-                    <section className="mt-4 rounded-xl border border-border bg-white p-4">
+                    <section className="mt-4 rounded-thumb border border-border bg-surface p-4">
                         <div className="text-[13px] text-text-subtle">
                             Pengiriman
                         </div>
@@ -641,7 +644,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                         {isDelivery &&
                             summary.delivery_quote &&
                             !summary.delivery_quote.is_serviceable && (
-                                <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+                                <div className="mt-2 rounded-thumb border border-warning-border bg-warning-bg px-3 py-2.5 text-xs text-warning-text">
                                     {summary.delivery_quote.reason ??
                                         'Delivery belum tersedia untuk outlet terpilih.'}
                                 </div>
@@ -677,24 +680,25 @@ export default function CheckoutPayment({ draft, summary }: any) {
                     </section>
 
                     {/* Pembayaran */}
-                    <section className="mt-4 rounded-xl border border-border bg-white p-4">
+                    <section className="mt-4 rounded-thumb border border-border bg-surface p-4">
                         <div className="mb-2 flex items-center justify-between">
                             <span className="text-[13px] text-text-subtle">
                                 Metode Pembayaran
                             </span>
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
                                 onClick={() =>
                                     setPaymentExpanded(!paymentExpanded)
                                 }
-                                className="min-h-11 px-2 text-xs font-semibold text-primary active:opacity-80"
+                                className="min-h-11 px-2 text-xs font-semibold text-primary"
                             >
                                 {paymentExpanded ? 'Tutup' : 'Ganti'}
-                            </button>
+                            </Button>
                         </div>
 
                         {/* Selected payment */}
-                        <div className="flex items-center justify-between rounded-xl bg-surface-muted px-4 py-3">
+                        <div className="flex items-center justify-between rounded-thumb bg-surface-muted px-4 py-3">
                             <div>
                                 <div className="text-sm font-semibold text-text">
                                     {selectedOption?.label ?? 'QRIS'}
@@ -731,16 +735,17 @@ export default function CheckoutPayment({ draft, summary }: any) {
                                             ) / 100;
 
                                         return (
-                                            <button
+                                            <Button
                                                 key={option.value}
                                                 type="button"
+                                                variant="outline"
                                                 onClick={() => {
                                                     setPaymentMethod(
                                                         option.value,
                                                     );
                                                     setPaymentExpanded(false);
                                                 }}
-                                                className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-left transition-all active:opacity-80"
+                                                className="h-auto min-h-0 w-full justify-between rounded-thumb px-4 py-3 text-left font-normal whitespace-normal"
                                             >
                                                 <div>
                                                     <div className="text-sm font-medium text-text">
@@ -760,7 +765,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                                                         </span>
                                                     </div>
                                                 )}
-                                            </button>
+                                            </Button>
                                         );
                                     })}
                                 <div className="px-1 pt-1 text-[11px] text-text-muted">
@@ -775,7 +780,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
                     {/* Total Card — mobile only */}
                     <div className="lg:hidden">
-                        <section className="mt-4 rounded-xl bg-primary px-4 py-3 text-white">
+                        <section className="mt-4 rounded-thumb bg-primary px-4 py-3 text-white">
                             <div className="space-y-1">
                                 <SummaryRow
                                     label="Subtotal"
@@ -820,7 +825,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
                     {/* Recipient — only when different */}
                     {hasDifferentRecipient && (
-                        <section className="mt-4 rounded-xl border border-border bg-white p-4">
+                        <section className="mt-4 rounded-thumb border border-border bg-surface p-4">
                             <div className="text-[13px] text-text-subtle">
                                 Pemesan
                             </div>
@@ -847,7 +852,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                             onClose={() => setAdjustmentModal(null)}
                             title="Stok Berubah"
                         >
-                            <p className="mb-3 text-sm text-zinc-600">
+                            <p className="mb-3 text-sm text-text-muted">
                                 Beberapa produk dalam pesanan Anda mengalami
                                 perubahan stok:
                             </p>
@@ -856,7 +861,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                                     (w: string, i: number) => (
                                         <li
                                             key={i}
-                                            className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-zinc-800"
+                                            className="rounded-chip border border-warning-border bg-warning-bg px-3 py-2 text-sm text-text"
                                         >
                                             {w}
                                         </li>
@@ -864,20 +869,22 @@ export default function CheckoutPayment({ draft, summary }: any) {
                                 )}
                             </ul>
                             <div className="flex gap-2">
-                                <button
+                                <Button
                                     type="button"
+                                    variant="outline"
                                     onClick={() => setAdjustmentModal(null)}
-                                    className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 active:opacity-80"
+                                    className="flex-1 rounded-thumb px-4 py-2.5 font-medium"
                                 >
                                     Kembali
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="button"
+                                    variant="primary"
                                     onClick={handleConfirmAdjusted}
-                                    className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white active:opacity-80"
+                                    className="flex-1 rounded-thumb px-4 py-2.5"
                                 >
                                     Konfirmasi & Bayar
-                                </button>
+                                </Button>
                             </div>
                         </Dialog>
                     )}
@@ -886,8 +893,8 @@ export default function CheckoutPayment({ draft, summary }: any) {
                     <div className="h-24 lg:hidden" />
                 </div>
                 <aside className="hidden lg:block">
-                    <div className="sticky top-0 rounded-xl border border-border bg-white p-4">
-                        <section className="rounded-xl bg-primary px-4 py-3 text-white">
+                    <div className="sticky top-0 rounded-thumb border border-border bg-surface p-4">
+                        <section className="rounded-thumb bg-primary px-4 py-3 text-white">
                             <div className="space-y-1">
                                 <SummaryRow
                                     label="Subtotal"
@@ -929,14 +936,15 @@ export default function CheckoutPayment({ draft, summary }: any) {
                             )}
                         </section>
                         <div className="mt-4">
-                            <button
+                            <Button
                                 type="button"
+                                variant="primary"
                                 onClick={submit}
                                 disabled={payButtonDisabled}
-                                className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                                className="min-h-14 w-full rounded-thumb px-5 font-bold disabled:bg-border disabled:text-text-subtle"
                             >
                                 {processing ? 'Memproses...' : payButtonLabel}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </aside>

@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button';
+
 interface Props {
     value: 'pickup' | 'delivery';
     onChange: (value: 'pickup' | 'delivery') => void;
@@ -13,8 +15,9 @@ export default function FulfillmentToggle({
     deliveryBadge = 'Tutup',
     variant = 'green',
 }: Props) {
-    const containerBg = variant === 'green' ? 'bg-white/20' : 'bg-gray-100';
-    const activeStyle = 'bg-white text-primary shadow-sm';
+    const containerBg =
+        variant === 'green' ? 'bg-surface/20' : 'bg-surface-muted';
+    const activeStyle = 'bg-surface text-primary shadow-sm';
     const inactiveStyle =
         variant === 'green' ? 'text-white/70' : 'text-text-muted';
     const disabledStyle =
@@ -25,20 +28,22 @@ export default function FulfillmentToggle({
             <div
                 className={`flex w-full max-w-[280px] rounded-full p-1 ${containerBg}`}
             >
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => onChange('pickup')}
-                    className={`relative flex-1 rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
+                    className={`relative h-auto min-h-0 flex-1 rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
                         value === 'pickup' ? activeStyle : inactiveStyle
                     }`}
                 >
                     Pick Up
-                </button>
-                <button
+                </Button>
+                <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => !deliveryDisabled && onChange('delivery')}
                     disabled={deliveryDisabled}
-                    className={`relative flex-1 rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
+                    className={`relative h-auto min-h-0 flex-1 rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
                         value === 'delivery'
                             ? activeStyle
                             : deliveryDisabled
@@ -48,11 +53,11 @@ export default function FulfillmentToggle({
                 >
                     Delivery
                     {deliveryDisabled && (
-                        <span className="absolute -top-1.5 -right-1 rounded-full bg-red-500 px-1.5 text-[8px] font-extrabold text-white">
+                        <span className="absolute -top-1.5 -right-1 rounded-full bg-danger px-1.5 text-[8px] font-extrabold text-white">
                             {deliveryBadge}
                         </span>
                     )}
-                </button>
+                </Button>
             </div>
         </div>
     );

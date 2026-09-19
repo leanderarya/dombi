@@ -5,6 +5,7 @@ import CheckoutItemCard from '@/components/customer/checkout-item-card';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
+import { Button } from '@/components/ui/button';
 import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { mutationFetch } from '@/lib/api';
@@ -169,7 +170,7 @@ export default function CheckoutIndex({
             <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-6">
                 <div className="min-w-0">
                     {items.length === 0 ? (
-                        <div className="mt-4 rounded-xl border border-border bg-white p-5 text-center">
+                        <div className="mt-4 rounded-thumb border border-border bg-surface p-5 text-center">
                             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface">
                                 <ShoppingCart className="h-5 w-5 text-text-subtle" />
                             </div>
@@ -179,17 +180,19 @@ export default function CheckoutIndex({
                             <p className="mt-1 text-xs text-text-muted">
                                 Pilih produk untuk mulai belanja.
                             </p>
-                            <button
+                            <Button
+                                type="button"
+                                variant="primary"
                                 onClick={() =>
                                     router.visit('/customer/products')
                                 }
-                                className="mt-4 min-h-11 rounded-lg bg-primary px-5 text-sm font-bold text-white active:opacity-80"
+                                className="mt-4 min-h-11 rounded-chip px-5 font-bold"
                             >
                                 Mulai Belanja
-                            </button>
+                            </Button>
                         </div>
                     ) : (
-                        <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                        <div className="mt-4 rounded-thumb border border-border bg-surface p-4">
                             <h2 className="mb-3 text-[13px] font-semibold text-text-subtle">
                                 Pesanan
                             </h2>
@@ -224,9 +227,9 @@ export default function CheckoutIndex({
 
                     <section className="mt-4">
                         {/* Segmented Toggle */}
-                        <div className="relative flex rounded-xl bg-surface-muted p-1">
+                        <div className="relative flex rounded-thumb bg-surface-muted p-1">
                             <div
-                                className="absolute top-1 bottom-1 rounded-lg bg-white shadow-sm transition-all duration-200 ease-out motion-reduce:transition-none"
+                                className="absolute top-1 bottom-1 rounded-chip bg-surface shadow-sm transition-all duration-200 ease-out motion-reduce:transition-none"
                                 style={{
                                     left:
                                         fulfillmentType === 'pickup'
@@ -235,10 +238,11 @@ export default function CheckoutIndex({
                                     width: 'calc(50% - 4px)',
                                 }}
                             />
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
                                 onClick={() => saveFulfillment('pickup')}
-                                className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
+                                className={`relative z-10 h-auto min-h-0 flex-1 rounded-chip py-2.5 text-xs font-semibold transition-colors duration-300 ${
                                     fulfillmentType === 'pickup'
                                         ? 'text-text'
                                         : 'text-text-muted'
@@ -246,9 +250,10 @@ export default function CheckoutIndex({
                             >
                                 <Store className="h-4 w-4" />
                                 Pickup
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
+                                variant="ghost"
                                 onClick={() => {
                                     saveFulfillment('delivery_dombi');
 
@@ -258,7 +263,7 @@ export default function CheckoutIndex({
                                         return;
                                     }
                                 }}
-                                className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
+                                className={`relative z-10 h-auto min-h-0 flex-1 rounded-chip py-2.5 text-xs font-semibold transition-colors duration-300 ${
                                     fulfillmentType === 'delivery_dombi'
                                         ? 'text-text'
                                         : 'text-text-muted'
@@ -266,11 +271,11 @@ export default function CheckoutIndex({
                             >
                                 <Truck className="h-4 w-4" />
                                 Delivery
-                            </button>
+                            </Button>
                         </div>
 
                         {/* Detail Card */}
-                        <div className="mt-3 overflow-hidden rounded-xl border border-border bg-white">
+                        <div className="mt-3 overflow-hidden rounded-thumb border border-border bg-surface">
                             <div
                                 className="flex transition-transform duration-200 ease-out motion-reduce:transition-none"
                                 style={{
@@ -284,7 +289,7 @@ export default function CheckoutIndex({
                                 {/* Pickup Detail */}
                                 <div className="w-1/2 shrink-0 p-4">
                                     <div className="flex items-center gap-2">
-                                        <Store className="h-4 w-4 text-emerald-600" />
+                                        <Store className="h-4 w-4 text-primary" />
                                         <span className="text-sm font-semibold text-text">
                                             Ambil di Outlet
                                         </span>
@@ -298,14 +303,14 @@ export default function CheckoutIndex({
                                             km
                                         </div>
                                     )}
-                                    <div className="mt-1 text-[11px] font-medium text-emerald-700">
+                                    <div className="mt-1 text-[11px] font-medium text-primary">
                                         Siap dalam 15-30 menit
                                     </div>
                                 </div>
                                 {/* Delivery Detail */}
                                 <div className="w-1/2 shrink-0 p-4">
                                     <div className="flex items-center gap-2">
-                                        <Truck className="h-4 w-4 text-emerald-600" />
+                                        <Truck className="h-4 w-4 text-primary" />
                                         <span className="text-sm font-semibold text-text">
                                             Kurir Dombi
                                         </span>
@@ -331,7 +336,7 @@ export default function CheckoutIndex({
                                                     )}
                                                 </span>
                                             </div>
-                                            <div className="mt-1 text-[11px] font-medium text-emerald-700">
+                                            <div className="mt-1 text-[11px] font-medium text-primary">
                                                 Diantar dalam 30-60 menit
                                             </div>
                                         </>
@@ -364,7 +369,7 @@ export default function CheckoutIndex({
                     <div className="h-24 lg:hidden" />
                 </div>
                 <aside className="hidden lg:block">
-                    <div className="sticky top-0 rounded-xl border border-border bg-white p-4">
+                    <div className="sticky top-0 rounded-thumb border border-border bg-surface p-4">
                         <h2 className="text-sm font-semibold text-text">
                             Ringkasan
                         </h2>
@@ -379,18 +384,19 @@ export default function CheckoutIndex({
                             </span>
                         </div>
                         <div className="mt-4">
-                            <button
+                            <Button
                                 type="button"
+                                variant="primary"
                                 onClick={submit}
                                 disabled={
                                     items.length === 0 ||
                                     !fulfillmentType ||
                                     processing
                                 }
-                                className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                                className="min-h-14 w-full rounded-thumb px-5 font-bold disabled:bg-border disabled:text-text-subtle"
                             >
                                 {processing ? 'Memproses...' : 'Lanjutkan'}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </aside>

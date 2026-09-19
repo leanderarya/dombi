@@ -1,4 +1,5 @@
 import { Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/format';
 
 interface Props {
@@ -22,9 +23,9 @@ export default function CheckoutItemCard({
     const subtotal = unitPrice * quantity;
 
     return (
-        <div className="flex items-center gap-3 border-b border-border py-3 last:border-b-0 active:bg-zinc-50">
+        <div className="flex items-center gap-3 border-b border-border py-3 last:border-b-0 active:bg-surface-muted">
             {/* Thumbnail */}
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-chip bg-surface">
                 {image ? (
                     <img
                         src={image}
@@ -51,29 +52,31 @@ export default function CheckoutItemCard({
 
             {/* Quantity Stepper */}
             <div className="flex shrink-0 items-center">
-                <button
+                <Button
                     type="button"
+                    variant="outline"
                     onClick={() =>
                         quantity > 1
                             ? onQuantityChange(quantity - 1)
                             : onRemove()
                     }
-                    className="flex min-h-11 min-w-11 items-center justify-center rounded-l-lg border border-border px-2 text-sm font-semibold text-text active:opacity-80"
+                    className="min-h-11 min-w-11 rounded-l-chip border-border px-2 text-sm font-semibold text-text"
                     aria-label="Kurangi"
                 >
                     −
-                </button>
+                </Button>
                 <span className="flex min-h-11 min-w-11 items-center justify-center border-y border-border px-2 text-xs font-bold text-text tabular-nums">
                     {quantity}
                 </span>
-                <button
+                <Button
                     type="button"
+                    variant="primary"
                     onClick={() => onQuantityChange(quantity + 1)}
-                    className="flex min-h-11 min-w-11 items-center justify-center rounded-r-lg border border-emerald-600 bg-emerald-600 px-2 text-sm font-semibold text-white active:opacity-80"
+                    className="min-h-11 min-w-11 rounded-r-chip border border-primary bg-primary px-2 text-sm font-semibold"
                     aria-label="Tambah"
                 >
                     +
-                </button>
+                </Button>
             </div>
         </div>
     );
