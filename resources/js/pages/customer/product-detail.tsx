@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast as toastNotify } from 'sonner';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import ForeGreenHeader from '@/components/customer/fore-green-header';
+import { Button } from '@/components/ui/button';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { mutationFetch } from '@/lib/api';
 import { getCsrfToken } from '@/lib/csrf';
@@ -336,7 +337,7 @@ function ProductDetailInner({
                 {toast && <AddToCartToast name={toast.name} />}
 
                 <main className="mx-auto max-w-lg px-4 pt-4 pb-32">
-                    <div className="mb-5 flex h-72 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 to-zinc-50">
+                    <div className="mb-5 flex h-72 items-center justify-center overflow-hidden rounded-card bg-gradient-to-br from-primary-light to-surface-muted">
                         {displayImage ? (
                             <img
                                 src={displayImage}
@@ -344,7 +345,7 @@ function ProductDetailInner({
                                 className="h-full w-full object-cover"
                             />
                         ) : (
-                            <span className="text-8xl">&#129371;</span>
+                            <span className="text-8xl">&#x1F95B;</span>
                         )}
                     </div>
 
@@ -359,7 +360,7 @@ function ProductDetailInner({
 
                     {selectedVariant ? (
                         <div className="mt-1 flex items-baseline gap-2">
-                            <span className="text-2xl font-bold text-emerald-700 tabular-nums">
+                            <span className="text-2xl font-bold text-primary tabular-nums">
                                 {formatCurrency(selectedVariant.selling_price)}
                             </span>
                             <StockBadge status={stockStatus} />
@@ -367,7 +368,7 @@ function ProductDetailInner({
                     ) : startingPrice > 0 ? (
                         <div className="mt-1">
                             <div className="text-sm text-text-muted">Mulai</div>
-                            <div className="text-2xl font-bold text-emerald-700 tabular-nums">
+                            <div className="text-2xl font-bold text-primary tabular-nums">
                                 {formatCurrency(startingPrice)}
                             </div>
                         </div>
@@ -521,10 +522,10 @@ function AddToCartToast({ name }: { name: string }) {
                 animation: 'toastSlideIn 0.3s ease-out',
             }}
         >
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 shadow-lg">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+            <div className="flex items-center gap-3 rounded-thumb border border-border bg-surface px-4 py-3 shadow-lg">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light">
                     <svg
-                        className="h-4 w-4 text-emerald-600"
+                        className="h-4 w-4 text-primary"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -576,13 +577,15 @@ function VariantSelector({
                     <span className="text-xs text-text-subtle">{subtitle}</span>
                 )}
             </div>
-            <div className="mt-3 divide-y divide-border rounded-xl border border-border bg-white">
+            <div className="mt-3 divide-y divide-border rounded-thumb border border-border bg-surface">
                 {options.map((opt) => (
-                    <button
+                    <Button
                         key={opt.key}
+                        type="button"
+                        variant="ghost"
                         onClick={opt.onSelect}
                         disabled={!opt.hasVariant}
-                        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:opacity-80 disabled:opacity-40"
+                        className="h-auto w-full justify-start gap-3 rounded-none px-4 py-3.5 text-left transition-colors active:opacity-80 disabled:opacity-40"
                     >
                         <RadioDot
                             checked={opt.selected}
@@ -594,7 +597,7 @@ function VariantSelector({
                             {opt.label}
                         </span>
                         {opt.right}
-                    </button>
+                    </Button>
                 ))}
             </div>
         </section>
@@ -618,15 +621,17 @@ function QuantitySelector({
         <section className="mt-6">
             <h3 className="text-sm font-semibold text-text">Jumlah</h3>
             {lowStock !== undefined && (
-                <p className="mt-1 text-[11px] text-amber-600">
+                <p className="mt-1 text-[11px] text-warning-text">
                     Stok tersisa {lowStock}
                 </p>
             )}
             <div className="mt-3 flex items-center gap-4">
-                <div className="flex items-center rounded-xl border border-border bg-white">
-                    <button
+                <div className="flex items-center rounded-thumb border border-border bg-surface">
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => onChange(Math.max(1, quantity - 1))}
-                        className="flex h-11 w-11 items-center justify-center rounded-l-xl text-text-muted active:opacity-80"
+                        className="h-11 w-11 rounded-l-thumb text-text-muted"
                     >
                         <svg
                             width="16"
@@ -638,14 +643,16 @@ function QuantitySelector({
                         >
                             <path strokeLinecap="round" d="M5 12h14" />
                         </svg>
-                    </button>
+                    </Button>
                     <span className="w-12 text-center text-sm font-bold text-text">
                         {quantity}
                     </span>
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => onChange(Math.min(max, quantity + 1))}
                         disabled={quantity >= max}
-                        className="flex h-11 w-11 items-center justify-center rounded-r-xl text-text-muted active:opacity-80 disabled:opacity-30"
+                        className="h-11 w-11 rounded-r-thumb text-text-muted disabled:opacity-30"
                     >
                         <svg
                             width="16"
@@ -657,7 +664,7 @@ function QuantitySelector({
                         >
                             <path strokeLinecap="round" d="M12 5v14M5 12h14" />
                         </svg>
-                    </button>
+                    </Button>
                 </div>
                 {max < 999 && (
                     <span className="text-xs text-text-muted">Maks: {max}</span>
@@ -694,10 +701,10 @@ function OtherProducts({
                             key={other.id}
                             href={href}
                             prefetch="hover"
-                            className="flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-white active:opacity-80"
+                            className="flex w-36 shrink-0 flex-col overflow-hidden rounded-thumb border border-border bg-surface active:opacity-80"
                         >
-                            <div className="flex h-20 items-center justify-center bg-gradient-to-br from-emerald-50 to-zinc-50">
-                                <span className="text-3xl">&#129371;</span>
+                            <div className="flex h-20 items-center justify-center bg-gradient-to-br from-primary-light to-surface-muted">
+                                <span className="text-3xl">&#x1F95B;</span>
                             </div>
                             <div className="p-2">
                                 <div className="truncate text-xs leading-tight font-semibold text-text">
@@ -708,7 +715,7 @@ function OtherProducts({
                                         <div className="text-[10px] leading-tight text-text-muted">
                                             Mulai
                                         </div>
-                                        <div className="text-xs font-bold text-emerald-700 tabular-nums">
+                                        <div className="text-xs font-bold text-primary tabular-nums">
                                             {formatCurrency(minPrice)}
                                         </div>
                                     </div>
@@ -757,10 +764,13 @@ function CartButton({ outletId }: { outletId: number | null }) {
     };
 
     return (
-        <button
+        <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={handleCheckout}
-            className="absolute top-1/2 right-4 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm active:bg-white/25"
+            className="absolute top-1/2 right-4 h-10 w-10 -translate-y-1/2 rounded-thumb bg-white/15 backdrop-blur-sm hover:bg-white/25"
+            aria-label="Keranjang"
         >
             <svg
                 className="h-5 w-5 text-white"
@@ -775,10 +785,10 @@ function CartButton({ outletId }: { outletId: number | null }) {
                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"
                 />
             </svg>
-            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-0.5 text-[10px] font-bold text-white">
+            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-bold text-white">
                 {totalItems > 9 ? '9+' : totalItems}
             </span>
-        </button>
+        </Button>
     );
 }
 
@@ -800,10 +810,11 @@ function StickyCTA({
     return (
         <div className="fixed right-0 bottom-0 left-0 z-40 border-t border-border bg-white/95 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0))] backdrop-blur">
             <div className="mx-auto max-w-lg px-4">
-                <button
+                <Button
+                    variant="primary"
                     onClick={onAdd}
                     disabled={adding || isOutOfStock || isOutletClosed || added}
-                    className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white shadow-sm transition-all duration-200 active:opacity-80 disabled:opacity-60 ${added ? 'bg-emerald-500' : 'bg-emerald-600'}`}
+                    className="h-auto w-full gap-2 rounded-thumb py-3.5 text-sm font-bold shadow-sm transition-all duration-200 active:opacity-80 disabled:opacity-60"
                 >
                     {isOutletClosed ? (
                         <span className="flex items-center gap-1.5">
@@ -852,7 +863,7 @@ function StickyCTA({
                             <span>{price}</span>
                         </>
                     )}
-                </button>
+                </Button>
             </div>
         </div>
     );
@@ -861,8 +872,8 @@ function StickyCTA({
 function RadioDot({ checked }: { checked: boolean; disabled?: boolean }) {
     if (checked) {
         return (
-            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600">
-                <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-primary">
+                <div className="h-2.5 w-2.5 rounded-full bg-primary" />
             </div>
         );
     }
@@ -879,7 +890,7 @@ function PriceDiff({ diff, selected }: { diff: number; selected: boolean }) {
 
     return (
         <span
-            className={`text-xs tabular-nums ${selected ? 'font-semibold text-emerald-700' : 'text-text-subtle'}`}
+            className={`text-xs tabular-nums ${selected ? 'font-semibold text-primary' : 'text-text-subtle'}`}
         >
             {diff > 0 ? '+' : ''}
             {formatCurrency(diff)}
@@ -890,7 +901,7 @@ function PriceDiff({ diff, selected }: { diff: number; selected: boolean }) {
 function StockBadge({ status }: { status: string }) {
     if (status === 'out_of_stock') {
         return (
-            <span className="rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+            <span className="rounded-md bg-danger-bg px-2 py-0.5 text-[11px] font-semibold text-danger-text">
                 Habis
             </span>
         );
@@ -898,14 +909,14 @@ function StockBadge({ status }: { status: string }) {
 
     if (status === 'low') {
         return (
-            <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+            <span className="rounded-md bg-warning-bg px-2 py-0.5 text-[11px] font-semibold text-warning-text">
                 Stok Terbatas
             </span>
         );
     }
 
     return (
-        <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+        <span className="rounded-md bg-primary-light px-2 py-0.5 text-[11px] font-semibold text-primary">
             Tersedia
         </span>
     );

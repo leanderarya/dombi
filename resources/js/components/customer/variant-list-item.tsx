@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
 import { memo } from 'react';
 import ProductImage from '@/components/customer/product-image';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOutlet } from '@/contexts/outlet-context';
 import { useQuickAddCart } from '@/hooks/use-quick-add-cart';
@@ -107,7 +108,7 @@ const VariantListItem = memo(function VariantListItem({
             {/* Image */}
             <div className="relative shrink-0">
                 {loading ? (
-                    <Skeleton className="h-16 w-16 rounded-xl" />
+                    <Skeleton className="h-16 w-16 rounded-thumb" />
                 ) : (
                     <>
                         <ProductImage
@@ -116,10 +117,12 @@ const VariantListItem = memo(function VariantListItem({
                             size="md"
                         />
                         {/* Favorite button */}
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={handleFavorite}
-                            className="absolute -top-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm"
+                            className="absolute -top-1 -right-1 h-8 w-8 rounded-full bg-surface shadow-sm hover:bg-surface"
                             aria-label={
                                 isFav
                                     ? 'Hapus dari favorit'
@@ -127,9 +130,9 @@ const VariantListItem = memo(function VariantListItem({
                             }
                         >
                             <Heart
-                                className={`h-3.5 w-3.5 ${isFav ? 'fill-red-500 text-red-500' : 'text-text-muted'}`}
+                                className={`h-3.5 w-3.5 ${isFav ? 'fill-danger text-danger' : 'text-text-muted'}`}
                             />
-                        </button>
+                        </Button>
                     </>
                 )}
             </div>
@@ -161,9 +164,9 @@ const VariantListItem = memo(function VariantListItem({
             {/* Quick Add / Toast */}
             <div className="shrink-0">
                 {toast ? (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-light">
                         <svg
-                            className="h-4 w-4 text-emerald-600"
+                            className="h-4 w-4 text-primary"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -177,14 +180,16 @@ const VariantListItem = memo(function VariantListItem({
                         </svg>
                     </div>
                 ) : (
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={handleQuickAdd}
                         disabled={adding || isOutOfStock || isOutletClosed}
-                        className={`flex h-10 w-10 items-center justify-center rounded-full transition-all active:opacity-80 disabled:opacity-40 ${
+                        className={`h-10 w-10 rounded-full transition-all active:opacity-80 disabled:opacity-40 ${
                             isOutOfStock || isOutletClosed
-                                ? 'bg-surface-muted text-text-muted'
-                                : 'bg-primary text-white active:bg-primary-hover'
+                                ? 'bg-surface-muted text-text-muted hover:bg-surface-muted'
+                                : 'bg-primary text-white hover:bg-primary-hover'
                         }`}
                         aria-label={
                             isOutOfStock
@@ -233,7 +238,7 @@ const VariantListItem = memo(function VariantListItem({
                                 />
                             </svg>
                         )}
-                    </button>
+                    </Button>
                 )}
             </div>
         </Link>

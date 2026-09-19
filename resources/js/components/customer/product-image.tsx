@@ -13,9 +13,9 @@ const sizeClasses = {
 };
 
 const fallbackColors = [
-    'from-emerald-100 to-emerald-200',
-    'from-amber-100 to-amber-200',
-    'from-blue-100 to-blue-200',
+    'from-primary-light to-primary/20',
+    'from-warning-bg to-warning-border',
+    'from-info-bg to-info-border',
     'from-rose-100 to-rose-200',
     'from-purple-100 to-purple-200',
 ];
@@ -31,7 +31,7 @@ export default function ProductImage({
     if (src) {
         return (
             <div
-                className={`relative shrink-0 overflow-hidden rounded-xl ${sizeClasses[size]} ${className}`}
+                className={`relative shrink-0 overflow-hidden rounded-thumb ${sizeClasses[size]} ${className}`}
             >
                 <img
                     src={src}
@@ -45,9 +45,9 @@ export default function ProductImage({
 
     return (
         <div
-            className={`flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${fallbackColors[colorIndex]} ${sizeClasses[size]} ${className}`}
+            className={`flex shrink-0 items-center justify-center rounded-thumb bg-gradient-to-br ${fallbackColors[colorIndex]} ${sizeClasses[size]} ${className}`}
         >
-            &#129371;
+            &#x1F95B;
         </div>
     );
 }

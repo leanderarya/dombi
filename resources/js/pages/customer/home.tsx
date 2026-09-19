@@ -18,6 +18,7 @@ import { gridCols } from '@/components/customer/responsive-layout-helpers';
 import NotificationBell from '@/components/shared/notification-bell';
 import NotificationSheet from '@/components/shared/notification-sheet';
 import PushBanner from '@/components/shared/push-banner';
+import { Button } from '@/components/ui/button';
 import { useGoogleLogin } from '@/hooks/use-google-login';
 import { useHeroSlides } from '@/hooks/use-hero-slides';
 import type { HeroSlide } from '@/hooks/use-hero-slides';
@@ -156,7 +157,7 @@ function HeroCarousel({
     const { slides, index, setIndex } = hero;
 
     return (
-        <section className="relative -mx-4 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-[#185338] via-[#216b49] to-[#3a8b63] pb-14">
+        <section className="relative -mx-4 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-brand-deep via-brand-deep-mid to-brand-deep-soft pb-14">
             {/* Decorative blobs */}
             <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
             <div className="pointer-events-none absolute bottom-0 -left-10 h-36 w-36 rounded-full bg-black/10 blur-xl" />
@@ -164,7 +165,7 @@ function HeroCarousel({
             {/* Top bar: brand store + bell */}
             <div className="relative z-10 flex items-center justify-between px-4 pt-safe pb-3 text-white">
                 <span className="flex items-center gap-1.5 text-xs font-semibold tracking-wide">
-                    <Store className="h-3 w-3 text-emerald-300" />
+                    <Store className="h-3 w-3 text-brand-bright" />
                     Dombi Store • {outletName ?? 'Seturan'}
                 </span>
                 <NotificationBell
@@ -189,15 +190,17 @@ function HeroCarousel({
                 {/* Dots */}
                 <div className="mt-3 flex items-center justify-center gap-1.5">
                     {slides.map((_, i) => (
-                        <button
+                        <Button
                             key={i}
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setIndex(i)}
                             aria-label={`Slide ${i + 1}`}
                             className={`rounded-full transition-all duration-300 ${
                                 i === index
-                                    ? 'h-1.5 w-5 bg-white'
-                                    : 'h-1.5 w-1.5 bg-white/40'
+                                    ? 'h-1.5 w-5 bg-white hover:bg-white'
+                                    : 'h-1.5 w-1.5 bg-white/40 hover:bg-white/40'
                             }`}
                         />
                     ))}
@@ -209,15 +212,15 @@ function HeroCarousel({
 
 function HeroSlideCard({ slide }: { slide: HeroSlide }) {
     return (
-        <div className="flex min-w-full items-center justify-between gap-3 rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-md">
+        <div className="flex min-w-full items-center justify-between gap-3 rounded-card border border-white/20 bg-white/10 p-4 backdrop-blur-md">
             <div className="max-w-[60%] space-y-1">
-                <span className="inline-block rounded-md bg-emerald-950/40 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-300 uppercase">
+                <span className="inline-block rounded-md bg-brand-deep/40 px-2 py-0.5 text-[10px] font-bold tracking-wider text-brand-bright uppercase">
                     {slide.title}
                 </span>
                 <h2 className="text-xl leading-tight font-extrabold text-white">
                     {slide.subtitle}
                 </h2>
-                <p className="text-[9px] font-medium text-emerald-200/80">
+                <p className="text-[9px] font-medium text-primary-light/80">
                     {slide.cta}
                 </p>
             </div>
@@ -225,7 +228,7 @@ function HeroSlideCard({ slide }: { slide: HeroSlide }) {
                 <img
                     src={slide.image}
                     alt={slide.title}
-                    className="h-24 w-24 rotate-3 rounded-xl object-cover shadow-lg transition-transform duration-300 hover:rotate-0"
+                    className="h-24 w-24 rotate-3 rounded-thumb object-cover shadow-lg transition-transform duration-300 hover:rotate-0"
                 />
             </div>
         </div>
@@ -247,7 +250,7 @@ function GreetingCard({
 
     return (
         <section className="relative z-20 -mt-10">
-            <div className="rounded-2xl border border-border bg-white p-4 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.06)]">
+            <div className="rounded-card border border-border bg-surface p-4 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.06)]">
                 <div className="mb-3 flex items-center justify-between">
                     <div>
                         <span className="text-[11px] font-medium text-text-muted">
@@ -267,25 +270,26 @@ function GreetingCard({
                         </h1>
                     </div>
                     {isLoggedIn ? (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-500 shadow-sm">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-warning-border bg-warning-bg text-warning-text shadow-sm">
                             <Coins className="h-4 w-4" />
                         </div>
                     ) : (
-                        <button
+                        <Button
                             type="button"
+                            variant="primary"
                             onClick={login}
-                            className="shrink-0 rounded-full bg-primary px-4 py-2 text-xs font-bold text-white active:opacity-80"
+                            className="h-auto shrink-0 rounded-full px-4 py-2 text-xs font-bold active:opacity-80"
                         >
                             Masuk
-                        </button>
+                        </Button>
                     )}
                 </div>
 
                 {isLoggedIn && (
-                    <div className="flex items-center gap-2 border-t border-gray-100 pt-3">
+                    <div className="flex items-center gap-2 border-t border-border pt-3">
                         <Link
                             href="/customer/coming-soon/poin"
-                            className="flex flex-1 items-center justify-between rounded-xl border border-emerald-100 bg-primary-light px-3 py-2 text-left active:opacity-80"
+                            className="flex flex-1 items-center justify-between rounded-thumb border border-primary/20 bg-primary-light px-3 py-2 text-left active:opacity-80"
                         >
                             <div className="flex items-center gap-2">
                                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-white">
@@ -302,7 +306,7 @@ function GreetingCard({
                         </Link>
                         <Link
                             href="/customer/coming-soon/my-dombi-plan"
-                            className="flex flex-1 items-center justify-between rounded-xl border border-sky-100 bg-sky-50 px-3 py-2 text-left active:opacity-80"
+                            className="flex flex-1 items-center justify-between rounded-thumb border border-sky-100 bg-sky-50 px-3 py-2 text-left active:opacity-80"
                         >
                             <div className="flex items-center gap-2">
                                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-sky-600 text-[10px] text-white">
@@ -336,11 +340,12 @@ function QuickActions({
         <section className="mt-6">
             <h2 className="px-4 text-sm font-bold text-text">Pesan Sekarang</h2>
             <div className={`mt-3 grid ${gridCols(2)} gap-3 px-4`}>
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
                     onClick={onPickup}
                     disabled={pickupLoading}
-                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-2xl border border-emerald-200/70 bg-primary-light p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all active:opacity-80 disabled:opacity-50"
+                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-card! border border-primary/20 bg-primary-light p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-primary-light active:opacity-80 disabled:opacity-50"
                 >
                     <div className="relative z-10">
                         <h3 className="text-base font-extrabold text-primary transition-transform group-hover:translate-x-0.5">
@@ -357,13 +362,14 @@ function QuickActions({
                             <Gift className="h-3.5 w-3.5" />
                         </span>
                     </div>
-                    <div className="absolute -right-2 -bottom-2 h-20 w-20 rounded-full bg-emerald-200/40 blur-md transition-transform group-hover:scale-110" />
-                </button>
+                    <div className="absolute -right-2 -bottom-2 h-20 w-20 rounded-full bg-primary/20 blur-md transition-transform group-hover:scale-110" />
+                </Button>
 
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
                     onClick={onDelivery}
-                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-2xl border border-orange-200/70 bg-orange-50/60 p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all active:opacity-80"
+                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-card! border border-orange-200/70 bg-orange-50/60 p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-orange-50/60 active:opacity-80"
                 >
                     <div className="relative z-10">
                         <h3 className="text-base font-extrabold text-orange-700 transition-transform group-hover:translate-x-0.5">
@@ -381,7 +387,7 @@ function QuickActions({
                         </span>
                     </div>
                     <div className="absolute -right-2 -bottom-2 h-20 w-20 rounded-full bg-orange-200/40 blur-md transition-transform group-hover:scale-110" />
-                </button>
+                </Button>
             </div>
         </section>
     );
@@ -394,7 +400,7 @@ const PROMO_BENTOS = [
         title: 'MyDombi Plan',
         subtitle: 'Berlangganan jauh lebih untung',
         icon: <Percent className="h-4 w-4" />,
-        iconBg: 'bg-emerald-100 text-primary',
+        iconBg: 'bg-primary-light text-primary',
         cta: 'Cek Paket',
         href: '/customer/coming-soon/my-dombi-plan',
     },
@@ -402,7 +408,7 @@ const PROMO_BENTOS = [
         title: 'Dombi Essentials',
         subtitle: 'Bawa minumanmu gaya baru',
         icon: <Wine className="h-4 w-4" />,
-        iconBg: 'bg-amber-100 text-amber-700',
+        iconBg: 'bg-warning-bg text-warning-text',
         cta: 'Lihat Merchandise',
         badge: 'Baru',
         href: '/customer/coming-soon/merch',
@@ -438,11 +444,11 @@ function PromoBento() {
                     <Link
                         key={bento.title}
                         href={bento.href}
-                        className="relative flex flex-col justify-between rounded-2xl border border-border bg-white p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                        className="relative flex flex-col justify-between rounded-card border border-border bg-surface p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
                     >
                         <div>
                             <div
-                                className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${bento.iconBg}`}
+                                className={`mb-3 flex h-10 w-10 items-center justify-center rounded-thumb ${bento.iconBg}`}
                             >
                                 {bento.icon}
                             </div>
@@ -458,7 +464,7 @@ function PromoBento() {
                                 {bento.subtitle}
                             </p>
                         </div>
-                        <div className="mt-3 flex items-center border-t border-gray-100 pt-2 text-[10px] font-bold text-primary">
+                        <div className="mt-3 flex items-center border-t border-border pt-2 text-[10px] font-bold text-primary">
                             <span>{bento.cta}</span>
                             <ArrowRight className="ml-1 h-3 w-3" />
                         </div>
@@ -473,24 +479,25 @@ function PromoBento() {
 
 function PhoneBanner({ onDismiss }: { onDismiss: () => void }) {
     return (
-        <div className="mt-4 flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3">
+        <div className="mt-4 flex items-center gap-3 rounded-thumb border border-border bg-surface px-4 py-3">
             <p className="min-w-0 flex-1 text-xs text-text-muted">
                 Tambahkan nomor HP (opsional) untuk memudahkan kurir
                 menghubungi.
             </p>
             <a
                 href="/customer/verify-phone"
-                className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
+                className="shrink-0 rounded-chip bg-primary px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
             >
                 Tambah
             </a>
-            <button
+            <Button
                 type="button"
+                variant="ghost"
                 onClick={onDismiss}
-                className="shrink-0 px-1 text-xs font-medium text-text-subtle active:opacity-80"
+                className="h-auto shrink-0 px-1 py-0 text-xs font-medium text-text-subtle hover:bg-transparent hover:text-text-subtle active:opacity-80"
             >
                 Nanti
-            </button>
+            </Button>
         </div>
     );
 }
@@ -506,7 +513,7 @@ function PickupOverlay({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-emerald-600 to-emerald-700"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-primary to-primary-hover"
             role="dialog"
             aria-live="polite"
             aria-label="Ambil di Outlet"
@@ -515,22 +522,22 @@ function PickupOverlay({
             <div className="px-6 text-center">
                 {foundOutletName ? (
                     <>
-                        <div className="text-[11px] font-bold tracking-widest text-emerald-200 uppercase">
+                        <div className="text-[11px] font-bold tracking-widest text-primary-light uppercase">
                             Outlet Terdekat
                         </div>
                         <div className="mt-2 text-2xl font-bold text-white">
                             {foundOutletName}
                         </div>
-                        <div className="mt-3 text-sm text-emerald-100">
+                        <div className="mt-3 text-sm text-primary-light">
                             Mengarahkan ke daftar produk...
                         </div>
                     </>
                 ) : (
                     <>
-                        <div className="text-sm font-medium text-emerald-100">
+                        <div className="text-sm font-medium text-primary-light">
                             Mencari outlet terdekat dari lokasi Anda
                         </div>
-                        <div className="mt-2 text-xs text-emerald-200/70">
+                        <div className="mt-2 text-xs text-primary-light/70">
                             Pastikan GPS aktif untuk hasil terbaik
                         </div>
                     </>
