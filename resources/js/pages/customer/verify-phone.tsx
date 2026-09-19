@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { useState, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
 import PhoneInput from '@/components/ui/phone-input';
 
 export default function VerifyPhone() {
@@ -95,19 +96,21 @@ export default function VerifyPhone() {
                             required
                         />
 
-                        <button
+                        <Button
+                            type="button"
+                            variant="primary"
                             onClick={handleSubmit}
                             disabled={loading || !phone}
-                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+                            className="w-full rounded-chip py-2.5 font-medium"
                         >
                             Lanjutkan
-                        </button>
+                        </Button>
                     </div>
                 )}
 
                 {step === 'confirm' && (
                     <div className="space-y-4">
-                        <div className="rounded-lg border border-border bg-surface-muted p-4 text-center">
+                        <div className="rounded-chip border border-border bg-surface-muted p-4 text-center">
                             <p className="text-sm text-text-subtle">
                                 Nomor HP Anda:
                             </p>
@@ -122,33 +125,37 @@ export default function VerifyPhone() {
                             </p>
                         )}
 
-                        <button
+                        <Button
+                            type="button"
+                            variant="primary"
                             onClick={handleSubmit}
                             disabled={loading}
-                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
+                            className="w-full rounded-chip py-2.5 font-medium"
                         >
                             {loading && (
                                 <Loader2 className="h-4 w-4 animate-spin" />
                             )}
                             Ya, Hubungkan
-                        </button>
+                        </Button>
 
-                        <button
+                        <Button
+                            type="button"
+                            variant="outline"
                             onClick={() => {
                                 setStep('phone');
                                 setError('');
                             }}
-                            className="flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-text hover:bg-surface-muted"
+                            className="w-full rounded-chip py-2.5 font-medium"
                         >
                             <ArrowLeft className="h-4 w-4" />
                             Ganti Nomor
-                        </button>
+                        </Button>
                     </div>
                 )}
 
                 {step === 'done' && (
                     <div className="flex flex-col items-center gap-3">
-                        <CheckCircle2 className="h-12 w-12 text-green-500" />
+                        <CheckCircle2 className="h-12 w-12 text-success" />
                         <p className="text-sm text-text">
                             Nomor HP berhasil dihubungkan
                         </p>

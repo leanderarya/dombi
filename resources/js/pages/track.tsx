@@ -15,6 +15,7 @@ import TerminalStatusCards from '@/components/customer/order/terminal-status-car
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
+import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
 import { getCsrfToken } from '@/lib/csrf';
 import {
@@ -216,7 +217,7 @@ export default function TrackPage({
                 {order.status === 'completed' && (
                     <Link
                         href="/customer/home"
-                        className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-6 text-xs font-bold text-white active:opacity-80"
+                        className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-chip bg-primary px-6 text-xs font-bold text-white active:opacity-80"
                     >
                         <RotateCcw className="h-3.5 w-3.5" />
                         Beli Lagi
@@ -260,7 +261,7 @@ export default function TrackPage({
                         <div>
                             <Link
                                 href={`/customer/orders/confirm/${order.order_code}`}
-                                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                                className="flex h-11 w-full items-center justify-center gap-2 rounded-chip bg-primary text-sm font-bold text-white active:opacity-80"
                             >
                                 {order.payment_status === 'failed' ||
                                 order.payment_status === 'expired'
@@ -344,23 +345,23 @@ function PaymentIssueBanner({
     orderCode: string;
 }) {
     return (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+        <div className="rounded-thumb border border-danger-border bg-danger-bg p-4">
             <div className="flex items-start gap-3">
-                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-danger-text" />
                 <div>
-                    <div className="text-sm font-semibold text-red-800">
+                    <div className="text-sm font-semibold text-danger-text">
                         {isFailed
                             ? 'Pembayaran Gagal'
                             : 'Pembayaran Kadaluarsa'}
                     </div>
-                    <div className="mt-1 text-xs text-red-600">
+                    <div className="mt-1 text-xs text-danger-text">
                         {isFailed
                             ? 'Pembayaran tidak berhasil diproses. Silakan coba bayar ulang.'
                             : 'Batas waktu pembayaran telah habis. Silakan coba bayar ulang.'}
                     </div>
                     <Link
                         href={`/customer/orders/confirm/${orderCode}`}
-                        className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80"
+                        className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-chip bg-danger text-sm font-bold text-white active:opacity-80"
                     >
                         Bayar Ulang
                     </Link>
@@ -373,13 +374,14 @@ function PaymentIssueBanner({
 function CancelButton({ onClick }: { onClick: () => void }) {
     return (
         <>
-            <button
+            <Button
                 type="button"
+                variant="outline"
                 onClick={onClick}
-                className="flex h-10 w-full items-center justify-center rounded-lg border border-red-200 text-xs font-semibold text-red-600 active:opacity-80"
+                className="h-10 w-full rounded-thumb border-danger-border text-xs font-semibold text-danger-text"
             >
                 Batalkan Pesanan
-            </button>
+            </Button>
             <p className="mt-1.5 text-center text-[10px] text-text-subtle">
                 Hanya jika pesanan belum diproses
             </p>
@@ -416,7 +418,7 @@ function NonCancellableNotice({
         : null;
 
     return (
-        <div className="flex items-center justify-between gap-2 rounded-lg bg-surface-muted px-3 py-2">
+        <div className="flex items-center justify-between gap-2 rounded-chip bg-surface-muted px-3 py-2">
             <span className="text-[11px] text-text-muted">
                 Pesanan diproses, tidak dapat dibatalkan
             </span>
@@ -441,7 +443,7 @@ function NonCancellableNotice({
 
 function LoginToManagePrompt({ recoveryToken }: { recoveryToken: string }) {
     return (
-        <div className="rounded-xl border border-border bg-surface-muted p-4 text-center">
+        <div className="rounded-thumb border border-border bg-surface-muted p-4 text-center">
             <div className="text-sm font-medium text-text">
                 Ingin membatalkan pesanan?
             </div>
@@ -450,7 +452,7 @@ function LoginToManagePrompt({ recoveryToken }: { recoveryToken: string }) {
             </div>
             <a
                 href={`/oauth/google?redirect=${encodeURIComponent(`/track/${recoveryToken}`)}`}
-                className="mt-3 inline-flex h-11 items-center justify-center rounded-xl bg-primary px-6 text-sm font-bold text-white active:opacity-80"
+                className="mt-3 inline-flex h-11 items-center justify-center rounded-thumb bg-primary px-6 text-sm font-bold text-white active:opacity-80"
             >
                 Masuk dengan Google
             </a>
@@ -460,22 +462,22 @@ function LoginToManagePrompt({ recoveryToken }: { recoveryToken: string }) {
 
 function VerifyPhonePrompt() {
     return (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <div className="rounded-thumb border border-warning-border bg-warning-bg p-4">
             <div className="flex items-start gap-3">
-                <MessageCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                <MessageCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
                 <div className="flex-1 space-y-2">
                     <div>
-                        <h3 className="text-sm font-medium text-amber-900">
+                        <h3 className="text-sm font-medium text-warning-text">
                             Verifikasi HP untuk kelola pesanan
                         </h3>
-                        <p className="text-xs text-amber-700">
+                        <p className="text-xs text-warning-text">
                             Verifikasi nomor HP Anda untuk dapat membatalkan dan
                             mengelola pesanan ini.
                         </p>
                     </div>
                     <a
                         href="/customer/verify-phone"
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+                        className="inline-flex items-center gap-1.5 rounded-chip bg-warning px-3 py-1.5 text-sm font-medium text-white hover:bg-warning/90"
                     >
                         Verifikasi Sekarang
                     </a>
@@ -531,7 +533,7 @@ function CancelDialog({
                             )
                         }
                         placeholder="Contoh: 1234"
-                        className="mt-1 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-text tabular-nums placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="mt-1 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text tabular-nums placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                     <p className="mt-1 text-[11px] text-text-subtle">
                         Untuk keamanan pembatalan pesanan pickup
@@ -540,14 +542,15 @@ function CancelDialog({
             )}
             <div className="mt-4 space-y-2">
                 {reasons.map((reason: string) => (
-                    <button
+                    <Button
                         key={reason}
                         type="button"
+                        variant="outline"
                         onClick={() => onReasonChange(reason)}
-                        className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${cancelReason === reason ? 'border-primary bg-primary-light text-primary' : 'border-border text-text active:opacity-80'}`}
+                        className={`h-11 w-full justify-start rounded-thumb px-4 text-left font-medium transition-all ${cancelReason === reason ? 'border-primary bg-primary-light text-primary' : 'border-border text-text'}`}
                     >
                         {reason}
-                    </button>
+                    </Button>
                 ))}
             </div>
             {cancelReason === 'Lainnya' && (
@@ -556,33 +559,37 @@ function CancelDialog({
                         value={cancelNote}
                         onChange={(e) => onNoteChange(e.target.value)}
                         placeholder="Jelaskan alasan pembatalan..."
-                        className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="min-h-20 w-full rounded-chip border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
             )}
             {error && (
-                <p className="mt-2 text-sm font-medium text-red-600">{error}</p>
+                <p className="mt-2 text-sm font-medium text-danger-text">
+                    {error}
+                </p>
             )}
             <div className="mt-4 flex gap-2">
-                <button
+                <Button
                     type="button"
+                    variant="outline"
                     onClick={onClose}
-                    className="flex h-12 flex-1 items-center justify-center rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
+                    className="h-12 flex-1 rounded-chip font-semibold"
                 >
                     Kembali
-                </button>
-                <button
+                </Button>
+                <Button
                     type="button"
+                    variant="danger"
                     onClick={onSubmit}
                     disabled={
                         !cancelReason ||
                         loading ||
                         (isPickup && last4Hp.length !== 4)
                     }
-                    className="flex h-12 flex-1 items-center justify-center rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
+                    className="h-12 flex-1 rounded-chip font-bold disabled:bg-surface-muted disabled:text-text-subtle"
                 >
                     {loading ? 'Membatalkan...' : 'Ya, Batalkan'}
-                </button>
+                </Button>
             </div>
         </Dialog>
     );
@@ -593,7 +600,7 @@ function NotFoundState() {
         <div className="min-h-dvh bg-surface">
             <Head title="Pesanan Tidak Ditemukan" />
             <div className="mx-auto flex max-w-lg flex-col items-center justify-center px-4 py-20 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-surface-muted">
+                <div className="flex h-16 w-16 items-center justify-center rounded-thumb bg-surface-muted">
                     <XCircle className="h-8 w-8 text-text-subtle" />
                 </div>
                 <h1 className="mt-4 text-lg font-semibold text-text">
@@ -605,7 +612,7 @@ function NotFoundState() {
                 </p>
                 <a
                     href="/customer/home"
-                    className="mt-6 flex min-h-11 items-center rounded-xl bg-primary px-6 text-sm font-bold text-white active:opacity-80"
+                    className="mt-6 flex min-h-11 items-center rounded-thumb bg-primary px-6 text-sm font-bold text-white active:opacity-80"
                 >
                     Kembali ke Beranda
                 </a>
@@ -666,33 +673,34 @@ function AccountPromotionBanner({
     };
 
     return (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-            <div className="text-[13px] text-emerald-600">Buat Akun</div>
-            <div className="mt-2 text-sm text-emerald-800">
+        <div className="rounded-thumb border border-primary/20 bg-primary-light p-4">
+            <div className="text-[13px] text-primary">Buat Akun</div>
+            <div className="mt-2 text-sm text-primary">
                 Buat akun untuk melacak pesanan, menyimpan alamat, dan memesan
                 lebih mudah.
             </div>
 
             {!showForm ? (
-                <button
+                <Button
                     type="button"
+                    variant="primary"
                     onClick={() => setShowForm(true)}
-                    className="mt-3 flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                    className="mt-3 min-h-11 w-full rounded-thumb font-bold"
                 >
                     Buat Akun Sekarang
-                </button>
+                </Button>
             ) : (
                 <form onSubmit={handleSubmit} className="mt-3 space-y-3">
                     <div>
-                        <label className="text-xs font-medium text-emerald-700">
+                        <label className="text-xs font-medium text-primary">
                             Nomor HP (terverifikasi)
                         </label>
-                        <div className="mt-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text">
+                        <div className="mt-1 rounded-chip border border-primary/20 bg-surface px-3 py-2 text-sm text-text">
                             {maskedPhone}
                         </div>
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-emerald-700">
+                        <label className="text-xs font-medium text-primary">
                             Nama
                         </label>
                         <input
@@ -701,11 +709,11 @@ function AccountPromotionBanner({
                             onChange={(e) => setFormName(e.target.value)}
                             required
                             minLength={3}
-                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            className="mt-1 w-full rounded-chip border border-primary/20 bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-emerald-700">
+                        <label className="text-xs font-medium text-primary">
                             Password
                         </label>
                         <input
@@ -714,11 +722,11 @@ function AccountPromotionBanner({
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             minLength={8}
-                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            className="mt-1 w-full rounded-chip border border-primary/20 bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-emerald-700">
+                        <label className="text-xs font-medium text-primary">
                             Konfirmasi Password
                         </label>
                         <input
@@ -729,23 +737,24 @@ function AccountPromotionBanner({
                             }
                             required
                             minLength={8}
-                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            className="mt-1 w-full rounded-chip border border-primary/20 bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
                     </div>
 
                     {error && (
-                        <p className="text-sm font-medium text-red-600">
+                        <p className="text-sm font-medium text-danger-text">
                             {error}
                         </p>
                     )}
 
-                    <button
+                    <Button
                         type="submit"
+                        variant="primary"
                         disabled={loading}
-                        className="flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                        className="min-h-11 w-full rounded-thumb font-bold"
                     >
                         {loading ? 'Membuat Akun...' : 'Daftar'}
-                    </button>
+                    </Button>
                 </form>
             )}
         </div>

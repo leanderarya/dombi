@@ -6,11 +6,11 @@ export default function Help() {
         <div className="min-h-dvh bg-background text-text">
             <Head title="Bantuan" />
 
-            <header className="sticky top-0 z-30 border-b border-border bg-white/95 pt-safe backdrop-blur">
+            <header className="sticky top-0 z-30 border-b border-border bg-surface/95 pt-safe backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <Link
                         href="/customer/profile"
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
+                        className="flex h-11 w-11 items-center justify-center rounded-chip text-text active:opacity-80"
                     >
                         <ChevronLeft className="h-5 w-5" />
                     </Link>
@@ -25,7 +25,7 @@ export default function Help() {
                     <h2 className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                         Hubungi Kami
                     </h2>
-                    <div className="mt-2 rounded-xl border border-border bg-white p-4">
+                    <div className="mt-2 rounded-thumb border border-border bg-surface p-4">
                         <p className="text-sm leading-relaxed text-text-muted">
                             Butuh bantuan terkait pesanan atau pengiriman? Tim
                             Dombi siap membantu kamu.
@@ -33,7 +33,7 @@ export default function Help() {
                         <div className="mt-4 space-y-2">
                             <a
                                 href="https://wa.me/6281111111111"
-                                className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-white active:bg-primary-hover"
+                                className="flex min-h-11 items-center justify-center gap-2 rounded-chip bg-primary text-sm font-semibold text-white active:bg-primary-hover"
                             >
                                 <svg
                                     className="h-4 w-4"
@@ -46,7 +46,7 @@ export default function Help() {
                             </a>
                             <a
                                 href="mailto:support@dombi.app"
-                                className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:bg-zinc-50"
+                                className="flex min-h-11 items-center justify-center gap-2 rounded-chip border border-border text-sm font-semibold text-text active:bg-surface-muted"
                             >
                                 <svg
                                     className="h-4 w-4"
@@ -98,7 +98,7 @@ export default function Help() {
 
 function FaqItem({ title, answer }: { title: string; answer: string }) {
     return (
-        <div className="rounded-xl border border-border bg-white p-4">
+        <div className="rounded-thumb border border-border bg-surface p-4">
             <div className="text-sm font-semibold text-text">{title}</div>
             <div className="mt-1.5 text-xs leading-relaxed text-text-muted">
                 {answer}

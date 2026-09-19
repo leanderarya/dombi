@@ -65,11 +65,11 @@ export default function ComingSoon() {
     return (
         <div className="min-h-dvh bg-background text-text">
             <Head title={info.title} />
-            <header className="sticky top-0 z-30 border-b border-border bg-white/95 pt-safe backdrop-blur">
+            <header className="sticky top-0 z-30 border-b border-border bg-surface/95 pt-safe backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <Link
                         href="/customer/home"
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
+                        className="flex h-11 w-11 items-center justify-center rounded-chip text-text active:opacity-80"
                     >
                         <ChevronLeft className="h-5 w-5" />
                     </Link>
@@ -90,7 +90,7 @@ export default function ComingSoon() {
                 <div className="mt-4 flex justify-center">
                     <Link
                         href="/customer/home"
-                        className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-slate-700 active:bg-zinc-50"
+                        className="inline-flex min-h-11 items-center justify-center rounded-chip border border-border bg-surface px-4 text-sm font-semibold text-text active:bg-surface-muted"
                     >
                         Kembali ke Beranda
                     </Link>

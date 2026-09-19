@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { HelpCircle, Info, LogOut, MapPin, Package, Bell } from 'lucide-react';
 import { useState } from 'react';
 import LoginDialog from '@/components/customer/login-dialog';
+import { Button } from '@/components/ui/button';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 
@@ -27,16 +28,17 @@ function PushToggle() {
         }[pushState] ?? '';
 
     return (
-        <button
+        <Button
             type="button"
+            variant="ghost"
             onClick={
                 pushState === 'loading' || pushState === 'error'
                     ? requestEnable
                     : undefined
             }
-            className="flex min-h-[52px] w-full items-center gap-3.5 rounded-xl px-1 active:opacity-80"
+            className="min-h-[52px] w-full justify-start gap-3.5 rounded-thumb px-1 active:opacity-80"
         >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-chip bg-surface-muted">
                 <Bell className="h-5 w-5 text-text-subtle" />
             </div>
             <div className="min-w-0 flex-1 text-left">
@@ -45,7 +47,7 @@ function PushToggle() {
                     <p className="mt-0.5 text-[11px] text-text-muted">{desc}</p>
                 )}
             </div>
-        </button>
+        </Button>
     );
 }
 
@@ -72,7 +74,7 @@ export default function Profile({ defaultAddress }: any) {
 
             {/* User Info */}
             <div className="flex items-center gap-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-light text-lg font-bold text-primary">
                     {initials}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -93,17 +95,17 @@ export default function Profile({ defaultAddress }: any) {
                     <h2 className="text-[13px] text-text-subtle">
                         Alamat Utama
                     </h2>
-                    <div className="mt-2 rounded-xl border border-border bg-white p-4">
+                    <div className="mt-2 rounded-thumb border border-border bg-surface p-4">
                         <div className="flex items-start gap-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50">
-                                <MapPin className="h-4 w-4 text-emerald-700" />
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light">
+                                <MapPin className="h-4 w-4 text-primary" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm font-semibold text-text">
                                         {defaultAddress.label || 'Alamat Utama'}
                                     </span>
-                                    <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700 uppercase">
+                                    <span className="rounded bg-primary-light px-1.5 py-0.5 text-[11px] font-bold text-primary uppercase">
                                         Utama
                                     </span>
                                 </div>
@@ -115,18 +117,19 @@ export default function Profile({ defaultAddress }: any) {
                         {isLoggedIn ? (
                             <Link
                                 href="/customer/addresses"
-                                className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg border border-border text-xs font-semibold text-text active:opacity-80"
+                                className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-chip border border-border text-xs font-semibold text-text active:opacity-80"
                             >
                                 Kelola Alamat
                             </Link>
                         ) : (
-                            <button
+                            <Button
                                 type="button"
+                                variant="outline"
                                 onClick={() => setLoginDialogOpen(true)}
-                                className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg border border-border text-xs font-semibold text-text active:opacity-80"
+                                className="mt-3 min-h-[44px] w-full rounded-chip text-xs font-semibold"
                             >
                                 Login untuk Kelola Alamat
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </section>
@@ -150,19 +153,20 @@ export default function Profile({ defaultAddress }: any) {
                             }
                         />
                     ) : (
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
                             onClick={() => setLoginDialogOpen(true)}
-                            className="flex min-h-[52px] w-full items-center gap-3.5 rounded-xl px-1 active:opacity-80"
+                            className="min-h-[52px] w-full justify-start gap-3.5 rounded-thumb px-1 active:opacity-80"
                         >
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-chip bg-surface-muted">
                                 <MapPin className="h-5 w-5 text-text-subtle" />
                             </div>
                             <span className="text-sm font-medium text-text">
                                 Alamat Saya
                             </span>
                             <svg
-                                className="ml-auto h-4 w-4 text-zinc-300"
+                                className="ml-auto h-4 w-4 text-text-subtle"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -174,7 +178,7 @@ export default function Profile({ defaultAddress }: any) {
                                     d="M9 5l7 7-7 7"
                                 />
                             </svg>
-                        </button>
+                        </Button>
                     )}
                     <MenuItem
                         href="/customer/help"
@@ -194,13 +198,15 @@ export default function Profile({ defaultAddress }: any) {
 
             {/* Logout */}
             {isLoggedIn && (
-                <button
+                <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => router.post('/logout')}
-                    className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 active:opacity-80"
+                    className="mt-6 min-h-[48px] w-full rounded-thumb border-danger-border bg-danger-bg font-bold text-danger-text hover:bg-danger-bg"
                 >
                     <LogOut className="h-4 w-4" />
                     Logout
-                </button>
+                </Button>
             )}
 
             {/* Version */}
@@ -229,14 +235,14 @@ function MenuItem({
     return (
         <Link
             href={href}
-            className="flex min-h-[52px] items-center gap-3.5 rounded-xl px-1 active:opacity-80"
+            className="flex min-h-[52px] items-center gap-3.5 rounded-thumb px-1 active:opacity-80"
         >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-chip bg-surface-muted">
                 {icon}
             </div>
             <span className="text-sm font-medium text-text">{title}</span>
             <svg
-                className="ml-auto h-4 w-4 text-zinc-300"
+                className="ml-auto h-4 w-4 text-text-subtle"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

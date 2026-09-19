@@ -9,11 +9,11 @@ export default function About() {
         <div className="min-h-dvh bg-background text-text">
             <Head title="Tentang Dombi" />
 
-            <header className="sticky top-0 z-30 border-b border-border bg-white/95 pt-safe backdrop-blur">
+            <header className="sticky top-0 z-30 border-b border-border bg-surface/95 pt-safe backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <Link
                         href="/customer/profile"
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
+                        className="flex h-11 w-11 items-center justify-center rounded-chip text-text active:opacity-80"
                     >
                         <ChevronLeft className="h-5 w-5" />
                     </Link>
@@ -27,7 +27,7 @@ export default function About() {
             <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
                 {/* App Identity */}
                 <section className="flex flex-col items-center pt-4 text-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-700">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-card bg-primary">
                         <span className="text-2xl font-bold text-white">D</span>
                     </div>
                     <h2 className="mt-3 text-lg font-bold text-text">Dombi</h2>
@@ -38,7 +38,7 @@ export default function About() {
 
                 {/* Description */}
                 <section className="mt-6">
-                    <div className="rounded-xl border border-border bg-white p-4">
+                    <div className="rounded-thumb border border-border bg-surface p-4">
                         <p className="text-sm leading-relaxed text-text-muted">
                             Dombi adalah aplikasi belanja kebutuhan harian yang
                             membantu pelanggan melakukan pemesanan dengan cepat,
@@ -83,7 +83,7 @@ export default function About() {
                     <h2 className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                         Informasi Aplikasi
                     </h2>
-                    <div className="mt-2 rounded-xl border border-border bg-white p-4">
+                    <div className="mt-2 rounded-thumb border border-border bg-surface p-4">
                         <div className="space-y-2.5 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-text-muted">Versi</span>
@@ -130,7 +130,7 @@ function ValueCard({
     description: string;
 }) {
     return (
-        <div className="flex items-start gap-3 rounded-xl border border-border bg-white p-4">
+        <div className="flex items-start gap-3 rounded-thumb border border-border bg-surface p-4">
             <span className="text-text-muted">{icon}</span>
             <div>
                 <div className="text-sm font-semibold text-text">{title}</div>
