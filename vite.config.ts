@@ -8,7 +8,12 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.tsx', 'resources/js/customer-app.tsx', 'resources/js/internal-app.tsx'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.tsx',
+                'resources/js/customer-app.tsx',
+                'resources/js/internal-app.tsx',
+            ],
             refresh: true,
             fonts: [],
         }),
@@ -25,15 +30,6 @@ export default defineConfig({
     ],
     build: {
         chunkSizeWarningLimit: 600,
-        rollupOptions: {
-            output: {
-                manualChunks: (id: string) => {
-                    if (id.includes('node_modules/recharts')) {
-                        return 'recharts';
-                    }
-                },
-            },
-        },
     },
     server: {
         cors: true,
