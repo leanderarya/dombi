@@ -208,7 +208,7 @@ export default function OutletNavigationSheet({
                                             {item.label}
                                         </span>
                                         {badgeCount > 0 && (
-                                            <span className="min-w-5 rounded-full bg-red-500 px-1.5 py-0.5 text-center text-[10px] font-bold text-white">
+                                            <span className="bg-danger-bg0 min-w-5 rounded-full px-1.5 py-0.5 text-center text-[10px] font-bold text-white">
                                                 {badgeCount > 99
                                                     ? '99+'
                                                     : badgeCount}
@@ -230,7 +230,7 @@ export default function OutletNavigationSheet({
                         onClose();
                         router.post('/logout');
                     }}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-medium text-red-600 active:bg-red-50"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-medium text-danger active:bg-danger-bg"
                 >
                     <LogOut className="h-5 w-5" />
                     <span>Keluar</span>
