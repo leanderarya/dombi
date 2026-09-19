@@ -43,6 +43,18 @@
     --color-accent-orange: #ff8a3d;
     --color-accent-orange-hover: #e07730;
 
+    /* Deep brand surfaces — hero beranda and the dark floating bars. The
+       light-surface tokens above have no equivalent for a deliberate dark
+       surface, so the family is declared once here instead of literals in
+       components. */
+    --color-brand-deep: #185338;
+    --color-brand-deep-mid: #216b49;
+    --color-brand-deep-soft: #3a8b63;
+    /* Bright accents that stay legible on `--color-text` surfaces */
+    --color-brand-bright: #34d399;
+    --color-warning-bright: #fbbf24;
+    --color-info-bright: #60a5fa;
+
     /* Owner Panel — warm gray bg */
     --color-mint-canvas: #f4f4f2;
     --color-mint-wash: #ecfdf5;

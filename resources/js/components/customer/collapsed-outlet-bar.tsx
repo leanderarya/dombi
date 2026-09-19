@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ChevronDown, ChevronLeft, Store } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { OutletOption } from '@/contexts/outlet-context';
 
 interface Props {
@@ -28,7 +29,7 @@ export default function CollapsedOutletBar({
 
     return (
         <div
-            className={`fixed top-0 right-0 left-0 z-50 bg-white/90 shadow-[0_8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+            className={`fixed top-0 right-0 left-0 z-50 bg-surface/90 shadow-elevated backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${
                 show
                     ? 'translate-y-0 opacity-100'
                     : 'pointer-events-none -translate-y-full opacity-0'
@@ -49,10 +50,11 @@ export default function CollapsedOutletBar({
                 </Link>
 
                 {/* Outlet info — tap to open sheet */}
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
                     onClick={onOpenSheet}
-                    className="flex min-w-0 flex-1 items-center gap-2 text-left active:opacity-80"
+                    className="h-auto min-w-0 flex-1 items-center gap-2 px-0 text-left hover:bg-transparent"
                 >
                     <Store className="h-4 w-4 shrink-0 text-primary" />
                     <span className="truncate text-sm font-bold text-text">
@@ -68,12 +70,12 @@ export default function CollapsedOutletBar({
                         {fulfillmentType === 'pickup' ? 'P' : 'D'}
                     </span>
                     {outlet.is_open === false && (
-                        <span className="shrink-0 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
+                        <span className="shrink-0 rounded-full bg-danger-bg px-1.5 py-0.5 text-[10px] font-bold text-danger-text">
                             Tutup
                         </span>
                     )}
                     <ChevronDown className="h-4 w-4 shrink-0 text-text-subtle" />
-                </button>
+                </Button>
             </div>
         </div>
     );

@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import { customerFloatingBarBottom } from '@/layouts/customer-mobile-layout-state';
 import { formatCurrency } from '@/lib/format';
 import { getStoredOutletId } from '@/lib/outlet-store';
@@ -65,11 +66,12 @@ export default function FloatingCartBar({
             className="fixed inset-x-0 z-30 px-4 transition-[bottom] duration-300 ease-in-out"
             style={{ bottom }}
         >
-            <button
+            <Button
                 type="button"
+                variant="ghost"
                 onClick={handleCheckout}
                 disabled={processing}
-                className="mx-auto flex w-full max-w-lg items-center gap-3 rounded-xl border border-white/10 bg-text px-4 py-2.5 shadow-lg active:bg-text/90 disabled:opacity-60"
+                className="mx-auto h-auto w-full max-w-lg items-center gap-3 rounded-thumb border border-white/10 bg-text px-4 py-2.5 text-left shadow-lg hover:bg-text/90 disabled:opacity-60"
             >
                 <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10">
                     <svg
@@ -85,7 +87,7 @@ export default function FloatingCartBar({
                             d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"
                         />
                     </svg>
-                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-0.5 text-[10px] font-bold text-white">
+                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-bold text-white">
                         {totalItems > 9 ? '9+' : totalItems}
                     </span>
                 </div>
@@ -99,10 +101,10 @@ export default function FloatingCartBar({
                     </div>
                 </div>
 
-                <span className="flex min-h-9 items-center rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white">
+                <span className="flex min-h-9 items-center rounded-lg bg-primary px-4 text-xs font-bold text-white">
                     {processing ? 'Memproses...' : 'Checkout'}
                 </span>
-            </button>
+            </Button>
         </div>
     );
 }

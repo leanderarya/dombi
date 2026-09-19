@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, Package, X } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { customerFloatingBarBottom } from '@/layouts/customer-mobile-layout-state';
 import type { RefundBadge } from '@/lib/active-order-card-state';
 import { getActiveRefundPresentation } from '@/lib/active-order-card-state';
@@ -67,8 +68,8 @@ export default function ActiveOrderBar({
             style={{ bottom }}
         >
             <div className="mx-auto flex w-full max-w-lg items-center gap-3 rounded-xl border border-white/10 bg-text px-4 py-3 shadow-lg">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600/20">
-                    <Package className="h-4 w-4 text-emerald-400" />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-bright/20">
+                    <Package className="h-4 w-4 text-brand-bright" />
                 </div>
 
                 <Link
@@ -82,10 +83,10 @@ export default function ActiveOrderBar({
                         <span
                             className={
                                 refundPresentation.active
-                                    ? 'text-[11px] font-bold text-blue-400'
+                                    ? 'text-[11px] font-bold text-info-bright'
                                     : order.status === 'pending_confirmation'
-                                      ? 'text-[11px] font-bold text-amber-400'
-                                      : 'text-[11px] font-bold text-emerald-400'
+                                      ? 'text-[11px] font-bold text-warning-bright'
+                                      : 'text-[11px] font-bold text-brand-bright'
                             }
                         >
                             {refundPresentation.detailLabel ??
@@ -99,14 +100,16 @@ export default function ActiveOrderBar({
 
                 <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
 
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={handleDismiss}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white/40 active:bg-white/10"
+                    className="h-7 w-7 shrink-0 rounded-full text-white/40 hover:bg-white/10 hover:text-white/70"
                     aria-label="Tutup"
                 >
                     <X className="h-3.5 w-3.5" />
-                </button>
+                </Button>
             </div>
         </div>
     );
