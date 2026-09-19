@@ -15,6 +15,8 @@ interface Props {
     transparent?: boolean;
     /** Show hamburger menu icon */
     onMenuClick?: () => void;
+    /** Accessible name for the icon-only back link */
+    backLabel?: string;
     /**
      * `customer` follows the canvas `Page Header/Customer` component:
      * 16/700 centred title, 12/20/16/20 padding, no bottom border.
@@ -22,7 +24,7 @@ interface Props {
     variant?: 'default' | 'customer';
 }
 
-export default function PageHeader({ title, titleClassName, subtitle, backHref, right, below, transparent, onMenuClick, variant = 'default' }: Props) {
+export default function PageHeader({ title, titleClassName, subtitle, backHref, right, below, transparent, onMenuClick, backLabel = 'Kembali', variant = 'default' }: Props) {
     const isCustomer = variant === 'customer';
     const background = transparent
         ? ''
@@ -36,7 +38,7 @@ export default function PageHeader({ title, titleClassName, subtitle, backHref, 
                 {/* Left side: back button, hamburger, or spacer */}
                 <div className="flex items-center gap-1">
                     {backHref && (
-                        <Link href={backHref} className={`flex h-11 w-11 items-center justify-center ${isCustomer ? 'rounded-chip text-text active:opacity-80' : 'rounded-lg text-text-muted active:bg-surface-muted'}`}>
+                        <Link aria-label={backLabel} href={backHref} className={`flex h-11 w-11 items-center justify-center ${isCustomer ? 'rounded-chip text-text active:opacity-80' : 'rounded-lg text-text-muted active:bg-surface-muted'}`}>
                             <ChevronLeft className="h-5 w-5" />
                         </Link>
                     )}
