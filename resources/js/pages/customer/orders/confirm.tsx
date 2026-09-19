@@ -1,6 +1,5 @@
 import { router } from '@inertiajs/react';
 import {
-    ChevronLeft,
     CheckCircle2,
     Clock,
     Copy,
@@ -11,6 +10,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import PushBanner from '@/components/shared/push-banner';
 import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/ui/page-header';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { copyToClipboard } from '@/lib/clipboard';
 import { openDokuCheckout, closeDokuCheckout } from '@/lib/doku-checkout';
@@ -325,33 +325,17 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
     const status = statusConfig[paymentStatus] ?? statusConfig.pending;
     const StatusIcon = status.icon;
 
+    const backHref = isLoggedIn ? '/customer/orders' : '/customer/home';
+
     return (
         <CustomerMobileLayout hideTopBar hideCartBar hideBottomNav>
             <div className="flex min-h-[80dvh] flex-col">
                 {/* Header */}
-                <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
-                    <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            aria-label="Kembali"
-                            className="h-11 w-11"
-                            onClick={() =>
-                                router.visit(
-                                    isLoggedIn
-                                        ? '/customer/orders'
-                                        : '/customer/home',
-                                )
-                            }
-                        >
-                            <ChevronLeft className="h-5 w-5" />
-                        </Button>
-                        <h1 className="text-base font-bold text-text">
-                            Konfirmasi Pesanan
-                        </h1>
-                        <div className="h-11 w-11" />
-                    </div>
-                </header>
+                <PageHeader
+                    variant="customer"
+                    title="Konfirmasi Pesanan"
+                    backHref={backHref}
+                />
 
                 {/* Content */}
                 <div className="px-4">
