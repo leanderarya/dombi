@@ -1,6 +1,6 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ChevronLeft } from 'lucide-react';
+import { Head, useForm } from '@inertiajs/react';
 import AddressForm from '@/components/customer/address-form';
+import PageHeader from '@/components/ui/page-header';
 
 export default function EditAddress({ address }: any) {
     const form = useForm({
@@ -30,20 +30,11 @@ export default function EditAddress({ address }: any) {
         <div className="min-h-dvh bg-background text-text">
             <Head title="Edit Alamat" />
 
-            <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
-                <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link
-                        href="/customer/addresses"
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
-                    >
-                        <ChevronLeft className="h-5 w-5" />
-                    </Link>
-                    <h1 className="text-sm font-semibold text-text">
-                        Edit Alamat
-                    </h1>
-                    <div className="h-11 w-11" />
-                </div>
-            </header>
+            <PageHeader
+                variant="customer"
+                title="Edit Alamat"
+                backHref="/customer/addresses"
+            />
 
             <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
                 <AddressForm

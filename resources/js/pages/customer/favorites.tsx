@@ -3,6 +3,7 @@ import { Heart } from 'lucide-react';
 import { useMemo } from 'react';
 import ProductImage from '@/components/customer/product-image';
 import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/ui/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useProducts } from '@/hooks/use-products';
@@ -77,11 +78,7 @@ function FavoritesInner() {
         <CustomerMobileLayout hideTopBar>
             <Head title="Favorit" />
             {/* Page Title */}
-            <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
-                <div className="mx-auto flex max-w-lg items-center justify-center px-4 py-3">
-                    <h1 className="text-base font-bold text-text">Favorit</h1>
-                </div>
-            </header>
+            <PageHeader variant="customer" title="Favorit" />
             <div className="pt-4">
                 {loading ? (
                     <FavoritesSkeleton />

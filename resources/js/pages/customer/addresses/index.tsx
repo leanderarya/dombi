@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ChevronLeft, MapPin, Plus, Search, Trash2 } from 'lucide-react';
+import { MapPin, Plus, Search, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import OfflineBanner from '@/components/shared/offline-banner';
 import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/ui/page-header';
 
 export default function AddressesIndex({ addresses }: any) {
     const [search, setSearch] = useState('');
@@ -39,25 +40,20 @@ export default function AddressesIndex({ addresses }: any) {
             <OfflineBanner />
 
             {/* Sticky Header */}
-            <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
-                <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link
-                        href="/customer/profile"
-                        className="flex h-11 w-11 items-center justify-center rounded-chip text-text active:opacity-80"
-                    >
-                        <ChevronLeft className="h-5 w-5" />
-                    </Link>
-                    <h1 className="text-sm font-semibold text-text">
-                        Alamat Saya
-                    </h1>
+            <PageHeader
+                variant="customer"
+                title="Alamat Saya"
+                backHref="/customer/profile"
+                right={
                     <Link
                         href="/customer/addresses/create"
+                        aria-label="Tambah alamat"
                         className="flex h-11 w-11 items-center justify-center rounded-chip text-text active:opacity-80"
                     >
                         <Plus className="h-5 w-5" />
                     </Link>
-                </div>
-            </header>
+                }
+            />
 
             {/* Content */}
             <main className="mx-auto max-w-lg px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom,0))]">
