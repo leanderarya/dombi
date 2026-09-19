@@ -7,7 +7,7 @@
 **Gate 1:** ✅ Lulus 2026-09-17 · **Change Request:** CR-1 (per-role), CR-2 (token & library)
 **Baseline:** `develop` @ `1d77a8d0`
 **Kanvas SSOT:** `pencil-new.pen` — 18 frame Order disetujui klien (D9)
-**Status:** 🟡 Fase A: A.1, A.2, A.4 selesai, A.3 ditunda. Fase B: selesai (6/6). Fase C: selesai lewat putaran koreksi C.5–C.7 (gate visual terbuka). Berikutnya Fase D — menunggu review staging pengguna.
+**Status:** 🟡 Fase A: A.1, A.2, A.4 selesai, A.3 ditunda. Fase B: selesai (6/6). Fase C: selesai lewat dua putaran koreksi (C.5–C.7, lalu F.1–F.4 untuk isi kartu daftar pesanan); gate visual Orders 1/2 **dijalankan dan lolos** 2026-09-18 dengan 1 temuan baru (F-1, dijadwalkan). Berikutnya Fase D — menunggu review staging pengguna.
 
 ## Keputusan yang mengikat
 
@@ -433,6 +433,34 @@ peringatan pra-ada), Vitest 136/136, `build` hijau.
 **Gate visual masih terbuka.** Desktop browser tidak terhubung ke sesi ini,
 jadi screenshot sebelum/sesudah tidak bisa diambil; verifikasi visual
 dilakukan pengguna di staging. Gate ini terbuka, bukan lolos.
+
+**Ditutup 2026-09-18.** Gate dijalankan lokal (Herd + Chrome for Testing
+headless lewat CDP) untuk frame Orders 1/2 — hasil dan bukti di
+`docs/ORDERS_LIST_VISUAL_GATE_20260918.md`. Lihat putaran ketiga di bawah.
+
+### Putaran ketiga (2026-09-18) — isi kartu daftar pesanan
+
+Audit delta antara dua frame Orders (`op1pF`, `fjKWV`) dan render menemukan
+lima penyimpangan **isi kartu** (chrome sudah lolos di C.5–C.7). Dua frame itu
+ternyata **satu route** (`GET /customer/orders`), jadi tidak ada layar baru —
+hanya penutupan delta. Plan: `docs/superpowers/plans/2026-09-18-orders-list-frame-application-plan.md`.
+
+| # | Temuan (kanvas vs kode) | Slice | Commit |
+|---|---|---|---|
+| 1 | Kartu `Dibatalkan Customer` tidak punya aksi | F.1 | `81b20695` |
+| 2 | Label fulfillment beda antar kartu; `delivery_ojol` salah label | F.2 | `c8f81866` |
+| 3 | Tanggal kartu aktif absolut; kanvas `Hari ini, 14.20` | F.3 | `6bb8c60a` |
+| 4 | Tidak ada test perilaku aksi kartu terminal | F.4 | `c8291498` |
+| 5 | Gate visual belum pernah dijalankan untuk frame ini | G.1 | lolos, 1 temuan |
+
+**Hasil gate (2026-09-18):** State A dan State B setara dengan `op1pF`/`fjKWV`
+pada judul, pita section, badge, label fulfillment, format tanggal, dan
+label/tombol aksi. Deviasi yang tersisa adalah literal-di-frame yang sudah
+diputuskan kalah di C.5–C.7 (radius 18/999, padding pill `[6,10]`, tint
+literal). **Temuan baru F-1:** `payment_status = 'pending'` terbaca sebagai
+refund pending (`RefundObligationStatus::Pending` vs `PaymentStatus::Pending`
+sama-sama `pending`) → badge `Proses Refund` + tombol bayar hilang; dijadwalkan
+sebagai slice F.5 di plan di atas, **belum dieksekusi** (di luar lingkup token).
 
 ---
 
