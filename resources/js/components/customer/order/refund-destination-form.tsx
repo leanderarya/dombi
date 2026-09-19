@@ -91,10 +91,11 @@ export default function RefundDestinationForm({
             <div>
                 <Label>Metode Penerimaan Dana</Label>
                 <div className="mt-2 flex gap-2">
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
                         onClick={() => setType('bank')}
-                        className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${
+                        className={`min-h-11 flex-1 gap-2 rounded-thumb px-3 py-2 text-xs font-semibold ${
                             type === 'bank'
                                 ? 'border-primary bg-primary/10 text-primary'
                                 : 'border-border text-text-muted'
@@ -102,11 +103,12 @@ export default function RefundDestinationForm({
                     >
                         <Banknote className="h-4 w-4" />
                         Transfer Bank
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="button"
+                        variant="outline"
                         onClick={() => setType('ewallet')}
-                        className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${
+                        className={`min-h-11 flex-1 gap-2 rounded-thumb px-3 py-2 text-xs font-semibold ${
                             type === 'ewallet'
                                 ? 'border-primary bg-primary/10 text-primary'
                                 : 'border-border text-text-muted'
@@ -114,7 +116,7 @@ export default function RefundDestinationForm({
                     >
                         <Smartphone className="h-4 w-4" />
                         E-Wallet
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -132,7 +134,7 @@ export default function RefundDestinationForm({
                             />
                             {errors.bank_name && (
                                 <p
-                                    className="mt-1 text-[11px] text-red-500"
+                                    className="mt-1 text-[11px] text-danger-text"
                                     role="alert"
                                 >
                                     {errors.bank_name}
@@ -155,7 +157,7 @@ export default function RefundDestinationForm({
                             />
                             {errors.account_number && (
                                 <p
-                                    className="mt-1 text-[11px] text-red-500"
+                                    className="mt-1 text-[11px] text-danger-text"
                                     role="alert"
                                 >
                                     {errors.account_number}
@@ -177,7 +179,7 @@ export default function RefundDestinationForm({
                             />
                             {errors.account_holder && (
                                 <p
-                                    className="mt-1 text-[11px] text-red-500"
+                                    className="mt-1 text-[11px] text-danger-text"
                                     role="alert"
                                 >
                                     {errors.account_holder}
@@ -209,7 +211,7 @@ export default function RefundDestinationForm({
                             />
                             {errors.ewallet_provider && (
                                 <p
-                                    className="mt-1 text-[11px] text-red-500"
+                                    className="mt-1 text-[11px] text-danger-text"
                                     role="alert"
                                 >
                                     {errors.ewallet_provider}
@@ -235,7 +237,7 @@ export default function RefundDestinationForm({
                             </p>
                             {errors.ewallet_number && (
                                 <p
-                                    className="mt-1 text-[11px] text-red-500"
+                                    className="mt-1 text-[11px] text-danger-text"
                                     role="alert"
                                 >
                                     {errors.ewallet_number}
@@ -257,7 +259,7 @@ export default function RefundDestinationForm({
                             />
                             {errors.ewallet_holder && (
                                 <p
-                                    className="mt-1 text-[11px] text-red-500"
+                                    className="mt-1 text-[11px] text-danger-text"
                                     role="alert"
                                 >
                                     {errors.ewallet_holder}

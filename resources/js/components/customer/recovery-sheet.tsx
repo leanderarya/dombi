@@ -7,6 +7,7 @@ import {
     useState,
 } from 'react';
 import { runAutoRecovery } from '@/components/customer/recovery-auto-submit';
+import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
 import PhoneInput from '@/components/ui/phone-input';
 import { PENDING_PHONE_KEY } from '@/lib/constants';
@@ -220,15 +221,16 @@ export default function RecoverySheet({
                     />
                 </div>
 
-                <button
+                <Button
                     type="button"
+                    variant="primary"
                     onClick={handleRecover}
                     disabled={loading || phone.trim().length < 8}
-                    className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                    className="mt-4 h-12 w-full rounded-thumb font-bold disabled:bg-border disabled:text-text-subtle"
                 >
                     <Search className="h-4 w-4" />
                     {loading ? 'Mencari...' : 'Cari Pesanan'}
-                </button>
+                </Button>
             </Dialog>
 
             {/* Verification Required Dialog */}
@@ -239,10 +241,10 @@ export default function RecoverySheet({
             >
                 <div className="flex flex-col items-center text-center">
                     <div
-                        className={`flex h-14 w-14 items-center justify-center rounded-full ${isDifferentAccount ? 'bg-amber-50' : 'bg-emerald-50'}`}
+                        className={`flex h-14 w-14 items-center justify-center rounded-full ${isDifferentAccount ? 'bg-warning-bg' : 'bg-primary-light'}`}
                     >
                         <ShieldCheck
-                            className={`h-7 w-7 ${isDifferentAccount ? 'text-amber-600' : 'text-emerald-600'}`}
+                            className={`h-7 w-7 ${isDifferentAccount ? 'text-warning' : 'text-primary'}`}
                         />
                     </div>
                     {isDifferentAccount ? (
@@ -270,15 +272,17 @@ export default function RecoverySheet({
                     )}
                 </div>
                 <div className="mt-5 flex gap-2">
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
                         onClick={() => setShowVerifyDialog(false)}
-                        className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
+                        className="h-12 flex-1 rounded-thumb font-semibold"
                     >
                         Kembali
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="button"
+                        variant="primary"
                         onClick={
                             isDifferentAccount
                                 ? handleLogoutAndRedirect
@@ -291,10 +295,10 @@ export default function RecoverySheet({
                                       window.location.href = `/oauth/google?redirect=${encodeURIComponent('/customer/orders')}`;
                                   }
                         }
-                        className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-xl text-sm font-bold text-white active:opacity-80 ${isDifferentAccount ? 'bg-amber-600' : 'bg-emerald-600'}`}
+                        className={`h-12 flex-1 rounded-thumb font-bold ${isDifferentAccount ? 'bg-warning hover:bg-warning/90' : ''}`}
                     >
                         {isDifferentAccount ? 'Ganti Akun' : 'Masuk Google'}
-                    </button>
+                    </Button>
                 </div>
             </Dialog>
         </>

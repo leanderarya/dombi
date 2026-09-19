@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { ChevronLeft, MapPin, Plus, Search, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import OfflineBanner from '@/components/shared/offline-banner';
+import { Button } from '@/components/ui/button';
 
 export default function AddressesIndex({ addresses }: any) {
     const [search, setSearch] = useState('');
@@ -38,11 +39,11 @@ export default function AddressesIndex({ addresses }: any) {
             <OfflineBanner />
 
             {/* Sticky Header */}
-            <header className="sticky top-0 z-30 border-b border-border bg-white/95 pt-safe backdrop-blur">
+            <header className="sticky top-0 z-30 border-b border-border bg-surface/95 pt-safe backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <Link
                         href="/customer/profile"
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
+                        className="flex h-11 w-11 items-center justify-center rounded-chip text-text active:opacity-80"
                     >
                         <ChevronLeft className="h-5 w-5" />
                     </Link>
@@ -51,7 +52,7 @@ export default function AddressesIndex({ addresses }: any) {
                     </h1>
                     <Link
                         href="/customer/addresses/create"
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
+                        className="flex h-11 w-11 items-center justify-center rounded-chip text-text active:opacity-80"
                     >
                         <Plus className="h-5 w-5" />
                     </Link>
@@ -63,7 +64,7 @@ export default function AddressesIndex({ addresses }: any) {
                 <Head title="Alamat Saya" />
 
                 {/* Search */}
-                <div className="flex items-center gap-2.5 rounded-xl border border-border bg-white px-3.5">
+                <div className="flex items-center gap-2.5 rounded-thumb border border-border bg-surface px-3.5">
                     <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                     <input
                         type="text"
@@ -107,7 +108,7 @@ export default function AddressesIndex({ addresses }: any) {
             <div className="fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom,0))] z-30 px-4">
                 <Link
                     href="/customer/addresses/create"
-                    className="mx-auto flex min-h-12 max-w-lg items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white shadow-lg active:bg-primary-hover"
+                    className="mx-auto flex min-h-12 max-w-lg items-center justify-center gap-2 rounded-thumb bg-primary text-sm font-bold text-white shadow-lg active:bg-primary-hover"
                 >
                     <MapPin className="h-4 w-4" />+ Tambah Alamat Baru
                 </Link>
@@ -135,7 +136,7 @@ function AddressCard({
 
     return (
         <div
-            className={`rounded-xl border bg-white p-4 ${isDefault ? 'border-emerald-300' : 'border-border'}`}
+            className={`rounded-thumb border bg-surface p-4 ${isDefault ? 'border-primary/20' : 'border-border'}`}
         >
             {/* Header */}
             <div className="flex items-center gap-2">
@@ -143,7 +144,7 @@ function AddressCard({
                     {address.label || 'Alamat'}
                 </span>
                 {isDefault && (
-                    <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-emerald-700 uppercase">
+                    <span className="rounded bg-primary-light px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-primary uppercase">
                         Utama
                     </span>
                 )}
@@ -178,12 +179,14 @@ function AddressCard({
             {/* Actions */}
             <div className="mt-3 flex items-center gap-3 border-t border-border pt-3">
                 {!isDefault && (
-                    <button
+                    <Button
+                        type="button"
+                        variant="link"
                         onClick={onSetDefault}
-                        className="text-xs font-bold tracking-wide text-primary uppercase active:text-primary-hover"
+                        className="h-auto gap-0 p-0 text-xs font-bold tracking-wide uppercase"
                     >
                         Pilih Utama
-                    </button>
+                    </Button>
                 )}
                 <Link
                     href={`/customer/addresses/${address.id}/edit`}
@@ -204,13 +207,15 @@ function AddressCard({
                     </svg>
                     Edit
                 </Link>
-                <button
+                <Button
+                    type="button"
+                    variant="link"
                     onClick={onDelete}
-                    className="ml-auto flex items-center gap-1 text-xs font-medium text-red-500 active:text-red-700"
+                    className="ml-auto h-auto gap-1 p-0 text-xs font-medium text-danger-text"
                 >
                     <Trash2 className="h-3 w-3" />
                     Hapus
-                </button>
+                </Button>
             </div>
         </div>
     );

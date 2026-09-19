@@ -1,6 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface OrderItem {
     product_name: string;
@@ -66,11 +67,11 @@ export default function GuestCancelPage() {
         <>
             <Head title="Batalkan Pesanan" />
             <div className="mx-auto max-w-lg px-4 py-8">
-                <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-                    <h1 className="text-lg font-bold text-red-800">
+                <div className="mb-6 rounded-chip border border-danger-border bg-danger-bg p-4">
+                    <h1 className="text-lg font-bold text-danger-text">
                         Batalkan Pesanan
                     </h1>
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="mt-1 text-sm text-danger-text">
                         Anda akan membatalkan pesanan{' '}
                         <strong>{order.order_code}</strong>. Tindakan ini tidak
                         dapat dibatalkan.
@@ -91,7 +92,7 @@ export default function GuestCancelPage() {
                         <span>Total</span>
                         <span>{order.total.toLocaleString('id-ID')}</span>
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-text-muted">
                         {order.outlet_name} ·{' '}
                         {order.fulfillment_type === 'pickup'
                             ? 'Ambil di Outlet'
@@ -137,7 +138,7 @@ export default function GuestCancelPage() {
                                 value={r}
                                 checked={reason === r}
                                 onChange={(e) => setReason(e.target.value)}
-                                className="accent-red-600"
+                                className="accent-danger"
                             />
                             {r}
                         </label>
@@ -153,17 +154,19 @@ export default function GuestCancelPage() {
                     )}
                 </div>
 
-                <button
+                <Button
+                    type="button"
+                    variant="danger"
                     onClick={handleCancel}
                     disabled={
                         submitting ||
                         (reason === 'Lainnya' && !note) ||
                         (isPickup && last4Hp.length !== 4)
                     }
-                    className="w-full rounded-lg bg-red-600 py-3 font-bold text-white disabled:opacity-50"
+                    className="w-full rounded-chip py-3 font-bold"
                 >
                     {submitting ? 'Memproses...' : 'Ya, Batalkan Pesanan Saya'}
-                </button>
+                </Button>
             </div>
         </>
     );

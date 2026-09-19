@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
 import { useMemo } from 'react';
 import ProductImage from '@/components/customer/product-image';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useProducts } from '@/hooks/use-products';
@@ -76,7 +77,7 @@ function FavoritesInner() {
         <CustomerMobileLayout hideTopBar>
             <Head title="Favorit" />
             {/* Page Title */}
-            <header className="sticky top-0 z-30 bg-white/95 pt-safe backdrop-blur">
+            <header className="sticky top-0 z-30 bg-surface/95 pt-safe backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-center px-4 py-3">
                     <h1 className="text-base font-bold text-text">Favorit</h1>
                 </div>
@@ -89,7 +90,7 @@ function FavoritesInner() {
                 ) : favoriteVariants.length === 0 ? (
                     <FavoritesEmpty />
                 ) : (
-                    <div className="mt-3 overflow-hidden rounded-2xl border border-border/60 bg-white">
+                    <div className="mt-3 overflow-hidden rounded-card border border-border/60 bg-surface">
                         {favoriteVariants.map((row, i) => (
                             <div
                                 key={row.variant.id}
@@ -153,18 +154,20 @@ function FavoriteRow({
                     src={variant.image}
                     size="md"
                 />
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         onFavorite();
                     }}
-                    className="absolute -top-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm"
+                    className="absolute -top-1 -right-1 h-8 w-8 rounded-full bg-surface shadow-sm hover:bg-surface-muted"
                     aria-label="Hapus dari favorit"
                 >
-                    <Heart className="h-3.5 w-3.5 fill-red-500 text-red-500" />
-                </button>
+                    <Heart className="h-3.5 w-3.5 fill-danger text-danger" />
+                </Button>
             </div>
 
             <div className="min-w-0 flex-1">
@@ -179,9 +182,9 @@ function FavoriteRow({
 
             <div className="shrink-0">
                 {toast ? (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-light">
                         <svg
-                            className="h-4 w-4 text-emerald-600"
+                            className="h-4 w-4 text-primary"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -195,18 +198,20 @@ function FavoriteRow({
                         </svg>
                     </div>
                 ) : (
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             handleQuickAdd();
                         }}
                         disabled={adding || isOutOfStock || isOutletClosed}
-                        className={`flex h-10 w-10 items-center justify-center rounded-full transition-all active:opacity-80 disabled:opacity-40 ${
+                        className={`h-10 w-10 rounded-full transition-all active:opacity-80 disabled:opacity-40 ${
                             isOutOfStock || isOutletClosed
-                                ? 'bg-surface-muted text-text-muted'
-                                : 'bg-primary text-white active:bg-primary-hover'
+                                ? 'bg-surface-muted text-text-muted hover:bg-surface-muted'
+                                : 'bg-primary text-white hover:bg-primary/90 active:bg-primary-hover'
                         }`}
                         aria-label={
                             isOutOfStock
@@ -255,7 +260,7 @@ function FavoriteRow({
                                 />
                             </svg>
                         )}
-                    </button>
+                    </Button>
                 )}
             </div>
         </Link>
@@ -270,26 +275,22 @@ function FavoritesError({
     onRetry: () => void;
 }) {
     return (
-        <div className="mt-3 rounded-2xl border border-border/60 bg-white p-4 text-center">
+        <div className="mt-3 rounded-card border border-border/60 bg-surface p-4 text-center">
             <p className="mb-3 text-sm text-text-muted">{message}</p>
-            <button
-                type="button"
-                onClick={onRetry}
-                className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white active:opacity-80"
-            >
+            <Button type="button" variant="primary" size="md" onClick={onRetry}>
                 Coba Lagi
-            </button>
+            </Button>
         </div>
     );
 }
 
 function FavoritesSkeleton() {
     return (
-        <div className="mt-3 rounded-2xl border border-border/60 bg-white p-4">
+        <div className="mt-3 rounded-card border border-border/60 bg-surface p-4">
             <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                     <div key={i} className="flex items-center gap-3.5 py-2">
-                        <Skeleton className="h-20 w-20 shrink-0 rounded-xl" />
+                        <Skeleton className="h-20 w-20 shrink-0 rounded-thumb" />
                         <div className="flex-1 space-y-2">
                             <Skeleton className="h-3 w-1/3" />
                             <Skeleton className="h-4 w-2/3" />
@@ -306,7 +307,7 @@ function FavoritesSkeleton() {
 function FavoritesEmpty() {
     return (
         <div className="mt-12 flex flex-col items-center text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted">
+            <div className="flex h-16 w-16 items-center justify-center rounded-card bg-surface-muted">
                 <Heart className="h-7 w-7 text-text-muted" />
             </div>
             <p className="mt-3 text-sm font-semibold text-text">
@@ -317,7 +318,7 @@ function FavoritesEmpty() {
             </p>
             <Link
                 href="/customer/products"
-                className="mt-4 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white active:opacity-80"
+                className="mt-4 rounded-thumb bg-primary px-5 py-2.5 text-sm font-semibold text-white active:opacity-80"
             >
                 Lihat Produk
             </Link>

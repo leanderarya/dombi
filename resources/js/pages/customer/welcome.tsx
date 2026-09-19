@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { useGoogleLogin } from '@/hooks/use-google-login';
 
 export default function Welcome() {
@@ -34,9 +35,9 @@ export default function Welcome() {
 
     if (loading) {
         return (
-            <div className="flex min-h-dvh items-center justify-center bg-white">
+            <div className="flex min-h-dvh items-center justify-center bg-surface">
                 <div className="text-center">
-                    <div className="mx-auto h-12 w-12 animate-pulse rounded-2xl bg-emerald-600" />
+                    <div className="mx-auto h-12 w-12 animate-pulse rounded-card bg-primary" />
                     <p className="mt-4 text-sm font-medium text-text-muted">
                         Menyiapkan Dombi...
                     </p>
@@ -46,29 +47,29 @@ export default function Welcome() {
     }
 
     return (
-        <div className="flex min-h-dvh flex-col bg-white">
+        <div className="flex min-h-dvh flex-col bg-surface">
             <Head title="Selamat Datang di Dombi" />
 
             {/* SECTION 1 — HERO IMAGE */}
             <div className="relative w-full flex-[0_0_50vh] overflow-hidden rounded-b-[2rem]">
                 {/* Replace this gradient with an <img> when hero asset is available */}
                 <div
-                    className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-emerald-400 to-emerald-600"
+                    className="absolute inset-0 bg-gradient-to-br from-primary via-brand-bright to-primary"
                     style={{
                         backgroundImage: `
-                            linear-gradient(135deg, #059669 0%, #34d399 50%, #059669 100%)
+                            linear-gradient(135deg, var(--color-primary) 0%, var(--color-brand-bright) 50%, var(--color-primary) 100%)
                         `,
                     }}
                 />
                 {/* Decorative elements */}
                 <div className="absolute inset-0 opacity-10">
-                    <div className="absolute -top-20 -right-20 h-80 w-80 rounded-full bg-white" />
-                    <div className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-white" />
-                    <div className="absolute right-10 bottom-20 h-40 w-40 rounded-full bg-white" />
+                    <div className="absolute -top-20 -right-20 h-80 w-80 rounded-full bg-surface" />
+                    <div className="absolute -bottom-32 -left-20 h-96 w-96 rounded-full bg-surface" />
+                    <div className="absolute right-10 bottom-20 h-40 w-40 rounded-full bg-surface" />
                 </div>
                 {/* Logo center */}
                 <div className="relative flex h-full flex-col items-center justify-center px-8">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/20 backdrop-blur-sm">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-surface/20 backdrop-blur-sm">
                         <span className="text-4xl font-bold text-white">D</span>
                     </div>
                     <div className="mt-4 text-sm font-semibold tracking-widest text-white/80 uppercase">
@@ -79,7 +80,7 @@ export default function Welcome() {
 
             {/* SECTION 2 — CAROUSEL INDICATOR */}
             <div className="flex justify-center gap-2 pt-5">
-                <div className="h-2 w-2 rounded-full bg-emerald-600" />
+                <div className="h-2 w-2 rounded-full bg-primary" />
                 <div className="h-2 w-2 rounded-full bg-border" />
                 <div className="h-2 w-2 rounded-full bg-border" />
             </div>
@@ -108,10 +109,11 @@ export default function Welcome() {
             <div className="px-6 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom,0))]">
                 <div className="mx-auto max-w-sm space-y-3">
                     {/* Primary: Google Login */}
-                    <button
+                    <Button
                         type="button"
+                        variant="primary"
                         onClick={handleGoogleLogin}
-                        className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-200/50 transition-all active:bg-emerald-700 active:opacity-80"
+                        className="h-14 w-full gap-3 rounded-full font-bold shadow-lg shadow-primary/20 transition-all active:bg-primary-hover active:opacity-80"
                     >
                         <svg className="h-5 w-5" viewBox="0 0 24 24">
                             <path
@@ -132,16 +134,17 @@ export default function Welcome() {
                             />
                         </svg>
                         Masuk dengan Google
-                    </button>
+                    </Button>
 
                     {/* Secondary: Guest */}
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
                         onClick={handleGuestMode}
-                        className="flex h-12 w-full items-center justify-center text-sm font-semibold text-text-muted underline active:text-text"
+                        className="h-12 w-full font-semibold text-text-muted underline hover:bg-transparent hover:text-text active:text-text"
                     >
                         Lewati Tahap Ini
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
