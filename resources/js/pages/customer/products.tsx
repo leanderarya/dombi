@@ -22,6 +22,7 @@ import {
     railAndMain,
 } from '@/components/customer/responsive-layout-helpers';
 import SizeSelectorSheet from '@/components/customer/size-selector-sheet';
+import { Button } from '@/components/ui/button';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useFulfillmentOverlay } from '@/hooks/use-fulfillment-overlay';
@@ -142,18 +143,20 @@ function ProductsInner() {
     return (
         <>
             <Head title="Dombi Center" />
-            <div className="relative mx-auto min-h-screen w-full max-w-md bg-[#FAFAFA] pb-24 font-sans text-gray-900 shadow-xl lg:max-w-7xl">
+            <div className="relative mx-auto min-h-screen w-full max-w-md bg-canvas pb-24 font-sans text-text shadow-xl lg:max-w-7xl">
                 {/* ── 1. HEADER ── */}
                 <header className="relative rounded-b-3xl bg-primary px-4 pt-safe pb-10 text-white">
                     <div className="mb-4 flex items-center justify-between">
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={handleBack}
-                            className="flex h-11 w-11 items-center justify-center rounded-lg text-white active:bg-white/20"
+                            className="h-11 w-11 rounded-chip! text-white hover:bg-white/20 hover:text-white"
                             aria-label="Kembali"
                         >
                             <ChevronLeft className="h-5 w-5" />
-                        </button>
+                        </Button>
                         <h1 className="text-base font-bold tracking-wide">
                             Dombi Center
                         </h1>
@@ -162,19 +165,21 @@ function ProductsInner() {
 
                     {/* Pick Up / Delivery toggle */}
                     <div className="relative mx-auto mb-2 flex w-[260px] items-center rounded-full bg-black/20 p-1">
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
                             onClick={() => !isLoggedIn || switchTo('pickup')}
-                            className={`flex-1 rounded-full px-3 py-1.5 text-center text-xs font-bold transition-all ${
+                            className={`h-auto flex-1 rounded-full px-3 py-1.5 text-center text-xs font-bold transition-all ${
                                 fulfillmentType === 'pickup'
-                                    ? 'bg-white text-emerald-700 shadow-xs'
-                                    : 'text-white/70'
+                                    ? 'bg-white text-primary shadow-xs hover:bg-white hover:text-primary'
+                                    : 'text-white/70 hover:bg-transparent hover:text-white/70'
                             }`}
                         >
                             Pick Up
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            variant="ghost"
                             onClick={() => {
                                 if (!isLoggedIn) {
                                     setDeliveryLoginOpen(true);
@@ -182,17 +187,17 @@ function ProductsInner() {
                                     switchTo('delivery');
                                 }
                             }}
-                            className={`relative flex-1 rounded-full px-3 py-1.5 text-center text-xs font-medium transition-all ${
+                            className={`relative h-auto flex-1 rounded-full px-3 py-1.5 text-center text-xs font-medium transition-all ${
                                 fulfillmentType === 'delivery'
-                                    ? 'bg-white text-emerald-700 shadow-xs'
-                                    : 'text-white/70'
+                                    ? 'bg-white text-primary shadow-xs hover:bg-white hover:text-primary'
+                                    : 'text-white/70 hover:bg-transparent hover:text-white/70'
                             }`}
                         >
                             Delivery
-                        </button>
+                        </Button>
                     </div>
 
-                    <p className="text-center text-[11px] font-medium text-emerald-100">
+                    <p className="text-center text-[11px] font-medium text-primary-light">
                         {fulfillmentType === 'pickup'
                             ? 'Ambil di store tanpa antre • Grind the Essentials'
                             : 'Diantar langsung ke lokasimu • Tepat waktu'}
@@ -203,27 +208,28 @@ function ProductsInner() {
 
                 {/* ── 2. FLOATING STORE SELECTOR ── */}
                 <div className="relative z-20 mx-4 -mt-5">
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => setOutletSheetOpen(true)}
-                        className="flex w-full items-center justify-between gap-2 rounded-2xl border border-slate-100 bg-white p-3.5 text-left shadow-md"
+                        className="h-auto w-full justify-between gap-2 rounded-card! border border-border bg-surface p-3.5 text-left shadow-md hover:bg-surface"
                     >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-thumb bg-primary-light text-primary">
                             <Store className="h-5 w-5" />
                         </div>
 
                         <div className="min-w-0 flex-1 px-1">
                             <div className="flex items-center gap-1.5">
-                                <h3 className="truncate text-sm font-bold text-gray-900">
+                                <h3 className="truncate text-sm font-bold text-text">
                                     {outletName}
                                 </h3>
                                 {selectedOutlet && (
-                                    <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                    <span className="shrink-0 rounded bg-primary-light px-1.5 py-0.5 text-[10px] font-semibold text-primary">
                                         Terdekat
                                     </span>
                                 )}
                             </div>
-                            <p className="mt-0.5 truncate text-xs text-gray-500">
+                            <p className="mt-0.5 truncate text-xs text-text-muted">
                                 {outletDistance
                                     ? `${outletDistance}${outletAddress ? ' • ' : ''}`
                                     : ''}
@@ -231,55 +237,58 @@ function ProductsInner() {
                             </p>
                         </div>
 
-                        <ChevronRight className="h-5 w-5 shrink-0 text-gray-400" />
-                    </button>
+                        <ChevronRight className="h-5 w-5 shrink-0 text-text-subtle" />
+                    </Button>
                 </div>
 
                 {/* ── MOBILE VIEW (<lg) ── */}
                 <div className="lg:hidden">
                     {/* ── 3. CATEGORY CHIPS ── */}
                     <div className="mx-4 mt-4 mb-3 flex items-center gap-2 overflow-hidden py-1">
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => setActiveFilter('all')}
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all ${
+                            className={`h-9 w-9 shrink-0 rounded-full border transition-all ${
                                 activeFilter === 'all'
-                                    ? 'border-emerald-700 bg-emerald-50 text-emerald-700'
-                                    : 'border-gray-200 bg-white text-gray-400'
+                                    ? 'border-primary bg-primary-light text-primary hover:bg-primary-light hover:text-primary'
+                                    : 'border-border bg-surface text-text-subtle hover:bg-surface hover:text-text-subtle'
                             }`}
                         >
                             <ThumbsUp className="h-4 w-4" />
-                        </button>
+                        </Button>
                         {filterOptions.map((opt) => (
-                            <button
+                            <Button
                                 key={opt.key}
                                 type="button"
+                                variant="ghost"
                                 onClick={() => setActiveFilter(opt.key)}
-                                className={`shrink-0 rounded-full px-4 py-2 text-xs transition-all ${
+                                className={`h-auto shrink-0 rounded-full px-4 py-2 text-xs transition-all ${
                                     activeFilter === opt.key
-                                        ? 'bg-emerald-600 font-bold text-white shadow-xs'
-                                        : 'border border-gray-200 bg-white font-medium text-gray-600'
+                                        ? 'bg-primary font-bold text-white shadow-xs hover:bg-primary'
+                                        : 'border border-border bg-surface font-medium text-text-muted hover:bg-surface hover:text-text-muted'
                                 }`}
                             >
                                 {opt.label}
-                            </button>
+                            </Button>
                         ))}
                     </div>
 
                     {/* ── 4. PROMO STRIP BANNER ── */}
                     <Link
                         href="/customer/coming-soon/merch"
-                        className="mx-4 mb-5 flex items-center justify-between rounded-2xl border border-sky-100 bg-sky-50 p-3"
+                        className="mx-4 mb-5 flex items-center justify-between rounded-card border border-sky-100 bg-sky-50 p-3"
                     >
                         <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-chip bg-sky-100 text-sky-600">
                                 <Store className="h-4 w-4" />
                             </div>
                             <div>
-                                <h4 className="text-xs font-bold text-gray-900">
+                                <h4 className="text-xs font-bold text-text">
                                     New Merchandise
                                 </h4>
-                                <p className="text-[11px] text-gray-500">
+                                <p className="text-[11px] text-text-muted">
                                     Jangan ketinggalan minum dengan gaya baru!
                                 </p>
                             </div>
@@ -291,10 +300,10 @@ function ProductsInner() {
                     {recommendations.length > 0 && (
                         <div className="mb-6">
                             <div className="mb-2.5 flex items-center justify-between px-4">
-                                <h2 className="text-sm font-bold text-gray-900">
+                                <h2 className="text-sm font-bold text-text">
                                     Rekomendasi
                                 </h2>
-                                <span className="text-xs font-medium text-gray-400">
+                                <span className="text-xs font-medium text-text-subtle">
                                     Pilihan Menarik
                                 </span>
                             </div>
@@ -323,10 +332,10 @@ function ProductsInner() {
                             familySections.map((section) => (
                                 <section key={section.familyId}>
                                     <div className="mb-3 flex items-center justify-between">
-                                        <h2 className="text-sm font-bold text-gray-900">
+                                        <h2 className="text-sm font-bold text-text">
                                             {section.familyName}
                                         </h2>
-                                        <span className="text-xs text-gray-400">
+                                        <span className="text-xs text-text-subtle">
                                             {section.totalVariants} varian
                                         </span>
                                     </div>
@@ -363,25 +372,27 @@ function ProductsInner() {
                 >
                     {/* LEFT RAIL */}
                     <aside className="hidden space-y-4 lg:block">
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
                             onClick={() => setOutletSheetOpen(true)}
-                            className="flex w-full items-center gap-2 rounded-2xl border border-border bg-white p-3 text-left shadow-xs"
+                            className="h-auto w-full justify-start gap-2 rounded-card! border border-border bg-surface p-3 text-left shadow-xs hover:bg-surface"
                         >
-                            <Store className="h-5 w-5 text-emerald-700" />
+                            <Store className="h-5 w-5 text-primary" />
                             <div className="min-w-0 flex-1">
-                                <div className="truncate text-sm font-bold text-gray-900">
+                                <div className="truncate text-sm font-bold text-text">
                                     {outletName}
                                 </div>
-                                <div className="truncate text-xs text-gray-500">
+                                <div className="truncate text-xs text-text-muted">
                                     {outletAddress}
                                 </div>
                             </div>
-                            <ChevronRight className="h-4 w-4 text-gray-400" />
-                        </button>
+                            <ChevronRight className="h-4 w-4 text-text-subtle" />
+                        </Button>
 
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
                             onClick={() => {
                                 const next =
                                     fulfillmentType === 'pickup'
@@ -396,41 +407,43 @@ function ProductsInner() {
 
                                 switchTo(next);
                             }}
-                            className="flex w-full items-center justify-between rounded-2xl border border-border bg-white p-3 text-left shadow-xs"
+                            className="h-auto w-full justify-between rounded-card! border border-border bg-surface p-3 text-left shadow-xs hover:bg-surface"
                         >
-                            <span className="text-sm font-semibold text-gray-900">
+                            <span className="text-sm font-semibold text-text">
                                 {fulfillmentType === 'pickup'
                                     ? 'Pick Up'
                                     : 'Delivery'}
                             </span>
-                            <ChevronRight className="h-4 w-4 text-gray-400" />
-                        </button>
+                            <ChevronRight className="h-4 w-4 text-text-subtle" />
+                        </Button>
 
                         <div className="space-y-1">
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
                                 onClick={() => setActiveFilter('all')}
-                                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                                className={`h-auto w-full justify-between rounded-chip! px-3 py-2 text-sm ${
                                     activeFilter === 'all'
-                                        ? 'bg-emerald-50 font-bold text-emerald-700'
-                                        : 'text-gray-600 hover:bg-surface-muted'
+                                        ? 'bg-primary-light font-bold text-primary hover:bg-primary-light hover:text-primary'
+                                        : 'text-text-muted hover:bg-surface-muted'
                                 }`}
                             >
                                 Semua
-                            </button>
+                            </Button>
                             {filterOptions.map((opt) => (
-                                <button
+                                <Button
                                     key={opt.key}
                                     type="button"
+                                    variant="ghost"
                                     onClick={() => setActiveFilter(opt.key)}
-                                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                                    className={`h-auto w-full justify-between rounded-chip! px-3 py-2 text-sm ${
                                         activeFilter === opt.key
-                                            ? 'bg-emerald-50 font-bold text-emerald-700'
-                                            : 'text-gray-600 hover:bg-surface-muted'
+                                            ? 'bg-primary-light font-bold text-primary hover:bg-primary-light hover:text-primary'
+                                            : 'text-text-muted hover:bg-surface-muted'
                                     }`}
                                 >
                                     {opt.label}
-                                </button>
+                                </Button>
                             ))}
                         </div>
                     </aside>
@@ -445,10 +458,10 @@ function ProductsInner() {
                                 {recommendations.length > 0 && (
                                     <div>
                                         <div className="mb-2.5 flex items-center justify-between">
-                                            <h2 className="text-sm font-bold text-gray-900">
+                                            <h2 className="text-sm font-bold text-text">
                                                 Rekomendasi
                                             </h2>
-                                            <span className="text-xs font-medium text-gray-400">
+                                            <span className="text-xs font-medium text-text-subtle">
                                                 Pilihan Menarik
                                             </span>
                                         </div>
@@ -484,10 +497,10 @@ function ProductsInner() {
                                         className="mt-6"
                                     >
                                         <div className="mb-3 flex items-center justify-between">
-                                            <h2 className="text-lg font-bold text-gray-900">
+                                            <h2 className="text-lg font-bold text-text">
                                                 {section.familyName}
                                             </h2>
-                                            <span className="text-xs text-gray-400">
+                                            <span className="text-xs text-text-subtle">
                                                 {section.totalVariants} varian
                                             </span>
                                         </div>
@@ -635,34 +648,36 @@ function ProductCard({
         <Link
             href={`/customer/products/${group.familyId}`}
             prefetch="hover"
-            className="flex max-w-[200px] min-w-[200px] shrink-0 items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3 shadow-xs active:bg-gray-50"
+            className="flex max-w-[200px] min-w-[200px] shrink-0 items-center gap-3 rounded-card border border-border bg-surface p-3 shadow-xs active:bg-surface-muted"
         >
             <ProductImage
                 name={v.name}
                 src={v.image}
                 size="sm"
-                className="shrink-0 rounded-xl"
+                className="shrink-0 rounded-thumb"
             />
             <div className="min-w-0 flex-1">
-                <h3 className="truncate text-xs font-bold text-gray-900">
+                <h3 className="truncate text-xs font-bold text-text">
                     {v.name}
                 </h3>
                 <div className="mt-1 flex items-center justify-between">
-                    <span className="truncate text-xs font-extrabold text-gray-900 tabular-nums">
+                    <span className="truncate text-xs font-extrabold text-text tabular-nums">
                         {formatCurrency(group.lowestPrice)}
                     </span>
-                    <button
+                    <Button
                         type="button"
+                        variant="primary"
+                        size="icon"
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             handleAdd();
                         }}
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xs"
+                        className="h-7 w-7 shrink-0 rounded-full shadow-xs"
                         aria-label={`Tambah ${v.name}`}
                     >
                         <Plus className="h-3.5 w-3.5" />
-                    </button>
+                    </Button>
                 </div>
             </div>
         </Link>
@@ -739,54 +754,58 @@ function VariantRow({
         <Link
             href={productHref}
             prefetch="hover"
-            className="flex w-full items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3 shadow-xs active:bg-gray-50"
+            className="flex w-full items-center gap-3 rounded-card border border-border bg-surface p-3 shadow-xs active:bg-surface-muted"
         >
             <div className="relative shrink-0">
                 <ProductImage
                     name={v.name}
                     src={v.image}
                     size="md"
-                    className="rounded-xl"
+                    className="rounded-thumb"
                 />
-                <button
+                <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         toggle(v.id);
                     }}
-                    className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 shadow-xs"
+                    className="absolute top-1 right-1 h-6 w-6 rounded-full bg-white/90 shadow-xs hover:bg-white/90"
                     aria-label="Favorit"
                 >
                     <Heart
-                        className={`h-3 w-3 ${isFav ? 'fill-rose-500 text-rose-500' : 'text-gray-400'}`}
+                        className={`h-3 w-3 ${isFav ? 'fill-rose-500 text-rose-500' : 'text-text-subtle'}`}
                     />
-                </button>
+                </Button>
             </div>
 
             <div className="min-w-0 flex-1">
-                <h3 className="truncate text-xs font-bold text-gray-900">
+                <h3 className="truncate text-xs font-bold text-text">
                     {group.displayLabel}
                 </h3>
-                <p className="mt-0.5 line-clamp-2 text-[11px] text-gray-400">
+                <p className="mt-0.5 line-clamp-2 text-[11px] text-text-subtle">
                     {group.familyDescription}
                 </p>
                 <div className="mt-2 flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-700 tabular-nums">
+                    <span className="text-xs font-bold text-primary tabular-nums">
                         {formatCurrency(group.lowestPrice)}
                     </span>
-                    <button
+                    <Button
                         type="button"
+                        variant="primary"
+                        size="icon"
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             handleAdd();
                         }}
-                        className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-white shadow-xs"
+                        className="h-7 w-7 rounded-full shadow-xs"
                         aria-label={`Tambah ${group.displayLabel}`}
                     >
                         <Plus className="h-4 w-4" />
-                    </button>
+                    </Button>
                 </div>
             </div>
         </Link>
@@ -801,13 +820,13 @@ function SectionSkeleton() {
             {[1, 2].map((i) => (
                 <div
                     key={i}
-                    className="flex animate-pulse items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3"
+                    className="flex animate-pulse items-center gap-3 rounded-card border border-border bg-surface p-3"
                 >
-                    <div className="h-20 w-20 shrink-0 rounded-xl bg-gray-100" />
+                    <div className="h-20 w-20 shrink-0 rounded-thumb bg-surface-muted" />
                     <div className="flex-1 space-y-2">
-                        <div className="h-3 w-1/3 rounded bg-gray-100" />
-                        <div className="h-3 w-2/3 rounded bg-gray-100" />
-                        <div className="h-3 w-1/4 rounded bg-gray-100" />
+                        <div className="h-3 w-1/3 rounded bg-surface-muted" />
+                        <div className="h-3 w-2/3 rounded bg-surface-muted" />
+                        <div className="h-3 w-1/4 rounded bg-surface-muted" />
                     </div>
                 </div>
             ))}
@@ -818,12 +837,10 @@ function SectionSkeleton() {
 function ErrorState({ message }: { message: string }) {
     return (
         <div className="mt-12 flex flex-col items-center text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted">
-                <span className="text-3xl">&#129371;</span>
+            <div className="flex h-16 w-16 items-center justify-center rounded-card bg-surface-muted">
+                <span className="text-3xl">&#x1F95B;</span>
             </div>
-            <p className="mt-3 text-sm font-semibold text-gray-900">
-                {message}
-            </p>
+            <p className="mt-3 text-sm font-semibold text-text">{message}</p>
         </div>
     );
 }
@@ -831,13 +848,13 @@ function ErrorState({ message }: { message: string }) {
 function EmptyState() {
     return (
         <div className="mt-12 flex flex-col items-center text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted">
-                <span className="text-3xl">&#129371;</span>
+            <div className="flex h-16 w-16 items-center justify-center rounded-card bg-surface-muted">
+                <span className="text-3xl">&#x1F95B;</span>
             </div>
-            <p className="mt-3 text-sm font-semibold text-gray-900">
+            <p className="mt-3 text-sm font-semibold text-text">
                 Belum ada produk
             </p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-text-muted">
                 Produk akan segera tersedia.
             </p>
         </div>

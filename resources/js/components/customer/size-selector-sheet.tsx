@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
 import { useOutlet } from '@/contexts/outlet-context';
 import { mutationFetch } from '@/lib/api';
@@ -125,25 +126,28 @@ function SizeSelectorSheetContent({
                             variant.stock_status === 'out_of_stock';
 
                         return (
-                            <button
+                            <Button
                                 key={variant.id}
+                                type="button"
+                                variant="ghost"
+                                size="lg"
                                 onClick={() => setSelectedId(variant.id)}
                                 disabled={outOfStock}
-                                className={`flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition-all active:opacity-80 disabled:opacity-40 ${
+                                className={`h-auto w-full justify-start gap-3 rounded-thumb border p-3.5 text-left transition-all active:opacity-80 disabled:opacity-40 ${
                                     isSelected
-                                        ? 'border-emerald-500 bg-emerald-50'
-                                        : 'border-border bg-white'
+                                        ? 'border-primary bg-primary-light hover:bg-primary-light'
+                                        : 'border-border bg-surface hover:bg-surface'
                                 }`}
                             >
                                 <div
                                     className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
                                         isSelected
-                                            ? 'border-emerald-600'
+                                            ? 'border-primary'
                                             : 'border-border'
                                     }`}
                                 >
                                     {isSelected && (
-                                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                                        <div className="h-2.5 w-2.5 rounded-full bg-primary" />
                                     )}
                                 </div>
                                 <div className="flex-1">
@@ -154,7 +158,7 @@ function SizeSelectorSheetContent({
                                 <div className="text-sm font-bold text-text tabular-nums">
                                     {formatCurrency(variant.price)}
                                 </div>
-                            </button>
+                            </Button>
                         );
                     })}
                 </div>
@@ -162,12 +166,15 @@ function SizeSelectorSheetContent({
                 {/* Quantity + Add */}
                 {selectedVariant && (
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center rounded-xl border border-border bg-white">
-                            <button
+                        <div className="flex items-center rounded-thumb border border-border bg-surface">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
                                 onClick={() =>
                                     setQuantity(Math.max(1, quantity - 1))
                                 }
-                                className="flex h-11 w-11 items-center justify-center rounded-l-xl text-text-muted active:bg-surface-muted"
+                                className="h-11 w-11 rounded-l-thumb text-text-muted"
                             >
                                 <svg
                                     width="16"
@@ -179,18 +186,21 @@ function SizeSelectorSheetContent({
                                 >
                                     <path strokeLinecap="round" d="M5 12h14" />
                                 </svg>
-                            </button>
+                            </Button>
                             <span className="w-10 text-center text-sm font-bold text-text">
                                 {quantity}
                             </span>
-                            <button
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
                                 onClick={() =>
                                     setQuantity(
                                         Math.min(effectiveMax, quantity + 1),
                                     )
                                 }
                                 disabled={isAtMaxQuantity}
-                                className="flex h-11 w-11 items-center justify-center rounded-r-xl text-text-muted active:bg-surface-muted disabled:opacity-30"
+                                className="h-11 w-11 rounded-r-thumb text-text-muted disabled:opacity-30"
                             >
                                 <svg
                                     width="16"
@@ -205,7 +215,7 @@ function SizeSelectorSheetContent({
                                         d="M12 5v14M5 12h14"
                                     />
                                 </svg>
-                            </button>
+                            </Button>
                         </div>
                         {effectiveMax < 999 && (
                             <span className="text-xs text-text-muted">
@@ -213,10 +223,12 @@ function SizeSelectorSheetContent({
                             </span>
                         )}
 
-                        <button
+                        <Button
+                            type="button"
+                            variant="primary"
                             onClick={handleAdd}
                             disabled={adding || isOutOfStock || isOutletClosed}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-sm active:bg-emerald-700 disabled:opacity-60"
+                            className="h-auto flex-1 rounded-thumb py-3 text-sm font-bold shadow-sm disabled:opacity-60"
                         >
                             {isOutletClosed
                                 ? 'Tutup'
@@ -225,7 +237,7 @@ function SizeSelectorSheetContent({
                                   : adding
                                     ? 'Menambahkan...'
                                     : 'Tambah'}
-                        </button>
+                        </Button>
                     </div>
                 )}
             </div>
