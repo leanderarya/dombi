@@ -14,17 +14,17 @@ createInertiaApp({
         color: '#047857',
     },
     resolve: (name) => {
-        const pages = import.meta.glob<{ default: ComponentType }>(
-            ['./pages/**/*.tsx', '!./pages/**/*.test.tsx'],
-            { eager: true },
-        );
+        const pages = import.meta.glob<{ default: ComponentType }>([
+            './pages/**/*.tsx',
+            '!./pages/**/*.test.tsx',
+        ]);
         const page = pages[`./pages/${name}.tsx`];
 
         if (!page) {
             throw new Error(`Page not found: ${name}`);
         }
 
-        return page;
+        return page().then(({ default: component }) => component);
     },
     setup({ el, App, props }) {
         const root = createRoot(el!);
