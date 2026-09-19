@@ -1,6 +1,7 @@
 import { ChevronDown, MapPin, Check, Store } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
+import { Button } from '@/components/ui/button';
 import { useCustomerLocation } from '@/lib/customer-location';
 
 type CheckoutItem = {
@@ -161,7 +162,7 @@ export default function PickupOutletSelector({
         <>
             {/* Loading state */}
             {loading && !hasRecommendations && (
-                <div className="mt-4 rounded-xl border border-border bg-white p-3">
+                <div className="mt-4 rounded-thumb border border-border bg-surface p-3">
                     <div className="flex items-center gap-3">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary" />
                         <div className="text-xs text-text-muted">
@@ -173,30 +174,31 @@ export default function PickupOutletSelector({
 
             {/* No location yet */}
             {!loading && !hasRecommendations && !summary && (
-                <div className="mt-4 rounded-xl border border-border bg-white p-3">
+                <div className="mt-4 rounded-thumb border border-border bg-surface p-3">
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2 text-xs text-text-muted">
                             <MapPin className="h-3.5 w-3.5 shrink-0" />
                             <span>Izinkan lokasi untuk rekomendasi outlet</span>
                         </div>
-                        <button
+                        <Button
                             type="button"
+                            variant="primary"
                             onClick={() => setSheetOpen(true)}
-                            className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-bold text-white active:opacity-80"
+                            className="h-auto shrink-0 rounded-chip px-3 py-1.5 text-[11px] font-bold active:opacity-80"
                         >
                             Atur
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}
 
             {/* Recommended outlet card */}
             {selectedOutlet && (
-                <div className="mt-4 overflow-hidden rounded-xl border border-border bg-white">
+                <div className="mt-4 overflow-hidden rounded-thumb border border-border bg-surface">
                     {/* Selected outlet — clickable */}
                     <div className="flex items-center gap-3 p-4">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
-                            <Store className="h-4 w-4 text-emerald-600" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-chip bg-primary-light">
+                            <Store className="h-4 w-4 text-primary" />
                         </div>
                         <div className="min-w-0 flex-1">
                             <div className="truncate text-sm font-semibold text-text">
@@ -206,7 +208,7 @@ export default function PickupOutletSelector({
                                 {selectedOutlet.address}
                             </div>
                             {selectedOutlet.is_open === false && (
-                                <span className="mt-1 inline-flex items-center rounded bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
+                                <span className="mt-1 inline-flex items-center rounded bg-danger-bg px-2 py-0.5 text-[11px] font-medium text-danger-text">
                                     Sedang Tutup
                                     {selectedOutlet.next_open
                                         ? ` • Buka ${selectedOutlet.next_open}`
@@ -223,7 +225,7 @@ export default function PickupOutletSelector({
                                     </div>
                                 )}
                             <div
-                                className={`mt-0.5 text-[10px] font-semibold ${selectedOutlet.stock_available ? 'text-emerald-600' : 'text-amber-600'}`}
+                                className={`mt-0.5 text-[10px] font-semibold ${selectedOutlet.stock_available ? 'text-primary' : 'text-warning'}`}
                             >
                                 {selectedOutlet.stock_available
                                     ? 'Stok tersedia'
@@ -235,10 +237,11 @@ export default function PickupOutletSelector({
                     {/* Other outlets — collapsible */}
                     {otherOutlets.length > 0 && (
                         <>
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
                                 onClick={() => setExpanded(!expanded)}
-                                className="flex w-full items-center justify-between border-t border-border px-4 py-2.5 text-[11px] font-semibold text-text-muted active:bg-surface-muted"
+                                className="flex h-auto w-full justify-between rounded-none border-t border-border px-4 py-2.5 text-[11px] font-semibold text-text-muted hover:bg-transparent active:bg-surface-muted"
                             >
                                 <span>
                                     {otherOutlets.length} outlet lainnya
@@ -246,22 +249,23 @@ export default function PickupOutletSelector({
                                 <ChevronDown
                                     className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`}
                                 />
-                            </button>
+                            </Button>
 
                             {expanded && (
                                 <div className="border-t border-border">
                                     {otherOutlets.map((outlet) => (
-                                        <button
+                                        <Button
                                             key={outlet.id}
                                             type="button"
+                                            variant="ghost"
                                             onClick={() => {
                                                 onSelect(outlet.id);
                                                 setExpanded(false);
                                             }}
                                             disabled={outlet.is_open === false}
-                                            className={`flex w-full items-center justify-between border-b border-border px-4 py-3 text-left last:border-b-0 active:bg-surface-muted ${
+                                            className={`flex h-auto w-full items-center justify-start gap-0 rounded-none border-b border-border px-4 py-3 text-left whitespace-normal last:border-b-0 hover:bg-transparent active:bg-surface-muted ${
                                                 outlet.id === selectedOutletId
-                                                    ? 'bg-emerald-50'
+                                                    ? 'bg-primary-light'
                                                     : ''
                                             } ${
                                                 outlet.is_open === false
@@ -277,7 +281,7 @@ export default function PickupOutletSelector({
                                                     {outlet.address}
                                                 </div>
                                                 {outlet.is_open === false && (
-                                                    <span className="mt-0.5 inline-flex items-center rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
+                                                    <span className="mt-0.5 inline-flex items-center rounded bg-danger-bg px-1.5 py-0.5 text-[10px] font-medium text-danger-text">
                                                         Sedang Tutup
                                                         {outlet.next_open
                                                             ? ` • Buka ${outlet.next_open}`
@@ -299,7 +303,7 @@ export default function PickupOutletSelector({
                                                             </div>
                                                         )}
                                                     <div
-                                                        className={`text-[10px] font-semibold ${outlet.stock_available ? 'text-emerald-600' : 'text-amber-600'}`}
+                                                        className={`text-[10px] font-semibold ${outlet.stock_available ? 'text-primary' : 'text-warning'}`}
                                                     >
                                                         {outlet.stock_available
                                                             ? 'Tersedia'
@@ -311,7 +315,7 @@ export default function PickupOutletSelector({
                                                     <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
                                                 )}
                                             </div>
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                             )}
@@ -320,7 +324,7 @@ export default function PickupOutletSelector({
                 </div>
             )}
 
-            {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+            {error && <p className="mt-2 text-xs text-danger">{error}</p>}
 
             <LocationSheet
                 open={sheetOpen}

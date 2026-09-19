@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
+import { Button } from '@/components/ui/button';
 import {
     syncCustomerLocationDraft,
     useCustomerLocation,
@@ -436,7 +437,7 @@ function LocationSheetContent({
             onClick={onClose}
         >
             <div
-                className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
+                className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-3xl bg-surface shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -448,13 +449,16 @@ function LocationSheetContent({
                                 ? 'Simpan Alamat?'
                                 : 'Tentukan Lokasi Anda'}
                         </h2>
-                        <button
+                        <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={onClose}
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-text-subtle active:bg-zinc-100"
+                            aria-label="Tutup"
+                            className="h-8 w-8 shrink-0 rounded-full text-text-subtle active:bg-surface-muted"
                         >
                             <X className="h-4 w-4" />
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -464,11 +468,12 @@ function LocationSheetContent({
                     {mode === 'options' && (
                         <div className="mt-2 space-y-2">
                             {/* GPS */}
-                            <button
+                            <Button
                                 type="button"
+                                variant="outline"
                                 onClick={handleUseCurrentLocation}
                                 disabled={loadingCurrent}
-                                className="flex h-14 w-full items-center gap-3.5 rounded-xl border border-border bg-white px-4 transition-all active:bg-zinc-50 active:opacity-80 disabled:opacity-60"
+                                className="h-14 w-full justify-start gap-3.5 rounded-thumb px-4 text-left active:bg-surface-muted active:opacity-80 disabled:opacity-60"
                             >
                                 <LocateFixed className="h-5 w-5 shrink-0 text-primary" />
                                 <div className="flex-1 text-left">
@@ -484,7 +489,7 @@ function LocationSheetContent({
                                             />
                                         )}
                                 </div>
-                            </button>
+                            </Button>
 
                             {/* Saved Addresses */}
                             {isLoggedIn && savedAddresses.length > 0 && (
@@ -496,17 +501,18 @@ function LocationSheetContent({
                                     {savedAddresses.map((addr) => (
                                         <div
                                             key={addr.id}
-                                            className="flex h-14 w-full items-center gap-3 rounded-xl border border-border bg-white px-4 transition-all active:bg-zinc-50 active:opacity-80"
+                                            className="flex h-14 w-full items-center gap-3 rounded-thumb border border-border bg-surface px-4 transition-all active:bg-surface-muted active:opacity-80"
                                         >
-                                            <button
+                                            <Button
                                                 type="button"
+                                                variant="ghost"
                                                 onClick={() =>
                                                     handleSelectSavedAddress(
                                                         addr,
                                                         Date.now(),
                                                     )
                                                 }
-                                                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                                                className="h-auto min-w-0 flex-1 justify-start gap-3 rounded-none px-0 text-left hover:bg-transparent"
                                             >
                                                 <MapPin className="h-4 w-4 shrink-0 text-text-subtle" />
                                                 <div className="min-w-0 flex-1">
@@ -515,7 +521,7 @@ function LocationSheetContent({
                                                             {addr.label}
                                                         </span>
                                                         {addr.is_default && (
-                                                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                                            <Star className="h-3 w-3 fill-warning-bright text-warning-bright" />
                                                         )}
                                                     </div>
                                                     <div className="truncate text-[11px] text-text-muted">
@@ -529,18 +535,20 @@ function LocationSheetContent({
                                                             addr.address_line}
                                                     </div>
                                                 </div>
-                                            </button>
-                                            <button
+                                            </Button>
+                                            <Button
                                                 type="button"
+                                                variant="ghost"
+                                                size="icon"
                                                 aria-label={`Hapus alamat ${addr.label}`}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     setDeleteTarget(addr);
                                                 }}
-                                                className="shrink-0 rounded-lg p-2 text-text-muted active:bg-red-50 active:text-red-600"
+                                                className="h-8 w-8 shrink-0 rounded-chip text-text-muted active:bg-danger-bg active:text-danger-text"
                                             >
                                                 <Trash2 className="h-4 w-4" />
-                                            </button>
+                                            </Button>
                                         </div>
                                     ))}
                                 </>
@@ -548,19 +556,20 @@ function LocationSheetContent({
 
                             {/* Manual Search */}
                             <div className="h-px bg-border" />
-                            <button
+                            <Button
                                 type="button"
+                                variant="outline"
                                 onClick={() => setMode('manual')}
-                                className="flex h-14 w-full items-center gap-3.5 rounded-xl border border-border bg-white px-4 transition-all active:bg-zinc-50 active:opacity-80"
+                                className="h-14 w-full justify-start gap-3.5 rounded-thumb px-4 text-left active:bg-surface-muted active:opacity-80"
                             >
                                 <Search className="h-5 w-5 shrink-0 text-text-muted" />
                                 <span className="text-sm font-semibold text-text">
                                     Cari Alamat Manual
                                 </span>
-                            </button>
+                            </Button>
 
                             {error && (
-                                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-700">
+                                <div className="rounded-thumb border border-danger-border bg-danger-bg px-3 py-2.5 text-xs text-danger-text">
                                     {error}
                                 </div>
                             )}
@@ -576,10 +585,11 @@ function LocationSheetContent({
                     {/* MODE: MANUAL */}
                     {mode === 'manual' && (
                         <div className="mt-2 space-y-4">
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
                                 onClick={() => setMode('options')}
-                                className="flex items-center gap-1.5 text-xs font-semibold text-text-muted active:text-text"
+                                className="h-auto gap-1.5 px-0 text-xs font-semibold text-text-muted hover:bg-transparent hover:text-text-muted active:text-text"
                             >
                                 <svg
                                     className="h-3.5 w-3.5"
@@ -595,7 +605,7 @@ function LocationSheetContent({
                                     />
                                 </svg>
                                 Kembali
-                            </button>
+                            </Button>
 
                             <LocationSearchPanel
                                 value={draft ?? EMPTY_LOCATION_DRAFT}
@@ -653,30 +663,32 @@ function LocationSheetContent({
                                 showSavedLocation={false}
                             />
 
-                            <button
+                            <Button
                                 type="button"
+                                variant="primary"
                                 onClick={confirmManualLocation}
                                 disabled={
                                     !draft ||
                                     draft.latitude === null ||
                                     draft.longitude === null
                                 }
-                                className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white transition-all active:bg-primary-hover active:opacity-80 disabled:bg-border"
+                                className="h-12 w-full rounded-thumb text-sm font-bold active:opacity-80 disabled:bg-border disabled:opacity-100"
                             >
                                 Simpan Lokasi
-                            </button>
+                            </Button>
                         </div>
                     )}
 
                     {/* MODE: SAVE AS ADDRESS */}
                     {mode === 'save' && (
                         <div className="mt-2 space-y-4">
-                            <button
+                            <Button
                                 type="button"
+                                variant="ghost"
                                 onClick={() => {
                                     onClose();
                                 }}
-                                className="flex items-center gap-1.5 text-xs font-semibold text-text-muted active:text-text"
+                                className="h-auto gap-1.5 px-0 text-xs font-semibold text-text-muted hover:bg-transparent hover:text-text-muted active:text-text"
                             >
                                 <svg
                                     className="h-3.5 w-3.5"
@@ -692,26 +704,26 @@ function LocationSheetContent({
                                     />
                                 </svg>
                                 Lewati
-                            </button>
+                            </Button>
 
                             {/* Preview */}
-                            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                            <div className="rounded-thumb border border-primary/20 bg-primary-light p-4">
                                 <div className="mb-2 flex items-center gap-2">
-                                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                                    <span className="text-sm font-semibold text-emerald-800">
+                                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                                    <span className="text-sm font-semibold text-primary">
                                         Lokasi Terdeteksi
                                     </span>
                                     {gpsAccuracy !== null && (
                                         <AccuracyBadge accuracy={gpsAccuracy} />
                                     )}
                                 </div>
-                                <div className="text-sm font-medium text-emerald-900">
+                                <div className="text-sm font-medium text-primary">
                                     {draft?.address_line ||
                                         [draft?.village, draft?.district]
                                             .filter(Boolean)
                                             .join(', ')}
                                 </div>
-                                <div className="mt-0.5 text-[11px] text-emerald-700">
+                                <div className="mt-0.5 text-[11px] text-primary">
                                     {[
                                         draft?.village,
                                         draft?.district,
@@ -732,9 +744,14 @@ function LocationSheetContent({
                                         <div className="mt-2 flex gap-2">
                                             {['Rumah', 'Kantor', 'Kos'].map(
                                                 (label) => (
-                                                    <button
+                                                    <Button
                                                         key={label}
                                                         type="button"
+                                                        variant={
+                                                            saveLabel === label
+                                                                ? 'primary'
+                                                                : 'outline'
+                                                        }
                                                         onClick={() =>
                                                             setSaveLabel(
                                                                 saveLabel ===
@@ -743,14 +760,14 @@ function LocationSheetContent({
                                                                     : label,
                                                             )
                                                         }
-                                                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+                                                        className={`h-auto rounded-full px-3 py-1.5 text-xs font-semibold ${
                                                             saveLabel === label
-                                                                ? 'bg-primary text-white'
-                                                                : 'border border-border text-text-muted active:bg-zinc-50'
+                                                                ? ''
+                                                                : 'text-text-muted active:bg-surface-muted'
                                                         }`}
                                                     >
                                                         {label}
-                                                    </button>
+                                                    </Button>
                                                 ),
                                             )}
                                         </div>
@@ -761,29 +778,31 @@ function LocationSheetContent({
                                                 setSaveLabel(e.target.value)
                                             }
                                             placeholder="Atau ketik label sendiri..."
-                                            className="mt-2 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                            className="mt-2 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                                             maxLength={20}
                                         />
                                     </div>
 
                                     <div className="flex gap-2">
-                                        <button
+                                        <Button
                                             type="button"
+                                            variant="primary"
                                             onClick={handleSaveAddress}
                                             disabled={saving}
-                                            className="flex h-12 flex-1 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                                            className="h-12 flex-1 rounded-thumb text-sm font-bold active:opacity-80"
                                         >
                                             {saving
                                                 ? 'Menyimpan...'
                                                 : 'Simpan Alamat'}
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                             type="button"
+                                            variant="outline"
                                             onClick={onClose}
-                                            className="flex h-12 items-center justify-center rounded-xl border border-border px-4 text-sm font-semibold text-text-muted active:bg-zinc-50"
+                                            className="h-12 rounded-thumb px-4 text-sm font-semibold text-text-muted active:bg-surface-muted"
                                         >
                                             Nanti Saja
-                                        </button>
+                                        </Button>
                                     </div>
 
                                     <p className="text-center text-[11px] text-text-subtle">
@@ -793,22 +812,23 @@ function LocationSheetContent({
                                 </>
                             ) : (
                                 <>
-                                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                                    <div className="rounded-thumb border border-warning-border bg-warning-bg p-3 text-xs text-warning-text">
                                         Alamat tersimpan penuh (5/5). Hapus
                                         alamat lama untuk menambah baru.
                                     </div>
-                                    <button
+                                    <Button
                                         type="button"
+                                        variant="primary"
                                         onClick={onClose}
-                                        className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80"
+                                        className="h-12 w-full rounded-thumb text-sm font-bold active:opacity-80"
                                     >
                                         Selesai
-                                    </button>
+                                    </Button>
                                 </>
                             )}
 
                             {error && (
-                                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-700">
+                                <div className="rounded-thumb border border-danger-border bg-danger-bg px-3 py-2.5 text-xs text-danger-text">
                                     {error}
                                 </div>
                             )}
@@ -826,7 +846,7 @@ function LocationSheetContent({
                     onClick={() => setDeleteTarget(null)}
                 >
                     <div
-                        className="w-full max-w-lg rounded-t-3xl bg-white p-5 shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
+                        className="w-full max-w-lg rounded-t-3xl bg-surface p-5 shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h3
@@ -840,22 +860,24 @@ function LocationSheetContent({
                             tersimpan.
                         </p>
                         <div className="mt-4 flex gap-2">
-                            <button
+                            <Button
                                 type="button"
+                                variant="outline"
                                 disabled={deleting}
                                 onClick={() => setDeleteTarget(null)}
-                                className="flex-1 rounded-lg border border-border px-3 py-2.5 text-xs font-semibold text-text active:opacity-80"
+                                className="h-auto flex-1 rounded-chip px-3 py-2.5 text-xs font-semibold active:opacity-80"
                             >
                                 Batal
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
+                                variant="danger"
                                 disabled={deleting}
                                 onClick={confirmDeleteSavedAddress}
-                                className="flex-1 rounded-lg bg-red-600 px-3 py-2.5 text-xs font-bold text-white active:opacity-80 disabled:opacity-60"
+                                className="h-auto flex-1 rounded-chip px-3 py-2.5 text-xs font-bold active:opacity-80"
                             >
                                 {deleting ? 'Menghapus...' : 'Hapus'}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -868,9 +890,9 @@ function LocationSheetContent({
 function AccuracyBadge({ accuracy }: { accuracy: number }) {
     const level = accuracy <= 10 ? 'high' : accuracy <= 30 ? 'medium' : 'low';
     const colors = {
-        high: 'bg-emerald-100 text-emerald-700',
-        medium: 'bg-amber-100 text-amber-700',
-        low: 'bg-red-100 text-red-700',
+        high: 'bg-primary-light text-primary',
+        medium: 'bg-warning-bg text-warning-text',
+        low: 'bg-danger-bg text-danger-text',
     };
     const labels = {
         high: 'Sangat Akurat',

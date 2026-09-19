@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { MapPin } from 'lucide-react';
 import { lazy, Suspense } from 'react';
+import { Button } from '@/components/ui/button';
 import PhoneInput from '@/components/ui/phone-input';
 import CurrentLocationButton from './current-location-button';
 
@@ -56,7 +57,7 @@ export default function AddressForm({
                 <div className="mt-2">
                     <Suspense
                         fallback={
-                            <div className="flex h-48 items-center justify-center rounded-lg border border-border bg-surface-muted text-xs text-text-subtle">
+                            <div className="flex h-48 items-center justify-center rounded-chip border border-border bg-surface-muted text-xs text-text-subtle">
                                 Memuat peta...
                             </div>
                         }
@@ -72,7 +73,7 @@ export default function AddressForm({
                     <CurrentLocationButton onLocation={handleLocationChange} />
                 </div>
                 {(errors.latitude || errors.longitude) && (
-                    <p className="mt-1.5 text-xs text-red-600">
+                    <p className="mt-1.5 text-xs text-danger">
                         {errors.latitude || errors.longitude}
                     </p>
                 )}
@@ -116,19 +117,17 @@ export default function AddressForm({
             {/* Address */}
             <div>
                 <label className="text-xs font-semibold text-text">
-                    Alamat Lengkap <span className="text-red-500">*</span>
+                    Alamat Lengkap <span className="text-danger">*</span>
                 </label>
                 <textarea
                     value={data.address}
                     onChange={(e) => setData('address', e.target.value)}
-                    className="mt-1.5 min-h-20 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                    className="mt-1.5 min-h-20 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
                     placeholder="Jalan, nomor, RT/RW, detail"
                     required
                 />
                 {errors.address && (
-                    <p className="mt-1 text-xs text-red-600">
-                        {errors.address}
-                    </p>
+                    <p className="mt-1 text-xs text-danger">{errors.address}</p>
                 )}
             </div>
 
@@ -195,11 +194,11 @@ export default function AddressForm({
                 <input
                     value={data.landmark}
                     onChange={(e) => setData('landmark', e.target.value)}
-                    className="mt-1.5 min-h-11 w-full rounded-lg border border-border px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                    className="mt-1.5 min-h-11 w-full rounded-chip border border-border px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
                     placeholder="Rumah cat hijau dekat mushola"
                 />
                 {errors.landmark && (
-                    <p className="mt-1 text-xs text-red-600">
+                    <p className="mt-1 text-xs text-danger">
                         {errors.landmark}
                     </p>
                 )}
@@ -216,23 +215,23 @@ export default function AddressForm({
                 <textarea
                     value={data.delivery_notes}
                     onChange={(e) => setData('delivery_notes', e.target.value)}
-                    className="mt-1.5 min-h-16 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                    className="mt-1.5 min-h-16 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
                     placeholder="Instruksi tambahan untuk kurir"
                 />
                 {errors.delivery_notes && (
-                    <p className="mt-1 text-xs text-red-600">
+                    <p className="mt-1 text-xs text-danger">
                         {errors.delivery_notes}
                     </p>
                 )}
             </div>
 
             {/* Default toggle */}
-            <label className="flex items-center gap-3 rounded-lg border border-border bg-white p-3">
+            <label className="flex items-center gap-3 rounded-chip border border-border bg-surface p-3">
                 <input
                     type="checkbox"
                     checked={data.is_default}
                     onChange={(e) => setData('is_default', e.target.checked)}
-                    className="h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 />
                 <span className="text-sm text-text">
                     Jadikan alamat default
@@ -241,16 +240,17 @@ export default function AddressForm({
 
             {/* Submit */}
             <div className="flex gap-3">
-                <button
+                <Button
                     type="submit"
+                    variant="primary"
                     disabled={processing}
-                    className="flex min-h-12 flex-1 items-center justify-center rounded-lg bg-emerald-700 text-sm font-bold text-white transition-transform active:bg-emerald-800 active:opacity-80 disabled:bg-zinc-300"
+                    className="min-h-12 flex-1 rounded-chip text-sm font-bold active:bg-primary-hover active:opacity-80 disabled:bg-border disabled:opacity-100"
                 >
                     {processing ? 'Menyimpan...' : submitLabel}
-                </button>
+                </Button>
                 <Link
                     href="/customer/addresses"
-                    className="flex min-h-12 items-center justify-center rounded-lg border border-border px-5 text-sm font-semibold text-text-muted active:bg-surface-muted"
+                    className="flex min-h-12 items-center justify-center rounded-chip border border-border px-5 text-sm font-semibold text-text-muted active:bg-surface-muted"
                 >
                     Batal
                 </Link>
@@ -281,18 +281,18 @@ function Field({
     return (
         <div>
             <label className="text-xs font-semibold text-text">
-                {label} {required && <span className="text-red-500">*</span>}
+                {label} {required && <span className="text-danger">*</span>}
             </label>
             <input
                 type={type}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 inputMode={inputMode}
-                className={`mt-1.5 min-h-11 w-full rounded-lg border px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200 ${error ? 'border-red-500' : 'border-border'}`}
+                className={`mt-1.5 min-h-11 w-full rounded-chip border px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary/20 focus:ring-1 focus:ring-primary/20 ${error ? 'border-danger' : 'border-border'}`}
                 placeholder={placeholder}
                 required={required}
             />
-            {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+            {error && <p className="mt-1 text-xs text-danger">{error}</p>}
         </div>
     );
 }

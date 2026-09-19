@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import LeafletPicker from '@/components/customer/leaflet-picker';
+import { Button } from '@/components/ui/button';
 import type { CustomerLocation } from '@/lib/customer-location';
 import { reverseGeocode, searchPlaces } from '@/lib/geocoding';
 import type { PlaceSuggestion } from '@/lib/geocoding';
@@ -258,7 +259,7 @@ export default function LocationSearchPanel({
     return (
         <div className="space-y-4">
             {showSavedLocation && savedLocation && (
-                <div className="rounded-xl border border-border bg-surface-muted p-4">
+                <div className="rounded-thumb border border-border bg-surface-muted p-4">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="flex items-center gap-2">
@@ -274,13 +275,14 @@ export default function LocationSearchPanel({
                             </div>
                         </div>
                         {onUseSavedLocation && (
-                            <button
+                            <Button
                                 type="button"
+                                variant="outline"
                                 onClick={onUseSavedLocation}
-                                className="min-h-10 shrink-0 rounded-lg border border-border bg-white px-3 text-xs font-semibold text-text active:bg-surface-muted"
+                                className="min-h-10 shrink-0 rounded-chip px-3 text-xs font-semibold"
                             >
                                 Gunakan Lagi
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>
@@ -291,7 +293,7 @@ export default function LocationSearchPanel({
                 <label className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                     Cari alamat
                 </label>
-                <div className="mt-2 flex items-center gap-2.5 rounded-lg border border-border bg-white px-3">
+                <div className="mt-2 flex items-center gap-2.5 rounded-chip border border-border bg-surface px-3">
                     <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                     <input
                         value={query}
@@ -317,7 +319,7 @@ export default function LocationSearchPanel({
                 {showSuggestions &&
                     (visibleSearchState !== 'idle' ||
                         visibleSuggestions.length > 0) && (
-                        <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-xl border border-border bg-white shadow-[0_12px_32px_rgba(15,23,42,0.12)]">
+                        <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-thumb border border-border bg-surface shadow-[0_12px_32px_rgba(15,23,42,0.12)]">
                             {visibleSearchState === 'searching' && (
                                 <div className="px-4 py-3 text-sm text-text-muted">
                                     Mencari alamat...
@@ -326,16 +328,17 @@ export default function LocationSearchPanel({
 
                             {visibleSearchState === 'found' &&
                                 visibleSuggestions.map((suggestion) => (
-                                    <button
+                                    <Button
                                         key={suggestion.id}
                                         type="button"
+                                        variant="ghost"
                                         onClick={() => {
                                             selectSuggestion(
                                                 suggestion,
                                                 Date.now(),
                                             );
                                         }}
-                                        className="block w-full border-b border-border px-4 py-3 text-left last:border-b-0 active:bg-surface-muted"
+                                        className="flex h-auto w-full flex-col items-start justify-start gap-0 rounded-none border-b border-border px-4 py-3 text-left whitespace-normal last:border-b-0 hover:bg-transparent active:bg-surface-muted"
                                     >
                                         <div className="text-sm font-semibold text-text">
                                             {suggestion.title}
@@ -344,7 +347,7 @@ export default function LocationSearchPanel({
                                             {suggestion.subtitle ||
                                                 suggestion.formatted_address}
                                         </div>
-                                    </button>
+                                    </Button>
                                 ))}
 
                             {visibleSearchState === 'empty' && (
@@ -369,7 +372,7 @@ export default function LocationSearchPanel({
             </div>
 
             {/* Section 1: Map Pin */}
-            <div className="rounded-xl border border-border bg-white p-4">
+            <div className="rounded-thumb border border-border bg-surface p-4">
                 <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 shrink-0 text-text-subtle" />
                     <span className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
@@ -384,7 +387,7 @@ export default function LocationSearchPanel({
                     />
                 </div>
                 {pinUpdated ? (
-                    <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                    <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-primary">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         <span>Lokasi Pin Diperbarui</span>
                     </div>
@@ -396,7 +399,7 @@ export default function LocationSearchPanel({
             </div>
 
             {/* Section 2: Detected Address (editable) */}
-            <div className="rounded-xl border border-border bg-white p-4">
+            <div className="rounded-thumb border border-border bg-surface p-4">
                 <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                     Alamat Terdeteksi
                 </div>
@@ -410,7 +413,7 @@ export default function LocationSearchPanel({
                             onChange={(event) =>
                                 onChange({ address_line: event.target.value })
                             }
-                            className="mt-1 min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                            className="mt-1 min-h-11 w-full rounded-chip border border-border bg-surface px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
                             placeholder={
                                 hasPin
                                     ? 'Alamat akan terisi otomatis'
@@ -428,10 +431,11 @@ export default function LocationSearchPanel({
             </div>
 
             {/* Toggle for detail fields */}
-            <button
+            <Button
                 type="button"
+                variant="outline"
                 onClick={() => setShowDetail(!showDetail)}
-                className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-white px-4 text-xs font-semibold text-text-muted active:opacity-80"
+                className="min-h-11 w-full justify-start gap-2 rounded-thumb px-4 text-xs font-semibold text-text-muted active:opacity-80"
             >
                 {showDetail ? (
                     <ChevronUp className="h-4 w-4" />
@@ -443,17 +447,17 @@ export default function LocationSearchPanel({
                     hasPin &&
                     (!(value.address_detail ?? '').trim() ||
                         !(value.landmark ?? '').trim()) && (
-                        <span className="ml-auto text-[11px] font-medium text-amber-600">
+                        <span className="ml-auto text-[11px] font-medium text-warning">
                             Opsional
                         </span>
                     )}
-            </button>
+            </Button>
 
             {/* Collapsible detail sections */}
             {showDetail && (
                 <>
                     {/* Detail Alamat */}
-                    <div className="rounded-xl border border-border bg-white p-4">
+                    <div className="rounded-thumb border border-border bg-surface p-4">
                         <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                             Detail Alamat
                         </div>
@@ -469,7 +473,7 @@ export default function LocationSearchPanel({
                                             address_detail: event.target.value,
                                         })
                                     }
-                                    className="mt-1 min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                                    className="mt-1 min-h-11 w-full rounded-chip border border-border bg-surface px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
                                     placeholder="Blok B3 No 27"
                                 />
                             </label>
@@ -480,7 +484,7 @@ export default function LocationSearchPanel({
                     </div>
 
                     {/* Patokan */}
-                    <div className="rounded-xl border border-border bg-white p-4">
+                    <div className="rounded-thumb border border-border bg-surface p-4">
                         <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                             Patokan / Ciri Rumah
                         </div>
@@ -496,7 +500,7 @@ export default function LocationSearchPanel({
                                             landmark: event.target.value,
                                         })
                                     }
-                                    className="mt-1 min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                                    className="mt-1 min-h-11 w-full rounded-chip border border-border bg-surface px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
                                     placeholder="Rumah cat hijau dekat mushola"
                                 />
                             </label>

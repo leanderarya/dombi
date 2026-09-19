@@ -147,10 +147,10 @@ export default function LeafletPicker({
     }, [hasCoords, lat, lng]);
 
     return (
-        <div className="relative overflow-hidden rounded-lg border border-border">
+        <div className="relative overflow-hidden rounded-chip border border-border">
             <div
                 ref={mapRef}
-                className="h-[260px] w-full bg-zinc-100 sm:h-[300px]"
+                className="h-[260px] w-full bg-surface-muted sm:h-[300px]"
                 style={{ touchAction: 'pan-x pan-y' }}
             />
             {!loaded && (
@@ -161,7 +161,7 @@ export default function LeafletPicker({
                 </div>
             )}
             {loaded && !hasCoords && (
-                <div className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg border border-white/70 bg-white/95 px-3 py-2 text-[11px] font-semibold text-text-muted shadow-sm">
+                <div className="pointer-events-none absolute inset-x-3 bottom-3 rounded-chip border border-white/70 bg-white/95 px-3 py-2 text-[11px] font-semibold text-text-muted shadow-sm">
                     Cari alamat atau tap peta untuk menentukan titik pengiriman.
                 </div>
             )}

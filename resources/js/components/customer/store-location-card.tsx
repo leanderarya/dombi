@@ -3,6 +3,7 @@ import { Store, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import OutletSheet from '@/components/customer/outlet-sheet';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOutlet } from '@/contexts/outlet-context';
 import { useCustomerLocation } from '@/lib/customer-location';
@@ -18,7 +19,7 @@ export default function StoreLocationCard() {
     // Loading skeleton
     if (loading && !selectedOutlet) {
         return (
-            <div className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-elevated">
+            <div className="flex items-center gap-3 rounded-card bg-surface p-3.5 shadow-elevated">
                 <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
                 <div className="flex-1 space-y-1.5">
                     <Skeleton className="h-4 w-1/2" />
@@ -32,15 +33,16 @@ export default function StoreLocationCard() {
     // Error state
     if (error && !selectedOutlet) {
         return (
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white p-3.5 shadow-elevated">
+            <div className="flex items-center justify-between gap-3 rounded-card bg-surface p-3.5 shadow-elevated">
                 <span className="text-xs text-text-muted">{error}</span>
-                <button
+                <Button
                     type="button"
+                    variant="primary"
                     onClick={retry}
-                    className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-bold text-white active:opacity-80"
+                    className="h-auto shrink-0 rounded-chip px-3 py-1.5 text-[11px] font-bold active:opacity-80"
                 >
                     Coba Lagi
-                </button>
+                </Button>
             </div>
         );
     }
@@ -48,7 +50,7 @@ export default function StoreLocationCard() {
     // No outlet available
     if (!selectedOutlet) {
         return (
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white p-3.5 shadow-elevated">
+            <div className="flex items-center justify-between gap-3 rounded-card bg-surface p-3.5 shadow-elevated">
                 <div className="flex items-center gap-2 text-xs text-text-muted">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
                     <span>Tidak ada outlet tersedia</span>
@@ -73,12 +75,13 @@ export default function StoreLocationCard() {
 
     return (
         <>
-            <button
+            <Button
                 type="button"
+                variant="ghost"
                 onClick={() => setOutletSheetOpen(true)}
-                className="flex w-full items-center gap-3 rounded-2xl bg-white p-3.5 text-left shadow-elevated transition-colors active:bg-surface-muted"
+                className="flex h-auto w-full items-center justify-start gap-3 rounded-card bg-surface p-3.5 text-left shadow-elevated active:bg-surface-muted"
             >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-thumb bg-primary-light">
                     <Store className="h-5 w-5 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -87,12 +90,12 @@ export default function StoreLocationCard() {
                             Dombi Store • {selectedOutlet.name}
                         </div>
                         {selectedOutlet.id === outlets[0]?.id && (
-                            <span className="shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                            <span className="shrink-0 rounded bg-primary-light px-1.5 py-0.5 text-[10px] font-semibold text-primary">
                                 Terdekat
                             </span>
                         )}
                         {selectedOutlet.is_open === false && (
-                            <span className="shrink-0 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
+                            <span className="shrink-0 rounded bg-danger-bg px-1.5 py-0.5 text-[10px] font-medium text-danger-text">
                                 Tutup
                             </span>
                         )}
@@ -135,7 +138,7 @@ export default function StoreLocationCard() {
                         d="M9 5l7 7-7 7"
                     />
                 </svg>
-            </button>
+            </Button>
 
             <OutletSheet
                 open={outletSheetOpen}
