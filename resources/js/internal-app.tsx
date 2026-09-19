@@ -1,13 +1,17 @@
 import { createInertiaApp, router } from '@inertiajs/react';
-import { Component, useEffect } from 'react';
+import { Component, lazy, Suspense, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
-import DevToolbar from '@/components/dev-toolbar';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
+
+const DevToolbar =
+    import.meta.env.DEV || import.meta.env.VITE_DEV_TOOLBAR === 'true'
+        ? lazy(() => import('@/components/dev-toolbar'))
+        : null;
 
 class ErrorBoundary extends Component<
     { children: ReactNode },
@@ -105,11 +109,13 @@ createInertiaApp({
                     closeButton
                     style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
                 />
-                {dev?.isLocal && (
-                    <DevToolbar
-                        currentRole={dev.currentRole ?? null}
-                        env={dev.env ?? ''}
-                    />
+                {DevToolbar && dev?.isLocal && (
+                    <Suspense fallback={null}>
+                        <DevToolbar
+                            currentRole={dev.currentRole ?? null}
+                            env={dev.env ?? ''}
+                        />
+                    </Suspense>
                 )}
             </ErrorBoundary>,
         );

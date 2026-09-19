@@ -1,12 +1,17 @@
 import { createInertiaApp } from '@inertiajs/react';
+import { lazy, Suspense } from 'react';
 import type { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
-import DevToolbar from '@/components/dev-toolbar';
 import CartConfirmationProvider from '@/providers/cart-confirmation-provider';
 import FavoritesProvider from '@/providers/favorites-provider';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
+
+const DevToolbar =
+    import.meta.env.DEV || import.meta.env.VITE_DEV_TOOLBAR === 'true'
+        ? lazy(() => import('@/components/dev-toolbar'))
+        : null;
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -42,27 +47,30 @@ createInertiaApp({
                     closeButton
                     style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
                 />
-                {(props.initialPage.props.dev as Record<string, unknown>)
-                    ?.isLocal && (
-                    <DevToolbar
-                        currentRole={
-                            (
-                                props.initialPage.props.dev as Record<
-                                    string,
-                                    unknown
-                                >
-                            ).currentRole as string | null
-                        }
-                        env={
-                            (
-                                props.initialPage.props.dev as Record<
-                                    string,
-                                    unknown
-                                >
-                            ).env as string
-                        }
-                    />
-                )}
+                {DevToolbar &&
+                    (props.initialPage.props.dev as Record<string, unknown>)
+                        ?.isLocal && (
+                        <Suspense fallback={null}>
+                            <DevToolbar
+                                currentRole={
+                                    (
+                                        props.initialPage.props.dev as Record<
+                                            string,
+                                            unknown
+                                        >
+                                    ).currentRole as string | null
+                                }
+                                env={
+                                    (
+                                        props.initialPage.props.dev as Record<
+                                            string,
+                                            unknown
+                                        >
+                                    ).env as string
+                                }
+                            />
+                        </Suspense>
+                    )}
             </>,
         );
     },
