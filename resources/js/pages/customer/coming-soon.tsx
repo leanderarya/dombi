@@ -1,8 +1,9 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { ChevronLeft, Coffee, Crown, Inbox, Leaf, Wine } from 'lucide-react';
+import { Coffee, Crown, Inbox, Leaf, Wine } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
 import EmptyState from '@/components/ui/empty-state';
+import PageHeader from '@/components/ui/page-header';
 
 interface FeatureInfo {
     title: string;
@@ -65,20 +66,11 @@ export default function ComingSoon() {
     return (
         <div className="min-h-dvh bg-background text-text">
             <Head title={info.title} />
-            <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
-                <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link
-                        href="/customer/home"
-                        className="flex h-11 w-11 items-center justify-center rounded-chip text-text active:opacity-80"
-                    >
-                        <ChevronLeft className="h-5 w-5" />
-                    </Link>
-                    <h1 className="text-sm font-semibold text-text">
-                        Akan Datang
-                    </h1>
-                    <div className="h-11 w-11" />
-                </div>
-            </header>
+            <PageHeader
+                variant="customer"
+                title="Akan Datang"
+                backHref="/customer/home"
+            />
 
             <main className="mx-auto max-w-lg px-4 pt-6 pb-24">
                 <EmptyState

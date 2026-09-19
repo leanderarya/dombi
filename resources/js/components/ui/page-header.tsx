@@ -32,11 +32,11 @@ export default function PageHeader({ title, titleClassName, subtitle, backHref, 
 
     return (
         <header className={`sticky top-0 z-30 ${isCustomer ? 'pt-safe-header' : 'pt-safe'} ${background}`}>
-            <div className={`mx-auto flex max-w-2xl items-center justify-between lg:max-w-4xl ${isCustomer ? 'px-5 pb-4' : 'px-4 py-3'}`}>
+            <div className={`mx-auto flex items-center justify-between ${isCustomer ? 'max-w-lg px-5 pb-4' : 'max-w-2xl px-4 py-3 lg:max-w-4xl'}`}>
                 {/* Left side: back button, hamburger, or spacer */}
                 <div className="flex items-center gap-1">
                     {backHref && (
-                        <Link href={backHref} className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted active:bg-surface-muted">
+                        <Link href={backHref} className={`flex h-11 w-11 items-center justify-center ${isCustomer ? 'rounded-chip text-text active:opacity-80' : 'rounded-lg text-text-muted active:bg-surface-muted'}`}>
                             <ChevronLeft className="h-5 w-5" />
                         </Link>
                     )}
@@ -65,7 +65,7 @@ export default function PageHeader({ title, titleClassName, subtitle, backHref, 
                 {right ?? <div className="w-11" />}
             </div>
             {below && (
-                <div className={`mx-auto max-w-2xl lg:max-w-4xl ${isCustomer ? 'px-5 pb-4' : 'px-4 pb-3'}`}>
+                <div className={`mx-auto ${isCustomer ? 'max-w-lg px-5 pb-4' : 'max-w-2xl px-4 pb-3 lg:max-w-4xl'}`}>
                     {below}
                 </div>
             )}
