@@ -1,5 +1,6 @@
 import { Check, MapPin } from 'lucide-react';
 import FulfillmentToggle from '@/components/customer/fulfillment-toggle';
+import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOutlet } from '@/contexts/outlet-context';
@@ -73,13 +74,14 @@ export default function OutletSheet({
                 {!loading && error && (
                     <div className="px-5 py-6 text-center">
                         <p className="mb-3 text-sm text-text-muted">{error}</p>
-                        <button
+                        <Button
                             type="button"
+                            variant="primary"
                             onClick={retry}
-                            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white active:opacity-80"
+                            className="rounded-thumb px-4 py-2 text-sm font-semibold active:opacity-80"
                         >
                             Coba Lagi
-                        </button>
+                        </Button>
                     </div>
                 )}
 
@@ -100,13 +102,14 @@ export default function OutletSheet({
                             const isSelected = selectedOutlet?.id === outlet.id;
 
                             return (
-                                <button
+                                <Button
                                     key={outlet.id}
                                     type="button"
+                                    variant="ghost"
                                     onClick={() => handleSelect(outlet)}
                                     disabled={outlet.is_open === false}
-                                    className={`flex w-full items-center gap-2.5 px-4 py-3 text-left transition-colors active:bg-surface-muted ${
-                                        isSelected ? 'bg-emerald-50' : ''
+                                    className={`flex h-auto w-full items-center justify-start gap-2.5 rounded-none px-4 py-3 text-left whitespace-normal hover:bg-transparent active:bg-surface-muted ${
+                                        isSelected ? 'bg-primary-light' : ''
                                     } ${
                                         outlet.is_open === false
                                             ? 'cursor-not-allowed opacity-50'
@@ -117,7 +120,7 @@ export default function OutletSheet({
                                     <div
                                         className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
                                             isSelected
-                                                ? 'border-emerald-600 bg-emerald-600'
+                                                ? 'border-primary bg-primary'
                                                 : 'border-border'
                                         }`}
                                     >
@@ -145,10 +148,10 @@ export default function OutletSheet({
                                             <span
                                                 className={`ml-auto shrink-0 text-[10px] font-semibold ${
                                                     outlet.is_open === false
-                                                        ? 'text-red-600'
+                                                        ? 'text-danger'
                                                         : outlet.stock_available
-                                                          ? 'text-emerald-600'
-                                                          : 'text-amber-600'
+                                                          ? 'text-primary'
+                                                          : 'text-warning'
                                                 }`}
                                             >
                                                 {outlet.is_open === false
@@ -162,7 +165,7 @@ export default function OutletSheet({
                                             {outlet.address}
                                         </div>
                                         {outlet.is_open === false && (
-                                            <div className="mt-0.5 text-[11px] font-medium text-red-600">
+                                            <div className="mt-0.5 text-[11px] font-medium text-danger">
                                                 Tutup
                                                 {outlet.next_open
                                                     ? ` • Buka ${outlet.next_open}`
@@ -170,7 +173,7 @@ export default function OutletSheet({
                                             </div>
                                         )}
                                     </div>
-                                </button>
+                                </Button>
                             );
                         })}
                     </div>
