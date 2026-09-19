@@ -38,12 +38,12 @@ export default function PhoneInput({
             {label && (
                 <span className="text-[13px] text-text-subtle">
                     {label}
-                    {required && <span className="ml-0.5 text-red-500">*</span>}
+                    {required && <span className="ml-0.5 text-danger">*</span>}
                 </span>
             )}
             <div
                 className={`mt-1 flex min-h-11 items-center overflow-hidden rounded-lg border ${
-                    error ? 'border-red-400' : 'border-border'
+                    error ? 'border-danger' : 'border-border'
                 } bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 ${
                     disabled ? 'bg-surface text-text-muted' : ''
                 }`}

@@ -81,6 +81,19 @@
     --color-danger-border: #fecaca;
     --color-info-border: #bfdbfe;
 
+    /* Status hues the semantic set does not cover: work in progress (orange),
+       waiting for handover (purple) and already moving (indigo). Values match
+       the shades the status badges drew before they moved onto tokens. */
+    --color-status-progress: #c2410c;
+    --color-status-progress-bg: #fff7ed;
+    --color-status-progress-border: #fed7aa;
+    --color-status-active: #7e22ce;
+    --color-status-active-bg: #faf5ff;
+    --color-status-active-border: #e9d5ff;
+    --color-status-transit: #4338ca;
+    --color-status-transit-bg: #eef2ff;
+    --color-status-transit-border: #c7d2fe;
+
     /* shadcn/ui compatible mappings */
     --color-foreground: var(--color-text);
     --color-muted-foreground: var(--color-text-muted);

@@ -12,9 +12,9 @@ export default function StockLevelBadge({
   const { displayLabel, variant } = getOwnerStockStatus(status, showQuantity ? availableStock : undefined);
   
   const styles: Record<string, string> = {
-    success: 'bg-emerald-50 text-emerald-700',
-    warning: 'bg-amber-50 text-amber-700',
-    danger: 'bg-red-50 text-red-700',
+    success: 'bg-success-bg text-success-text',
+    warning: 'bg-warning-bg text-warning-text',
+    danger: 'bg-danger-bg text-danger-text',
   };
   
   return (
