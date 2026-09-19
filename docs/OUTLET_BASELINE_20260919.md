@@ -91,3 +91,12 @@ role — so O.2 starts there.
 3. **Dialog component — one shared shell** for the six outlet dialogs, built on
    the existing `components/ui` primitives where they fit. The 64 raw buttons
    and the four sub-44px icon targets fold into that work.
+
+## Verification
+
+Standing instruction from 2026-09-19: every UI/UX change ends with the
+`interface-review` skill
+(`~/.commandcode/skills/interface-review/SKILL.md`), on top of the five gates
+(types, lint, format, test, build) and the screenshot pass. It is recorded here
+because global taste learning is off, so the preference does not persist on its
+own.
