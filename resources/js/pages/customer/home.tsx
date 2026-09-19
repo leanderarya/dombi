@@ -345,7 +345,7 @@ function QuickActions({
                     variant="ghost"
                     onClick={onPickup}
                     disabled={pickupLoading}
-                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-card border border-primary/20 bg-primary-light p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-primary-light active:opacity-80 disabled:opacity-50"
+                    className="group relative flex h-36 flex-col items-stretch justify-between overflow-hidden rounded-card border border-primary/20 bg-primary-light p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-primary-light active:opacity-80 disabled:opacity-50"
                 >
                     <div className="relative z-10">
                         <h3 className="text-base font-extrabold text-primary transition-transform group-hover:translate-x-0.5">
@@ -369,7 +369,7 @@ function QuickActions({
                     type="button"
                     variant="ghost"
                     onClick={onDelivery}
-                    className="group relative flex h-36 flex-col justify-between overflow-hidden rounded-card border border-warning-border bg-warning-bg p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-warning-bg active:opacity-80"
+                    className="group relative flex h-36 flex-col items-stretch justify-between overflow-hidden rounded-card border border-warning-border bg-warning-bg p-4 text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-warning-bg active:opacity-80"
                 >
                     <div className="relative z-10">
                         <h3 className="text-base font-extrabold text-warning-text transition-transform group-hover:translate-x-0.5">
