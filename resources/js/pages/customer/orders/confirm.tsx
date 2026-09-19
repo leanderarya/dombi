@@ -365,7 +365,7 @@ export default function ConfirmPage({
         <CustomerMobileLayout hideTopBar hideCartBar hideBottomNav>
             <div className="flex min-h-[80dvh] flex-col">
                 {/* Header */}
-                <header className="sticky top-0 z-30 bg-surface/95 pt-safe backdrop-blur">
+                <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
                     <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                         <Button
                             variant="ghost"

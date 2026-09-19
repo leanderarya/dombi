@@ -77,7 +77,7 @@ function FavoritesInner() {
         <CustomerMobileLayout hideTopBar>
             <Head title="Favorit" />
             {/* Page Title */}
-            <header className="sticky top-0 z-30 bg-surface/95 pt-safe backdrop-blur">
+            <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-center px-4 py-3">
                     <h1 className="text-base font-bold text-text">Favorit</h1>
                 </div>

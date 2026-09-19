@@ -37,7 +37,7 @@ export default function CustomerTopBar({
 
     return (
         <>
-            <header className="sticky top-0 z-30 bg-background/95 pt-safe backdrop-blur">
+            <header className="sticky top-0 z-30 bg-background/95 pt-safe-header backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
                     <div className="min-w-0 flex-1">
                         {isLoggedIn ? (
