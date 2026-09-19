@@ -65,7 +65,7 @@ export default function ComingSoon() {
     return (
         <div className="min-h-dvh bg-background text-text">
             <Head title={info.title} />
-            <header className="sticky top-0 z-30 border-b border-border bg-surface/95 pt-safe backdrop-blur">
+            <header className="sticky top-0 z-30 border-b border-border bg-surface/95 pt-safe-header backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <Link
                         href="/customer/home"
