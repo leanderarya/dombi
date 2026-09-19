@@ -129,7 +129,7 @@ export default function OutletReports({ outlet, preview }: Props) {
 
                 {/* Preview Summary */}
                 {preview && preview.total_orders > 0 && (
-                    <div className="rounded-xl border border-border bg-white p-4">
+                    <div className="rounded-xl border border-border bg-surface p-4">
                         <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                             Ringkasan Laporan
                         </div>
@@ -154,15 +154,15 @@ export default function OutletReports({ outlet, preview }: Props) {
                                 <div className="text-lg font-bold text-emerald-700 tabular-nums">
                                     {formatCurrency(preview.total_revenue)}
                                 </div>
-                                <div className="text-[10px] text-emerald-600">
+                                <div className="text-[10px] text-success">
                                     Total Penjualan
                                 </div>
                             </div>
-                            <div className="rounded-lg bg-amber-50 p-3 text-center">
-                                <div className="text-lg font-bold text-amber-700 tabular-nums">
+                            <div className="rounded-lg bg-warning-bg p-3 text-center">
+                                <div className="text-lg font-bold text-warning-text tabular-nums">
                                     {formatCurrency(preview.total_margin)}
                                 </div>
-                                <div className="text-[10px] text-amber-600">
+                                <div className="text-[10px] text-warning">
                                     Total Margin
                                 </div>
                             </div>
@@ -174,14 +174,14 @@ export default function OutletReports({ outlet, preview }: Props) {
                 )}
 
                 {preview && preview.total_orders === 0 && (
-                    <div className="rounded-xl border border-border bg-white p-4 text-center">
+                    <div className="rounded-xl border border-border bg-surface p-4 text-center">
                         <p className="text-sm text-text-muted">
                             Tidak ada data penjualan pada periode ini.
                         </p>
                     </div>
                 )}
 
-                <div className="rounded-xl border border-border bg-white p-4">
+                <div className="rounded-xl border border-border bg-surface p-4">
                     <div className="mb-2 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                         Konten Laporan
                     </div>

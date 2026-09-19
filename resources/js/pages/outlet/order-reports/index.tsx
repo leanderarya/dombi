@@ -70,7 +70,7 @@ export default function OutletOrderReportsIndex({ reports, filters }: any) {
                             <Link
                                 key={report.id}
                                 href={`/outlet/order-reports/${report.id}`}
-                                className="block rounded-xl border border-border bg-white p-4 active:opacity-80"
+                                className="block rounded-xl border border-border bg-surface p-4 active:opacity-80"
                             >
                                 <div className="flex items-start justify-between">
                                     <div>

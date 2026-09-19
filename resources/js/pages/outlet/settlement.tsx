@@ -196,7 +196,7 @@ export default function OutletSettlement({
                             {Array.from({ length: 4 }).map((_, i) => (
                                 <div
                                     key={i}
-                                    className="space-y-1.5 rounded-xl border border-border bg-white p-4"
+                                    className="space-y-1.5 rounded-xl border border-border bg-surface p-4"
                                 >
                                     <Skeleton className="h-3 w-2/3" />
                                     <Skeleton className="h-5 w-1/3" />
@@ -228,11 +228,11 @@ export default function OutletSettlement({
                                 </div>
                             </div>
                         ) : (
-                            <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                            <div className="rounded-xl border border-danger-border bg-danger-bg p-4">
                                 <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                                     Total Belum Disetor
                                 </div>
-                                <div className="mt-1 text-3xl font-bold text-red-600 tabular-nums">
+                                <div className="mt-1 text-3xl font-bold text-danger tabular-nums">
                                     {formatCurrency(reconciliation.outstanding)}
                                 </div>
 
@@ -250,7 +250,7 @@ export default function OutletSettlement({
                                                     <span className="text-text-muted">
                                                         {t.period_label}
                                                     </span>
-                                                    <span className="font-semibold text-red-600 tabular-nums">
+                                                    <span className="font-semibold text-danger tabular-nums">
                                                         {formatCurrency(
                                                             t.outstanding,
                                                         )}
@@ -265,15 +265,15 @@ export default function OutletSettlement({
                                         {paymentAccounts.map((account) => (
                                             <div
                                                 key={account.id}
-                                                className="flex items-center gap-2 rounded-lg bg-red-100/50 px-3 py-2"
+                                                className="flex items-center gap-2 rounded-lg bg-danger-bg/50 px-3 py-2"
                                             >
-                                                <span className="text-[11px] font-bold text-red-800">
+                                                <span className="text-[11px] font-bold text-danger-text">
                                                     {account.bank_name}
                                                 </span>
-                                                <span className="text-[11px] text-red-700">
+                                                <span className="text-[11px] text-danger-text">
                                                     {account.account_number}
                                                 </span>
-                                                <span className="text-[10px] text-red-600">
+                                                <span className="text-[10px] text-danger">
                                                     a.n.{' '}
                                                     {account.account_holder}
                                                 </span>
@@ -283,10 +283,10 @@ export default function OutletSettlement({
                                 )}
 
                                 {hasPendingPayment ? (
-                                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                                    <div className="mt-3 rounded-lg border border-warning-border bg-warning-bg p-3">
                                         <div className="flex items-center gap-2">
                                             <svg
-                                                className="h-4 w-4 text-amber-600"
+                                                className="h-4 w-4 text-warning"
                                                 viewBox="0 0 20 20"
                                                 fill="currentColor"
                                             >
@@ -296,7 +296,7 @@ export default function OutletSettlement({
                                                     clipRule="evenodd"
                                                 />
                                             </svg>
-                                            <span className="text-xs font-medium text-amber-800">
+                                            <span className="text-xs font-medium text-warning-text">
                                                 Pembayaran sedang menunggu
                                                 verifikasi
                                             </span>
@@ -570,7 +570,7 @@ export default function OutletSettlement({
                                                 className={`text-sm font-bold tabular-nums ${
                                                     summary.net_amount >= 0
                                                         ? 'text-emerald-700'
-                                                        : 'text-red-600'
+                                                        : 'text-danger'
                                                 }`}
                                             >
                                                 {summary.direction ===
@@ -669,7 +669,7 @@ function BreakdownRow({
                 {label}
             </span>
             <span
-                className={`text-sm font-semibold tabular-nums ${negative ? 'text-emerald-600' : accent ? 'text-emerald-700' : muted ? 'text-text-subtle' : 'text-text'}`}
+                className={`text-sm font-semibold tabular-nums ${negative ? 'text-success' : accent ? 'text-emerald-700' : muted ? 'text-text-subtle' : 'text-text'}`}
             >
                 {negative && value > 0 ? '- ' : ''}
                 {isCurrency ? formatCurrency(Math.abs(value)) : value}
@@ -691,11 +691,11 @@ function TimelineItem({
     const isOverdue = entry.status === 'overdue';
 
     const statusColor = isPaid
-        ? 'bg-emerald-500'
+        ? 'bg-success'
         : isOverdue
-          ? 'bg-red-500'
+          ? 'bg-danger-bg0'
           : isPartial
-            ? 'bg-amber-500'
+            ? 'bg-warning-bg0'
             : 'bg-text-subtle';
 
     const statusLabel = isPaid
@@ -727,9 +727,9 @@ function TimelineItem({
                                     isPaid
                                         ? 'bg-emerald-50 text-emerald-700'
                                         : isOverdue
-                                          ? 'bg-red-50 text-red-700'
+                                          ? 'bg-danger-bg text-danger-text'
                                           : isPartial
-                                            ? 'bg-amber-50 text-amber-700'
+                                            ? 'bg-warning-bg text-warning-text'
                                             : 'bg-surface-muted text-text-muted'
                                 }`}
                             >
@@ -745,12 +745,12 @@ function TimelineItem({
                             {formatCurrency(entry.amount)}
                         </div>
                         {entry.direction === 'owner_pays_outlet' && (
-                            <div className="text-[11px] font-medium text-emerald-600 tabular-nums">
+                            <div className="text-[11px] font-medium text-success tabular-nums">
                                 Owner bayar
                             </div>
                         )}
                         {entry.outstanding > 0 && (
-                            <div className="text-[11px] font-medium text-red-600 tabular-nums">
+                            <div className="text-[11px] font-medium text-danger tabular-nums">
                                 Sisa: {formatCurrency(entry.outstanding)}
                             </div>
                         )}
@@ -831,7 +831,7 @@ function PaymentSheet({
                         placeholder="Masukkan nominal"
                     />
                     {errors.amount && (
-                        <p className="mt-1 text-xs text-red-600">
+                        <p className="mt-1 text-xs text-danger">
                             {errors.amount}
                         </p>
                     )}
@@ -853,7 +853,7 @@ function PaymentSheet({
                         placeholder="No. referensi transfer"
                     />
                     {errors.reference_number && (
-                        <p className="mt-1 text-xs text-red-600">
+                        <p className="mt-1 text-xs text-danger">
                             {errors.reference_number}
                         </p>
                     )}
@@ -874,7 +874,7 @@ function PaymentSheet({
                         className="w-full rounded-lg border border-border px-3 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                     {errors.payment_date && (
-                        <p className="mt-1 text-xs text-red-600">
+                        <p className="mt-1 text-xs text-danger">
                             {errors.payment_date}
                         </p>
                     )}
@@ -894,7 +894,7 @@ function PaymentSheet({
                         className="w-full rounded-lg border border-border px-3 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                     {errors.proof_image && (
-                        <p className="mt-1 text-xs text-red-600">
+                        <p className="mt-1 text-xs text-danger">
                             {errors.proof_image}
                         </p>
                     )}
@@ -989,8 +989,8 @@ function PaymentDetailSheet({
                     )}
 
                     {payment.rejection_reason && (
-                        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-                            <div className="text-[11px] font-semibold tracking-wider text-red-600 uppercase">
+                        <div className="rounded-xl bg-danger-bg p-3 text-sm text-danger-text">
+                            <div className="text-[11px] font-semibold tracking-wider text-danger uppercase">
                                 Alasan Ditolak
                             </div>
                             <p className="mt-1">{payment.rejection_reason}</p>

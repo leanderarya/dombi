@@ -43,7 +43,7 @@ export default function OutletOrderReportShow({ report }: any) {
             <Head title={`Laporan #${report.id}`} />
 
             {/* Status */}
-            <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-white p-4">
+            <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-surface p-4">
                 <div>
                     <div className="text-sm font-semibold text-text">
                         {report.order?.order_code ??
@@ -68,7 +68,7 @@ export default function OutletOrderReportShow({ report }: any) {
             </div>
 
             {/* Report Info */}
-            <div className="mt-4 rounded-xl border border-border bg-white p-4">
+            <div className="mt-4 rounded-xl border border-border bg-surface p-4">
                 <div className="text-[13px] text-text-subtle">Laporan</div>
                 <div className="mt-2 space-y-2 text-sm">
                     <div className="flex justify-between">
@@ -94,7 +94,7 @@ export default function OutletOrderReportShow({ report }: any) {
 
             {/* Order Info */}
             {report.order && (
-                <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                <div className="mt-4 rounded-xl border border-border bg-surface p-4">
                     <div className="text-[13px] text-text-subtle">Pesanan</div>
                     <div className="mt-2 space-y-2 text-sm">
                         <div className="flex justify-between">
@@ -113,7 +113,7 @@ export default function OutletOrderReportShow({ report }: any) {
 
             {/* Resolution */}
             {isFinal && (
-                <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                <div className="mt-4 rounded-xl border border-border bg-surface p-4">
                     <div className="text-[13px] text-text-subtle">Resolusi</div>
                     <div className="mt-2 text-sm text-text">
                         {report.resolution_notes ?? '-'}
@@ -141,7 +141,7 @@ export default function OutletOrderReportShow({ report }: any) {
 
             {/* Respond Form */}
             {respondMode && (
-                <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                <div className="mt-4 rounded-xl border border-border bg-surface p-4">
                     <div className="text-[13px] text-text-subtle">
                         Tanggapi Laporan
                     </div>

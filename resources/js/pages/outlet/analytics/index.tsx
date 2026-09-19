@@ -100,7 +100,7 @@ export default function OutletAnalytics({
                         {Array.from({ length: 2 }).map((_, i) => (
                             <div
                                 key={i}
-                                className="rounded-xl border border-border bg-white p-4"
+                                className="rounded-xl border border-border bg-surface p-4"
                             >
                                 <Skeleton className="mb-3 h-3 w-1/4" />
                                 <Skeleton className="h-[220px] w-full rounded-lg" />
@@ -145,7 +145,7 @@ export default function OutletAnalytics({
                         )}
 
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="rounded-xl border border-border bg-white p-4">
+                            <div className="rounded-xl border border-border bg-surface p-4">
                                 <div className="text-[11px] font-medium text-text-muted">
                                     Total Pendapatan
                                 </div>
@@ -153,7 +153,7 @@ export default function OutletAnalytics({
                                     {formatCurrency(kpis.total_revenue)}
                                 </div>
                             </div>
-                            <div className="rounded-xl border border-border bg-white p-4">
+                            <div className="rounded-xl border border-border bg-surface p-4">
                                 <div className="text-[11px] font-medium text-text-muted">
                                     Total Pesanan
                                 </div>
@@ -161,7 +161,7 @@ export default function OutletAnalytics({
                                     {kpis.total_orders}
                                 </div>
                             </div>
-                            <div className="rounded-xl border border-border bg-white p-4">
+                            <div className="rounded-xl border border-border bg-surface p-4">
                                 <div className="text-[11px] font-medium text-text-muted">
                                     Rata-rata per Pesanan
                                 </div>
@@ -171,7 +171,7 @@ export default function OutletAnalytics({
                             </div>
                         </div>
 
-                        <div className="rounded-xl border border-border bg-white p-4">
+                        <div className="rounded-xl border border-border bg-surface p-4">
                             <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                                 Produk Terlaris
                             </div>
@@ -183,7 +183,7 @@ export default function OutletAnalytics({
                             </div>
                         </div>
 
-                        <div className="rounded-xl border border-border bg-white p-4">
+                        <div className="rounded-xl border border-border bg-surface p-4">
                             <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                                 Trend Revenue
                             </div>

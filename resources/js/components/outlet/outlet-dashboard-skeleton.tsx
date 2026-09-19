@@ -4,17 +4,17 @@ export default function OutletDashboardSkeleton() {
     return (
         <div className="space-y-4">
             {/* Hero — stats */}
-            <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+            <div className="rounded-xl border border-border bg-surface p-4">
                 <div className="flex items-center justify-center">
                     <div className="flex items-center gap-6">
                         <div className="space-y-1 text-center">
-                            <Skeleton className="mx-auto h-7 w-12 bg-emerald-200" />
-                            <Skeleton className="mx-auto h-3 w-14 bg-emerald-200" />
+                            <Skeleton className="mx-auto h-7 w-12 bg-primary/10" />
+                            <Skeleton className="mx-auto h-3 w-14 bg-primary/10" />
                         </div>
-                        <div className="h-6 w-px bg-emerald-200" />
+                        <div className="h-6 w-px bg-primary/10" />
                         <div className="space-y-1 text-center">
-                            <Skeleton className="mx-auto h-7 w-12 bg-emerald-200" />
-                            <Skeleton className="mx-auto h-3 w-10 bg-emerald-200" />
+                            <Skeleton className="mx-auto h-7 w-12 bg-primary/10" />
+                            <Skeleton className="mx-auto h-3 w-10 bg-primary/10" />
                         </div>
                     </div>
                 </div>
@@ -24,7 +24,7 @@ export default function OutletDashboardSkeleton() {
             <Skeleton className="h-12 w-full rounded-xl" />
 
             {/* Stats grid */}
-            <div className="space-y-3 rounded-xl border border-border bg-white p-4">
+            <div className="space-y-3 rounded-xl border border-border bg-surface p-4">
                 <div className="grid grid-cols-4 gap-2">
                     {Array.from({ length: 4 }).map((_, i) => (
                         <div key={i} className="space-y-1 text-center">
@@ -48,7 +48,7 @@ export default function OutletDashboardSkeleton() {
             {/* Low stock list */}
             <div className="space-y-2">
                 <Skeleton className="h-3 w-24" />
-                <div className="divide-y divide-border rounded-xl border border-border bg-white">
+                <div className="divide-y divide-border rounded-xl border border-border bg-surface">
                     {Array.from({ length: 3 }).map((_, i) => (
                         <div
                             key={i}

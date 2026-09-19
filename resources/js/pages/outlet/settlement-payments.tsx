@@ -116,7 +116,7 @@ export default function OutletSettlementPayments({ payments }: Props) {
                 {showForm && (
                     <form
                         onSubmit={handleSubmit}
-                        className="mb-4 rounded-xl border border-border bg-white p-4"
+                        className="mb-4 rounded-xl border border-border bg-surface p-4"
                     >
                         <h2 className="mb-3 text-sm font-semibold text-text">
                             Submit Pembayaran
@@ -217,7 +217,7 @@ export default function OutletSettlementPayments({ payments }: Props) {
                         payments.data.map((payment) => (
                             <div
                                 key={payment.id}
-                                className="rounded-xl border border-border bg-white p-4"
+                                className="rounded-xl border border-border bg-surface p-4"
                             >
                                 <div className="flex items-start justify-between">
                                     <div>
@@ -255,7 +255,7 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                     </div>
                                 )}
                                 {payment.rejection_reason && (
-                                    <div className="mt-2 rounded-lg bg-red-50 p-2 text-xs text-red-700">
+                                    <div className="mt-2 rounded-lg bg-danger-bg p-2 text-xs text-danger-text">
                                         Alasan ditolak:{' '}
                                         {payment.rejection_reason}
                                     </div>

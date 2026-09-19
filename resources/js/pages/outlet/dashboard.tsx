@@ -84,11 +84,11 @@ export default function OutletDashboard({
                                 <div>
                                     <div className="flex items-center justify-center gap-1">
                                         {urgentTasks > 0 && (
-                                            <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                                            <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                                         )}
                                         {urgentTasks === 0 &&
                                             warningTasks > 0 && (
-                                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                                                <span className="h-1.5 w-1.5 rounded-full bg-warning" />
                                             )}
                                         <div
                                             className={`text-lg font-bold tabular-nums ${pendingTasks > 0 ? 'text-text' : 'text-text-muted'}`}
@@ -111,45 +111,45 @@ export default function OutletDashboard({
                                 {stats.pendingOrders > 0 && (
                                     <Link
                                         href="/outlet/orders?status=pending_confirmation"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80"
                                     >
-                                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                                        <span className="h-1.5 w-1.5 rounded-full bg-warning" />
                                         {stats.pendingOrders} Baru
                                     </Link>
                                 )}
                                 {deliveryStats.needsDispatch > 0 && (
                                     <Link
                                         href="/outlet/deliveries"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80"
                                     >
-                                        <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                                        <span className="h-1.5 w-1.5 rounded-full bg-info" />
                                         {deliveryStats.needsDispatch} Dikirim
                                     </Link>
                                 )}
                                 {deliveryStats.failed > 0 && (
                                     <Link
                                         href="/outlet/deliveries?status=failed"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80"
                                     >
-                                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                                        <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                                         {deliveryStats.failed} Gagal
                                     </Link>
                                 )}
                                 {lowStockItems.length > 0 && (
                                     <Link
                                         href="/outlet/inventory"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80"
                                     >
-                                        <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
+                                        <span className="h-1.5 w-1.5 rounded-full bg-accent-orange" />
                                         {lowStockItems.length} Stok Rendah
                                     </Link>
                                 )}
                                 {(stats.expiredToday ?? 0) > 0 && (
                                     <Link
                                         href="/outlet/orders?tab=riwayat&status=expired"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-red-50/80 px-2.5 py-1.5 text-[11px] font-semibold text-red-700 active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-danger-bg/80 px-2.5 py-1.5 text-[11px] font-semibold text-danger-text active:opacity-80"
                                     >
-                                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                                        <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                                         {stats.expiredToday} Kadaluarsa
                                     </Link>
                                 )}
@@ -172,27 +172,27 @@ export default function OutletDashboard({
                             settlementStats.margin > 0) && (
                             <Link
                                 href="/outlet/settlement"
-                                className="mb-4 block rounded-xl border border-border bg-white"
+                                className="mb-4 block rounded-xl border border-border bg-surface"
                             >
                                 {settlementStats.outstanding > 0 ? (
                                     /* Outstanding — urgent red card */
-                                    <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                                    <div className="rounded-xl border border-danger-border bg-danger-bg p-4">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                                                     Belum Disetor
                                                 </div>
-                                                <div className="mt-1 text-2xl font-bold text-red-600 tabular-nums">
+                                                <div className="mt-1 text-2xl font-bold text-danger tabular-nums">
                                                     {formatCurrency(
                                                         settlementStats.outstanding,
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
-                                                <DollarSign className="h-5 w-5 text-red-600" />
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger-bg">
+                                                <DollarSign className="h-5 w-5 text-danger" />
                                             </div>
                                         </div>
-                                        <div className="mt-2 flex items-center gap-1 text-[11px] font-medium text-red-700">
+                                        <div className="mt-2 flex items-center gap-1 text-[11px] font-medium text-danger-text">
                                             <span>
                                                 Ketuk untuk lihat detail & bayar
                                             </span>
@@ -201,7 +201,7 @@ export default function OutletDashboard({
                                     </div>
                                 ) : (
                                     /* All paid — subtle green indicator */
-                                    <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                                    <div className="flex items-center justify-between rounded-xl border border-success-border bg-success-bg p-4">
                                         <div>
                                             <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                                                 Settlement
@@ -224,7 +224,7 @@ export default function OutletDashboard({
                                                 </div>
                                             )}
                                             <svg
-                                                className="h-5 w-5 text-emerald-600"
+                                                className="h-5 w-5 text-success"
                                                 viewBox="0 0 20 20"
                                                 fill="currentColor"
                                             >
@@ -241,7 +241,7 @@ export default function OutletDashboard({
                         )}
 
                     {/* Stats — compact grid */}
-                    <div className="rounded-xl border border-border bg-white p-4">
+                    <div className="rounded-xl border border-border bg-surface p-4">
                         <div className="grid grid-cols-4 gap-2">
                             <StatCell
                                 label="Baru"
@@ -289,14 +289,14 @@ export default function OutletDashboard({
                     <div className="grid grid-cols-2 gap-3">
                         <Link
                             href="/outlet/analytics"
-                            className="flex min-h-11 items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
+                            className="flex min-h-11 items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
                         >
                             <BarChart3 className="h-5 w-5 text-primary" />
                             Analitik
                         </Link>
                         <Link
                             href="/outlet/reports"
-                            className="flex min-h-11 items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
+                            className="flex min-h-11 items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
                         >
                             <FileText className="h-5 w-5 text-primary" />
                             Laporan
@@ -317,7 +317,7 @@ export default function OutletDashboard({
                                     Lihat Semua
                                 </Link>
                             </div>
-                            <div className="divide-y divide-border rounded-xl border border-border bg-white">
+                            <div className="divide-y divide-border rounded-xl border border-border bg-surface">
                                 {lowStockItems.slice(0, 3).map((item: any) => (
                                     <div
                                         key={item.id}
@@ -385,7 +385,7 @@ function StatCell({
         <div className="text-center">
             <div className="flex items-center justify-center gap-1">
                 {alert && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-warning" />
                 )}
                 <div
                     className={`text-lg font-bold tabular-nums ${alert ? 'text-text' : 'text-text-muted'}`}
