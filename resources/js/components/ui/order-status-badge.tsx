@@ -1,16 +1,20 @@
 const styles: Record<string, string> = {
-    pending_confirmation: 'bg-amber-50 text-amber-800 ring-1 ring-amber-200',
-    confirmed: 'bg-blue-50 text-blue-800 ring-1 ring-blue-200',
-    preparing: 'bg-orange-50 text-orange-800 ring-1 ring-orange-200',
-    ready_for_pickup: 'bg-purple-50 text-purple-800 ring-1 ring-purple-200',
-    picked_up: 'bg-blue-50 text-blue-800 ring-1 ring-blue-200',
-    delivering: 'bg-indigo-50 text-indigo-800 ring-1 ring-indigo-200',
-    completed: 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200',
-    cancelled_by_customer: 'bg-red-50 text-red-800 ring-1 ring-red-200',
-    cancelled_by_outlet: 'bg-red-50 text-red-800 ring-1 ring-red-200',
-    rejected_by_outlet: 'bg-red-50 text-red-800 ring-1 ring-red-200',
-    failed_delivery: 'bg-red-50 text-red-800 ring-1 ring-red-200',
-    expired: 'bg-slate-50 text-slate-800 ring-1 ring-slate-200',
+    pending_confirmation:
+        'bg-warning-bg text-warning-text ring-1 ring-warning-border',
+    confirmed: 'bg-info-bg text-info-text ring-1 ring-info-border',
+    preparing:
+        'bg-status-progress-bg text-status-progress ring-1 ring-status-progress-border',
+    ready_for_pickup:
+        'bg-status-active-bg text-status-active ring-1 ring-status-active-border',
+    picked_up: 'bg-info-bg text-info-text ring-1 ring-info-border',
+    delivering:
+        'bg-status-transit-bg text-status-transit ring-1 ring-status-transit-border',
+    completed: 'bg-success-bg text-success-text ring-1 ring-success-border',
+    cancelled_by_customer: 'bg-danger-bg text-danger-text ring-1 ring-danger-border',
+    cancelled_by_outlet: 'bg-danger-bg text-danger-text ring-1 ring-danger-border',
+    rejected_by_outlet: 'bg-danger-bg text-danger-text ring-1 ring-danger-border',
+    failed_delivery: 'bg-danger-bg text-danger-text ring-1 ring-danger-border',
+    expired: 'bg-surface-muted text-text ring-1 ring-border',
 };
 
 const labels: Record<string, string> = {
