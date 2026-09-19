@@ -78,13 +78,16 @@ anyway (O.2), so the fix rides along.
 `assign-courier-sheet.tsx` alone is 64 palette classes — nearly a quarter of the
 role — so O.2 starts there.
 
-## Decisions still open before O.1
+## Decisions
 
-1. **Refresh boundary** — D5 makes Outlet a *refresh*, not consistency-only.
-   Which surfaces may move (colour, radius, spacing, typography) and which may
-   not (flow, wording, navigation structure)?
-2. **Visual reference** — no Outlet frames exist (`docs/design-references/`
-   holds `Customer` only). Follow `DESIGN.md` and the token set, or draw Outlet
-   frames first the way Customer was done?
-3. **Dialog component** — one shared dialog shell for the six outlet dialogs,
-   or reuse what exists?
+1. **Refresh boundary — decided 2026-09-19: token, typography, shared
+   components.** Colour moves to tokens, the type and radius scales are
+   aligned, and the repeated pieces (dialog shell, card, status badge) are
+   standardised, spacing included. Explicitly frozen: flow, wording and
+   navigation structure.
+2. **Visual reference — settled by (1).** With layout and flow frozen,
+   `DESIGN.md` plus the token set are the reference; no Outlet frames are
+   needed. Frames would only be required if structure came into scope.
+3. **Dialog component — one shared shell** for the six outlet dialogs, built on
+   the existing `components/ui` primitives where they fit. The 64 raw buttons
+   and the four sub-44px icon targets fold into that work.
