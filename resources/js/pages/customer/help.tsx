@@ -1,23 +1,16 @@
-import { Head, Link } from '@inertiajs/react';
-import { ChevronLeft } from 'lucide-react';
+import { Head } from '@inertiajs/react';
+import PageHeader from '@/components/ui/page-header';
 
 export default function Help() {
     return (
         <div className="min-h-dvh bg-background text-text">
             <Head title="Bantuan" />
 
-            <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
-                <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link
-                        href="/customer/profile"
-                        className="flex h-11 w-11 items-center justify-center rounded-chip text-text active:opacity-80"
-                    >
-                        <ChevronLeft className="h-5 w-5" />
-                    </Link>
-                    <h1 className="text-sm font-semibold text-text">Bantuan</h1>
-                    <div className="h-11 w-11" />
-                </div>
-            </header>
+            <PageHeader
+                variant="customer"
+                title="Bantuan"
+                backHref="/customer/profile"
+            />
 
             <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
                 {/* Support Contact */}

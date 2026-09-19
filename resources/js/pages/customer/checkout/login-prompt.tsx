@@ -1,30 +1,19 @@
 import { Head, Link } from '@inertiajs/react';
-import { ChevronLeft, Truck, Shield } from 'lucide-react';
+import { Truck, Shield } from 'lucide-react';
 import { GoogleIcon } from '@/components/ui/google-icon';
+import PageHeader from '@/components/ui/page-header';
 
 export default function LoginPrompt() {
     return (
         <div className="min-h-dvh bg-surface text-text">
             <Head title="Login Diperlukan" />
 
-            <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
-                <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
-                    <Link
-                        href="/customer/checkout"
-                        className="flex h-11 w-11 items-center justify-center rounded-chip text-text active:opacity-80"
-                    >
-                        <ChevronLeft className="h-5 w-5" />
-                    </Link>
-                    <div>
-                        <div className="text-sm font-semibold text-text">
-                            Login Diperlukan
-                        </div>
-                        <div className="text-[11px] text-text-muted">
-                            Untuk pengiriman ke alamat
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <PageHeader
+                variant="customer"
+                title="Login Diperlukan"
+                subtitle="Untuk pengiriman ke alamat"
+                backHref="/customer/checkout"
+            />
 
             <main className="mx-auto max-w-lg px-4 py-8">
                 <div className="flex flex-col items-center text-center">
