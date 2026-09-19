@@ -42,7 +42,7 @@ export default function OrderHeader({
     const isDanger = status ? BANNER_DANGER.includes(status) : false;
 
     return (
-        <header className="sticky top-0 z-30 border-b border-border bg-surface/95 pt-safe-header backdrop-blur">
+        <header className="sticky top-0 z-30 bg-surface/95 pt-safe-header backdrop-blur">
             <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                 <Button
                     type="button"
