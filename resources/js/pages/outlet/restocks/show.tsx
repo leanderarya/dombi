@@ -70,7 +70,7 @@ export default function OutletRestockShow({ restock }: any) {
                     {restock.status === 'requested' && (
                         <button
                             onClick={() => setShowCancelDialog(true)}
-                            className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+                            className="rounded-lg border border-danger-border px-3 py-1.5 text-xs font-semibold text-danger hover:bg-danger-bg"
                         >
                             Batalkan
                         </button>
@@ -170,7 +170,7 @@ export default function OutletRestockShow({ restock }: any) {
                                 placeholder="Opsional: kondisi barang saat diterima"
                                 maxLength={500}
                                 rows={2}
-                                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none"
                             />
                         </div>
                         <div>
@@ -183,7 +183,7 @@ export default function OutletRestockShow({ restock }: any) {
                                 placeholder="Opsional: catatan jika ada kerusakan"
                                 maxLength={500}
                                 rows={2}
-                                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none"
+                                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring focus:outline-none"
                             />
                         </div>
                     </div>

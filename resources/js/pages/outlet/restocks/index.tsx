@@ -100,7 +100,7 @@ export default function OutletRestocksIndex({
                                     <Link
                                         key={restock.id}
                                         href={`/outlet/restocks/${restock.id}`}
-                                        className="block rounded-xl border border-border bg-white p-4 transition-colors active:bg-surface-muted"
+                                        className="block rounded-xl border border-border bg-surface p-4 transition-colors active:bg-surface-muted"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="text-sm font-bold text-text">

@@ -139,7 +139,7 @@ export default function MyCouriers({
                         {c.nominee_phone} · {c.nominee_vehicle_plate}
                     </div>
                     {c.rejection_reason && (
-                        <div className="mt-1 rounded bg-red-50 px-2 py-1 text-xs text-red-700">
+                        <div className="mt-1 rounded bg-danger-bg px-2 py-1 text-xs text-danger-text">
                             Alasan: {c.rejection_reason}
                         </div>
                     )}
@@ -282,7 +282,7 @@ export default function MyCouriers({
                                                     )}
                                                     target="_blank"
                                                     rel="noreferrer"
-                                                    className="inline-flex items-center gap-1.5 rounded-[0.625rem] bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                                                    className="inline-flex items-center gap-1.5 rounded-[0.625rem] bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-hover"
                                                 >
                                                     <MessageCircle className="h-3.5 w-3.5" />
                                                     Kirim Link Aktivasi via
@@ -369,7 +369,7 @@ export default function MyCouriers({
                             className="w-full rounded-[0.625rem] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                         />
                         {errors.name && (
-                            <span className="text-xs text-red-600">
+                            <span className="text-xs text-danger">
                                 {errors.name}
                             </span>
                         )}
@@ -386,7 +386,7 @@ export default function MyCouriers({
                             className="w-full rounded-[0.625rem] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                         />
                         {errors.phone && (
-                            <span className="text-xs text-red-600">
+                            <span className="text-xs text-danger">
                                 {errors.phone}
                             </span>
                         )}
@@ -405,7 +405,7 @@ export default function MyCouriers({
                             className="w-full rounded-[0.625rem] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                         />
                         {errors.vehicle_plate && (
-                            <span className="text-xs text-red-600">
+                            <span className="text-xs text-danger">
                                 {errors.vehicle_plate}
                             </span>
                         )}
@@ -422,7 +422,7 @@ export default function MyCouriers({
                             info="wajib, maks 5 MB"
                         />
                         {errors.face_photo && (
-                            <span className="text-xs text-red-600">
+                            <span className="text-xs text-danger">
                                 {errors.face_photo}
                             </span>
                         )}
@@ -439,7 +439,7 @@ export default function MyCouriers({
                             info="wajib, maks 5 MB"
                         />
                         {errors.vehicle_photo && (
-                            <span className="text-xs text-red-600">
+                            <span className="text-xs text-danger">
                                 {errors.vehicle_photo}
                             </span>
                         )}

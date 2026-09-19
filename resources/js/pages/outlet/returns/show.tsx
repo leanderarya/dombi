@@ -18,7 +18,7 @@ export default function OutletReturnsShow({ return: ret }: any) {
             <Head title={`Return #${ret.id}`} />
 
             <div className="mt-4 pb-24">
-                <div className="rounded-xl border border-border bg-white p-4">
+                <div className="rounded-xl border border-border bg-surface p-4">
                     <div className="flex items-start justify-between gap-3">
                         <div>
                             <div className="text-sm font-bold text-text">
@@ -128,7 +128,7 @@ export default function OutletReturnsShow({ return: ret }: any) {
                 {ret.exchange_request && (
                     <Link
                         href={`/outlet/exchanges/${ret.exchange_request.id}`}
-                        className="mt-4 block rounded-xl border border-border bg-white p-4 active:opacity-80"
+                        className="mt-4 block rounded-xl border border-border bg-surface p-4 active:opacity-80"
                     >
                         <div className="text-sm font-semibold text-text">
                             Lihat Tukar Produk

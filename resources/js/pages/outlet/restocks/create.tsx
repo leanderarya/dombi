@@ -92,7 +92,7 @@ export default function CreateRestock({ families, inventories }: any) {
                                     <button
                                         type="button"
                                         onClick={() => removeItem(index)}
-                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle active:bg-red-50 active:text-red-600"
+                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle active:bg-danger-bg active:text-danger"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </button>
@@ -200,12 +200,12 @@ export default function CreateRestock({ families, inventories }: any) {
                     value={form.data.notes}
                     onChange={(e) => form.setData('notes', e.target.value)}
                     placeholder="Catatan restock (opsional)..."
-                    className="mt-1 min-h-[80px] w-full rounded-lg border border-border px-3 py-2.5 text-sm placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                    className="mt-1 min-h-[80px] w-full rounded-lg border border-border px-3 py-2.5 text-sm placeholder:text-text-subtle focus:border-ring focus:ring-1 focus:ring-ring"
                 />
             </div>
 
             {form.errors.items && (
-                <div className="mt-2 text-xs text-red-600">
+                <div className="mt-2 text-xs text-danger">
                     {form.errors.items}
                 </div>
             )}

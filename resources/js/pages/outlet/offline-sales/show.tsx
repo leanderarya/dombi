@@ -48,7 +48,7 @@ export default function OfflineSaleShow({ sale, outlet, week }: any) {
                                 <span className="text-xs text-text-muted">
                                     Penjualan Online (profit outlet)
                                 </span>
-                                <span className="text-sm font-semibold text-emerald-600 tabular-nums">
+                                <span className="text-sm font-semibold text-success tabular-nums">
                                     {formatCurrency(week.online_share)}
                                 </span>
                             </div>
@@ -67,8 +67,8 @@ export default function OfflineSaleShow({ sale, outlet, week }: any) {
                                 <span
                                     className={`text-sm font-bold tabular-nums ${
                                         week.direction === 'owner_pays_outlet'
-                                            ? 'text-emerald-600'
-                                            : 'text-red-600'
+                                            ? 'text-success'
+                                            : 'text-danger'
                                     }`}
                                 >
                                     {formatCurrency(Math.abs(week.net_amount))}
