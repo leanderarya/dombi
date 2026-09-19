@@ -197,7 +197,6 @@ class OrderController extends Controller
                 ] : null,
             ],
             'isLoggedIn' => $request->user() !== null,
-            'cancellationReasons' => OrderStatusService::cancellationReasons(),
         ]);
     }
 

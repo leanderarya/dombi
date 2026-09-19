@@ -11,7 +11,6 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import PushBanner from '@/components/shared/push-banner';
 import { Button } from '@/components/ui/button';
-import Dialog from '@/components/ui/dialog';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { copyToClipboard } from '@/lib/clipboard';
 import { openDokuCheckout, closeDokuCheckout } from '@/lib/doku-checkout';
@@ -22,11 +21,7 @@ type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max polling
 
-export default function ConfirmPage({
-    order,
-    isLoggedIn,
-    cancellationReasons = [],
-}: any) {
+export default function ConfirmPage({ order, isLoggedIn }: any) {
     const nav = useNavigation();
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(() => {
         const s = order.payment_status;
@@ -41,10 +36,6 @@ export default function ConfirmPage({
     const [copied, setCopied] = useState(false);
     const [payLoading, setPayLoading] = useState(false);
     const [payError, setPayError] = useState<string | null>(null);
-    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-    const [cancelReason, setCancelReason] = useState('');
-    const [cancelLoading, setCancelLoading] = useState(false);
-    const [needsRefund, setNeedsRefund] = useState(false);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
     const pollStart = useRef<number | null>(null);
     const submitLock = useRef(false);
@@ -172,31 +163,6 @@ export default function ConfirmPage({
             );
         }
     }, [order.order_code]);
-
-    const handleCancel = useCallback(() => {
-        if (!cancelReason) {
-            return;
-        }
-
-        setCancelLoading(true);
-
-        router.post(
-            `/customer/orders/${order.id}/cancel`,
-            { reason: cancelReason },
-            {
-                onFinish: () => setCancelLoading(false),
-                onSuccess: () => {
-                    setCancelDialogOpen(false);
-
-                    if (paymentStatus === 'paid') {
-                        setNeedsRefund(true);
-                    }
-
-                    setPaymentStatus('cancelled');
-                },
-            },
-        );
-    }, [order.id, cancelReason, paymentStatus]);
 
     const handlePay = useCallback(
         async (method?: string) => {
@@ -352,9 +318,7 @@ export default function ConfirmPage({
             bg: 'bg-danger-bg',
             border: 'border-danger-border',
             title: 'Dibatalkan',
-            message: needsRefund
-                ? 'Pesanan dibatalkan. Refund sedang diproses.'
-                : 'Pembayaran dibatalkan.',
+            message: 'Pembayaran dibatalkan.',
         },
     };
 
@@ -434,51 +398,23 @@ export default function ConfirmPage({
                     {/* Action Buttons */}
                     <div className="mt-4 space-y-3">
                         {paymentStatus === 'pending' && (
-                            <>
-                                <Button
-                                    variant="primary"
-                                    size="cta"
-                                    className="w-full"
-                                    onClick={() => handlePay()}
-                                    disabled={payLoading}
-                                >
-                                    {payLoading ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            Memproses...
-                                        </>
-                                    ) : (
-                                        'Lanjutkan Pembayaran'
-                                    )}
-                                </Button>
-                                {isLoggedIn &&
-                                    order.status === 'pending_confirmation' && (
-                                        <Button
-                                            variant="ghost"
-                                            size="lg"
-                                            className="w-full text-xs text-text-subtle active:text-danger"
-                                            onClick={() =>
-                                                setCancelDialogOpen(true)
-                                            }
-                                        >
-                                            Batalkan Pesanan
-                                        </Button>
-                                    )}
-                            </>
+                            <Button
+                                variant="primary"
+                                size="cta"
+                                className="w-full"
+                                onClick={() => handlePay()}
+                                disabled={payLoading}
+                            >
+                                {payLoading ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Memproses...
+                                    </>
+                                ) : (
+                                    'Lanjutkan Pembayaran'
+                                )}
+                            </Button>
                         )}
-
-                        {paymentStatus === 'paid' &&
-                            isLoggedIn &&
-                            order.status === 'pending_confirmation' && (
-                                <Button
-                                    variant="ghost"
-                                    size="lg"
-                                    className="w-full text-xs text-text-subtle active:text-danger"
-                                    onClick={() => setCancelDialogOpen(true)}
-                                >
-                                    Batalkan Pesanan
-                                </Button>
-                            )}
 
                         {paymentStatus === 'paid' && (
                             <Button
@@ -658,56 +594,6 @@ export default function ConfirmPage({
                         </div>
                     </div>
                 </div>
-
-                {/* Cancel Dialog */}
-                <Dialog
-                    open={cancelDialogOpen}
-                    onClose={() => setCancelDialogOpen(false)}
-                    title="Batalkan Pesanan"
-                >
-                    <p className="text-sm text-text-muted">
-                        Pesanan yang dibatalkan tidak dapat dipulihkan.
-                    </p>
-                    <div className="mt-4 space-y-2">
-                        {cancellationReasons.map((reason: string) => (
-                            <Button
-                                key={reason}
-                                type="button"
-                                variant="outline"
-                                size="lg"
-                                className={`w-full justify-start ${
-                                    cancelReason === reason
-                                        ? 'border-danger bg-danger-bg text-danger-text'
-                                        : ''
-                                }`}
-                                onClick={() => setCancelReason(reason)}
-                            >
-                                {reason}
-                            </Button>
-                        ))}
-                    </div>
-                    <div className="mt-4 flex gap-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="cta"
-                            className="flex-1"
-                            onClick={() => setCancelDialogOpen(false)}
-                        >
-                            Kembali
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="danger"
-                            size="cta"
-                            className="flex-1"
-                            onClick={handleCancel}
-                            disabled={!cancelReason || cancelLoading}
-                        >
-                            {cancelLoading ? 'Membatalkan...' : 'Ya, Batalkan'}
-                        </Button>
-                    </div>
-                </Dialog>
             </div>
         </CustomerMobileLayout>
     );
