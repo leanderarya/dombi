@@ -24,7 +24,7 @@ function BigRow({
         tone === 'emerald'
             ? 'text-emerald-700'
             : tone === 'red'
-              ? 'text-red-600'
+              ? 'text-danger'
               : tone === 'muted'
                 ? 'text-text-muted'
                 : 'text-text';
@@ -68,7 +68,7 @@ export default function SettlementShow({
                     </div>
                     <div
                         className={`mt-1 text-[11px] font-semibold ${
-                            isOwnerPay ? 'text-emerald-600' : 'text-red-600'
+                            isOwnerPay ? 'text-success' : 'text-danger'
                         }`}
                     >
                         {isOwnerPay
@@ -177,7 +177,7 @@ export default function SettlementShow({
                                             <div
                                                 className={`text-sm font-medium ${
                                                     isPayout
-                                                        ? 'text-emerald-600'
+                                                        ? 'text-success'
                                                         : 'text-text'
                                                 }`}
                                             >
@@ -205,13 +205,15 @@ export default function SettlementShow({
                     <div
                         className={`mt-4 rounded-xl border p-4 ${
                             isOwnerPay
-                                ? 'border-emerald-200 bg-emerald-50'
-                                : 'border-red-200 bg-red-50'
+                                ? 'border-success-border bg-success-bg'
+                                : 'border-danger-border bg-danger-bg'
                         }`}
                     >
                         <div
                             className={`text-[11px] font-semibold uppercase ${
-                                isOwnerPay ? 'text-emerald-700' : 'text-red-700'
+                                isOwnerPay
+                                    ? 'text-emerald-700'
+                                    : 'text-danger-text'
                             }`}
                         >
                             {isOwnerPay
@@ -220,7 +222,9 @@ export default function SettlementShow({
                         </div>
                         <div
                             className={`mt-1 text-xl font-bold tabular-nums ${
-                                isOwnerPay ? 'text-emerald-700' : 'text-red-700'
+                                isOwnerPay
+                                    ? 'text-emerald-700'
+                                    : 'text-danger-text'
                             }`}
                         >
                             {formatCurrency(settlement.outstanding)}
