@@ -62,7 +62,7 @@ export default function OrderHeader({
                 >
                     <ChevronLeft className="h-5 w-5" />
                 </Button>
-                <h1 className="text-sm font-semibold text-text">{title}</h1>
+                <h1 className="text-base font-bold text-text">{title}</h1>
                 {trackingUrl ? (
                     <Button
                         type="button"
