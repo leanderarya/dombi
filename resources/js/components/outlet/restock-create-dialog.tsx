@@ -87,7 +87,7 @@ export default function RestockCreateDialog({
 
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-2xl bg-white shadow-2xl"
+                className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-2xl bg-surface shadow-2xl"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -96,7 +96,7 @@ export default function RestockCreateDialog({
                     </h2>
                     <button
                         onClick={onClose}
-                        className="flex h-10 w-10 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                        className="flex h-11 w-11 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -140,7 +140,7 @@ export default function RestockCreateDialog({
                                             );
                                         }
                                     }}
-                                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
+                                    className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
                                 >
                                     <Minus className="h-3.5 w-3.5" />
                                 </button>
@@ -175,7 +175,7 @@ export default function RestockCreateDialog({
                                             current + 1,
                                         );
                                     }}
-                                    className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
+                                    className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
                                 >
                                     <Plus className="h-3.5 w-3.5" />
                                 </button>
@@ -211,7 +211,7 @@ export default function RestockCreateDialog({
                         <button
                             type="submit"
                             disabled={form.processing || selectedCount === 0}
-                            className="h-11 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                            className="h-11 w-full rounded-xl bg-primary text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
                         >
                             {form.processing ? 'Mengirim...' : 'Kirim Restock'}
                         </button>

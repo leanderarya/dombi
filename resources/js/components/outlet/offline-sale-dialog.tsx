@@ -85,7 +85,7 @@ export default function OfflineSaleDialog({
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl"
+                className="relative w-full max-w-md rounded-2xl bg-surface shadow-2xl"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -94,7 +94,7 @@ export default function OfflineSaleDialog({
                     </h2>
                     <button
                         onClick={onClose}
-                        className="flex h-10 w-10 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted"
+                        className="flex h-11 w-11 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted"
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -148,12 +148,12 @@ export default function OfflineSaleDialog({
                                     className="min-h-11 w-full rounded-lg border border-border bg-surface text-center text-sm font-semibold text-text focus:ring-2 focus:ring-primary/30 focus:outline-none"
                                 />
                                 {qtyOverflow && (
-                                    <p className="mt-1 text-xs text-red-600">
+                                    <p className="mt-1 text-xs text-danger">
                                         Maksimal {qtyMax} (stok tersedia)
                                     </p>
                                 )}
                                 {qtyValid && qtyNum < 1 && (
-                                    <p className="mt-1 text-xs text-red-600">
+                                    <p className="mt-1 text-xs text-danger">
                                         Jumlah minimal 1
                                     </p>
                                 )}
@@ -175,7 +175,7 @@ export default function OfflineSaleDialog({
                         </div>
 
                         {form.errors.quantity && (
-                            <p className="text-xs text-red-600">
+                            <p className="text-xs text-danger">
                                 {form.errors.quantity}
                             </p>
                         )}
@@ -199,7 +199,7 @@ export default function OfflineSaleDialog({
                                 !qtyValid ||
                                 qtyOverflow
                             }
-                            className="min-h-11 w-full rounded-lg bg-emerald-600 text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                            className="min-h-11 w-full rounded-lg bg-primary text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
                         >
                             {form.processing
                                 ? 'Menyimpan...'

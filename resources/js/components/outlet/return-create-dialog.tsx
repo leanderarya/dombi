@@ -142,7 +142,7 @@ export default function ReturnCreateDialog({
 
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-2xl bg-white shadow-2xl"
+                className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-2xl bg-surface shadow-2xl"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -151,7 +151,7 @@ export default function ReturnCreateDialog({
                     </h2>
                     <button
                         onClick={onClose}
-                        className="flex h-10 w-10 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                        className="flex h-11 w-11 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -206,7 +206,7 @@ export default function ReturnCreateDialog({
                                         <button
                                             type="button"
                                             onClick={() => removeImage(index)}
-                                            className="absolute top-0.5 right-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white"
+                                            className="bg-danger-bg0 absolute top-0.5 right-0.5 flex h-7 w-7 items-center justify-center rounded-full text-white"
                                         >
                                             <Trash2 className="h-3 w-3" />
                                         </button>
@@ -248,7 +248,7 @@ export default function ReturnCreateDialog({
                                     return (
                                         <div
                                             key={v.id}
-                                            className={`rounded-xl border p-3 transition-colors ${isSelected ? 'border-primary bg-primary-light' : 'border-border bg-white'}`}
+                                            className={`rounded-xl border p-3 transition-colors ${isSelected ? 'border-primary bg-primary-light' : 'border-border bg-surface'}`}
                                         >
                                             <button
                                                 type="button"
@@ -289,7 +289,7 @@ export default function ReturnCreateDialog({
                                                                 ) ?? 1) - 1,
                                                             )
                                                         }
-                                                        className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-text-muted"
+                                                        className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted"
                                                     >
                                                         <Minus className="h-3.5 w-3.5" />
                                                     </button>
@@ -323,7 +323,7 @@ export default function ReturnCreateDialog({
                                                                 ) ?? 1) + 1,
                                                             )
                                                         }
-                                                        className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-text-muted"
+                                                        className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted"
                                                     >
                                                         <Plus className="h-3.5 w-3.5" />
                                                     </button>
@@ -346,7 +346,7 @@ export default function ReturnCreateDialog({
                             disabled={
                                 form.processing || selectedVariants.size === 0
                             }
-                            className="h-11 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                            className="h-11 w-full rounded-xl bg-primary text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
                         >
                             {form.processing ? 'Mengirim...' : 'Ajukan Return'}
                         </button>

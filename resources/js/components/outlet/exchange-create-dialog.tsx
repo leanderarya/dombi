@@ -70,7 +70,7 @@ export default function ExchangeCreateDialog({
 
             <div
                 onClick={(e) => e.stopPropagation()}
-                className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-2xl bg-white shadow-2xl"
+                className="relative flex max-h-[85vh] w-full max-w-md flex-col rounded-2xl bg-surface shadow-2xl"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -79,7 +79,7 @@ export default function ExchangeCreateDialog({
                     </h2>
                     <button
                         onClick={onClose}
-                        className="flex h-10 w-10 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                        className="flex h-11 w-11 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -91,10 +91,10 @@ export default function ExchangeCreateDialog({
                 >
                     <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
                         {/* Return Section */}
-                        <div className="space-y-2.5 rounded-xl border border-red-200 bg-red-50/50 p-2.5">
+                        <div className="space-y-2.5 rounded-xl border border-danger-border bg-danger-bg/50 p-2.5">
                             <div className="mb-1 flex items-center gap-2">
-                                <div className="h-2 w-2 shrink-0 rounded-full bg-red-500" />
-                                <span className="text-xs font-bold text-red-700">
+                                <div className="bg-danger-bg0 h-2 w-2 shrink-0 rounded-full" />
+                                <span className="text-xs font-bold text-danger-text">
                                     Dikembalikan
                                 </span>
                             </div>
@@ -126,7 +126,7 @@ export default function ExchangeCreateDialog({
                                                         1,
                                                 )
                                             }
-                                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
+                                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
                                         >
                                             <Minus className="h-3 w-3" />
                                         </button>
@@ -145,7 +145,7 @@ export default function ExchangeCreateDialog({
                                                     ),
                                                 )
                                             }
-                                            className="h-8 w-14 rounded-lg border border-border bg-white text-center text-sm font-semibold text-text focus:ring-2 focus:ring-red-300 focus:outline-none"
+                                            className="h-8 w-14 rounded-lg border border-border bg-surface text-center text-sm font-semibold text-text focus:ring-2 focus:ring-danger-border focus:outline-none"
                                         />
                                         <button
                                             type="button"
@@ -156,7 +156,7 @@ export default function ExchangeCreateDialog({
                                                         1,
                                                 )
                                             }
-                                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
+                                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
                                         >
                                             <Plus className="h-3 w-3" />
                                         </button>
@@ -176,16 +176,16 @@ export default function ExchangeCreateDialog({
                                             )
                                         }
                                         placeholder="Opsional"
-                                        className="h-8 w-full rounded-lg border border-border bg-white px-2.5 text-sm text-text placeholder:text-text-subtle focus:ring-2 focus:ring-red-300 focus:outline-none"
+                                        className="h-8 w-full rounded-lg border border-border bg-surface px-2.5 text-sm text-text placeholder:text-text-subtle focus:ring-2 focus:ring-danger-border focus:outline-none"
                                     />
                                 </div>
                             </div>
                         </div>
 
                         {/* Replacement Section */}
-                        <div className="space-y-2.5 rounded-xl border border-emerald-200 bg-emerald-50/50 p-2.5">
+                        <div className="space-y-2.5 rounded-xl border border-success-border bg-success-bg/50 p-2.5">
                             <div className="mb-1 flex items-center gap-2">
-                                <div className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                                <div className="h-2 w-2 shrink-0 rounded-full bg-success" />
                                 <span className="text-xs font-bold text-emerald-700">
                                     Pengganti
                                 </span>
@@ -220,7 +220,7 @@ export default function ExchangeCreateDialog({
                                                         1,
                                                 )
                                             }
-                                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
+                                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
                                         >
                                             <Minus className="h-3 w-3" />
                                         </button>
@@ -241,7 +241,7 @@ export default function ExchangeCreateDialog({
                                                     ),
                                                 )
                                             }
-                                            className="h-8 w-14 rounded-lg border border-border bg-white text-center text-sm font-semibold text-text focus:ring-2 focus:ring-emerald-300 focus:outline-none"
+                                            className="h-8 w-14 rounded-lg border border-border bg-surface text-center text-sm font-semibold text-text focus:ring-2 focus:ring-ring focus:outline-none"
                                         />
                                         <button
                                             type="button"
@@ -253,7 +253,7 @@ export default function ExchangeCreateDialog({
                                                         1,
                                                 )
                                             }
-                                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
+                                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
                                         >
                                             <Plus className="h-3 w-3" />
                                         </button>
@@ -273,7 +273,7 @@ export default function ExchangeCreateDialog({
                                             )
                                         }
                                         placeholder="Opsional"
-                                        className="h-8 w-full rounded-lg border border-border bg-white px-2.5 text-sm text-text placeholder:text-text-subtle focus:ring-2 focus:ring-emerald-300 focus:outline-none"
+                                        className="h-8 w-full rounded-lg border border-border bg-surface px-2.5 text-sm text-text placeholder:text-text-subtle focus:ring-2 focus:ring-ring focus:outline-none"
                                     />
                                 </div>
                             </div>
@@ -289,7 +289,7 @@ export default function ExchangeCreateDialog({
                                 !form.data.return_variant_id ||
                                 !form.data.replacement_variant_id
                             }
-                            className="h-11 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                            className="h-11 w-full rounded-xl bg-primary text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
                         >
                             {form.processing
                                 ? 'Mengirim...'
