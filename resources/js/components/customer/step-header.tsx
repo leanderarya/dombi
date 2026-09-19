@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { Check, ChevronLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface StepConfig {
     label: string;
@@ -19,18 +20,20 @@ export default function StepHeader({
     backHref,
 }: Props) {
     return (
-        <header className="sticky top-0 z-30 border-b border-border bg-white/95 pt-safe backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-border bg-surface/95 pt-safe backdrop-blur">
             <div className="mx-auto max-w-lg px-4 py-3">
                 {/* Top row: back button + title */}
                 <div className="mb-3 flex items-center justify-between">
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => router.visit(backHref)}
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
+                        className="h-11 w-11 rounded-chip text-text"
                         aria-label="Kembali"
                     >
                         <ChevronLeft className="h-5 w-5" />
-                    </button>
+                    </Button>
                     <h1 className="text-base font-semibold text-text">
                         {title}
                     </h1>
@@ -50,9 +53,9 @@ export default function StepHeader({
                                     <div
                                         className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
                                             isCompleted
-                                                ? 'bg-emerald-600 text-white'
+                                                ? 'bg-primary text-white'
                                                 : isCurrent
-                                                  ? 'bg-emerald-100 text-emerald-700 ring-2 ring-emerald-600'
+                                                  ? 'bg-primary-light text-primary ring-2 ring-primary'
                                                   : 'bg-surface-muted text-text-subtle'
                                         }`}
                                     >
@@ -65,7 +68,7 @@ export default function StepHeader({
                                     <span
                                         className={`mt-1 text-[11px] font-medium ${
                                             isCurrent
-                                                ? 'text-emerald-700'
+                                                ? 'text-primary'
                                                 : isCompleted
                                                   ? 'text-text'
                                                   : 'text-text-subtle'
@@ -80,7 +83,7 @@ export default function StepHeader({
                                     <div
                                         className={`mx-1 mb-4 h-0.5 w-8 rounded-full ${
                                             isCompleted
-                                                ? 'bg-emerald-600'
+                                                ? 'bg-primary'
                                                 : 'bg-border'
                                         }`}
                                     />

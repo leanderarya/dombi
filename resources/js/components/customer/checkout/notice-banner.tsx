@@ -1,4 +1,6 @@
 import { AlertTriangle, Info, X, XCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Notice from '@/components/ui/notice';
 
 type Variant = 'error' | 'warning' | 'info';
 
@@ -10,28 +12,10 @@ interface Props {
     action?: { label: string; onClick: () => void };
 }
 
-const STYLES: Record<
-    Variant,
-    { container: string; icon: string; title: string; message: string }
-> = {
-    error: {
-        container: 'border-red-200 bg-red-50',
-        icon: 'text-red-600',
-        title: 'text-red-800',
-        message: 'text-red-600',
-    },
-    warning: {
-        container: 'border-amber-200 bg-amber-50',
-        icon: 'text-amber-600',
-        title: 'text-amber-800',
-        message: 'text-amber-600',
-    },
-    info: {
-        container: 'border-blue-200 bg-blue-50',
-        icon: 'text-blue-600',
-        title: 'text-blue-800',
-        message: 'text-blue-600',
-    },
+const TONE: Record<Variant, 'danger' | 'warning' | 'info'> = {
+    error: 'danger',
+    warning: 'warning',
+    info: 'info',
 };
 
 const ICONS: Record<Variant, typeof XCircle> = {
@@ -47,41 +31,44 @@ export default function NoticeBanner({
     onDismiss,
     action,
 }: Props) {
-    const style = STYLES[variant];
-    const Icon = ICONS[variant];
-
-    return (
-        <div
-            className={`flex items-start gap-3 rounded-xl border ${style.container} p-4`}
-        >
-            <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${style.icon}`} />
-            <div className="min-w-0 flex-1">
-                <p className={`text-sm font-semibold ${style.title}`}>
-                    {title}
-                </p>
-                {message && (
-                    <p className={`mt-1 text-xs ${style.message}`}>{message}</p>
-                )}
+    const controls =
+        action || onDismiss ? (
+            <div className="flex items-center gap-2">
                 {action && (
-                    <button
+                    <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={action.onClick}
-                        className={`mt-2 min-h-[44px] text-xs font-semibold ${style.title} active:opacity-80`}
+                        className="min-h-11 text-current"
                     >
                         {action.label}
-                    </button>
+                    </Button>
+                )}
+                {onDismiss && (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={onDismiss}
+                        aria-label="Tutup"
+                        className="ml-auto h-11 w-11 shrink-0 text-current"
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
                 )}
             </div>
-            {onDismiss && (
-                <button
-                    type="button"
-                    onClick={onDismiss}
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center ${style.icon} active:opacity-80`}
-                    aria-label="Tutup"
-                >
-                    <X className="h-4 w-4" />
-                </button>
-            )}
-        </div>
+        ) : undefined;
+
+    return (
+        <Notice
+            variant="block"
+            tone={TONE[variant]}
+            icon={ICONS[variant]}
+            title={title}
+            action={controls}
+        >
+            {message}
+        </Notice>
     );
 }
