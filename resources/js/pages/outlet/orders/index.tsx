@@ -137,7 +137,7 @@ export default function OutletOrdersIndex({
                                 <span className="font-semibold text-warning-text">
                                     {count} pesanan menunggu konfirmasi
                                 </span>
-                                <span className="ml-1 text-warning">
+                                <span className="ml-1 text-warning-text">
                                     &rarr;
                                 </span>
                             </button>

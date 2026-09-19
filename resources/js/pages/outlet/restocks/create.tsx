@@ -92,7 +92,7 @@ export default function CreateRestock({ families, inventories }: any) {
                                     <button
                                         type="button"
                                         onClick={() => removeItem(index)}
-                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle active:bg-danger-bg active:text-danger"
+                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle active:bg-danger-bg active:text-danger-text"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </button>

@@ -183,7 +183,7 @@ export default function OutletExchangesCreate({
                                 {pairs.length > 1 && (
                                     <button
                                         onClick={() => removePair(index)}
-                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle hover:bg-danger-bg hover:text-danger"
+                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle hover:bg-danger-bg hover:text-danger-text"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </button>
@@ -212,7 +212,7 @@ export default function OutletExchangesCreate({
 
                             {/* Replacement side */}
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-success">
+                                <label className="mb-1 block text-xs font-medium text-success-text">
                                     Diganti Dengan (Produk Baru)
                                 </label>
                                 <select

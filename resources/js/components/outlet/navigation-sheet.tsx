@@ -230,7 +230,7 @@ export default function OutletNavigationSheet({
                         onClose();
                         router.post('/logout');
                     }}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-medium text-danger active:bg-danger-bg"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-medium text-danger-text active:bg-danger-bg"
                 >
                     <LogOut className="h-5 w-5" />
                     <span>Keluar</span>
