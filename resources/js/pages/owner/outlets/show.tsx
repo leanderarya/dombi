@@ -364,7 +364,7 @@ export default function OutletShow({
                                         <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Outstanding
                                         </div>
-                                        <div className="mt-0.5 font-heading text-base font-bold text-red-600 tabular-nums">
+                                        <div className="mt-0.5 font-heading text-base font-bold text-danger tabular-nums">
                                             {formatCurrency(
                                                 settlementSummary.outstanding,
                                             )}
@@ -374,7 +374,7 @@ export default function OutletShow({
                                         <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Terlambat
                                         </div>
-                                        <div className="mt-0.5 font-heading text-base font-bold text-amber-600 tabular-nums">
+                                        <div className="mt-0.5 font-heading text-base font-bold text-warning-text tabular-nums">
                                             {settlementSummary.overdue_count}
                                         </div>
                                     </div>
@@ -382,7 +382,7 @@ export default function OutletShow({
                                         <div className="text-xs font-semibold text-text-subtle tabular-nums">
                                             Dibayar
                                         </div>
-                                        <div className="mt-0.5 font-heading text-base font-bold text-emerald-600 tabular-nums">
+                                        <div className="mt-0.5 font-heading text-base font-bold text-success-text tabular-nums">
                                             {formatCurrency(
                                                 settlementSummary.paid_this_month,
                                             )}
@@ -556,7 +556,7 @@ export default function OutletShow({
                                 </div>
                             </div>
                             <div className="rounded-xl border border-border bg-surface-muted/50 p-3">
-                                <div className="font-heading text-base font-bold text-emerald-600 tabular-nums">
+                                <div className="font-heading text-base font-bold text-success-text tabular-nums">
                                     {activeDeliveriesCount ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-subtle">
@@ -572,9 +572,9 @@ export default function OutletShow({
                                 </div>
                             </div>
                             <div
-                                className={`rounded-xl border p-3 ${Number(outlet.low_stock_count) > 0 ? 'border-amber-200 bg-amber-50' : 'border-border bg-surface-muted/50'}`}
+                                className={`rounded-xl border p-3 ${Number(outlet.low_stock_count) > 0 ? 'border-warning-border bg-warning' : 'border-border bg-surface-muted/50'}`}
                             >
-                                <div className="font-heading text-base font-bold text-amber-600 tabular-nums">
+                                <div className="font-heading text-base font-bold text-warning-text tabular-nums">
                                     {outlet.low_stock_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-subtle">

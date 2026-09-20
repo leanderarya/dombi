@@ -251,7 +251,7 @@ export default function DeliveryTiersIndex({
                                                     onClick={() =>
                                                         setDeleteId(tier.id)
                                                     }
-                                                    className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                                                    className="text-danger hover:bg-danger hover:text-danger"
                                                     aria-label={`Hapus tier ${tier.min_km}–${tier.max_km} km`}
                                                 >
                                                     <Trash2
@@ -363,7 +363,7 @@ export default function DeliveryTiersIndex({
                     {Object.keys(addForm.errors).length > 0 && (
                         <div className="mt-2">
                             {Object.values(addForm.errors).map((err, i) => (
-                                <p key={i} className="text-xs text-red-600">
+                                <p key={i} className="text-xs text-danger">
                                     {err}
                                 </p>
                             ))}
@@ -467,7 +467,7 @@ export default function DeliveryTiersIndex({
                     {Object.keys(editForm.errors).length > 0 && (
                         <div className="mt-2">
                             {Object.values(editForm.errors).map((err, i) => (
-                                <p key={i} className="text-xs text-red-600">
+                                <p key={i} className="text-xs text-danger">
                                     {err}
                                 </p>
                             ))}

@@ -72,31 +72,33 @@ export default function CustomerShow({ customer, orders, stats }: any) {
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                     <StatCard
                         icon={
-                            <ShoppingBag className="h-5 w-5 text-[#2563EB]" />
+                            <ShoppingBag className="h-5 w-5 text-[var(--color-info)]" />
                         }
                         label="Total Order"
                         value={stats.total_orders}
-                        tone="bg-[#2563EB]/10 text-[#2563EB]"
+                        tone="bg-[var(--color-info)]/10 text-[var(--color-info)]"
                     />
                     <StatCard
                         icon={
-                            <DollarSign className="h-5 w-5 text-emerald-600" />
+                            <DollarSign className="h-5 w-5 text-success-text" />
                         }
                         label="Total Belanja"
                         value={formatCurrency(stats.total_spend)}
-                        tone="bg-emerald-500/10 text-emerald-600"
+                        tone="bg-success/10 text-success-text"
                     />
                     <StatCard
-                        icon={<Receipt className="h-5 w-5 text-amber-600" />}
+                        icon={<Receipt className="h-5 w-5 text-warning-text" />}
                         label="Rata-rata Order"
                         value={formatCurrency(stats.avg_order)}
-                        tone="bg-amber-500/10 text-amber-600"
+                        tone="bg-warning/10 text-warning-text"
                     />
                     <StatCard
-                        icon={<Clock className="h-5 w-5 text-[#7C3AED]" />}
+                        icon={
+                            <Clock className="h-5 w-5 text-[var(--color-status-active)]" />
+                        }
                         label="Terakhir Belanja"
                         value={formatDate(stats.last_order_at)}
-                        tone="bg-[#7C3AED]/10 text-[#7C3AED]"
+                        tone="bg-[var(--color-status-active)]/10 text-[var(--color-status-active)]"
                     />
                 </div>
 

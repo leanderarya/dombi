@@ -330,24 +330,24 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         )}
 
                         {exchange.status === 'completed' && (
-                            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-success-border bg-primary p-3 text-center">
                                 <CheckCircle2
-                                    className="mx-auto h-5 w-5 text-emerald-500"
+                                    className="mx-auto h-5 w-5 text-success-text"
                                     aria-hidden="true"
                                 />
-                                <div className="mt-1 text-xs font-semibold text-emerald-800">
+                                <div className="mt-1 text-xs font-semibold text-success-text">
                                     Tukar Produk Selesai
                                 </div>
                             </div>
                         )}
 
                         {exchange.status === 'rejected' && (
-                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-danger-border bg-danger p-3 text-center">
                                 <XCircle
-                                    className="mx-auto h-5 w-5 text-red-500"
+                                    className="mx-auto h-5 w-5 text-danger"
                                     aria-hidden="true"
                                 />
-                                <div className="mt-1 text-xs font-semibold text-red-800">
+                                <div className="mt-1 text-xs font-semibold text-danger-text">
                                     Tukar Produk Ditolak
                                 </div>
                             </div>
@@ -489,7 +489,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         rows={3}
                     />
                     {rejectForm.errors.reason && (
-                        <div className="text-xs text-red-500">
+                        <div className="text-xs text-danger">
                             {rejectForm.errors.reason}
                         </div>
                     )}

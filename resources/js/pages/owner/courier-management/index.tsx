@@ -147,7 +147,7 @@ export default function CourierManagement() {
                             <span className="text-xs font-medium text-text-muted">
                                 Ongkir Masuk
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-info)]/10 text-[var(--color-info)]">
                                 <Wallet className="h-5 w-5" />
                             </span>
                         </div>
@@ -160,7 +160,7 @@ export default function CourierManagement() {
                             <span className="text-xs font-medium text-text-muted">
                                 Cost Eksternal
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning-text">
                                 <Truck className="h-5 w-5" />
                             </span>
                         </div>
@@ -173,12 +173,12 @@ export default function CourierManagement() {
                             <span className="text-xs font-medium text-text-muted">
                                 Net
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                                 <Wallet className="h-5 w-5" />
                             </span>
                         </div>
                         <div
-                            className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${(revenueSummary?.net ?? 0) < 0 ? 'text-red-600' : 'text-text'}`}
+                            className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${(revenueSummary?.net ?? 0) < 0 ? 'text-danger' : 'text-text'}`}
                         >
                             {formatCurrency(revenueSummary?.net ?? 0)}
                         </div>
@@ -188,7 +188,7 @@ export default function CourierManagement() {
                             <span className="text-xs font-medium text-text-muted">
                                 Jumlah Delivery
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-status-active)]/10 text-[var(--color-status-active)]">
                                 <Users className="h-5 w-5" />
                             </span>
                         </div>
@@ -669,7 +669,7 @@ export default function CourierManagement() {
                                     rows={3}
                                 />
                                 {rejectForm.errors.reason && (
-                                    <span className="text-xs text-red-600">
+                                    <span className="text-xs text-danger">
                                         {rejectForm.errors.reason}
                                     </span>
                                 )}

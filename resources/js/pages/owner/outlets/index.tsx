@@ -199,7 +199,7 @@ export default function OutletsIndex({ outlets }: any) {
                                             <div
                                                 className={`text-sm font-bold tabular-nums ${
                                                     lowStock > 0
-                                                        ? 'text-amber-600'
+                                                        ? 'text-warning-text'
                                                         : 'text-text'
                                                 }`}
                                             >

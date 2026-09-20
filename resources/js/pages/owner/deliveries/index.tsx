@@ -66,7 +66,7 @@ export default function OwnerDeliveriesIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Pengiriman Aktif
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-info)]/10 text-[var(--color-info)]">
                             <Truck className="h-5 w-5" />
                         </span>
                     </div>
@@ -83,7 +83,7 @@ export default function OwnerDeliveriesIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Selesai Hari Ini
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                             <CheckCircle className="h-5 w-5" />
                         </span>
                     </div>
@@ -100,11 +100,11 @@ export default function OwnerDeliveriesIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Gagal
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-danger/10 text-danger">
                             <XCircle className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold text-red-600 tabular-nums sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-danger tabular-nums sm:text-2xl">
                         {stats.failed_today ?? 0}
                     </div>
                     <p className="text-[11px] text-text-muted">
@@ -117,7 +117,7 @@ export default function OwnerDeliveriesIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Total Hari Ini
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-success)]/10 text-[var(--color-success)]">
                             <Package className="h-5 w-5" />
                         </span>
                     </div>
@@ -215,7 +215,7 @@ export default function OwnerDeliveriesIndex({
                                 return (
                                     <TableRow
                                         key={d.id}
-                                        className="border-t border-border/20 transition-colors hover:bg-emerald-50/40"
+                                        className="border-t border-border/20 transition-colors hover:bg-primary/40"
                                     >
                                         <TableCell className="px-4 py-3 font-mono font-bold text-primary tabular-nums">
                                             {d.order?.order_code ?? '-'}

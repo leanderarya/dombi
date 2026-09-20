@@ -83,7 +83,7 @@ export default function CreateCourier() {
                                             'flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold transition-all',
                                             isSelected
                                                 ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
-                                                : 'border-border bg-surface text-text-muted hover:bg-emerald-50/40',
+                                                : 'border-border bg-surface text-text-muted hover:bg-primary/40',
                                         )}
                                     >
                                         <Icon
@@ -96,7 +96,7 @@ export default function CreateCourier() {
                             })}
                         </div>
                         {form.errors.vehicle_type && (
-                            <p className="mt-1 text-xs text-red-500">
+                            <p className="mt-1 text-xs text-danger">
                                 {form.errors.vehicle_type}
                             </p>
                         )}

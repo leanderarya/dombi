@@ -62,7 +62,7 @@ export default function CustomersIndex({ customers }: any) {
                                 {customers.data.map((customer: any) => (
                                     <TableRow
                                         key={customer.id}
-                                        className="cursor-pointer border-t border-border/20 transition-colors hover:bg-emerald-50/40"
+                                        className="cursor-pointer border-t border-border/20 transition-colors hover:bg-primary/40"
                                         onClick={() =>
                                             router.visit(
                                                 `/owner/customers/${customer.id}`,
