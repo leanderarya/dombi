@@ -1,6 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { LogOut, User, Shield, Phone, Package } from 'lucide-react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { Button } from '@/components/ui/button';
 
 export default function OwnerProfile() {
     const { auth, appVersion } = usePage<any>().props;
@@ -78,29 +79,33 @@ export default function OwnerProfile() {
                             <div className="mb-3 text-xs font-medium text-text-subtle">
                                 Quick Actions
                             </div>
-                            <button
+                            <Button
                                 onClick={() => router.post('/logout')}
-                                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-danger-border bg-danger text-sm font-bold text-danger-border transition-all duration-150 hover:bg-danger-bg active:opacity-80"
+                                variant="outline"
+                                size="cta"
+                                className="border-danger-border text-danger-text hover:bg-danger-bg"
                             >
                                 <LogOut
                                     className="h-4 w-4"
                                     aria-hidden="true"
                                 />
                                 Logout
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
 
                 {/* Mobile logout */}
                 <div className="mt-4 lg:hidden">
-                    <button
+                    <Button
                         onClick={() => router.post('/logout')}
-                        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-danger-border bg-danger text-sm font-bold text-danger-border transition-all duration-150 hover:bg-danger-bg active:opacity-80"
+                        variant="outline"
+                        size="cta"
+                        className="border-danger-border text-danger-text hover:bg-danger-bg"
                     >
                         <LogOut className="h-4 w-4" aria-hidden="true" />
                         Logout
-                    </button>
+                    </Button>
                 </div>
             </div>
         </OwnerPageShell>

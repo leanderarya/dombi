@@ -233,42 +233,47 @@ export default function PenukaranTab({
                                 </div>
                                 {ex.status === 'submitted' ? (
                                     <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
-                                        <button
+                                        <Button
                                             type="button"
                                             onClick={() => {
                                                 setApproveId(ex.id);
                                                 setApproveNotes('');
                                             }}
-                                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white active:bg-primary/90"
+                                            size="lg"
+                                            className="flex-1"
                                         >
                                             <CheckCircle2 className="h-3.5 w-3.5" />
                                             Setujui
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                             type="button"
                                             onClick={() =>
                                                 router.visit(
                                                     `/owner/exchanges/${ex.id}`,
                                                 )
                                             }
-                                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-text-muted active:bg-surface-muted"
+                                            variant="outline"
+                                            size="lg"
+                                            className="flex-1"
                                         >
                                             Tinjau
-                                        </button>
+                                        </Button>
                                     </div>
                                 ) : (
                                     <div className="mt-3 border-t border-border pt-3">
-                                        <button
+                                        <Button
                                             type="button"
                                             onClick={() =>
                                                 router.visit(
                                                     `/owner/exchanges/${ex.id}`,
                                                 )
                                             }
-                                            className="w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold text-text-muted active:bg-surface-muted"
+                                            variant="outline"
+                                            size="lg"
+                                            className="w-full"
                                         >
                                             Lihat Detail
-                                        </button>
+                                        </Button>
                                     </div>
                                 )}
                             </div>
