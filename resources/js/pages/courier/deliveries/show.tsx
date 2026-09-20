@@ -13,6 +13,7 @@ import {
     XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
@@ -302,33 +303,33 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                 {/* Quick Contact */}
                 {order.customer_phone && (
                     <div className="mt-3 flex gap-2">
-                        <button
+                        <Button
                             onClick={whatsappCustomer}
-                            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors active:opacity-80"
+                            size="lg"
+                            className="flex-1"
                         >
                             <MessageCircle className="h-4 w-4" />
                             WhatsApp
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             onClick={callCustomer}
-                            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
+                            variant="outline"
+                            size="lg"
+                            className="flex-1"
                         >
                             <Phone className="h-4 w-4" />
                             Telepon
-                        </button>
+                        </Button>
                     </div>
                 )}
             </SectionCard>
 
             {/* Navigation */}
             {order.latitude && order.longitude && (
-                <button
-                    onClick={openMaps}
-                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white transition-colors active:opacity-80"
-                >
+                <Button onClick={openMaps} size="lg" className="w-full">
                     <MapPin className="h-4 w-4" />
                     Buka di Google Maps
-                </button>
+                </Button>
             )}
 
             {/* Outlet + Pesanan */}
@@ -602,18 +603,22 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <button
+                    <Button
                         onClick={() => setShowReturnSheet(false)}
-                        className="flex-1 rounded-lg border border-border bg-surface px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
+                        variant="outline"
+                        size="lg"
+                        className="flex-1"
                     >
                         Batal
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={returnToOutlet}
-                        className="flex-1 rounded-lg bg-danger px-4 py-3 text-sm font-bold text-white transition-colors active:bg-danger"
+                        variant="destructive"
+                        size="lg"
+                        className="flex-1"
                     >
                         Ya, Kembalikan
-                    </button>
+                    </Button>
                 </div>
             </Dialog>
         </CourierLayout>
@@ -721,13 +726,14 @@ function CompleteSheetContent({
                 </p>
             )}
 
-            <button
+            <Button
                 type="submit"
                 disabled={form.processing}
-                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-white transition-colors active:bg-primary-hover disabled:opacity-50"
+                size="cta"
+                className="mt-4 w-full"
             >
                 {form.processing ? 'Memproses...' : 'Konfirmasi Selesai'}
-            </button>
+            </Button>
         </form>
     );
 }
@@ -805,13 +811,15 @@ function FailSheetContent({
                 </p>
             )}
 
-            <button
+            <Button
                 type="submit"
                 disabled={!form.data.failed_reason || form.processing}
-                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-danger px-4 text-sm font-bold text-white transition-colors active:bg-danger disabled:opacity-50"
+                variant="destructive"
+                size="cta"
+                className="mt-4 w-full"
             >
                 {form.processing ? 'Memproses...' : 'Konfirmasi Gagal'}
-            </button>
+            </Button>
         </form>
     );
 }
@@ -889,13 +897,15 @@ function RejectSheetContent({
                 </p>
             )}
 
-            <button
+            <Button
                 type="submit"
                 disabled={!form.data.rejection_reason || form.processing}
-                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-danger px-4 text-sm font-bold text-white transition-colors active:bg-danger disabled:opacity-50"
+                variant="destructive"
+                size="cta"
+                className="mt-4 w-full"
             >
                 {form.processing ? 'Memproses...' : 'Konfirmasi Tolak'}
-            </button>
+            </Button>
         </form>
     );
 }
