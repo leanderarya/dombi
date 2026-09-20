@@ -89,12 +89,12 @@ export default function RevenueTrendChart({ data }: RevenueTrendChartProps) {
                     >
                         <stop
                             offset="0%"
-                            stopColor="#059669"
+                            stopColor="var(--color-primary)"
                             stopOpacity={0.15}
                         />
                         <stop
                             offset="100%"
-                            stopColor="#059669"
+                            stopColor="var(--color-primary)"
                             stopOpacity={0}
                         />
                     </linearGradient>
@@ -102,14 +102,14 @@ export default function RevenueTrendChart({ data }: RevenueTrendChartProps) {
                 <XAxis
                     dataKey="date"
                     tickFormatter={formatXAxisTick}
-                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }}
                     tickLine={false}
                     axisLine={false}
                     interval="preserveStartEnd"
                 />
                 <YAxis
                     tickFormatter={formatYAxisTick}
-                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }}
                     tickLine={false}
                     axisLine={false}
                     width={45}
@@ -117,7 +117,10 @@ export default function RevenueTrendChart({ data }: RevenueTrendChartProps) {
                 <Tooltip
                     content={<ChartTooltip />}
                     trigger="click"
-                    cursor={{ stroke: '#059669', strokeDasharray: '3 3' }}
+                    cursor={{
+                        stroke: 'var(--color-primary)',
+                        strokeDasharray: '3 3',
+                    }}
                 />
                 <Area
                     type="monotone"
@@ -128,12 +131,12 @@ export default function RevenueTrendChart({ data }: RevenueTrendChartProps) {
                 <Line
                     type="monotone"
                     dataKey="revenue"
-                    stroke="#059669"
+                    stroke="var(--color-primary)"
                     strokeWidth={2}
                     dot={false}
                     activeDot={{
                         r: 4,
-                        fill: '#059669',
+                        fill: 'var(--color-primary)',
                         stroke: '#fff',
                         strokeWidth: 2,
                     }}

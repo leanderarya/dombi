@@ -66,7 +66,7 @@ export default function TopProductsChart({ data }: TopProductsChartProps) {
             >
                 <XAxis
                     type="number"
-                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tick={{ fontSize: 11, fill: 'var(--color-text-subtle)' }}
                     tickLine={false}
                     axisLine={false}
                 />
@@ -74,7 +74,7 @@ export default function TopProductsChart({ data }: TopProductsChartProps) {
                     type="category"
                     dataKey="product_name"
                     tickFormatter={truncateName}
-                    tick={{ fontSize: 11, fill: '#374151' }}
+                    tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
                     tickLine={false}
                     axisLine={false}
                     width={130}
@@ -82,11 +82,11 @@ export default function TopProductsChart({ data }: TopProductsChartProps) {
                 <Tooltip
                     content={<ChartTooltip />}
                     trigger="click"
-                    cursor={{ fill: '#059669', fillOpacity: 0.08 }}
+                    cursor={{ fill: 'var(--color-primary)', fillOpacity: 0.08 }}
                 />
                 <Bar
                     dataKey="total_qty"
-                    fill="#059669"
+                    fill="var(--color-primary)"
                     radius={[0, 4, 4, 0]}
                     barSize={20}
                 />

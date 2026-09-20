@@ -60,7 +60,7 @@ const MARKER_ZOOM = 15;
 // Gray circle icon for existing outlets
 const existingOutletIcon = L.divIcon({
     className: '',
-    html: `<div style="width:24px;height:24px;border-radius:50%;background:#94a3b8;border:3px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center"><div style="width:8px;height:8px;border-radius:50%;background:white"></div></div>`,
+    html: `<div style="width:24px;height:24px;border-radius:50%;background:var(--color-text-subtle);border:3px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center"><div style="width:8px;height:8px;border-radius:50%;background:white"></div></div>`,
     iconSize: [24, 24],
     iconAnchor: [12, 12],
     popupAnchor: [0, -14],
