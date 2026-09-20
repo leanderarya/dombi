@@ -225,7 +225,7 @@ export function LaporanTab({
                             <div className="rounded-xl bg-surface p-5 shadow-card">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
                                     <DollarSign
-                                        className="h-4 w-4 text-emerald-500"
+                                        className="h-4 w-4 text-success-text"
                                         aria-hidden="true"
                                     />
                                     Pendapatan
@@ -233,14 +233,14 @@ export function LaporanTab({
                                 <div className="mt-2 text-3xl font-bold text-text">
                                     {formatCurrency(summary.totalRevenue)}
                                 </div>
-                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">
+                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-success-text">
                                     Total pendapatan
                                 </div>
                             </div>
                             <div className="rounded-xl bg-surface p-5 shadow-card">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
                                     <CheckCircle
-                                        className="h-4 w-4 text-emerald-500"
+                                        className="h-4 w-4 text-success-text"
                                         aria-hidden="true"
                                     />
                                     Selesai
@@ -248,7 +248,7 @@ export function LaporanTab({
                                 <div className="mt-2 text-3xl font-bold text-text">
                                     {summary.completedOrders}
                                 </div>
-                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">
+                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-success-text">
                                     Pesanan selesai
                                 </div>
                             </div>
@@ -276,7 +276,7 @@ export function LaporanTab({
                                     <div className="rounded-xl bg-surface p-5 shadow-card">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
                                             <XCircle
-                                                className="h-4 w-4 text-red-500"
+                                                className="h-4 w-4 text-danger"
                                                 aria-hidden="true"
                                             />
                                             Dibatalkan
@@ -284,14 +284,14 @@ export function LaporanTab({
                                         <div className="mt-2 text-3xl font-bold text-text">
                                             {summary.cancelledOrders}
                                         </div>
-                                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">
+                                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-danger">
                                             Dibatalkan
                                         </div>
                                     </div>
                                     <div className="rounded-xl bg-surface p-5 shadow-card">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
                                             <Truck
-                                                className="h-4 w-4 text-emerald-500"
+                                                className="h-4 w-4 text-success-text"
                                                 aria-hidden="true"
                                             />
                                             Pengiriman Berhasil
@@ -299,14 +299,14 @@ export function LaporanTab({
                                         <div className="mt-2 text-3xl font-bold text-text">
                                             {summary.completedDeliveries}
                                         </div>
-                                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">
+                                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-success-text">
                                             Pengiriman selesai
                                         </div>
                                     </div>
                                     <div className="rounded-xl bg-surface p-5 shadow-card">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
                                             <XCircle
-                                                className="h-4 w-4 text-red-500"
+                                                className="h-4 w-4 text-danger"
                                                 aria-hidden="true"
                                             />
                                             Pengiriman Gagal
@@ -315,7 +315,7 @@ export function LaporanTab({
                                             {summary.failedDeliveries}
                                         </div>
                                         {summary.failedDeliveries > 0 && (
-                                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">
+                                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-danger">
                                                 Perlu ditinjau
                                             </div>
                                         )}

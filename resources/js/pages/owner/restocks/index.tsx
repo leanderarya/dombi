@@ -168,17 +168,17 @@ export default function OwnerRestocksIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Menunggu
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning-text">
                             <Clock className="h-5 w-5" />
                         </span>
                     </div>
                     <div
-                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${requestedCount > 0 ? 'text-amber-600' : 'text-text'}`}
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${requestedCount > 0 ? 'text-warning-text' : 'text-text'}`}
                     >
                         {requestedCount}
                     </div>
                     {requestedCount > 0 && (
-                        <p className="text-[11px] text-amber-500">
+                        <p className="text-[11px] text-warning-text">
                             Perlu ditinjau
                         </p>
                     )}
@@ -188,7 +188,7 @@ export default function OwnerRestocksIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Disiapkan
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-info)]/10 text-[var(--color-info)]">
                             <Package className="h-5 w-5" />
                         </span>
                     </div>
@@ -201,7 +201,7 @@ export default function OwnerRestocksIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Dikirim
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-success)]/10 text-[var(--color-success)]">
                             <Truck className="h-5 w-5" />
                         </span>
                     </div>
@@ -214,11 +214,11 @@ export default function OwnerRestocksIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Selesai
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                             <CheckCircle className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-success-text tabular-nums sm:text-2xl">
                         {completedCount}
                     </div>
                 </div>
@@ -565,7 +565,7 @@ function RestockActionModal({
                                                               />
                                                           </td>
                                                           <td
-                                                              className={`py-2 text-right tabular-nums ${stockWarning ? 'font-semibold text-red-600' : 'text-text-muted'}`}
+                                                              className={`py-2 text-right tabular-nums ${stockWarning ? 'font-semibold text-danger' : 'text-text-muted'}`}
                                                           >
                                                               {stockVal ?? '—'}
                                                           </td>
@@ -607,7 +607,7 @@ function RestockActionModal({
                                                                   '—'}
                                                           </td>
                                                           <td
-                                                              className={`py-2 text-right tabular-nums ${stockWarning ? 'font-semibold text-red-600' : 'text-text-muted'}`}
+                                                              className={`py-2 text-right tabular-nums ${stockWarning ? 'font-semibold text-danger' : 'text-text-muted'}`}
                                                           >
                                                               {stockVal ?? '—'}
                                                           </td>

@@ -33,29 +33,29 @@ const STATUS_CONFIG: Record<
     { bg: string; text: string; border: string }
 > = {
     requested: {
-        bg: 'bg-amber-50',
-        text: 'text-amber-700',
-        border: 'border-amber-200',
+        bg: 'bg-warning',
+        text: 'text-warning-text',
+        border: 'border-warning-border',
     },
     approved: {
-        bg: 'bg-amber-50',
-        text: 'text-amber-700',
-        border: 'border-amber-200',
+        bg: 'bg-warning',
+        text: 'text-warning-text',
+        border: 'border-warning-border',
     },
     rejected: {
-        bg: 'bg-red-50',
-        text: 'text-red-700',
-        border: 'border-red-200',
+        bg: 'bg-danger',
+        text: 'text-danger-text',
+        border: 'border-danger-border',
     },
     preparing: {
-        bg: 'bg-amber-50',
-        text: 'text-amber-700',
-        border: 'border-amber-200',
+        bg: 'bg-warning',
+        text: 'text-warning-text',
+        border: 'border-warning-border',
     },
     shipped: {
-        bg: 'bg-amber-50',
-        text: 'text-amber-700',
-        border: 'border-amber-200',
+        bg: 'bg-warning',
+        text: 'text-warning-text',
+        border: 'border-warning-border',
     },
     completed: {
         bg: 'bg-mint-wash',
@@ -198,7 +198,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     return (
                                         <tr
                                             key={item.id}
-                                            className="border-t border-border/20 transition-colors hover:bg-emerald-50/40"
+                                            className="border-t border-border/20 transition-colors hover:bg-primary/40"
                                         >
                                             <td className="px-5 py-3 font-medium text-text">
                                                 {item.product?.name ??
@@ -294,7 +294,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     <div className="text-text-muted">
                                         Alasan tolak
                                     </div>
-                                    <div className="font-medium text-red-600">
+                                    <div className="font-medium text-danger">
                                         {restock.rejected_reason}
                                     </div>
                                 </>
@@ -364,7 +364,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     <div className="text-text-muted">
                                         Catatan kerusakan
                                     </div>
-                                    <div className="font-medium text-red-600">
+                                    <div className="font-medium text-danger">
                                         {restock.damage_notes}
                                     </div>
                                 </>
@@ -548,7 +548,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                             rows={2}
                         />
                         {approveForm.errors.items && (
-                            <div className="text-xs text-red-600">
+                            <div className="text-xs text-danger">
                                 {approveForm.errors.items}
                             </div>
                         )}
@@ -612,7 +612,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                         rows={3}
                     />
                     {rejectForm.errors.rejected_reason && (
-                        <div className="text-xs text-red-600">
+                        <div className="text-xs text-danger">
                             {rejectForm.errors.rejected_reason}
                         </div>
                     )}

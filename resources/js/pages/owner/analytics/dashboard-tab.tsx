@@ -120,7 +120,7 @@ export function DashboardTab({
                         <span className="text-xs font-medium text-text-muted">
                             Total Pesanan
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-success)]/10 text-[var(--color-success)]">
                             <ShoppingCart className="h-5 w-5" />
                         </span>
                     </div>
@@ -131,8 +131,8 @@ export function DashboardTab({
                         <p
                             className={`text-[11px] font-semibold ${
                                 kpis.total_orders_trend.positive
-                                    ? 'text-emerald-600'
-                                    : 'text-red-500'
+                                    ? 'text-success-text'
+                                    : 'text-danger'
                             }`}
                         >
                             {kpis.total_orders_trend.positive ? '+' : ''}
@@ -146,7 +146,7 @@ export function DashboardTab({
                         <span className="text-xs font-medium text-text-muted">
                             Pendapatan
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                             <DollarSign className="h-5 w-5" />
                         </span>
                     </div>
@@ -157,8 +157,8 @@ export function DashboardTab({
                         <p
                             className={`text-[11px] font-semibold ${
                                 kpis.total_revenue_trend.positive
-                                    ? 'text-emerald-600'
-                                    : 'text-red-500'
+                                    ? 'text-success-text'
+                                    : 'text-danger'
                             }`}
                         >
                             {kpis.total_revenue_trend.positive ? '+' : ''}
@@ -172,7 +172,7 @@ export function DashboardTab({
                         <span className="text-xs font-medium text-text-muted">
                             Rata-rata
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-info)]/10 text-[var(--color-info)]">
                             <TrendingUp className="h-5 w-5" />
                         </span>
                     </div>
@@ -193,7 +193,7 @@ export function DashboardTab({
                         <span className="text-xs font-medium text-text-muted">
                             Outlet Aktif
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-status-active)]/10 text-[var(--color-status-active)]">
                             <Users className="h-5 w-5" />
                         </span>
                     </div>
@@ -204,8 +204,8 @@ export function DashboardTab({
                         <p
                             className={`text-[11px] font-semibold ${
                                 kpis.active_outlets_trend.positive
-                                    ? 'text-emerald-600'
-                                    : 'text-red-500'
+                                    ? 'text-success-text'
+                                    : 'text-danger'
                             }`}
                         >
                             {kpis.active_outlets_trend.positive ? '+' : ''}
@@ -240,7 +240,7 @@ export function DashboardTab({
                                 <Link
                                     key={item.outlet_id}
                                     href={`/owner/outlets/${item.outlet_id}`}
-                                    className="group -m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-emerald-50/40"
+                                    className="group -m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-primary/40"
                                 >
                                     <div className="min-w-0 flex-1">
                                         <div className="mb-1 flex items-center justify-between text-xs font-medium">
@@ -293,7 +293,7 @@ export function DashboardTab({
                                 <Link
                                     key={product.product_name}
                                     href={`/owner/inventories?product=${encodeURIComponent(product.product_name)}`}
-                                    className="group -m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-emerald-50/40"
+                                    className="group -m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-primary/40"
                                 >
                                     <div className="flex items-center gap-3">
                                         <span

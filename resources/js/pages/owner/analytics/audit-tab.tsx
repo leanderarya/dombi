@@ -26,12 +26,12 @@ const typeLabels: Record<string, string> = {
 };
 const typeColors: Record<string, string> = {
     initial_stock: 'text-text-muted',
-    stock_adjustment: 'text-amber-700',
-    order_reserved: 'text-blue-700',
-    order_completed: 'text-emerald-700',
-    order_cancelled: 'text-red-700',
-    restock_in: 'text-emerald-700',
-    delivery_returned: 'text-purple-700',
+    stock_adjustment: 'text-warning-text',
+    order_reserved: 'text-info-text',
+    order_completed: 'text-success-text',
+    order_cancelled: 'text-danger-text',
+    restock_in: 'text-success-text',
+    delivery_returned: 'text-status-active',
 };
 const typeOptions = Object.entries(typeLabels).map(([k, v]) => ({
     value: k,
@@ -124,7 +124,7 @@ export function AuditTrailTab({
                             className="flex items-center gap-3 rounded-xl bg-surface px-3 py-2.5 shadow-card transition-all duration-200"
                         >
                             <div
-                                className={`shrink-0 text-xs font-bold tabular-nums ${m.quantity >= 0 ? 'text-emerald-700' : 'text-red-600'}`}
+                                className={`shrink-0 text-xs font-bold tabular-nums ${m.quantity >= 0 ? 'text-success-text' : 'text-danger'}`}
                             >
                                 {m.quantity >= 0 ? '+' : ''}
                                 {m.quantity}
@@ -177,7 +177,7 @@ export function AuditTrailTab({
                         <div className="rounded-xl bg-surface p-5 shadow-card">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
                                 <ArrowDownRight
-                                    className="h-4 w-4 text-emerald-500"
+                                    className="h-4 w-4 text-success-text"
                                     aria-hidden="true"
                                 />
                                 Stok Masuk
@@ -189,7 +189,7 @@ export function AuditTrailTab({
                                     ).length
                                 }
                             </div>
-                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">
+                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-success-text">
                                 <ArrowDownRight
                                     className="h-3 w-3"
                                     aria-hidden="true"
@@ -200,7 +200,7 @@ export function AuditTrailTab({
                         <div className="rounded-xl bg-surface p-5 shadow-card">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
                                 <ArrowUpRight
-                                    className="h-4 w-4 text-red-500"
+                                    className="h-4 w-4 text-danger"
                                     aria-hidden="true"
                                 />
                                 Stok Keluar
@@ -212,7 +212,7 @@ export function AuditTrailTab({
                                     ).length
                                 }
                             </div>
-                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">
+                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-danger">
                                 <ArrowUpRight
                                     className="h-3 w-3"
                                     aria-hidden="true"

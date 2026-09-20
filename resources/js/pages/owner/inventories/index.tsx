@@ -360,7 +360,7 @@ export default function InventoriesIndex({
                                 <span className="text-xs font-medium text-text-muted">
                                     Total SKU
                                 </span>
-                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-success)]/10 text-[var(--color-success)]">
                                     <Package className="h-5 w-5" />
                                 </span>
                             </div>
@@ -373,17 +373,17 @@ export default function InventoriesIndex({
                                 <span className="text-xs font-medium text-text-muted">
                                     Stok Kritis
                                 </span>
-                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-danger/10 text-danger">
                                     <AlertTriangle className="h-5 w-5" />
                                 </span>
                             </div>
                             <div
-                                className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.critical > 0 ? 'text-red-600' : 'text-text'}`}
+                                className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.critical > 0 ? 'text-danger' : 'text-text'}`}
                             >
                                 {stats.critical}
                             </div>
                             {stats.critical > 0 && (
-                                <p className="text-[11px] text-red-500">
+                                <p className="text-[11px] text-danger">
                                     ≤ 2 pcs
                                 </p>
                             )}
@@ -393,17 +393,17 @@ export default function InventoriesIndex({
                                 <span className="text-xs font-medium text-text-muted">
                                     Stok Rendah
                                 </span>
-                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning-text">
                                     <AlertCircle className="h-5 w-5" />
                                 </span>
                             </div>
                             <div
-                                className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.lowStock > 0 ? 'text-amber-600' : 'text-text'}`}
+                                className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.lowStock > 0 ? 'text-warning-text' : 'text-text'}`}
                             >
                                 {stats.lowStock}
                             </div>
                             {stats.lowStock > 0 && (
-                                <p className="text-[11px] text-amber-500">
+                                <p className="text-[11px] text-warning-text">
                                     ≤ minimum
                                 </p>
                             )}
@@ -413,11 +413,11 @@ export default function InventoriesIndex({
                                 <span className="text-xs font-medium text-text-muted">
                                     Stok Sehat
                                 </span>
-                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                                     <CheckCircle className="h-5 w-5" />
                                 </span>
                             </div>
-                            <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                            <div className="font-heading text-xl font-bold text-success-text tabular-nums sm:text-2xl">
                                 {stats.totalSku - stats.lowStock}
                             </div>
                         </div>
@@ -617,11 +617,11 @@ export default function InventoriesIndex({
                                                                                     'h-2.5 w-2.5 rounded-full',
                                                                                     s ===
                                                                                         'critical'
-                                                                                        ? 'bg-red-500'
+                                                                                        ? 'bg-danger'
                                                                                         : s ===
                                                                                             'low'
-                                                                                          ? 'bg-amber-400'
-                                                                                          : 'bg-emerald-500',
+                                                                                          ? 'bg-warning'
+                                                                                          : 'bg-success',
                                                                                 )}
                                                                                 title={`${o.outlet_name}: ${o.current_stock} pcs`}
                                                                             />
@@ -650,11 +650,11 @@ export default function InventoriesIndex({
                                                             'px-3 py-3 text-right font-bold tabular-nums',
                                                             group.overallStatus ===
                                                                 'critical'
-                                                                ? 'text-red-600'
+                                                                ? 'text-danger'
                                                                 : group.overallStatus ===
                                                                     'low'
-                                                                  ? 'text-amber-600'
-                                                                  : 'text-emerald-600',
+                                                                  ? 'text-warning-text'
+                                                                  : 'text-success-text',
                                                         )}
                                                     >
                                                         {group.totalStock} pcs
@@ -796,10 +796,10 @@ export default function InventoriesIndex({
                                                                                             className={cn(
                                                                                                 'px-3 py-2.5 text-right font-bold tabular-nums',
                                                                                                 isCritical
-                                                                                                    ? 'text-red-600'
+                                                                                                    ? 'text-danger'
                                                                                                     : isLow
-                                                                                                      ? 'text-amber-600'
-                                                                                                      : 'text-emerald-600',
+                                                                                                      ? 'text-warning-text'
+                                                                                                      : 'text-success-text',
                                                                                             )}
                                                                                         >
                                                                                             {
@@ -834,7 +834,7 @@ export default function InventoriesIndex({
                                                                                                 {(isCritical ||
                                                                                                     isLow) &&
                                                                                                     (reminded ? (
-                                                                                                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
+                                                                                                        <span className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-xs font-semibold text-success-text">
                                                                                                             <Check className="h-3 w-3" />{' '}
                                                                                                             Terkirim
                                                                                                         </span>
