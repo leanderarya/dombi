@@ -246,6 +246,7 @@ export default function OutletShow({
                             <Button
                                 type="button"
                                 onClick={() => setLocationModalOpen(true)}
+                                aria-label="Ubah lokasi outlet"
                                 variant="ghost"
                                 size="icon"
                                 className="h-11 w-11 text-text-muted"
@@ -290,6 +291,7 @@ export default function OutletShow({
                             <Button
                                 type="button"
                                 onClick={() => setScheduleModalOpen(true)}
+                                aria-label="Ubah jam operasional"
                                 variant="ghost"
                                 size="icon"
                                 className="h-11 w-11 text-text-muted"
@@ -508,6 +510,7 @@ export default function OutletShow({
                             <Button
                                 type="button"
                                 onClick={() => setStatusModalOpen(true)}
+                                aria-label="Ubah status outlet"
                                 variant="ghost"
                                 size="icon"
                                 className="h-11 w-11 text-text-muted"

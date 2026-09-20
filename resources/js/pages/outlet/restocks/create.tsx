@@ -93,6 +93,7 @@ export default function CreateRestock({ families, inventories }: any) {
                                     <Button
                                         type="button"
                                         onClick={() => removeItem(index)}
+                                        aria-label="Hapus item"
                                         variant="ghost"
                                         size="icon"
                                         className="h-11 w-11 text-text-subtle active:bg-danger-bg active:text-danger-text"
