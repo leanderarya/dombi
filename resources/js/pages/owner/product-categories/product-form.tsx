@@ -1331,17 +1331,19 @@ export default function ProductForm({
                                                 <td className="px-2 py-1.5">
                                                     {bulkSizeRows.length >
                                                         1 && (
-                                                        <button
+                                                        <Button
                                                             type="button"
                                                             onClick={() =>
                                                                 removeBulkSizeRow(
                                                                     i,
                                                                 )
                                                             }
-                                                            className="flex h-11 w-11 items-center justify-center rounded text-text-muted opacity-0 transition group-hover:opacity-100 hover:bg-danger-bg hover:text-danger-text"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-11 w-11 text-text-muted"
                                                         >
                                                             <X className="h-3.5 w-3.5" />
-                                                        </button>
+                                                        </Button>
                                                     )}
                                                 </td>
                                             </tr>

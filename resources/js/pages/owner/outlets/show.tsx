@@ -243,13 +243,15 @@ export default function OutletShow({
                             <h2 className="font-heading text-base font-bold text-text">
                                 Lokasi
                             </h2>
-                            <button
+                            <Button
                                 type="button"
                                 onClick={() => setLocationModalOpen(true)}
-                                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                                variant="ghost"
+                                size="icon"
+                                className="h-11 w-11 text-text-muted"
                             >
                                 <Pencil className="h-3.5 w-3.5" />
-                            </button>
+                            </Button>
                         </div>
                         <p className="text-xs text-text-muted">
                             {outlet.kelurahan ?? '-'} &middot;{' '}
@@ -285,13 +287,15 @@ export default function OutletShow({
                                     Jadwal Outlet
                                 </h2>
                             </div>
-                            <button
+                            <Button
                                 type="button"
                                 onClick={() => setScheduleModalOpen(true)}
-                                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                                variant="ghost"
+                                size="icon"
+                                className="h-11 w-11 text-text-muted"
                             >
                                 <Pencil className="h-3.5 w-3.5" />
-                            </button>
+                            </Button>
                         </div>
                         {operatingHours && operatingHours.length > 0 ? (
                             <p className="text-xs text-text-muted tabular-nums">
@@ -501,13 +505,15 @@ export default function OutletShow({
                             <h2 className="font-heading text-base font-bold text-text">
                                 Status & Aksi
                             </h2>
-                            <button
+                            <Button
                                 type="button"
                                 onClick={() => setStatusModalOpen(true)}
-                                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80"
+                                variant="ghost"
+                                size="icon"
+                                className="h-11 w-11 text-text-muted"
                             >
                                 <Pencil className="h-3.5 w-3.5" />
-                            </button>
+                            </Button>
                         </div>
                         <div className="mb-3 flex items-center gap-2">
                             <OutletStatusBadge

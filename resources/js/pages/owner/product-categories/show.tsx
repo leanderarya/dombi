@@ -653,7 +653,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                 </span>
                                             )}
                                         {section.flavorGroup && (
-                                            <button
+                                            <Button
                                                 type="button"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -662,11 +662,13 @@ export default function ProductCategoryShow({ category }: Props) {
                                                     );
                                                     setFgImageFile(null);
                                                 }}
-                                                className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-11 w-11 text-text-muted"
                                                 title="Edit gambar grup"
                                             >
                                                 <Upload className="h-3.5 w-3.5" />
-                                            </button>
+                                            </Button>
                                         )}
                                     </div>
                                 </button>
@@ -829,18 +831,20 @@ export default function ProductCategoryShow({ category }: Props) {
                                                             </td>
                                                             <td className="px-3 py-3">
                                                                 <div className="flex items-center justify-center gap-0.5">
-                                                                    <button
+                                                                    <Button
                                                                         title="Duplikat"
                                                                         onClick={() =>
                                                                             handleDuplicate(
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-11 w-11 text-text-muted"
                                                                     >
                                                                         <Copy className="h-3.5 w-3.5" />
-                                                                    </button>
-                                                                    <button
+                                                                    </Button>
+                                                                    <Button
                                                                         title={
                                                                             p.is_active
                                                                                 ? 'Nonaktifkan'
@@ -851,36 +855,42 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-11 w-11 text-text-muted"
                                                                     >
                                                                         {p.is_active ? (
                                                                             <ToggleRight className="h-3.5 w-3.5 text-primary" />
                                                                         ) : (
                                                                             <ToggleLeft className="h-3.5 w-3.5" />
                                                                         )}
-                                                                    </button>
-                                                                    <button
+                                                                    </Button>
+                                                                    <Button
                                                                         title="Edit"
                                                                         onClick={() =>
                                                                             openEditProduct(
                                                                                 p,
                                                                             )
                                                                         }
-                                                                        className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-11 w-11 text-text-muted"
                                                                     >
                                                                         <Pencil className="h-3.5 w-3.5" />
-                                                                    </button>
-                                                                    <button
+                                                                    </Button>
+                                                                    <Button
                                                                         title="Hapus"
                                                                         onClick={() =>
                                                                             setDeleteId(
                                                                                 p.id,
                                                                             )
                                                                         }
-                                                                        className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-danger-bg hover:text-danger-text"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-11 w-11 text-text-muted"
                                                                     >
                                                                         <Trash2 className="h-3.5 w-3.5" />
-                                                                    </button>
+                                                                    </Button>
                                                                 </div>
                                                             </td>
                                                         </tr>
