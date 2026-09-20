@@ -2,6 +2,7 @@ import { Head, useForm } from '@inertiajs/react';
 import { X } from 'lucide-react';
 import { useState, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 
@@ -368,15 +369,16 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                             </div>
                         </div>
                     </div>
-                    <button
+                    <Button
                         onClick={handleSubmit}
                         disabled={
                             form.processing || selectedVariants.size === 0
                         }
-                        className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                        size="lg"
+                        className="w-full"
                     >
                         {form.processing ? 'Mengirim...' : 'Ajukan Return'}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </OutletLayout>
