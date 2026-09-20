@@ -145,7 +145,7 @@ export default function ExchangeCreateDialog({
                                                     ),
                                                 )
                                             }
-                                            className="h-8 w-14 rounded-lg border border-border bg-surface text-center text-sm font-semibold text-text focus:ring-2 focus:ring-danger-border focus:outline-none"
+                                            className="h-8 w-14 rounded-lg border border-border bg-surface text-center text-sm font-semibold text-text focus:ring-2 focus:ring-danger focus:outline-none"
                                         />
                                         <button
                                             type="button"
@@ -176,7 +176,7 @@ export default function ExchangeCreateDialog({
                                             )
                                         }
                                         placeholder="Opsional"
-                                        className="h-8 w-full rounded-lg border border-border bg-surface px-2.5 text-sm text-text placeholder:text-text-subtle focus:ring-2 focus:ring-danger-border focus:outline-none"
+                                        className="h-8 w-full rounded-lg border border-border bg-surface px-2.5 text-sm text-text placeholder:text-text-subtle focus:ring-2 focus:ring-danger focus:outline-none"
                                     />
                                 </div>
                             </div>
