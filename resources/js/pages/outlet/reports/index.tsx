@@ -150,8 +150,8 @@ export default function OutletReports({ outlet, preview }: Props) {
                                     Item
                                 </div>
                             </div>
-                            <div className="rounded-lg bg-emerald-50 p-3 text-center">
-                                <div className="text-lg font-bold text-emerald-700 tabular-nums">
+                            <div className="rounded-lg bg-primary p-3 text-center">
+                                <div className="text-lg font-bold text-success-border tabular-nums">
                                     {formatCurrency(preview.total_revenue)}
                                 </div>
                                 <div className="text-[10px] text-success-text">

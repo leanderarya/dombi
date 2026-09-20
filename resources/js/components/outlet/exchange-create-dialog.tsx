@@ -186,7 +186,7 @@ export default function ExchangeCreateDialog({
                         <div className="space-y-2.5 rounded-xl border border-success-border bg-success-bg/50 p-2.5">
                             <div className="mb-1 flex items-center gap-2">
                                 <div className="h-2 w-2 shrink-0 rounded-full bg-success" />
-                                <span className="text-xs font-bold text-emerald-700">
+                                <span className="text-xs font-bold text-success-border">
                                     Pengganti
                                 </span>
                             </div>

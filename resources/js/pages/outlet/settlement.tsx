@@ -569,7 +569,7 @@ export default function OutletSettlement({
                                             <span
                                                 className={`text-sm font-bold tabular-nums ${
                                                     summary.net_amount >= 0
-                                                        ? 'text-emerald-700'
+                                                        ? 'text-success-border'
                                                         : 'text-danger'
                                                 }`}
                                             >
@@ -669,7 +669,7 @@ function BreakdownRow({
                 {label}
             </span>
             <span
-                className={`text-sm font-semibold tabular-nums ${negative ? 'text-success-text' : accent ? 'text-emerald-700' : muted ? 'text-text-subtle' : 'text-text'}`}
+                className={`text-sm font-semibold tabular-nums ${negative ? 'text-success-text' : accent ? 'text-success-border' : muted ? 'text-text-subtle' : 'text-text'}`}
             >
                 {negative && value > 0 ? '- ' : ''}
                 {isCurrency ? formatCurrency(Math.abs(value)) : value}
@@ -725,7 +725,7 @@ function TimelineItem({
                             <span
                                 className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                                     isPaid
-                                        ? 'bg-emerald-50 text-emerald-700'
+                                        ? 'bg-primary text-success-border'
                                         : isOverdue
                                           ? 'bg-danger-bg text-danger-text'
                                           : isPartial
