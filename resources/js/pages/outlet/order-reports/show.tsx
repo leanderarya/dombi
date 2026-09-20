@@ -152,7 +152,7 @@ export default function OutletOrderReportShow({ report }: any) {
                                 form.setData('resolution_notes', e.target.value)
                             }
                             placeholder="Jelaskan tindakan yang akan diambil..."
-                            className="min-h-24 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                            className="min-h-24 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
                     </div>
                     <div className="mt-3 flex gap-2">

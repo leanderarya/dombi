@@ -186,7 +186,7 @@ export default function OutletInventory({
                             <div>
                                 <div className="mb-3 flex items-center gap-2">
                                     <span className="h-1.5 w-1.5 rounded-full bg-danger" />
-                                    <h2 className="text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                    <h2 className="text-xs font-semibold tracking-wider text-text-muted uppercase">
                                         Stok Kritis
                                     </h2>
                                     <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
@@ -214,7 +214,7 @@ export default function OutletInventory({
                             <div>
                                 <div className="mb-3 flex items-center gap-2">
                                     <span className="h-1.5 w-1.5 rounded-full bg-warning" />
-                                    <h2 className="text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                    <h2 className="text-xs font-semibold tracking-wider text-text-muted uppercase">
                                         Stok Rendah
                                     </h2>
                                     <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
@@ -263,7 +263,7 @@ export default function OutletInventory({
                         {/* No-family items */}
                         {filteredNoFamilyItems.length > 0 && (
                             <div>
-                                <h2 className="mb-3 text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                <h2 className="mb-3 text-xs font-semibold tracking-wider text-text-muted uppercase">
                                     Lainnya
                                 </h2>
                                 <div className="space-y-2">

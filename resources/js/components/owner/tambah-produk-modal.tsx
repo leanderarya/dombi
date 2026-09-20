@@ -157,7 +157,7 @@ function TambahProdukModalContent({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari produk..."
-                        className="w-full bg-transparent py-2 text-sm placeholder:text-text-subtle focus:outline-none"
+                        className="w-full bg-transparent py-2 text-sm placeholder:text-text-muted focus:outline-none"
                     />
                 </div>
                 <div className="mt-2 flex items-center justify-between">

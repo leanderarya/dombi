@@ -287,7 +287,7 @@ export default function RefundTab({
                                             {/* Destination */}
                                             {destination && (
                                                 <div>
-                                                    <p className="text-[11px] font-medium tracking-wider text-text-subtle uppercase">
+                                                    <p className="text-[11px] font-medium tracking-wider text-text-muted uppercase">
                                                         Tujuan Refund
                                                     </p>
                                                     <div className="mt-1 flex items-start gap-2.5 rounded-lg bg-surface p-2.5 text-xs">
@@ -352,7 +352,7 @@ export default function RefundTab({
                                             {/* Proof & reference */}
                                             {proof_url && (
                                                 <div>
-                                                    <p className="text-[11px] font-medium tracking-wider text-text-subtle uppercase">
+                                                    <p className="text-[11px] font-medium tracking-wider text-text-muted uppercase">
                                                         Bukti Transfer
                                                     </p>
                                                     <a
@@ -397,7 +397,7 @@ export default function RefundTab({
                                             {/* Timeline */}
                                             {timeline.length > 0 && (
                                                 <div>
-                                                    <p className="text-[11px] font-medium tracking-wider text-text-subtle uppercase">
+                                                    <p className="text-[11px] font-medium tracking-wider text-text-muted uppercase">
                                                         Riwayat (
                                                         {timeline.length})
                                                     </p>

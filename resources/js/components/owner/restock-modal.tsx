@@ -82,7 +82,7 @@ export default function RestockModal({
         >
             <form onSubmit={handleSubmit}>
                 <div className="mt-4">
-                    <div className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                    <div className="text-xs font-bold tracking-wider text-text-muted uppercase">
                         Produk
                     </div>
                     <div className="mt-1 text-sm font-semibold text-text">
@@ -91,7 +91,7 @@ export default function RestockModal({
                 </div>
 
                 <div className="mt-3">
-                    <div className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                    <div className="text-xs font-bold tracking-wider text-text-muted uppercase">
                         Stok Saat Ini
                     </div>
                     <div className="mt-1 text-sm font-semibold text-text">
@@ -100,7 +100,7 @@ export default function RestockModal({
                 </div>
 
                 <div className="mt-3">
-                    <label className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                    <label className="text-xs font-bold tracking-wider text-text-muted uppercase">
                         Tambah Stok
                     </label>
                     <div className="mt-1 flex gap-2">
@@ -136,7 +136,7 @@ export default function RestockModal({
                 </div>
 
                 <div className="mt-3">
-                    <label className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                    <label className="text-xs font-bold tracking-wider text-text-muted uppercase">
                         Catatan
                     </label>
                     <textarea

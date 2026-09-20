@@ -130,7 +130,7 @@ export default function OutletReports({ outlet, preview }: Props) {
                 {/* Preview Summary */}
                 {preview && preview.total_orders > 0 && (
                     <div className="rounded-xl border border-border bg-surface p-4">
-                        <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                        <div className="mb-3 text-[11px] font-bold tracking-wider text-text-muted uppercase">
                             Ringkasan Laporan
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -182,7 +182,7 @@ export default function OutletReports({ outlet, preview }: Props) {
                 )}
 
                 <div className="rounded-xl border border-border bg-surface p-4">
-                    <div className="mb-2 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                    <div className="mb-2 text-[11px] font-bold tracking-wider text-text-muted uppercase">
                         Konten Laporan
                     </div>
                     <ul className="space-y-2 text-sm text-text-muted">

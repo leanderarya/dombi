@@ -169,7 +169,7 @@ export default function OfflineSaleDialog({
                                         form.setData('notes', e.target.value)
                                     }
                                     placeholder="Opsional"
-                                    className="min-h-11 w-full rounded-lg border border-border bg-surface px-2.5 text-sm text-text placeholder:text-text-subtle focus:ring-2 focus:ring-primary/30 focus:outline-none"
+                                    className="min-h-11 w-full rounded-lg border border-border bg-surface px-2.5 text-sm text-text placeholder:text-text-muted focus:ring-2 focus:ring-primary/30 focus:outline-none"
                                 />
                             </div>
                         </div>

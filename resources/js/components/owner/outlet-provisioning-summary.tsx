@@ -119,7 +119,7 @@ export default function OutletProvisioningSummary({
 function Info({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-center justify-between gap-3 border-b border-border py-2 last:border-b-0">
-            <span className="text-xs font-semibold tracking-wide text-text-subtle uppercase">
+            <span className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                 {label}
             </span>
             <span className="min-w-0 truncate text-right text-sm font-semibold text-text">

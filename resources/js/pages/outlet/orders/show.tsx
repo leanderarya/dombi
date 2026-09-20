@@ -277,7 +277,7 @@ export default function OutletOrderShow({
 
                     {isDifferentRecipient(order) && (
                         <div className="mt-3 border-t border-border pt-3">
-                            <div className="text-[11px] font-semibold tracking-wider text-text-subtle uppercase">
+                            <div className="text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                 Penerima
                             </div>
                             <div className="mt-1.5 space-y-1.5 text-sm">

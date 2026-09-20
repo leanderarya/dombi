@@ -192,7 +192,7 @@ function InfoBadge({
         <div
             className={`rounded-lg border border-border bg-surface-muted px-3 py-2 ${className}`}
         >
-            <div className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+            <div className="text-xs font-bold tracking-wider text-text-muted uppercase">
                 {label}
             </div>
             <div

@@ -433,7 +433,7 @@ export default function CheckoutCustomer({
                         <div className="p-4">
                             <div className="mb-3 flex items-center gap-2">
                                 <User className="h-3.5 w-3.5 text-text-subtle" />
-                                <span className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                <span className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                     Pemesan
                                 </span>
                             </div>
@@ -485,7 +485,7 @@ export default function CheckoutCustomer({
                                 <div className="mb-3 flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <Phone className="h-3.5 w-3.5 text-text-subtle" />
-                                        <span className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                        <span className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                             Penerima
                                         </span>
                                     </div>
@@ -785,7 +785,7 @@ function CompactField({
                 onChange={(e) => onChange(e.target.value)}
                 inputMode={inputMode}
                 readOnly={readOnly}
-                className={`mt-1 min-h-10 w-full rounded-chip border px-3 text-xs text-text placeholder:text-text-subtle focus:ring-1 ${error ? 'border-danger-border focus:border-danger-border focus:ring-danger-border' : 'border-border focus:border-primary focus:ring-primary/20'} ${readOnly ? 'bg-surface text-text-muted' : 'bg-surface'}`}
+                className={`mt-1 min-h-10 w-full rounded-chip border px-3 text-xs text-text placeholder:text-text-muted focus:ring-1 ${error ? 'border-danger-border focus:border-danger-border focus:ring-danger-border' : 'border-border focus:border-primary focus:ring-primary/20'} ${readOnly ? 'bg-surface text-text-muted' : 'bg-surface'}`}
                 placeholder={placeholder}
             />
             {hint && !error && (

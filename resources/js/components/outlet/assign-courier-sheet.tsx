@@ -262,7 +262,7 @@ export default function AssignCourierSheet({
                                 </div>
                             ) : (
                                 <>
-                                    <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                    <div className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                         Kurir Terdekat ({couriers.length})
                                     </div>
                                     <div className="mt-2 space-y-2">

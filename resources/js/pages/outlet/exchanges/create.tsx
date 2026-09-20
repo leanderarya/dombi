@@ -177,7 +177,7 @@ export default function OutletExchangesCreate({
                             className="rounded-xl border border-border bg-surface p-4"
                         >
                             <div className="mb-3 flex items-center justify-between">
-                                <span className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                                <span className="text-xs font-bold tracking-wider text-text-muted uppercase">
                                     Pasangan {index + 1}
                                 </span>
                                 {pairs.length > 1 && (
@@ -292,7 +292,7 @@ export default function OutletExchangesCreate({
                         onChange={(e) => form.setData('notes', e.target.value)}
                         placeholder="Opsional"
                         rows={2}
-                        className="w-full rounded-lg border border-border px-3 py-2.5 text-sm placeholder:text-text-subtle"
+                        className="w-full rounded-lg border border-border px-3 py-2.5 text-sm placeholder:text-text-muted"
                     />
                 </div>
 

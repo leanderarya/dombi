@@ -387,7 +387,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                         <details className="group rounded-xl border border-border bg-surface">
                             <summary className="flex cursor-pointer items-center justify-between p-4 active:opacity-80">
                                 <div>
-                                    <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                    <div className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                         Status Pengiriman
                                     </div>
                                     <div className="mt-1 text-sm font-medium text-text">
@@ -675,7 +675,7 @@ function CompleteSheetContent({
                             form.setData('delivered_to', e.target.value)
                         }
                         placeholder="Nama penerima"
-                        className="mt-1 block min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="mt-1 block min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
 
@@ -690,7 +690,7 @@ function CompleteSheetContent({
                         }
                         placeholder="Catatan pengiriman"
                         rows={2}
-                        className="mt-1 block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="mt-1 block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
 
@@ -789,7 +789,7 @@ function FailSheetContent({
                         }
                         placeholder="Jelaskan alasan kegagalan"
                         rows={3}
-                        className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
             )}
@@ -873,7 +873,7 @@ function RejectSheetContent({
                         }
                         placeholder="Jelaskan alasan penolakan"
                         rows={3}
-                        className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
             )}

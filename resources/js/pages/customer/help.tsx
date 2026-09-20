@@ -15,7 +15,7 @@ export default function Help() {
             <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
                 {/* Support Contact */}
                 <section>
-                    <h2 className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                    <h2 className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                         Hubungi Kami
                     </h2>
                     <div className="mt-2 rounded-thumb border border-border bg-surface p-4">
@@ -62,7 +62,7 @@ export default function Help() {
 
                 {/* FAQ */}
                 <section className="mt-6">
-                    <h2 className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                    <h2 className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                         FAQ
                     </h2>
                     <div className="mt-2 space-y-2">

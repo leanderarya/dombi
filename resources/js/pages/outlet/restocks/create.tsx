@@ -85,7 +85,7 @@ export default function CreateRestock({ families, inventories }: any) {
                     return (
                         <SectionCard key={index}>
                             <div className="flex items-start justify-between">
-                                <div className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                                <div className="text-xs font-bold tracking-wider text-text-muted uppercase">
                                     Item {index + 1}
                                 </div>
                                 {form.data.items.length > 1 && (
@@ -200,7 +200,7 @@ export default function CreateRestock({ families, inventories }: any) {
                     value={form.data.notes}
                     onChange={(e) => form.setData('notes', e.target.value)}
                     placeholder="Catatan restock (opsional)..."
-                    className="mt-1 min-h-[80px] w-full rounded-lg border border-border px-3 py-2.5 text-sm placeholder:text-text-subtle focus:border-ring focus:ring-1 focus:ring-ring"
+                    className="mt-1 min-h-[80px] w-full rounded-lg border border-border px-3 py-2.5 text-sm placeholder:text-text-muted focus:border-ring focus:ring-1 focus:ring-ring"
                 />
             </div>
 

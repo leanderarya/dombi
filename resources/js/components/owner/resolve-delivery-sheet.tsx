@@ -216,7 +216,7 @@ export default function ResolveDeliverySheet({
                             onChange={(e) =>
                                 form.setData('resolution_notes', e.target.value)
                             }
-                            className="min-h-16 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-success-border focus:ring-1 focus:ring-success-border"
+                            className="min-h-16 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-success-border focus:ring-1 focus:ring-success-border"
                             placeholder="Tambahkan catatan operasional (wajib)..."
                             required
                         />

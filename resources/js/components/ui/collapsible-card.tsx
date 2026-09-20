@@ -19,7 +19,7 @@ export default function CollapsibleCard({ label, children, defaultOpen = false, 
             <button
                 type="button"
                 onClick={() => setOpen((p) => !p)}
-                className="flex w-full items-center justify-between px-4 py-3 text-xs font-bold tracking-wider text-text-subtle uppercase active:opacity-70"
+                className="flex w-full items-center justify-between px-4 py-3 text-xs font-bold tracking-wider text-text-muted uppercase active:opacity-70"
             >
                 <div className="flex items-center gap-2">
                     <span>{label}</span>

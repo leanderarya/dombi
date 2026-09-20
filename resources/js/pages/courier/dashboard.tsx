@@ -115,7 +115,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
             {/* In Transit — highest priority */}
             {tasks.inTransit.length > 0 && (
                 <div className="mt-4">
-                    <h2 className="mb-3 text-xs font-bold tracking-wider text-text-subtle uppercase">
+                    <h2 className="mb-3 text-xs font-bold tracking-wider text-text-muted uppercase">
                         Sedang Diantar
                     </h2>
                     <div className="space-y-2">
@@ -153,7 +153,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
             {/* Waiting Pickup */}
             {tasks.waitingPickup.length > 0 && (
                 <div className="mt-4">
-                    <h2 className="mb-3 text-xs font-bold tracking-wider text-text-subtle uppercase">
+                    <h2 className="mb-3 text-xs font-bold tracking-wider text-text-muted uppercase">
                         Menunggu Pickup ({tasks.waitingPickup.length})
                     </h2>
                     <div className="space-y-2">
@@ -197,7 +197,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
             {/* Needs Action */}
             {tasks.needsAction.length > 0 && (
                 <div className="mt-4">
-                    <h2 className="mb-3 text-xs font-bold tracking-wider text-text-subtle uppercase">
+                    <h2 className="mb-3 text-xs font-bold tracking-wider text-text-muted uppercase">
                         Perlu Tindakan ({tasks.needsAction.length})
                     </h2>
                     <div className="space-y-2">
@@ -236,7 +236,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
             {tasks.completedToday.length > 0 && (
                 <div className="mt-4">
                     <div className="mb-3 flex items-center justify-between">
-                        <h2 className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                        <h2 className="text-xs font-bold tracking-wider text-text-muted uppercase">
                             Selesai Hari Ini ({tasks.completedToday.length})
                         </h2>
                         <Link

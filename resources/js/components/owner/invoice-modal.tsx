@@ -76,7 +76,7 @@ export default function InvoiceModal({
 
             {/* Breakdown */}
             <div className="mt-3 rounded-lg border border-border bg-surface-muted p-3">
-                <div className="mb-2 text-xs font-bold tracking-wider text-text-subtle uppercase">
+                <div className="mb-2 text-xs font-bold tracking-wider text-text-muted uppercase">
                     Tagihan Belum Dibayar
                 </div>
                 {unpaidBreakdown.map((item) => (

@@ -179,7 +179,7 @@ export default function OutletDashboard({
                                     <div className="rounded-xl border border-danger-border bg-danger-bg p-4">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                                <div className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                                     Belum Disetor
                                                 </div>
                                                 <div className="mt-1 text-2xl font-bold text-danger tabular-nums">
@@ -203,7 +203,7 @@ export default function OutletDashboard({
                                     /* All paid — subtle green indicator */
                                     <div className="flex items-center justify-between rounded-xl border border-success-border bg-success-bg p-4">
                                         <div>
-                                            <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                            <div className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                                 Settlement
                                             </div>
                                             <div className="mt-0.5 text-sm font-semibold text-success-border">
@@ -307,7 +307,7 @@ export default function OutletDashboard({
                     {lowStockItems.length > 0 && (
                         <div>
                             <div className="mb-2 flex items-center justify-between">
-                                <h2 className="text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                <h2 className="text-xs font-semibold tracking-wider text-text-muted uppercase">
                                     Stok Rendah
                                 </h2>
                                 <Link

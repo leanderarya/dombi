@@ -137,7 +137,7 @@ export default function OrderTimeline({
             <details className="group rounded-card border border-border bg-surface">
                 <summary className="flex cursor-pointer items-center justify-between p-4 active:opacity-80">
                     <div>
-                        <div className="text-caption font-bold tracking-wider text-text-subtle uppercase">
+                        <div className="text-caption font-bold tracking-wider text-text-muted uppercase">
                             Perjalanan Pesanan
                         </div>
                         <div className="mt-1 text-sm font-medium text-text">
@@ -164,7 +164,7 @@ export default function OrderTimeline({
 
     return (
         <div className="rounded-card border border-border bg-surface p-4">
-            <div className="text-caption font-bold tracking-wider text-text-subtle uppercase">
+            <div className="text-caption font-bold tracking-wider text-text-muted uppercase">
                 Perjalanan Pesanan
             </div>
             <div className="mt-4">

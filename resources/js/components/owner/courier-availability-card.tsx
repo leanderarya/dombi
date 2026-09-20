@@ -17,7 +17,7 @@ export default function CourierAvailabilityCard({ couriers }: Props) {
     return (
         <div className="rounded-lg border border-border bg-surface p-3">
             <div className="flex items-center justify-between">
-                <div className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                <div className="text-xs font-bold tracking-wider text-text-muted uppercase">
                     Kurir Aktif
                 </div>
                 <span className="text-xs font-medium text-text-muted">
