@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Button } from '@/components/ui/button';
 import { copyToClipboard } from '@/lib/clipboard';
 
 type Provisioning = {
@@ -104,12 +105,13 @@ export default function OutletProvisioningSummary({
                         Share
                     </button>
                 </div>
-                <button
+                <Button
                     onClick={() => setOpen(false)}
-                    className="mt-2 min-h-[48px] w-full rounded-lg bg-success px-4 text-sm font-semibold text-white transition-colors active:bg-primary"
+                    size="lg"
+                    className="mt-2 w-full"
                 >
                     Close
-                </button>
+                </Button>
             </div>
         </div>,
         document.body,
