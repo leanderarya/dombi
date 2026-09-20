@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
 import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
 import {
     formatCurrency,
@@ -141,15 +142,16 @@ export default function DeliveryCard({
             {/* Actions */}
             <div className="mt-2 flex gap-2">
                 {needsAssignment && onAssignCourier && (
-                    <button
+                    <Button
                         onClick={(e) => {
                             e.preventDefault();
                             onAssignCourier(item.id);
                         }}
-                        className="flex min-h-[36px] flex-1 items-center justify-center rounded-md bg-primary text-xs font-semibold text-white transition-colors hover:bg-primary-hover active:bg-primary-hover"
+                        size="lg"
+                        className="flex-1"
                     >
                         Assign Kurir
-                    </button>
+                    </Button>
                 )}
                 {isFailed && onResolve && (
                     <button

@@ -1,4 +1,5 @@
 import { Eye, Check, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/lib/format';
 import FinanceStatusBadge from './finance-status-badge';
 
@@ -121,15 +122,16 @@ export default function PaymentHistoryCard({
             {/* Actions */}
             {isPending && (
                 <div className="mt-4 flex gap-2 border-t border-border pt-3">
-                    <button
+                    <Button
                         type="button"
                         onClick={() => onVerify(payment.id)}
                         disabled={processing}
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary py-2.5 text-sm font-bold text-white transition-all hover:bg-primary-hover disabled:opacity-50"
+                        size="lg"
+                        className="flex-1"
                     >
                         <Check className="h-4 w-4" />
                         Verifikasi
-                    </button>
+                    </Button>
                     <button
                         type="button"
                         onClick={() => onReject(payment.id)}

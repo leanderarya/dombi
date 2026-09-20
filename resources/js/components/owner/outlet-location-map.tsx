@@ -21,6 +21,7 @@ import {
     useMap,
     useMapEvents,
 } from 'react-leaflet';
+import { Button } from '@/components/ui/button';
 import { reverseGeocode, searchPlaces } from '@/lib/geocoding';
 import type { PlaceSuggestion, ReverseGeocodeResult } from '@/lib/geocoding';
 
@@ -412,13 +413,14 @@ function MapPreviewContent({
                     {geo.address.formatted_address}
                 </div>
             )}
-            <button
+            <Button
                 type="button"
                 onClick={onConfirm}
-                className="mt-2 w-full rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-hover"
+                size="lg"
+                className="mt-2 w-full"
             >
                 Simpan Lokasi
-            </button>
+            </Button>
         </div>
     );
 }

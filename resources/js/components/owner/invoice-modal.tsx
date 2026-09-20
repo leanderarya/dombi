@@ -1,6 +1,7 @@
 import { Copy, Check, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import OwnerModalShell from '@/components/owner/owner-modal-shell';
+import { Button } from '@/components/ui/button';
 import { copyToClipboard } from '@/lib/clipboard';
 import { formatCurrency } from '@/lib/format';
 
@@ -114,14 +115,15 @@ export default function InvoiceModal({
                     )}
                     {copied ? 'Tersalin' : 'Copy Pesan'}
                 </button>
-                <button
+                <Button
                     type="button"
                     onClick={handleWhatsApp}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-bold text-white hover:bg-primary-hover"
+                    size="lg"
+                    className="flex-1"
                 >
                     <ExternalLink className="h-4 w-4" />
                     Buka WhatsApp
-                </button>
+                </Button>
             </div>
         </OwnerModalShell>
     );
