@@ -20,11 +20,11 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
     },
     due_today: {
         label: 'Jatuh Tempo',
-        className: 'bg-amber-50 text-amber-700',
+        className: 'bg-warning-bg text-warning-text',
     },
-    overdue: { label: 'Terlambat', className: 'bg-red-50 text-red-700' },
+    overdue: { label: 'Terlambat', className: 'bg-danger-bg text-danger-text' },
     partial: { label: 'Sebagian', className: 'bg-primary/10 text-primary' },
-    paid: { label: 'Lunas', className: 'bg-emerald-50 text-emerald-700' },
+    paid: { label: 'Lunas', className: 'bg-success-bg text-success-text' },
 };
 
 function getOverdueLabel(dueDate: string): string | null {
@@ -231,7 +231,7 @@ export default function OutletAccountStatement({
                                                             {badge.label}
                                                         </StatusBadge>
                                                         {overdueLabel && (
-                                                            <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">
+                                                            <span className="rounded-full bg-danger-bg px-2 py-0.5 text-xs font-bold text-danger-text">
                                                                 {overdueLabel}
                                                             </span>
                                                         )}
@@ -269,7 +269,7 @@ export default function OutletAccountStatement({
                                                         <span className="text-text-subtle">
                                                             &middot;
                                                         </span>
-                                                        <span className="font-semibold text-emerald-600">
+                                                        <span className="font-semibold text-success-text">
                                                             Owner bayar:{' '}
                                                             {formatCurrency(
                                                                 Math.abs(
@@ -283,7 +283,7 @@ export default function OutletAccountStatement({
                                                 <span className="text-text-subtle">
                                                     &middot;
                                                 </span>
-                                                <span className="text-emerald-600">
+                                                <span className="text-success-text">
                                                     Dibayar:{' '}
                                                     {formatCurrency(
                                                         s.paid_amount,
@@ -294,7 +294,7 @@ export default function OutletAccountStatement({
                                                         <span className="text-text-subtle">
                                                             &middot;
                                                         </span>
-                                                        <span className="font-semibold text-red-600">
+                                                        <span className="font-semibold text-danger">
                                                             Sisa:{' '}
                                                             {formatCurrency(
                                                                 s.outstanding,
@@ -361,7 +361,7 @@ export default function OutletAccountStatement({
                                                 deliveryStats?.dombi_fee ?? 0,
                                             )}
                                         </span>
-                                        <span className="ml-2 font-semibold text-emerald-600">
+                                        <span className="ml-2 font-semibold text-success-text">
                                             Net +
                                             {formatCurrency(
                                                 deliveryStats?.dombi_net ?? 0,
@@ -400,7 +400,7 @@ export default function OutletAccountStatement({
                                                 )}
                                             </span>
                                             <span
-                                                className={`ml-2 font-semibold ${(deliveryStats.eksternal_net ?? 0) < 0 ? 'text-red-600' : 'text-emerald-600'}`}
+                                                className={`ml-2 font-semibold ${(deliveryStats.eksternal_net ?? 0) < 0 ? 'text-danger' : 'text-success-text'}`}
                                             >
                                                 Net{' '}
                                                 {(deliveryStats.eksternal_net ??
@@ -414,7 +414,7 @@ export default function OutletAccountStatement({
                                             </span>
                                             {(deliveryStats.eksternal_net ??
                                                 0) < 0 && (
-                                                <span className="ml-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
+                                                <span className="ml-1 rounded-full bg-danger-bg px-1.5 py-0.5 text-[10px] font-bold text-danger-text">
                                                     Rugi
                                                 </span>
                                             )}
@@ -426,7 +426,7 @@ export default function OutletAccountStatement({
                                 label="Net Settlement"
                                 value={
                                     <span
-                                        className={`font-semibold ${(summary.net_amount ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
+                                        className={`font-semibold ${(summary.net_amount ?? 0) >= 0 ? 'text-success-text' : 'text-danger'}`}
                                     >
                                         {(summary.net_amount ?? 0) >= 0
                                             ? 'Owner bayar '
@@ -467,7 +467,7 @@ export default function OutletAccountStatement({
                             <OwnerDetailRow
                                 label="Sisa"
                                 value={
-                                    <span className="font-semibold text-red-600">
+                                    <span className="font-semibold text-danger">
                                         {formatCurrency(summary.outstanding)}
                                     </span>
                                 }

@@ -119,7 +119,7 @@ export default function RekeningTab({
                         <span className="text-xs font-medium text-text-muted">
                             Total Rekening
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                             <Banknote className="h-5 w-5" />
                         </span>
                     </div>
@@ -132,11 +132,11 @@ export default function RekeningTab({
                         <span className="text-xs font-medium text-text-muted">
                             Aktif
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                             <CheckCircle2 className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-success-text tabular-nums sm:text-2xl">
                         {activeCount}
                     </div>
                 </div>
@@ -209,7 +209,7 @@ export default function RekeningTab({
                                         onClick={() =>
                                             handleDeleteClick(account.id)
                                         }
-                                        className="text-red-600 hover:text-red-700"
+                                        className="text-danger hover:text-danger-text"
                                     >
                                         Hapus
                                     </Button>
@@ -314,7 +314,7 @@ function AccountForm({
                     placeholder="BCA, Mandiri, BRI..."
                 />
                 {errors.bank_name && (
-                    <p className="mt-1 text-xs text-red-600">
+                    <p className="mt-1 text-xs text-danger">
                         {errors.bank_name}
                     </p>
                 )}
@@ -331,7 +331,7 @@ function AccountForm({
                     placeholder="1234567890"
                 />
                 {errors.account_number && (
-                    <p className="mt-1 text-xs text-red-600">
+                    <p className="mt-1 text-xs text-danger">
                         {errors.account_number}
                     </p>
                 )}
@@ -348,7 +348,7 @@ function AccountForm({
                     placeholder="PT Dombi Indonesia"
                 />
                 {errors.account_holder && (
-                    <p className="mt-1 text-xs text-red-600">
+                    <p className="mt-1 text-xs text-danger">
                         {errors.account_holder}
                     </p>
                 )}

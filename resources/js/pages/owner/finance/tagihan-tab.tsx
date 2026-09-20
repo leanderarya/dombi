@@ -66,12 +66,12 @@ export default function TagihanTab({ kpis, outlets }: any) {
                         <span className="text-xs font-medium text-text-muted">
                             Belum Dibayar
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                        <span className="bg-danger-bg0/10 flex h-10 w-10 items-center justify-center rounded-xl text-danger">
                             <Receipt className="h-5 w-5" />
                         </span>
                     </div>
                     <div
-                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.total_unpaid > 0 ? 'text-red-600' : 'text-text'}`}
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.total_unpaid > 0 ? 'text-danger' : 'text-text'}`}
                     >
                         {formatCurrency(kpis.total_unpaid)}
                     </div>
@@ -81,7 +81,7 @@ export default function TagihanTab({ kpis, outlets }: any) {
                         <span className="text-xs font-medium text-text-muted">
                             Outlet
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-info/10 text-info-text">
                             <StoreIcon className="h-5 w-5" />
                         </span>
                     </div>
@@ -89,7 +89,7 @@ export default function TagihanTab({ kpis, outlets }: any) {
                         {kpis.outlets_unpaid}
                     </div>
                     <p
-                        className={`text-[11px] ${kpis.outlets_unpaid > 0 ? 'text-amber-600' : 'text-emerald-600'}`}
+                        className={`text-[11px] ${kpis.outlets_unpaid > 0 ? 'text-warning-text' : 'text-success-text'}`}
                     >
                         {kpis.outlets_unpaid > 0
                             ? 'Memiliki tagihan'
@@ -101,12 +101,12 @@ export default function TagihanTab({ kpis, outlets }: any) {
                         <span className="text-xs font-medium text-text-muted">
                             Jatuh Tempo
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                        <span className="bg-warning-bg0/10 flex h-10 w-10 items-center justify-center rounded-xl text-warning-text">
                             <CalendarClock className="h-5 w-5" />
                         </span>
                     </div>
                     <div
-                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.due_this_week > 0 ? 'text-orange-600' : 'text-text'}`}
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.due_this_week > 0 ? 'text-status-progress' : 'text-text'}`}
                     >
                         {formatCurrency(kpis.due_this_week)}
                     </div>
