@@ -121,10 +121,10 @@ function ColorFilterChips({
     onChange: (key: string) => void;
 }) {
     const colorMap: Record<string, string> = {
-        pending: 'text-amber-600 bg-amber-50 ring-amber-200',
-        investigating: 'text-blue-600 bg-blue-50 ring-blue-200',
-        resolved: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
-        rejected: 'text-red-600 bg-red-50 ring-red-200',
+        pending: 'text-warning-text bg-warning ring-warning-border',
+        investigating: 'text-info-text bg-info ring-info-border',
+        resolved: 'text-success-text bg-primary ring-success-border',
+        rejected: 'text-danger bg-danger ring-danger-border',
     };
 
     return (

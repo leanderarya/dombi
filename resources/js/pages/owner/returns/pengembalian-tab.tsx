@@ -81,17 +81,17 @@ export default function PengembalianTab({
                             <span className="text-xs font-medium text-text-muted">
                                 Return Tertunda
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning-text">
                                 <RefreshCcw className="h-5 w-5" />
                             </span>
                         </div>
                         <div
-                            className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_returns > 0 ? 'text-amber-600' : 'text-text'}`}
+                            className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_returns > 0 ? 'text-warning-text' : 'text-text'}`}
                         >
                             {dashboard.pending_returns}
                         </div>
                         {dashboard.pending_returns > 0 && (
-                            <p className="text-[11px] text-amber-500">
+                            <p className="text-[11px] text-warning-text">
                                 Perlu ditinjau
                             </p>
                         )}
@@ -101,7 +101,7 @@ export default function PengembalianTab({
                             <span className="text-xs font-medium text-text-muted">
                                 Nilai Return
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-info)]/10 text-[var(--color-info)]">
                                 <Wallet className="h-5 w-5" />
                             </span>
                         </div>
@@ -115,7 +115,7 @@ export default function PengembalianTab({
                                 <span className="text-xs font-medium text-text-muted">
                                     Total Return
                                 </span>
-                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                                     <PackageX className="h-5 w-5" />
                                 </span>
                             </div>

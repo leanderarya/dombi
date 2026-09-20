@@ -304,8 +304,8 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                         <span
                                                             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
                                                                 isStored
-                                                                    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
-                                                                    : 'bg-red-50 text-red-700 ring-1 ring-red-200'
+                                                                    ? 'bg-primary text-success-text ring-1 ring-success-border'
+                                                                    : 'bg-danger text-danger-text ring-1 ring-danger-border'
                                                             }`}
                                                         >
                                                             {isStored
@@ -379,7 +379,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                                     },
                                                                 );
                                                             }}
-                                                            className="rounded-md bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 transition-colors hover:bg-emerald-100"
+                                                            className="rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-success-text ring-1 ring-success-border transition-colors hover:bg-success-bg"
                                                         >
                                                             Simpan
                                                         </button>
@@ -412,7 +412,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                                     },
                                                                 );
                                                             }}
-                                                            className="rounded-md bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 ring-1 ring-red-200 transition-colors hover:bg-red-100"
+                                                            className="rounded-md bg-danger px-2.5 py-1.5 text-xs font-semibold text-danger-text ring-1 ring-danger-border transition-colors hover:bg-danger-bg"
                                                         >
                                                             Buang
                                                         </button>
@@ -486,24 +486,24 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         )}
 
                         {ret.status === 'completed' && (
-                            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-success-border bg-primary p-3 text-center">
                                 <CheckCircle2
-                                    className="mx-auto h-5 w-5 text-emerald-500"
+                                    className="mx-auto h-5 w-5 text-success-text"
                                     aria-hidden="true"
                                 />
-                                <div className="mt-1 text-xs font-semibold text-emerald-800">
+                                <div className="mt-1 text-xs font-semibold text-success-text">
                                     Return Selesai
                                 </div>
                             </div>
                         )}
 
                         {ret.status === 'rejected' && (
-                            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-center">
+                            <div className="mt-4 rounded-xl border border-danger-border bg-danger p-3 text-center">
                                 <XCircle
-                                    className="mx-auto h-5 w-5 text-red-500"
+                                    className="mx-auto h-5 w-5 text-danger"
                                     aria-hidden="true"
                                 />
-                                <div className="mt-1 text-xs font-semibold text-red-800">
+                                <div className="mt-1 text-xs font-semibold text-danger-text">
                                     Return Ditolak
                                 </div>
                             </div>
@@ -643,7 +643,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         rows={3}
                     />
                     {rejectForm.errors.reason && (
-                        <div className="text-xs text-red-500">
+                        <div className="text-xs text-danger">
                             {rejectForm.errors.reason}
                         </div>
                     )}

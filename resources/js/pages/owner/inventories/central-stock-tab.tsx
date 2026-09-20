@@ -164,12 +164,12 @@ export default function CentralStockTab({
                         Stok Habis
                     </span>
                     <div
-                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.zero_stock > 0 ? 'text-red-600' : 'text-text'}`}
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.zero_stock > 0 ? 'text-danger' : 'text-text'}`}
                     >
                         {stats.zero_stock}
                     </div>
                     {stats.zero_stock > 0 && (
-                        <p className="text-[11px] text-red-500">
+                        <p className="text-[11px] text-danger">
                             Perlu tindakan
                         </p>
                     )}
@@ -179,12 +179,12 @@ export default function CentralStockTab({
                         Stok Rendah
                     </span>
                     <div
-                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.low_stock > 0 ? 'text-amber-600' : 'text-text'}`}
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.low_stock > 0 ? 'text-warning-text' : 'text-text'}`}
                     >
                         {stats.low_stock}
                     </div>
                     {stats.low_stock > 0 && (
-                        <p className="text-[11px] text-amber-500">
+                        <p className="text-[11px] text-warning-text">
                             Perlu tindakan
                         </p>
                     )}
@@ -209,7 +209,7 @@ export default function CentralStockTab({
                         key={f.key}
                         type="button"
                         onClick={() => setStockFilter(f.key)}
-                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${stockFilter === f.key ? 'bg-emerald-50 text-emerald-600 ring-emerald-200' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${stockFilter === f.key ? 'bg-primary text-success-text ring-success-border' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
                     >
                         {f.label}
                     </button>
@@ -276,7 +276,7 @@ export default function CentralStockTab({
                                             )}
                                         </TableCell>
                                         <TableCell
-                                            className={`px-3 py-3 text-right font-bold tabular-nums ${isZero ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}
+                                            className={`px-3 py-3 text-right font-bold tabular-nums ${isZero ? 'text-danger' : isLow ? 'text-warning-text' : 'text-success-text'}`}
                                         >
                                             {v.center_stock} pcs
                                         </TableCell>
