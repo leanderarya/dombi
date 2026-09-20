@@ -166,7 +166,7 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
                         <Link
                             key={delivery.id}
                             href={`/courier/deliveries/${delivery.id}`}
-                            className="block rounded-xl border border-border bg-white p-4 transition-all hover:shadow-sm active:opacity-80"
+                            className="block rounded-xl border border-border bg-surface p-4 transition-all hover:shadow-sm active:opacity-80"
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1">

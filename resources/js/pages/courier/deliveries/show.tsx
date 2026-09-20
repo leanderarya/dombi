@@ -311,7 +311,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                         </button>
                         <button
                             onClick={callCustomer}
-                            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
+                            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
                         >
                             <Phone className="h-4 w-4" />
                             Telepon
@@ -384,7 +384,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                             : (currentStep?.label ?? delivery.status);
 
                     return (
-                        <details className="group rounded-xl border border-border bg-white">
+                        <details className="group rounded-xl border border-border bg-surface">
                             <summary className="flex cursor-pointer items-center justify-between p-4 active:opacity-80">
                                 <div>
                                     <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
@@ -420,19 +420,19 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                                                     className="relative flex gap-3 pb-5 last:pb-0"
                                                 >
                                                     {!isLast && (
-                                                        <div className="absolute top-6 bottom-0 left-[11px] w-px bg-red-200" />
+                                                        <div className="absolute top-6 bottom-0 left-[11px] w-px bg-danger-border" />
                                                     )}
                                                     <div className="relative shrink-0 pt-0.5">
-                                                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 ring-2 ring-red-500">
-                                                            <XCircle className="h-3 w-3 text-red-600" />
+                                                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-danger-bg ring-2 ring-danger">
+                                                            <XCircle className="h-3 w-3 text-danger" />
                                                         </div>
                                                     </div>
                                                     <div className="min-w-0 flex-1 pt-0.5">
-                                                        <div className="text-sm font-semibold text-red-700">
+                                                        <div className="text-sm font-semibold text-danger-text">
                                                             Pengiriman Gagal
                                                         </div>
                                                         {delivery.failed_reason && (
-                                                            <div className="mt-0.5 text-xs text-red-600">
+                                                            <div className="mt-0.5 text-xs text-danger">
                                                                 {
                                                                     delivery.failed_reason
                                                                 }
@@ -542,10 +542,10 @@ export default function CourierDeliveryShow({ delivery }: Props) {
             {/* Failure Info */}
             {delivery.status === 'failed' && delivery.failed_reason && (
                 <SectionCard
-                    className="border-red-200 bg-red-50"
+                    className="border-danger-border bg-danger-bg"
                     label="Alasan Gagal"
                 >
-                    <div className="mt-1 text-sm text-red-800">
+                    <div className="mt-1 text-sm text-danger-text">
                         {delivery.failed_reason}
                     </div>
                 </SectionCard>
@@ -593,9 +593,9 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                 onClose={() => setShowReturnSheet(false)}
                 title="Kembali ke Outlet"
             >
-                <div className="flex items-center gap-3 rounded-lg bg-amber-50 p-4">
-                    <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
-                    <p className="text-sm text-amber-800">
+                <div className="flex items-center gap-3 rounded-lg bg-warning-bg p-4">
+                    <AlertTriangle className="h-5 w-5 shrink-0 text-warning-text" />
+                    <p className="text-sm text-warning-text">
                         Anda yakin ingin mengembalikan pesanan{' '}
                         <strong>{order.order_code}</strong> ke outlet? Pesanan
                         perlu diambil ulang.
@@ -604,13 +604,13 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                 <div className="flex gap-3">
                     <button
                         onClick={() => setShowReturnSheet(false)}
-                        className="flex-1 rounded-lg border border-border bg-white px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
+                        className="flex-1 rounded-lg border border-border bg-surface px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
                     >
                         Batal
                     </button>
                     <button
                         onClick={returnToOutlet}
-                        className="flex-1 rounded-lg bg-red-600 px-4 py-3 text-sm font-bold text-white transition-colors active:bg-red-700"
+                        className="flex-1 rounded-lg bg-danger px-4 py-3 text-sm font-bold text-white transition-colors active:bg-danger"
                     >
                         Ya, Kembalikan
                     </button>
@@ -675,7 +675,7 @@ function CompleteSheetContent({
                             form.setData('delivered_to', e.target.value)
                         }
                         placeholder="Nama penerima"
-                        className="mt-1 block min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="mt-1 block min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
 
@@ -690,7 +690,7 @@ function CompleteSheetContent({
                         }
                         placeholder="Catatan pengiriman"
                         rows={2}
-                        className="mt-1 block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="mt-1 block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
 
@@ -716,7 +716,7 @@ function CompleteSheetContent({
             </div>
 
             {form.errors.proof_image && (
-                <p className="mt-1 text-xs text-red-600">
+                <p className="mt-1 text-xs text-danger">
                     {form.errors.proof_image}
                 </p>
             )}
@@ -759,8 +759,8 @@ function FailSheetContent({
                         key={reason}
                         className={`flex cursor-pointer items-center rounded-lg border p-3 transition-colors ${
                             form.data.failed_reason === reason
-                                ? 'border-red-300 bg-red-50'
-                                : 'border-border bg-white active:bg-surface-muted'
+                                ? 'border-danger bg-danger-bg'
+                                : 'border-border bg-surface active:bg-surface-muted'
                         }`}
                     >
                         <input
@@ -789,18 +789,18 @@ function FailSheetContent({
                         }
                         placeholder="Jelaskan alasan kegagalan"
                         rows={3}
-                        className="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
             )}
 
             {form.errors.failed_reason && (
-                <p className="mt-1 text-xs text-red-600">
+                <p className="mt-1 text-xs text-danger">
                     {form.errors.failed_reason}
                 </p>
             )}
             {form.errors.failure_note && (
-                <p className="mt-1 text-xs text-red-600">
+                <p className="mt-1 text-xs text-danger">
                     {form.errors.failure_note}
                 </p>
             )}
@@ -808,7 +808,7 @@ function FailSheetContent({
             <button
                 type="submit"
                 disabled={!form.data.failed_reason || form.processing}
-                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-bold text-white transition-colors active:bg-red-700 disabled:opacity-50"
+                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-danger px-4 text-sm font-bold text-white transition-colors active:bg-danger disabled:opacity-50"
             >
                 {form.processing ? 'Memproses...' : 'Konfirmasi Gagal'}
             </button>
@@ -843,8 +843,8 @@ function RejectSheetContent({
                         key={reason}
                         className={`flex cursor-pointer items-center rounded-lg border p-3 transition-colors ${
                             form.data.rejection_reason === reason
-                                ? 'border-red-300 bg-red-50'
-                                : 'border-border bg-white active:bg-surface-muted'
+                                ? 'border-danger bg-danger-bg'
+                                : 'border-border bg-surface active:bg-surface-muted'
                         }`}
                     >
                         <input
@@ -873,18 +873,18 @@ function RejectSheetContent({
                         }
                         placeholder="Jelaskan alasan penolakan"
                         rows={3}
-                        className="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="block w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
             )}
 
             {form.errors.rejection_reason && (
-                <p className="mt-1 text-xs text-red-600">
+                <p className="mt-1 text-xs text-danger">
                     {form.errors.rejection_reason}
                 </p>
             )}
             {form.errors.rejection_note && (
-                <p className="mt-1 text-xs text-red-600">
+                <p className="mt-1 text-xs text-danger">
                     {form.errors.rejection_note}
                 </p>
             )}
@@ -892,7 +892,7 @@ function RejectSheetContent({
             <button
                 type="submit"
                 disabled={!form.data.rejection_reason || form.processing}
-                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-bold text-white transition-colors active:bg-red-700 disabled:opacity-50"
+                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-danger px-4 text-sm font-bold text-white transition-colors active:bg-danger disabled:opacity-50"
             >
                 {form.processing ? 'Memproses...' : 'Konfirmasi Tolak'}
             </button>

@@ -87,7 +87,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                         disabled={loadingAction !== null}
                         className={`min-h-11 rounded-lg px-5 py-3 text-sm font-bold transition-colors disabled:opacity-50 ${
                             courier.is_online
-                                ? 'border border-border bg-white text-text active:bg-surface-muted'
+                                ? 'border border-border bg-surface text-text active:bg-surface-muted'
                                 : 'bg-primary text-white active:opacity-80'
                         }`}
                     >
@@ -123,7 +123,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                             <Link
                                 key={task.id}
                                 href={`/courier/deliveries/${task.id}`}
-                                className="block rounded-xl border border-border bg-white p-4 transition-all hover:shadow-sm active:opacity-80"
+                                className="block rounded-xl border border-border bg-surface p-4 transition-all hover:shadow-sm active:opacity-80"
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
@@ -161,7 +161,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                             <Link
                                 key={task.id}
                                 href={`/courier/deliveries/${task.id}`}
-                                className="block rounded-xl border border-border bg-white p-4 transition-all hover:shadow-sm active:opacity-80"
+                                className="block rounded-xl border border-border bg-surface p-4 transition-all hover:shadow-sm active:opacity-80"
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
@@ -180,8 +180,8 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                                             <span
                                                 className={`rounded-md px-2 py-1 text-xs font-bold ring-1 ${
                                                     task.age_minutes > 30
-                                                        ? 'bg-red-100 text-red-800 ring-red-200'
-                                                        : 'bg-amber-100 text-amber-800 ring-amber-200'
+                                                        ? 'bg-danger-bg text-danger-text ring-danger-border'
+                                                        : 'bg-warning-bg text-warning-text ring-warning-border'
                                                 }`}
                                             >
                                                 {task.age_minutes}m
@@ -205,7 +205,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                             <Link
                                 key={task.id}
                                 href={`/courier/deliveries/${task.id}`}
-                                className="block rounded-xl border border-border bg-white p-4 transition-all hover:shadow-sm active:opacity-80"
+                                className="block rounded-xl border border-border bg-surface p-4 transition-all hover:shadow-sm active:opacity-80"
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
@@ -216,13 +216,13 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                                             {task.customer_name}
                                         </div>
                                         {task.failed_reason && (
-                                            <div className="mt-2 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+                                            <div className="mt-2 flex items-center gap-2 rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger-text">
                                                 <AlertCircle className="h-4 w-4 shrink-0" />
                                                 {task.failed_reason}
                                             </div>
                                         )}
                                     </div>
-                                    <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700 ring-1 ring-red-200">
+                                    <span className="rounded-full bg-danger-bg px-2.5 py-1 text-xs font-bold text-danger-text ring-1 ring-danger-border">
                                         Gagal
                                     </span>
                                 </div>
@@ -251,7 +251,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                         {tasks.completedToday.slice(0, 5).map((task) => (
                             <div
                                 key={task.id}
-                                className="flex items-center justify-between rounded-xl border border-border bg-white p-4"
+                                className="flex items-center justify-between rounded-xl border border-border bg-surface p-4"
                             >
                                 <div>
                                     <div className="text-sm font-bold text-text">
@@ -299,7 +299,7 @@ function StatCard({
 }) {
     return (
         <div
-            className={`rounded-xl border border-border bg-white p-3 text-center ${dimmed ? 'opacity-50' : ''}`}
+            className={`rounded-xl border border-border bg-surface p-3 text-center ${dimmed ? 'opacity-50' : ''}`}
         >
             <div className="text-2xl font-bold text-text tabular-nums">
                 {value}
