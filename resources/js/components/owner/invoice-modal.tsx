@@ -103,10 +103,12 @@ export default function InvoiceModal({
             </div>
 
             <div className="mt-5 flex gap-3">
-                <button
+                <Button
                     type="button"
                     onClick={handleCopy}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-surface py-2.5 text-sm font-bold text-text hover:bg-surface-muted"
+                    variant="outline"
+                    size="lg"
+                    className="flex-1"
                 >
                     {copied ? (
                         <Check className="h-4 w-4 text-success-text" />
@@ -114,7 +116,7 @@ export default function InvoiceModal({
                         <Copy className="h-4 w-4" />
                     )}
                     {copied ? 'Tersalin' : 'Copy Pesan'}
-                </button>
+                </Button>
                 <Button
                     type="button"
                     onClick={handleWhatsApp}

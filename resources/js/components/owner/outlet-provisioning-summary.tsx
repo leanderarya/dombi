@@ -92,18 +92,22 @@ export default function OutletProvisioningSummary({
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                    <button
+                    <Button
                         onClick={copyCredentials}
-                        className="min-h-[44px] rounded-lg border border-border bg-surface px-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
+                        variant="outline"
+                        size="lg"
+                        className="flex-1"
                     >
                         {copied ? 'Copied' : 'Copy Credentials'}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={shareCredentials}
-                        className="min-h-[44px] rounded-lg border border-border bg-surface px-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
+                        variant="outline"
+                        size="lg"
+                        className="flex-1"
                     >
                         Share
-                    </button>
+                    </Button>
                 </div>
                 <Button
                     onClick={() => setOpen(false)}

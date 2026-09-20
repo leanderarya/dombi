@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import OwnerModalShell from '@/components/owner/owner-modal-shell';
+import { Button } from '@/components/ui/button';
 
 interface Props {
     open: boolean;
@@ -166,20 +167,23 @@ export default function RestockModal({
                 )}
 
                 <div className="mt-5 flex gap-3">
-                    <button
+                    <Button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 rounded-lg border border-border bg-surface py-2.5 text-sm font-bold text-text hover:bg-surface-muted"
+                        variant="outline"
+                        size="lg"
+                        className="flex-1"
                     >
                         Batal
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="submit"
                         disabled={saving || qty <= 0}
-                        className="flex-[2] rounded-lg bg-primary py-2.5 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-50"
+                        size="lg"
+                        className="flex-[2]"
                     >
                         {saving ? 'Menyimpan...' : 'Simpan Restock'}
-                    </button>
+                    </Button>
                 </div>
             </form>
         </OwnerModalShell>
