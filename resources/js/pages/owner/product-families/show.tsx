@@ -927,6 +927,7 @@ export default function ProductFamilyShow({ family }: Props) {
                             Batal
                         </Button>
                         <Button
+                            size="lg"
                             variant="destructive"
                             onClick={handleDeleteVariant}
                         >
@@ -955,6 +956,7 @@ export default function ProductFamilyShow({ family }: Props) {
                             Batal
                         </Button>
                         <Button
+                            size="lg"
                             variant="destructive"
                             onClick={handleDeleteFamily}
                         >

@@ -420,7 +420,11 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                         >
                             Batal
                         </Button>
-                        <Button variant="destructive" onClick={handleDelete}>
+                        <Button
+                            size="lg"
+                            variant="destructive"
+                            onClick={handleDelete}
+                        >
                             Hapus
                         </Button>
                     </DialogFooter>

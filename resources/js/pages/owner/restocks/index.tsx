@@ -646,7 +646,11 @@ function RestockActionModal({
                                     Tolak
                                 </Button>
                                 <div className="flex-1" />
-                                <Button variant="outline" onClick={onClose}>
+                                <Button
+                                    size="lg"
+                                    variant="outline"
+                                    onClick={onClose}
+                                >
                                     Batal
                                 </Button>
                                 <Button
@@ -661,7 +665,11 @@ function RestockActionModal({
                             </>
                         )}
                         {!isRequested && (
-                            <Button variant="outline" onClick={onClose}>
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                onClick={onClose}
+                            >
                                 Tutup
                             </Button>
                         )}

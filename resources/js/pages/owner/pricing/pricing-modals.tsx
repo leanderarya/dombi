@@ -123,6 +123,7 @@ export function GlobalPriceModal({
 
                 <div className="mt-6 flex gap-2">
                     <Button
+                        size="lg"
                         type="button"
                         variant="secondary"
                         onClick={onClose}
@@ -206,6 +207,7 @@ export function OutletPriceModal({
 
                 <div className="mt-6 flex gap-2">
                     <Button
+                        size="lg"
                         type="button"
                         variant="secondary"
                         onClick={onClose}

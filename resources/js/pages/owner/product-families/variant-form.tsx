@@ -145,7 +145,12 @@ export default function VariantForm({
                     >
                         {editing ? 'Update' : 'Simpan'}
                     </Button>
-                    <Button type="button" variant="outline" onClick={onCancel}>
+                    <Button
+                        size="lg"
+                        type="button"
+                        variant="outline"
+                        onClick={onCancel}
+                    >
                         Batal
                     </Button>
                 </div>

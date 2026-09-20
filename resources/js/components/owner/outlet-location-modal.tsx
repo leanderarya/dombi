@@ -157,6 +157,7 @@ export default function OutletLocationModal({
                     </div>
                     <DialogFooter>
                         <Button
+                            size="lg"
                             variant="outline"
                             type="button"
                             onClick={closeModal}
