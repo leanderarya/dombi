@@ -1163,7 +1163,7 @@ export default function ProductForm({
                                 className="min-h-11 border-transparent bg-accent-orange text-white hover:bg-accent-orange-hover"
                                 onClick={addBulkSizeRow}
                             >
-                                <Plus className="h-3.5 w-3.5" /> Tambah Ukuran
+                                <Plus className="h-4 w-4" /> Tambah Ukuran
                             </Button>
                         </div>
 
