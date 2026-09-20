@@ -197,7 +197,8 @@ export default function PembayaranTab({
                             'text-warning-text bg-warning-bg ring-warning-border',
                         verified:
                             'text-success-text bg-success-bg ring-success-border',
-                        rejected: 'text-danger bg-danger-bg ring-danger-border',
+                        rejected:
+                            'text-danger-text bg-danger-bg ring-danger-border',
                     };
 
                     return (

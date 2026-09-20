@@ -66,7 +66,7 @@ export default function TagihanTab({ kpis, outlets }: any) {
                         <span className="text-xs font-medium text-text-muted">
                             Belum Dibayar
                         </span>
-                        <span className="bg-danger-bg0/10 flex h-10 w-10 items-center justify-center rounded-xl text-danger">
+                        <span className="bg-danger-bg0/10 flex h-10 w-10 items-center justify-center rounded-xl text-danger-text">
                             <Receipt className="h-5 w-5" />
                         </span>
                     </div>
