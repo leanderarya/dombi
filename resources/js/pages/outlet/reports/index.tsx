@@ -109,7 +109,7 @@ export default function OutletReports({ outlet, preview }: Props) {
                             type="button"
                             onClick={handleCustomApply}
                             size="lg"
-                            className="shrink-0"
+                            className="shrink-0 active:opacity-80"
                         >
                             Terapkan
                         </Button>

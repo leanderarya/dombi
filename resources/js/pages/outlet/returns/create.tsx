@@ -375,7 +375,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                             form.processing || selectedVariants.size === 0
                         }
                         size="lg"
-                        className="w-full"
+                        className="w-full active:opacity-80"
                     >
                         {form.processing ? 'Mengirim...' : 'Ajukan Return'}
                     </Button>

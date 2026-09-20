@@ -82,7 +82,7 @@ export default function ExchangeCreateDialog({
                         onClick={onClose}
                         variant="ghost"
                         size="icon"
-                        className="h-11 w-11"
+                        className="h-11 w-11 active:opacity-80"
                     >
                         <X className="h-4 w-4" />
                     </Button>

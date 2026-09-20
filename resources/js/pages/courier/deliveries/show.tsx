@@ -306,7 +306,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                         <Button
                             onClick={whatsappCustomer}
                             size="lg"
-                            className="flex-1"
+                            className="flex-1 active:opacity-80"
                         >
                             <MessageCircle className="h-4 w-4" />
                             WhatsApp
@@ -315,7 +315,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                             onClick={callCustomer}
                             variant="outline"
                             size="lg"
-                            className="flex-1"
+                            className="flex-1 active:opacity-80"
                         >
                             <Phone className="h-4 w-4" />
                             Telepon

@@ -134,7 +134,7 @@ export default function OutletOrderReportShow({ report }: any) {
                         type="button"
                         onClick={() => setRespondMode(true)}
                         size="cta"
-                        className="w-full"
+                        className="w-full active:opacity-80"
                     >
                         Tanggapi Laporan
                     </Button>
@@ -166,7 +166,7 @@ export default function OutletOrderReportShow({ report }: any) {
                             }}
                             variant="outline"
                             size="lg"
-                            className="flex-1"
+                            className="flex-1 active:opacity-80"
                         >
                             Batal
                         </Button>
@@ -175,7 +175,7 @@ export default function OutletOrderReportShow({ report }: any) {
                             onClick={handleRespond}
                             disabled={form.processing}
                             size="lg"
-                            className="flex-1"
+                            className="flex-1 active:opacity-80"
                         >
                             {form.processing
                                 ? 'Mengirim...'

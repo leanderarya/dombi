@@ -494,7 +494,7 @@ export default function AssignCourierSheet({
                             variant="outline"
                             size="cta"
                             onClick={onClose}
-                            className="flex-1"
+                            className="flex-1 active:opacity-80"
                         >
                             Batal
                         </Button>
@@ -511,7 +511,7 @@ export default function AssignCourierSheet({
                                       !courierCost ||
                                       form.processing
                             }
-                            className="flex-1"
+                            className="flex-1 active:opacity-80"
                         >
                             {form.processing ? 'Mengassign...' : 'Assign Kurir'}
                         </Button>

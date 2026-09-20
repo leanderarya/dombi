@@ -70,7 +70,7 @@ export default function OfflineSalesIndex({
                         size="lg"
                         onClick={() => setShowCreate(true)}
                         icon={Plus}
-                        className="min-h-11"
+                        className="min-h-11 active:opacity-80"
                     >
                         Catat Penjualan
                     </Button>
@@ -131,7 +131,7 @@ export default function OfflineSalesIndex({
                                                         aria-label="Edit penjualan"
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="h-11 w-11 text-text-subtle"
+                                                        className="h-11 w-11 text-text-subtle active:opacity-80"
                                                     >
                                                         <Pencil className="h-4 w-4" />
                                                     </Button>

@@ -115,7 +115,7 @@ export default function OutletShow({
                     <Button
                         variant="danger"
                         size="sm"
-                        className="min-h-11"
+                        className="min-h-11 active:opacity-80"
                         onClick={() => setShowArchiveConfirm(true)}
                     >
                         <Trash2 className="h-3 w-3" aria-hidden="true" />
@@ -227,7 +227,7 @@ export default function OutletShow({
                         <Button
                             variant="outline"
                             size="sm"
-                            className="mt-3 min-h-11"
+                            className="mt-3 min-h-11 active:opacity-80"
                             disabled={outlet.status === 'archived'}
                             onClick={() => setResetOpen(true)}
                         >
@@ -249,7 +249,7 @@ export default function OutletShow({
                                 aria-label="Ubah lokasi outlet"
                                 variant="ghost"
                                 size="icon"
-                                className="h-11 w-11 text-text-muted"
+                                className="h-11 w-11 text-text-muted active:opacity-80"
                             >
                                 <Pencil className="h-3.5 w-3.5" />
                             </Button>
