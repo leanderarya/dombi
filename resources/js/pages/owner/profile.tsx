@@ -80,7 +80,7 @@ export default function OwnerProfile() {
                             </div>
                             <button
                                 onClick={() => router.post('/logout')}
-                                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 hover:bg-red-100 active:opacity-80"
+                                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-danger-border bg-danger text-sm font-bold text-danger-border transition-all duration-150 hover:bg-danger-bg active:opacity-80"
                             >
                                 <LogOut
                                     className="h-4 w-4"
@@ -96,7 +96,7 @@ export default function OwnerProfile() {
                 <div className="mt-4 lg:hidden">
                     <button
                         onClick={() => router.post('/logout')}
-                        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 hover:bg-red-100 active:opacity-80"
+                        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-danger-border bg-danger text-sm font-bold text-danger-border transition-all duration-150 hover:bg-danger-bg active:opacity-80"
                     >
                         <LogOut className="h-4 w-4" aria-hidden="true" />
                         Logout

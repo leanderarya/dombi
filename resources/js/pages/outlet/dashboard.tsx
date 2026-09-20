@@ -206,7 +206,7 @@ export default function OutletDashboard({
                                             <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                                                 Settlement
                                             </div>
-                                            <div className="mt-0.5 text-sm font-semibold text-emerald-700">
+                                            <div className="mt-0.5 text-sm font-semibold text-success-border">
                                                 Semua lunas
                                             </div>
                                         </div>
@@ -216,7 +216,7 @@ export default function OutletDashboard({
                                                     <div className="text-[11px] text-text-subtle">
                                                         Margin
                                                     </div>
-                                                    <div className="text-sm font-bold text-emerald-700 tabular-nums">
+                                                    <div className="text-sm font-bold text-success-border tabular-nums">
                                                         {formatCurrency(
                                                             settlementStats.margin,
                                                         )}

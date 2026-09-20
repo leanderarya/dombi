@@ -22,7 +22,7 @@ function BigRow({
 }) {
     const toneCls =
         tone === 'emerald'
-            ? 'text-emerald-700'
+            ? 'text-success-border'
             : tone === 'red'
               ? 'text-danger'
               : tone === 'muted'
@@ -212,7 +212,7 @@ export default function SettlementShow({
                         <div
                             className={`text-[11px] font-semibold uppercase ${
                                 isOwnerPay
-                                    ? 'text-emerald-700'
+                                    ? 'text-success-border'
                                     : 'text-danger-text'
                             }`}
                         >
@@ -223,7 +223,7 @@ export default function SettlementShow({
                         <div
                             className={`mt-1 text-xl font-bold tabular-nums ${
                                 isOwnerPay
-                                    ? 'text-emerald-700'
+                                    ? 'text-success-border'
                                     : 'text-danger-text'
                             }`}
                         >

@@ -302,12 +302,12 @@ function RevenueTrendChart({
                         >
                             <stop
                                 offset="0%"
-                                stopColor="#005D42"
+                                stopColor="var(--color-brand-deep)"
                                 stopOpacity="0.25"
                             />
                             <stop
                                 offset="100%"
-                                stopColor="#005D42"
+                                stopColor="var(--color-brand-deep)"
                                 stopOpacity="0"
                             />
                         </linearGradient>
@@ -320,7 +320,7 @@ function RevenueTrendChart({
                             y1={y}
                             x2={w}
                             y2={y}
-                            stroke="#F4F4F2"
+                            stroke="var(--color-surface-muted)"
                             strokeWidth="1"
                         />
                     ))}
@@ -329,7 +329,7 @@ function RevenueTrendChart({
                     <path
                         d={linePath}
                         fill="none"
-                        stroke="#005D42"
+                        stroke="var(--color-brand-deep)"
                         strokeWidth="3"
                         className="chart-line"
                     />
@@ -340,7 +340,7 @@ function RevenueTrendChart({
                             y1={0}
                             x2={hovered.x}
                             y2={h}
-                            stroke="#005D42"
+                            stroke="var(--color-brand-deep)"
                             strokeWidth="1"
                             strokeOpacity="0.3"
                             strokeDasharray="4,4"
@@ -352,7 +352,7 @@ function RevenueTrendChart({
                             key={i}
                             cx={p.x}
                             cy={p.y}
-                            fill="#005D42"
+                            fill="var(--color-brand-deep)"
                             r={
                                 hoverIndex === i
                                     ? 5
@@ -385,7 +385,7 @@ function RevenueTrendChart({
                                 width={100}
                                 height={26}
                                 rx="6"
-                                fill="#1E1E1E"
+                                fill="var(--color-text)"
                             />
                             <text
                                 x={Math.min(Math.max(hovered.x, 54), w - 54)}
