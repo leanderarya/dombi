@@ -122,18 +122,20 @@ export default function OfflineSalesIndex({
                                                             sale.total_amount,
                                                         )}
                                                     </span>
-                                                    <button
+                                                    <Button
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             e.stopPropagation();
                                                             setEditTarget(sale);
                                                         }}
                                                         aria-label="Edit penjualan"
-                                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle active:bg-surface-muted active:text-text"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-11 w-11 text-text-subtle"
                                                     >
                                                         <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                    <button
+                                                    </Button>
+                                                    <Button
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             e.stopPropagation();
@@ -142,10 +144,12 @@ export default function OfflineSalesIndex({
                                                             );
                                                         }}
                                                         aria-label="Hapus penjualan"
-                                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle active:bg-danger-bg active:text-danger-text"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-11 w-11 text-text-subtle"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             </div>
                                             <div className="mt-1 flex items-center justify-between text-xs text-text-muted">

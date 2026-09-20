@@ -194,7 +194,7 @@ export default function OfflineSaleDialog({
                                 </span>
                             </div>
                         )}
-                        <button
+                        <Button
                             type="submit"
                             disabled={
                                 form.processing ||
@@ -202,14 +202,15 @@ export default function OfflineSaleDialog({
                                 !qtyValid ||
                                 qtyOverflow
                             }
-                            className="min-h-11 w-full rounded-lg bg-primary text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                            size="lg"
+                            className="w-full"
                         >
                             {form.processing
                                 ? 'Menyimpan...'
                                 : sale
                                   ? 'Update'
                                   : 'Simpan'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

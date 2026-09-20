@@ -620,17 +620,20 @@ function InventoryRow({
                         )}
                     </div>
                 </div>
-                <button
+                <Button
                     type="button"
                     onClick={(e) => {
                         e.stopPropagation();
                         setShowOpname(true);
                     }}
-                    className="ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-text-subtle transition-colors active:bg-surface-muted active:text-primary"
+                    variant="ghost"
+                    size="icon"
+                    className="ml-2 h-11 w-11 shrink-0 text-text-subtle"
                     title="Stock Opname"
+                    aria-label="Stock Opname"
                 >
                     <ClipboardCheck className="h-4 w-4" />
-                </button>
+                </Button>
             </div>
 
             <OpnameSheet
@@ -683,7 +686,12 @@ function OpnameSheet({
     };
 
     return (
-        <BottomSheet open={open} onClose={onClose} title="Stock Opname">
+        <BottomSheet
+            open={open}
+            onClose={onClose}
+            title="Stock Opname"
+            aria-label="Stock Opname"
+        >
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <span className="text-[11px] font-medium text-text-subtle">
