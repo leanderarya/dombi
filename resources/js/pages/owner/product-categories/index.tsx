@@ -287,24 +287,28 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                                     Kelola{' '}
                                                     <ChevronRight className="h-3 w-3" />
                                                 </button>
-                                                <button
+                                                <Button
                                                     onClick={() =>
                                                         handleEdit(cat)
                                                     }
-                                                    className="flex min-h-11 min-w-11 items-center justify-center text-text-muted transition-colors hover:text-primary"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-11 w-11 text-text-muted"
                                                     aria-label={`Edit ${cat.name}`}
                                                 >
                                                     <Pencil className="h-3.5 w-3.5" />
-                                                </button>
-                                                <button
+                                                </Button>
+                                                <Button
                                                     onClick={() =>
                                                         setDeleteId(cat.id)
                                                     }
-                                                    className="flex min-h-11 min-w-11 items-center justify-center text-text-muted transition-colors hover:text-danger"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-11 w-11 text-text-muted"
                                                     aria-label={`Hapus ${cat.name}`}
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
-                                                </button>
+                                                </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
