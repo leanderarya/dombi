@@ -54,7 +54,7 @@ export default function OutletScheduleModal({
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>
+                    <Button size="lg" variant="outline" onClick={onClose}>
                         Tutup
                     </Button>
                 </DialogFooter>

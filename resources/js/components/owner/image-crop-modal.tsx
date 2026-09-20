@@ -69,6 +69,7 @@ export default function ImageCropModal({
 
                 <div className="mt-4 flex justify-end gap-2">
                     <Button
+                        size="lg"
                         variant="outline"
                         onClick={onClose}
                         disabled={processing}

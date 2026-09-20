@@ -510,7 +510,11 @@ export default function DeliveryTiersIndex({
                         >
                             Batal
                         </Button>
-                        <Button variant="destructive" onClick={handleDelete}>
+                        <Button
+                            size="lg"
+                            variant="destructive"
+                            onClick={handleDelete}
+                        >
                             Hapus
                         </Button>
                     </DialogFooter>

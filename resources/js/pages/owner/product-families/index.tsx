@@ -425,7 +425,11 @@ export default function ProductFamiliesIndex({ families }: Props) {
                         >
                             Batal
                         </Button>
-                        <Button variant="destructive" onClick={handleDelete}>
+                        <Button
+                            size="lg"
+                            variant="destructive"
+                            onClick={handleDelete}
+                        >
                             Hapus
                         </Button>
                     </DialogFooter>

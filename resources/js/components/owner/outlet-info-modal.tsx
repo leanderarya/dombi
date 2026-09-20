@@ -101,6 +101,7 @@ export default function OutletInfoModal({
                     />
                     <DialogFooter>
                         <Button
+                            size="lg"
                             variant="outline"
                             type="button"
                             onClick={closeModal}

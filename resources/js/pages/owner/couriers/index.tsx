@@ -354,7 +354,11 @@ export default function CouriersIndex({
                             >
                                 Batal
                             </Button>
-                            <Button type="submit" loading={form.processing}>
+                            <Button
+                                type="submit"
+                                size="lg"
+                                loading={form.processing}
+                            >
                                 Tambah Kurir
                             </Button>
                         </DialogFooter>

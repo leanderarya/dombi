@@ -275,6 +275,7 @@ export default function RekeningTab({
                             Batal
                         </Button>
                         <Button
+                            size="lg"
                             variant="destructive"
                             onClick={handleDeleteConfirm}
                         >
