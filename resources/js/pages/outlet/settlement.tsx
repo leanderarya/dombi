@@ -921,6 +921,7 @@ function PaymentSheet({
                 <Button
                     type="submit"
                     variant="primary"
+                    size="lg"
                     disabled={processing}
                     loading={processing}
                     className="w-full"
