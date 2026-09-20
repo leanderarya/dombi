@@ -139,7 +139,7 @@ export default function OutletAnalytics({
                                     type="button"
                                     onClick={handleCustomApply}
                                     size="lg"
-                                    className="shrink-0"
+                                    className="shrink-0 active:opacity-80"
                                 >
                                     Terapkan
                                 </Button>

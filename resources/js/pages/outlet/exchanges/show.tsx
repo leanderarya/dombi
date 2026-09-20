@@ -138,7 +138,7 @@ export default function OutletExchangesShow({ exchange }: any) {
                         <Button
                             onClick={handleConfirmReceived}
                             size="lg"
-                            className="w-full"
+                            className="w-full active:opacity-80"
                         >
                             Konfirmasi Barang Diterima
                         </Button>

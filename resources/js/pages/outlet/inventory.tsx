@@ -164,7 +164,7 @@ export default function OutletInventory({
                                 onClick={() => setShowRestock(true)}
                                 icon={Plus}
                                 title="Request Restock"
-                                className="h-12 w-12 shrink-0 !px-0"
+                                className="h-12 w-12 shrink-0 !px-0 active:opacity-80"
                             />
                         </div>
 
@@ -628,7 +628,7 @@ function InventoryRow({
                     }}
                     variant="ghost"
                     size="icon"
-                    className="ml-2 h-11 w-11 shrink-0 text-text-subtle"
+                    className="ml-2 h-11 w-11 shrink-0 text-text-subtle active:opacity-80"
                     title="Stock Opname"
                     aria-label="Stock Opname"
                 >

@@ -630,7 +630,7 @@ export default function OutletOrderShow({
                             assignForm.processing || !assignForm.data.courier_id
                         }
                         size="lg"
-                        className="w-full"
+                        className="w-full active:opacity-80"
                     >
                         {assignForm.processing
                             ? 'Mengassign...'
@@ -697,7 +697,7 @@ export default function OutletOrderShow({
                     disabled={!rejectForm.data.reason || rejectForm.processing}
                     variant="destructive"
                     size="cta"
-                    className="mt-4 w-full"
+                    className="mt-4 w-full active:opacity-80"
                 >
                     {rejectForm.processing ? 'Menolak...' : 'Tolak Pesanan'}
                 </Button>
@@ -756,7 +756,7 @@ export default function OutletOrderShow({
                     disabled={!cancelForm.data.reason || cancelForm.processing}
                     variant="destructive"
                     size="cta"
-                    className="mt-4 w-full"
+                    className="mt-4 w-full active:opacity-80"
                 >
                     {cancelForm.processing
                         ? 'Membatalkan...'

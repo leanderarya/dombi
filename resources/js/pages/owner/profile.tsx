@@ -83,7 +83,7 @@ export default function OwnerProfile() {
                                 onClick={() => router.post('/logout')}
                                 variant="outline"
                                 size="cta"
-                                className="border-danger-border text-danger-text hover:bg-danger-bg"
+                                className="border-danger-border text-danger-text hover:bg-danger-bg active:opacity-80"
                             >
                                 <LogOut
                                     className="h-4 w-4"
@@ -101,7 +101,7 @@ export default function OwnerProfile() {
                         onClick={() => router.post('/logout')}
                         variant="outline"
                         size="cta"
-                        className="border-danger-border text-danger-text hover:bg-danger-bg"
+                        className="border-danger-border text-danger-text hover:bg-danger-bg active:opacity-80"
                     >
                         <LogOut className="h-4 w-4" aria-hidden="true" />
                         Logout

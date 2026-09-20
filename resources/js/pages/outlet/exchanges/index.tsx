@@ -57,7 +57,7 @@ export default function OutletExchangesIndex({ exchanges, filters }: any) {
                             <Button
                                 size="lg"
                                 icon={Plus}
-                                className="min-h-11"
+                                className="min-h-11 active:opacity-80"
                                 onClick={() =>
                                     router.visit('/outlet/exchanges/create')
                                 }

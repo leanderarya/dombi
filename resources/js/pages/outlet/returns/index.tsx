@@ -63,7 +63,7 @@ export default function OutletReturnsIndex({
                                 size="lg"
                                 onClick={() => setShowCreate(true)}
                                 icon={Plus}
-                                className="min-h-11"
+                                className="min-h-11 active:opacity-80"
                             >
                                 Ajukan Return
                             </Button>

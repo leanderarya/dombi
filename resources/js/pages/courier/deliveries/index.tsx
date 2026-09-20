@@ -72,7 +72,7 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
                         onClick={fetchOptimizedRoute}
                         disabled={loadingRoute}
                         size="lg"
-                        className="w-full"
+                        className="w-full active:opacity-80"
                     >
                         {loadingRoute ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
