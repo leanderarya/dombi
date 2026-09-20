@@ -11,18 +11,22 @@ interface Props {
 }
 
 const colorMap: Record<string, { bg: string; dot: string; text: string }> = {
-    slate: { bg: 'bg-slate-100', dot: 'bg-slate-400', text: 'text-slate-700' },
-    blue: { bg: 'bg-blue-100', dot: 'bg-blue-500', text: 'text-blue-700' },
+    slate: { bg: 'bg-surface-muted', dot: 'bg-text-subtle', text: 'text-text' },
+    blue: { bg: 'bg-info-bg', dot: 'bg-info-bg0', text: 'text-info-text' },
     purple: {
-        bg: 'bg-purple-100',
-        dot: 'bg-purple-500',
-        text: 'text-purple-700',
+        bg: 'bg-status-active-bg',
+        dot: 'bg-status-active-bg0',
+        text: 'text-status-active',
     },
-    amber: { bg: 'bg-amber-100', dot: 'bg-amber-500', text: 'text-amber-700' },
+    amber: {
+        bg: 'bg-warning-bg',
+        dot: 'bg-warning-bg0',
+        text: 'text-warning-text',
+    },
     green: {
-        bg: 'bg-emerald-100',
-        dot: 'bg-emerald-500',
-        text: 'text-emerald-700',
+        bg: 'bg-success-bg',
+        dot: 'bg-success',
+        text: 'text-success-text',
     },
 };
 
@@ -46,7 +50,7 @@ export default function DeliveryBoardColumn({
                 >
                     {count}
                 </span>
-                <h3 className="text-xs font-bold tracking-wider text-slate-500 uppercase">
+                <h3 className="text-xs font-bold tracking-wider text-text-muted uppercase">
                     {title}
                 </h3>
             </div>
@@ -54,7 +58,7 @@ export default function DeliveryBoardColumn({
             {/* Cards */}
             <div className="space-y-2">
                 {items.length === 0 ? (
-                    <div className="rounded-lg border border-dashed border-slate-200 p-4 text-center text-xs text-slate-400">
+                    <div className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-text-subtle">
                         {emptyMessage ?? 'Tidak ada data'}
                     </div>
                 ) : (

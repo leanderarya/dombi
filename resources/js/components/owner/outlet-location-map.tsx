@@ -241,21 +241,21 @@ export default function OutletLocationMap({
     }, [marker, existingOutlets]);
 
     return (
-        <div className="overflow-hidden rounded-lg border border-slate-300 bg-slate-100">
+        <div className="overflow-hidden rounded-lg border border-border-strong bg-surface-muted">
             {!readOnly && (
                 <>
                     <MapSearchBox
                         onSelect={(lat, lng) => onChange({ lat, lng, geo })}
                     />
-                    <div className="border-b border-slate-200 bg-white">
+                    <div className="border-b border-border bg-surface">
                         <button
                             type="button"
                             onClick={handleUseCurrentLocation}
                             disabled={gpsLoading}
-                            className="flex w-full items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                            className="flex w-full items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-text hover:bg-surface-muted disabled:opacity-60"
                         >
                             {gpsLoading ? (
-                                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-emerald-600" />
+                                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-border-strong border-t-primary" />
                             ) : (
                                 <Locate className="h-4 w-4" />
                             )}
@@ -264,7 +264,7 @@ export default function OutletLocationMap({
                                 : 'Gunakan Lokasi Saya'}
                         </button>
                         {gpsError && (
-                            <div className="px-3 pb-2 text-[11px] font-medium text-red-600">
+                            <div className="px-3 pb-2 text-[11px] font-medium text-danger">
                                 {gpsError}
                             </div>
                         )}
@@ -304,11 +304,11 @@ export default function OutletLocationMap({
                         >
                             <Popup>
                                 <div className="text-xs">
-                                    <div className="font-bold text-slate-900">
+                                    <div className="font-bold text-text">
                                         {o.name}
                                     </div>
                                     {o.address && (
-                                        <div className="mt-0.5 text-slate-500">
+                                        <div className="mt-0.5 text-text-muted">
                                             {o.address}
                                         </div>
                                     )}
@@ -357,15 +357,15 @@ export default function OutletLocationMap({
                     )}
                 </MapContainer>
             </div>
-            <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-3 py-2 text-xs">
-                <span className="font-semibold text-slate-500">
+            <div className="flex items-center justify-between gap-3 border-t border-border bg-surface px-3 py-2 text-xs">
+                <span className="font-semibold text-text-muted">
                     {readOnly
                         ? 'Outlet coordinates'
                         : nearest
                           ? `Outlet terdekat: ${nearest.outlet.name} (${nearest.distance.toFixed(1)} km)`
                           : 'Tap map atau drag marker'}
                 </span>
-                <span className="rounded-md bg-[#F8FAFC] px-2 py-1 font-semibold text-slate-700 tabular-nums">
+                <span className="rounded-md bg-surface-muted px-2 py-1 font-semibold text-text tabular-nums">
                     Lat:{' '}
                     {marker
                         ? marker.lat.toFixed(5)
@@ -393,29 +393,29 @@ function MapPreviewContent({
 }) {
     return (
         <div className="w-56 p-1 text-xs">
-            <div className="font-bold text-slate-900 tabular-nums">
+            <div className="font-bold text-text tabular-nums">
                 {lat.toFixed(6)} · {lng.toFixed(6)}
             </div>
             {geo.loading && (
-                <div className="mt-1 flex items-center gap-1.5 text-slate-500">
-                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-600" />
+                <div className="mt-1 flex items-center gap-1.5 text-text-muted">
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-border border-t-primary" />
                     Mendeteksi alamat...
                 </div>
             )}
             {geo.failed && (
-                <div className="mt-1 text-red-600">
+                <div className="mt-1 text-danger">
                     Gagal mendeteksi wilayah. Geser marker atau coba lagi.
                 </div>
             )}
             {!geo.loading && !geo.failed && geo.address && (
-                <div className="mt-1 text-slate-600">
+                <div className="mt-1 text-text-muted">
                     {geo.address.formatted_address}
                 </div>
             )}
             <button
                 type="button"
                 onClick={onConfirm}
-                className="mt-2 w-full rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+                className="mt-2 w-full rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-hover"
             >
                 Simpan Lokasi
             </button>
@@ -491,44 +491,44 @@ function MapSearchBox({
     }, []);
 
     return (
-        <div className="relative border-b border-slate-200 bg-white">
+        <div className="relative border-b border-border bg-surface">
             <div className="flex items-center gap-2 px-3 py-2">
-                <Search className="h-4 w-4 shrink-0 text-slate-400" />
+                <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                 <input
                     type="text"
                     value={query}
                     onChange={(e) => handleSearch(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setOpen(true)}
                     placeholder="Cari lokasi outlet..."
-                    className="flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                    className="flex-1 bg-transparent text-sm text-text placeholder:text-text-subtle focus:outline-none"
                 />
                 {query && (
                     <button
                         type="button"
                         onClick={handleClear}
-                        className="text-slate-400 hover:text-slate-600"
+                        className="text-text-subtle hover:text-text-muted"
                     >
                         <X className="h-4 w-4" />
                     </button>
                 )}
                 {loading && (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-600" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary" />
                 )}
             </div>
 
             {open && suggestions.length > 0 && (
-                <div className="absolute inset-x-0 top-full z-[1000] max-h-48 overflow-y-auto border-b border-slate-200 bg-white">
+                <div className="absolute inset-x-0 top-full z-[1000] max-h-48 overflow-y-auto border-b border-border bg-surface">
                     {suggestions.map((s) => (
                         <button
                             key={s.id}
                             type="button"
                             onClick={() => handleSelect(s)}
-                            className="flex w-full flex-col px-3 py-2 text-left hover:bg-emerald-50 active:bg-emerald-100"
+                            className="flex w-full flex-col px-3 py-2 text-left hover:bg-success-bg active:bg-success-bg"
                         >
-                            <span className="text-sm font-medium text-slate-900">
+                            <span className="text-sm font-medium text-text">
                                 {s.title}
                             </span>
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-text-muted">
                                 {s.subtitle}
                             </span>
                         </button>

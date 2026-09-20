@@ -104,7 +104,7 @@ export default function ImageUploadField({
                     <img
                         src={preview}
                         alt="Preview"
-                        className="h-16 w-16 rounded object-cover ring-1 ring-slate-200"
+                        className="h-16 w-16 rounded object-cover ring-1 ring-border"
                     />
                 ) : hasExistingString ? (
                     <img
@@ -114,7 +114,7 @@ export default function ImageUploadField({
                                 : `/storage/${value as string}`
                         }
                         alt="Existing"
-                        className="h-16 w-16 rounded object-cover ring-1 ring-slate-200"
+                        className="h-16 w-16 rounded object-cover ring-1 ring-border"
                         onError={(ev) => {
                             (ev.target as HTMLImageElement).style.display =
                                 'none';
@@ -141,13 +141,13 @@ export default function ImageUploadField({
                     <>
                         {confirmingRemove ? (
                             <>
-                                <span className="text-xs text-amber-600">
+                                <span className="text-xs text-warning-text">
                                     Yakin hapus?
                                 </span>
                                 <button
                                     type="button"
                                     onClick={handleLocalRemove}
-                                    className="text-xs font-medium text-red-600 hover:text-red-700"
+                                    className="text-xs font-medium text-danger hover:text-danger-text"
                                 >
                                     Ya
                                 </button>
@@ -163,7 +163,7 @@ export default function ImageUploadField({
                             <button
                                 type="button"
                                 onClick={handleLocalRemove}
-                                className="text-xs font-medium text-red-600 hover:text-red-700"
+                                className="text-xs font-medium text-danger hover:text-danger-text"
                             >
                                 Hapus
                             </button>
@@ -174,7 +174,7 @@ export default function ImageUploadField({
                     <button
                         type="button"
                         onClick={handleLocalRemove}
-                        className="text-xs font-medium text-red-600 hover:text-red-700"
+                        className="text-xs font-medium text-danger hover:text-danger-text"
                     >
                         Hapus
                     </button>

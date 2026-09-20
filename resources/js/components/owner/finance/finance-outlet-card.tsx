@@ -46,7 +46,7 @@ export default function FinanceOutletCard({
                         {outletName}
                     </span>
                     {isOverdue && overdueDays > 0 && (
-                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">
+                        <span className="rounded-full bg-danger-bg px-2 py-0.5 text-xs font-bold text-danger-text">
                             {overdueDays} Hari
                         </span>
                     )}
@@ -56,24 +56,24 @@ export default function FinanceOutletCard({
                         <span>Penjualan: {formatCurrency(totalSales)}</span>
                     )}
                     {netAmount > 0 && direction === 'owner_pays_outlet' && (
-                        <span className="font-semibold text-emerald-600">
+                        <span className="font-semibold text-success-text">
                             Owner bayar: {formatCurrency(netAmount)}
                         </span>
                     )}
                     {netAmount > 0 && direction === 'owner_pays_outlet' ? (
-                        <span className="font-semibold text-emerald-600">
+                        <span className="font-semibold text-success-text">
                             Belum dibayar owner:{' '}
                             {formatCurrency(netAmount - totalPaid)}
                         </span>
                     ) : (
                         totalOutstanding > 0 && (
-                            <span className="font-semibold text-red-600">
+                            <span className="font-semibold text-danger">
                                 Sisa: {formatCurrency(totalOutstanding)}
                             </span>
                         )
                     )}
                     {totalPaid > 0 && (
-                        <span className="text-emerald-600">
+                        <span className="text-success-text">
                             Dibayar: {formatCurrency(totalPaid)}
                         </span>
                     )}

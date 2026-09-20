@@ -68,7 +68,7 @@ function PageHeader({
                 {backHref && (
                     <Link
                         href={backHref}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-border p-1.5 text-slate-600 hover:bg-surface-muted"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-border p-1.5 text-text-muted hover:bg-surface-muted"
                     >
                         <ArrowLeft className="h-4 w-4" />
                     </Link>

@@ -157,7 +157,7 @@ export default function OutletFormSheet({
                                     {(form.errors.kelurahan ||
                                         form.errors.kecamatan ||
                                         geo.failed) && (
-                                        <p className="text-xs font-semibold text-red-600">
+                                        <p className="text-xs font-semibold text-danger">
                                             {geo.failed
                                                 ? 'Gagal mendeteksi wilayah. Geser marker atau coba lagi. Anda bisa isi manual.'
                                                 : 'Data lokasi belum terdeteksi. Geser marker pada peta.'}
@@ -349,7 +349,7 @@ export default function OutletFormSheet({
                             </Suspense>
                             {(form.errors.latitude ||
                                 form.errors.longitude) && (
-                                <p className="text-xs font-semibold text-red-600">
+                                <p className="text-xs font-semibold text-danger">
                                     Pilih lokasi outlet dari peta terlebih
                                     dahulu.
                                 </p>
@@ -454,7 +454,7 @@ function TextArea({
     return (
         <label className="block">
             <span className="text-xs font-semibold tracking-wide text-text-muted uppercase">
-                {label} {required && <span className="text-red-500">*</span>}
+                {label} {required && <span className="text-danger">*</span>}
             </span>
             <textarea
                 value={value ?? ''}
@@ -465,7 +465,7 @@ function TextArea({
                 required={required}
             />
             {error && (
-                <span className="mt-1 block text-xs font-semibold text-red-600">
+                <span className="mt-1 block text-xs font-semibold text-danger">
                     {error}
                 </span>
             )}

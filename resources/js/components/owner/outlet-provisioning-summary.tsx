@@ -48,23 +48,23 @@ export default function OutletProvisioningSummary({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950/40 px-4"
+            className="fixed inset-0 z-[2000] flex items-center justify-center bg-foreground/40 px-4"
             role="dialog"
             aria-modal="true"
         >
-            <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-4">
-                <p className="text-xs font-semibold tracking-wide text-emerald-600 uppercase">
+            <div className="w-full max-w-md rounded-lg border border-border bg-surface p-4">
+                <p className="text-xs font-semibold tracking-wide text-success-text uppercase">
                     Branch Provisioned
                 </p>
-                <h2 className="mt-1 text-2xl font-semibold text-slate-900">
+                <h2 className="mt-1 text-2xl font-semibold text-text">
                     Outlet siap operasional
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
+                <p className="mt-2 text-sm leading-6 text-text-muted">
                     Akun outlet berhasil dibuat. Temporary password hanya
                     ditampilkan sekali di ringkasan ini.
                 </p>
 
-                <div className="mt-4 rounded-lg border border-slate-200 bg-[#F8FAFC] p-3">
+                <div className="mt-4 rounded-lg border border-border bg-surface-muted p-3">
                     <Info label="Outlet" value={provisioning.outlet_name} />
                     <Info label="Status" value={provisioning.status} />
                     <Info
@@ -73,40 +73,40 @@ export default function OutletProvisioningSummary({
                     />
                 </div>
 
-                <div className="mt-3 rounded-lg border border-slate-300 bg-slate-950 p-3 font-mono text-xs text-slate-100">
-                    <div className="text-slate-400">Username</div>
+                <div className="mt-3 rounded-lg border border-border-strong bg-foreground p-3 font-mono text-xs text-surface">
+                    <div className="text-text-subtle">Username</div>
                     <div className="mt-1 break-all tabular-nums">
                         {provisioning.email}
                     </div>
-                    <div className="mt-3 text-slate-400">
+                    <div className="mt-3 text-text-subtle">
                         Temporary Password
                     </div>
-                    <div className="mt-1 text-base font-semibold tracking-wide text-emerald-300 tabular-nums">
+                    <div className="mt-1 text-base font-semibold tracking-wide text-brand-bright tabular-nums">
                         {provisioning.temporary_password}
                     </div>
                 </div>
 
-                <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 font-semibold text-amber-800">
+                <div className="mt-3 rounded-lg border border-warning-border bg-warning-bg p-3 text-xs leading-5 font-semibold text-warning-text">
                     Outlet wajib mengganti password pada login pertama.
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-2">
                     <button
                         onClick={copyCredentials}
-                        className="min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors active:bg-[#F8FAFC]"
+                        className="min-h-[44px] rounded-lg border border-border bg-surface px-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
                     >
                         {copied ? 'Copied' : 'Copy Credentials'}
                     </button>
                     <button
                         onClick={shareCredentials}
-                        className="min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors active:bg-[#F8FAFC]"
+                        className="min-h-[44px] rounded-lg border border-border bg-surface px-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
                     >
                         Share
                     </button>
                 </div>
                 <button
                     onClick={() => setOpen(false)}
-                    className="mt-2 min-h-[48px] w-full rounded-lg bg-emerald-500 px-4 text-sm font-semibold text-white transition-colors active:bg-emerald-600"
+                    className="mt-2 min-h-[48px] w-full rounded-lg bg-success px-4 text-sm font-semibold text-white transition-colors active:bg-primary"
                 >
                     Close
                 </button>
@@ -118,11 +118,11 @@ export default function OutletProvisioningSummary({
 
 function Info({ label, value }: { label: string; value: string }) {
     return (
-        <div className="flex items-center justify-between gap-3 border-b border-slate-200 py-2 last:border-b-0">
-            <span className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
+        <div className="flex items-center justify-between gap-3 border-b border-border py-2 last:border-b-0">
+            <span className="text-xs font-semibold tracking-wide text-text-subtle uppercase">
                 {label}
             </span>
-            <span className="min-w-0 truncate text-right text-sm font-semibold text-slate-900">
+            <span className="min-w-0 truncate text-right text-sm font-semibold text-text">
                 {value}
             </span>
         </div>

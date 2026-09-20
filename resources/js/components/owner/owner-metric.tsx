@@ -12,10 +12,10 @@ interface Props {
 
 const colorMap = {
     default: 'text-text',
-    red: 'text-red-600',
-    green: 'text-emerald-600',
-    amber: 'text-amber-600',
-    blue: 'text-blue-600',
+    red: 'text-danger',
+    green: 'text-success-text',
+    amber: 'text-warning-text',
+    blue: 'text-info-text',
 };
 
 export default function OwnerMetric({

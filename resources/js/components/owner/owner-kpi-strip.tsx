@@ -84,12 +84,12 @@ export default function OwnerKpiStrip({ items, cols }: Props) {
                             {item.trend && (
                                 <>
                                     {trendPositive ? (
-                                        <TrendingUp className="h-4 w-4 text-emerald-600" />
+                                        <TrendingUp className="h-4 w-4 text-success-text" />
                                     ) : (
-                                        <TrendingDown className="h-4 w-4 text-red-600" />
+                                        <TrendingDown className="h-4 w-4 text-danger" />
                                     )}
                                     <span
-                                        className={`text-[13px] font-medium ${trendPositive ? 'text-emerald-600' : 'text-red-600'}`}
+                                        className={`text-[13px] font-medium ${trendPositive ? 'text-success-text' : 'text-danger'}`}
                                     >
                                         {item.trend.value}
                                     </span>

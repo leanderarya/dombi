@@ -27,13 +27,13 @@ export default function OwnerSegmentedTabs({
                     onClick={() => onChange(tab.key)}
                     className={`relative rounded-lg px-5 py-2 text-[12px] font-semibold transition-all duration-200 ${
                         activeTab === tab.key
-                            ? 'bg-white text-primary shadow-sm'
+                            ? 'bg-surface text-primary shadow-sm'
                             : 'text-text-muted hover:text-primary'
                     }`}
                 >
                     {tab.label}
                     {tab.count !== undefined && tab.count > 0 && (
-                        <span className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
+                        <span className="ml-1.5 rounded-full bg-danger-bg px-1.5 py-0.5 text-[10px] font-bold text-danger-text">
                             {tab.count}
                         </span>
                     )}

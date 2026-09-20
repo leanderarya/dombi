@@ -91,7 +91,7 @@ export default function RefundCompletionModal({
                             #{orderCode}
                         </span>
                         <span className="text-text-subtle">—</span>
-                        <span className="font-semibold text-emerald-700 tabular-nums">
+                        <span className="font-semibold text-success-text tabular-nums">
                             Rp{amount.toLocaleString('id-ID')}
                         </span>
                     </DialogDescription>

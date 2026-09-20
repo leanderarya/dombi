@@ -56,7 +56,7 @@ export default function ProductImage({
 
     return (
         <div
-            className={`${sizeCls} ${className} flex items-center justify-center rounded bg-gradient-to-br from-emerald-100 to-teal-50 text-emerald-700`}
+            className={`${sizeCls} ${className} flex items-center justify-center rounded bg-gradient-to-br from-primary-light to-surface text-success-text`}
             aria-label={name}
         >
             🥛

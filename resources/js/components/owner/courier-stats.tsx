@@ -18,29 +18,29 @@ export default function CourierStats({ stats, todayDeliveries }: Props) {
                 icon={Users}
                 label="Total Kurir"
                 value={stats.total}
-                color="text-blue-600"
-                bgColor="bg-blue-50"
+                color="text-info-text"
+                bgColor="bg-info-bg"
             />
             <StatCard
                 icon={Truck}
                 label="Online"
                 value={stats.online}
-                color="text-emerald-600"
-                bgColor="bg-emerald-50"
+                color="text-success-text"
+                bgColor="bg-success-bg"
             />
             <StatCard
                 icon={MapPin}
                 label="Lokasi Aktif"
                 value={stats.active_location}
-                color="text-indigo-600"
-                bgColor="bg-indigo-50"
+                color="text-status-transit"
+                bgColor="bg-status-transit-bg"
             />
             <StatCard
                 icon={Bike}
                 label="Pengiriman Hari Ini"
                 value={todayDeliveries}
-                color="text-amber-600"
-                bgColor="bg-amber-50"
+                color="text-warning-text"
+                bgColor="bg-warning-bg"
             />
         </div>
     );

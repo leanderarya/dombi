@@ -194,7 +194,7 @@ export default function OwnerFilterCard({
                         onClick={tambahOnClick}
                         className={`inline-flex h-8 items-center gap-1 rounded-md px-3 text-xs font-semibold transition-colors ${
                             tambahActive
-                                ? 'border border-border bg-white text-text active:bg-surface-muted'
+                                ? 'border border-border bg-surface text-text active:bg-surface-muted'
                                 : 'bg-primary text-white hover:bg-primary-hover'
                         }`}
                     >

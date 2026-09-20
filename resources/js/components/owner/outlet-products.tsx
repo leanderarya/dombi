@@ -127,7 +127,7 @@ export default function OutletProducts({ outletId }: Props) {
 
     if (loading) {
         return (
-            <div className="py-6 text-center text-xs text-slate-400">
+            <div className="py-6 text-center text-xs text-text-subtle">
                 Memuat produk...
             </div>
         );
@@ -137,20 +137,20 @@ export default function OutletProducts({ outletId }: Props) {
         <div className="space-y-3">
             {/* Header */}
             <div className="flex items-center gap-2">
-                <div className="flex flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3">
-                    <Search className="h-4 w-4 shrink-0 text-slate-400" />
+                <div className="flex flex-1 items-center gap-2 rounded-lg border border-border bg-surface px-3">
+                    <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                     <input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari produk..."
-                        className="w-full bg-transparent py-2 text-sm placeholder:text-slate-400 focus:outline-none"
+                        className="w-full bg-transparent py-2 text-sm placeholder:text-text-subtle focus:outline-none"
                     />
                 </div>
                 <button
                     type="button"
                     onClick={() => setAddOpen(true)}
-                    className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 text-xs font-bold text-white hover:bg-emerald-700"
+                    className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-bold text-white hover:bg-primary-hover"
                 >
                     <Plus className="h-4 w-4" />
                     Tambah Produk
@@ -159,18 +159,18 @@ export default function OutletProducts({ outletId }: Props) {
 
             {/* Empty State */}
             {products.length === 0 && (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 py-10 text-center">
-                    <Package className="mb-3 h-10 w-10 text-slate-300" />
-                    <div className="text-sm font-semibold text-slate-700">
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border-strong py-10 text-center">
+                    <Package className="mb-3 h-10 w-10 text-text-subtle" />
+                    <div className="text-sm font-semibold text-text">
                         Belum ada produk outlet
                     </div>
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="mt-1 text-xs text-text-muted">
                         Tambahkan produk pertama untuk outlet ini.
                     </div>
                     <button
                         type="button"
                         onClick={() => setAddOpen(true)}
-                        className="mt-4 flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700"
+                        className="mt-4 flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary-hover"
                     >
                         <Plus className="h-4 w-4" />
                         Tambah Produk
@@ -180,23 +180,23 @@ export default function OutletProducts({ outletId }: Props) {
 
             {/* Table */}
             {filtered.length > 0 && (
-                <div className="overflow-x-auto rounded-lg border border-slate-200">
+                <div className="overflow-x-auto rounded-lg border border-border">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50">
-                                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                            <tr className="border-b border-border bg-surface-muted">
+                                <th className="px-3 py-2.5 text-left font-medium text-text-muted">
                                     Produk
                                 </th>
-                                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                                <th className="px-3 py-2.5 text-left font-medium text-text-muted">
                                     Status
                                 </th>
-                                <th className="px-3 py-2.5 text-right font-medium text-slate-500">
+                                <th className="px-3 py-2.5 text-right font-medium text-text-muted">
                                     Harga Jual
                                 </th>
-                                <th className="px-3 py-2.5 text-right font-medium text-slate-500">
+                                <th className="px-3 py-2.5 text-right font-medium text-text-muted">
                                     Stok
                                 </th>
-                                <th className="px-3 py-2.5 text-right font-medium text-slate-500">
+                                <th className="px-3 py-2.5 text-right font-medium text-text-muted">
                                     Aksi
                                 </th>
                             </tr>
@@ -205,20 +205,20 @@ export default function OutletProducts({ outletId }: Props) {
                             {filtered.map((p) => (
                                 <tr
                                     key={p.variant_id}
-                                    className="border-b border-slate-50 last:border-0"
+                                    className="border-b border-border last:border-0"
                                 >
                                     <td className="px-3 py-2.5">
-                                        <div className="font-medium text-slate-900">
+                                        <div className="font-medium text-text">
                                             {p.name}
                                         </div>
-                                        <div className="text-xs text-slate-500">
+                                        <div className="text-xs text-text-muted">
                                             {p.family_name}
                                         </div>
                                     </td>
                                     <td className="px-3 py-2.5">
                                         <StatusBadge active={p.is_active} />
                                     </td>
-                                    <td className="px-3 py-2.5 text-right text-slate-700 tabular-nums">
+                                    <td className="px-3 py-2.5 text-right text-text tabular-nums">
                                         {formatCurrency(p.selling_price)}
                                     </td>
                                     <td className="px-3 py-2.5 text-right">
@@ -275,8 +275,8 @@ function StatusBadge({ active }: { active: boolean }) {
         <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${
                 active
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'bg-slate-100 text-slate-500'
+                    ? 'bg-success-bg text-success-text'
+                    : 'bg-surface-muted text-text-muted'
             }`}
         >
             {active ? (
@@ -293,9 +293,9 @@ function StockBadge({ status, stock }: { status: string; stock: number }) {
     const { variant } = getOwnerStockStatus(status, stock);
 
     const styles: Record<string, string> = {
-        success: 'bg-emerald-50 text-emerald-700',
-        warning: 'bg-amber-50 text-amber-700',
-        danger: 'bg-red-50 text-red-700',
+        success: 'bg-success-bg text-success-text',
+        warning: 'bg-warning-bg text-warning-text',
+        danger: 'bg-danger-bg text-danger-text',
     };
 
     const statusLabel: Record<string, string> = {
@@ -373,14 +373,14 @@ function ActionMenu({
                 ref={triggerRef}
                 type="button"
                 onClick={open ? () => setOpen(false) : handleOpen}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1.5 text-text-subtle hover:bg-surface-muted hover:text-text-muted"
             >
                 <MoreHorizontal className="h-4 w-4" />
             </button>
             {open &&
                 createPortal(
                     <div
-                        className="fixed z-[100] min-w-[180px] rounded-lg border border-slate-200 bg-white py-1"
+                        className="fixed z-[100] min-w-[180px] rounded-lg border border-border bg-surface py-1"
                         style={{ top: pos.top, right: pos.right }}
                     >
                         <button
@@ -389,7 +389,7 @@ function ActionMenu({
                                 onRestock();
                                 setOpen(false);
                             }}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-text hover:bg-surface-muted"
                         >
                             Restock
                         </button>
@@ -399,7 +399,7 @@ function ActionMenu({
                                 onToggle();
                                 setOpen(false);
                             }}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-text hover:bg-surface-muted"
                         >
                             {isActive ? 'Nonaktifkan' : 'Aktifkan'}
                         </button>
@@ -409,7 +409,7 @@ function ActionMenu({
                                 onRemove();
                                 setOpen(false);
                             }}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger-text hover:bg-danger-bg"
                         >
                             <Trash2 className="h-3.5 w-3.5" />
                             Hapus dari Outlet

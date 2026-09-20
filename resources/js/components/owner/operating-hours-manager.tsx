@@ -101,7 +101,7 @@ export default function OperatingHoursManager({
         <div className="space-y-3">
             {hours.map((h, index) => (
                 <div key={h.day_of_week} className="flex items-center gap-3">
-                    <span className="w-16 text-sm font-medium text-slate-700">
+                    <span className="w-16 text-sm font-medium text-text">
                         {DAY_NAMES[h.day_of_week]}
                     </span>
                     <label className="flex items-center gap-1.5">
@@ -111,9 +111,9 @@ export default function OperatingHoursManager({
                             onChange={(e) =>
                                 updateDay(index, 'is_closed', !e.target.checked)
                             }
-                            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                            className="h-4 w-4 rounded border-border-strong text-success-text focus:ring-success"
                         />
-                        <span className="text-xs text-slate-500">Buka</span>
+                        <span className="text-xs text-text-muted">Buka</span>
                     </label>
                     {!h.is_closed && (
                         <>
@@ -127,9 +127,9 @@ export default function OperatingHoursManager({
                                         e.target.value,
                                     )
                                 }
-                                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
+                                className="rounded-lg border border-border bg-surface px-2 py-1.5 text-sm"
                             />
-                            <span className="text-xs text-slate-400">-</span>
+                            <span className="text-xs text-text-subtle">-</span>
                             <input
                                 type="time"
                                 value={h.close_time}
@@ -140,18 +140,18 @@ export default function OperatingHoursManager({
                                         e.target.value,
                                     )
                                 }
-                                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
+                                className="rounded-lg border border-border bg-surface px-2 py-1.5 text-sm"
                             />
                         </>
                     )}
                     {h.is_closed && (
-                        <span className="text-xs text-slate-400">Tutup</span>
+                        <span className="text-xs text-text-subtle">Tutup</span>
                     )}
                 </div>
             ))}
 
             {saving && (
-                <p className="text-xs font-medium text-amber-600">
+                <p className="text-xs font-medium text-warning-text">
                     Menyimpan...
                 </p>
             )}
@@ -160,7 +160,7 @@ export default function OperatingHoursManager({
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="mt-2 flex min-h-[40px] items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                className="mt-2 flex min-h-[40px] items-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-50"
             >
                 <Save className="h-4 w-4" />
                 {saving ? 'Menyimpan...' : 'Simpan Jam Operasional'}
