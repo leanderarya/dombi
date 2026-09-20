@@ -158,16 +158,18 @@ export default function OutletOrderReportShow({ report }: any) {
                         />
                     </div>
                     <div className="mt-3 flex gap-2">
-                        <button
+                        <Button
                             type="button"
                             onClick={() => {
                                 setRespondMode(false);
                                 form.reset();
                             }}
-                            className="flex h-11 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
+                            variant="outline"
+                            size="lg"
+                            className="flex-1"
                         >
                             Batal
-                        </button>
+                        </Button>
                         <Button
                             type="button"
                             onClick={handleRespond}
