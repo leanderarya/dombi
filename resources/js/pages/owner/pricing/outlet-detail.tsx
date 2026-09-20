@@ -521,7 +521,7 @@ export default function OutletDetail({
                                     <TableCell className="px-6 py-4">
                                         <div className="flex items-center justify-center gap-1">
                                             {row.has_override && (
-                                                <button
+                                                <Button
                                                     type="button"
                                                     onClick={() =>
                                                         handleReset(
@@ -531,22 +531,26 @@ export default function OutletDetail({
                                                         )
                                                     }
                                                     title="Reset ke harga pusat"
-                                                    className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-text-subtle transition-colors hover:bg-danger-bg hover:text-danger-text"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-11 w-11 text-text-muted"
                                                 >
                                                     <RotateCcw className="h-3.5 w-3.5" />
-                                                </button>
+                                                </Button>
                                             )}
-                                            <button
+                                            <Button
                                                 type="button"
                                                 onClick={() => {
                                                     setSelectedRow(row);
                                                     setModalOpen(true);
                                                 }}
                                                 title="Ubah harga"
-                                                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-text-subtle transition-colors hover:bg-success-bg/40 hover:text-primary"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-11 w-11 text-text-muted"
                                             >
                                                 <Pencil className="h-3.5 w-3.5" />
-                                            </button>
+                                            </Button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
