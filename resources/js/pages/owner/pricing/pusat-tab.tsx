@@ -204,7 +204,7 @@ export function PusatTab({
                         <span className="text-xs font-medium text-text-muted">
                             Margin Negatif
                         </span>
-                        <span className="bg-danger-bg0/10 flex h-10 w-10 items-center justify-center rounded-xl text-danger-text">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-danger/10 text-danger-text">
                             <TrendingDown className="h-5 w-5" />
                         </span>
                     </div>

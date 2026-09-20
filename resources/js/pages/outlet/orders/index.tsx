@@ -91,6 +91,7 @@ export default function OutletOrdersIndex({
                     <div className="mx-1 flex rounded-xl bg-surface-muted p-1">
                         <button
                             onClick={() => handleTabChange('aktif')}
+                            aria-pressed={isAktif}
                             className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
                                 isAktif
                                     ? 'bg-surface text-text shadow-sm'
@@ -101,6 +102,7 @@ export default function OutletOrdersIndex({
                         </button>
                         <button
                             onClick={() => handleTabChange('riwayat')}
+                            aria-pressed={!isAktif}
                             className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
                                 !isAktif
                                     ? 'bg-surface text-text shadow-sm'

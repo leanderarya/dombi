@@ -697,9 +697,9 @@ function TimelineItem({
     const statusColor = isPaid
         ? 'bg-success'
         : isOverdue
-          ? 'bg-danger-bg0'
+          ? 'bg-danger'
           : isPartial
-            ? 'bg-warning-bg0'
+            ? 'bg-warning'
             : 'bg-text-subtle';
 
     const statusLabel = isPaid

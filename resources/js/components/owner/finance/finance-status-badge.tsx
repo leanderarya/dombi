@@ -9,23 +9,23 @@ const CONFIG: Record<
 > = {
     overdue: {
         label: 'Terlambat',
-        dotClass: 'bg-danger-bg0',
+        dotClass: 'bg-danger',
         badgeClass: 'bg-danger-bg text-danger-text border border-danger-border',
     },
     unpaid: {
         label: 'Belum Bayar',
-        dotClass: 'bg-warning-bg0',
+        dotClass: 'bg-warning',
         badgeClass:
             'bg-warning-bg text-warning-text border border-warning-border',
     },
     partial: {
         label: 'Sebagian',
-        dotClass: 'bg-info-bg0',
+        dotClass: 'bg-info',
         badgeClass: 'bg-info-bg text-info-text border border-info-border',
     },
     unsettled: {
         label: 'Belum Ditagihkan',
-        dotClass: 'bg-status-progress-bg0',
+        dotClass: 'bg-status-progress',
         badgeClass:
             'bg-status-progress-bg text-status-progress border border-status-progress-border',
     },

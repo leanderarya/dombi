@@ -121,7 +121,7 @@ function getStockSeverity(shortage: number): {
 } {
     if (shortage >= 8) {
         return {
-            dot: 'bg-danger-bg0',
+            dot: 'bg-danger',
             text: 'text-danger-text',
             bar: 'bg-danger',
         };
@@ -819,7 +819,7 @@ export default function Dashboard({
                                 className="group flex w-full items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3 transition-all hover:border-primary hover:bg-success-bg/40"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-danger-bg0 h-2 w-2 rounded-full" />
+                                    <div className="h-2 w-2 rounded-full bg-danger" />
                                     <span className="text-xs font-semibold text-text">
                                         Restock Stok Kritis
                                     </span>
@@ -855,7 +855,7 @@ export default function Dashboard({
                                 className="group flex w-full items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3 transition-all hover:border-primary hover:bg-success-bg/40"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="bg-info-bg0 h-2 w-2 rounded-full" />
+                                    <div className="h-2 w-2 rounded-full bg-info" />
                                     <span className="text-xs font-semibold text-text">
                                         Tukar Produk
                                     </span>

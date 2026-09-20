@@ -25,9 +25,9 @@ export default function MarginBar({
     if (margin >= 5000) {
         color = 'bg-success';
     } else if (margin > 0) {
-        color = 'bg-warning-bg0';
+        color = 'bg-warning';
     } else {
-        color = 'bg-danger-bg0';
+        color = 'bg-danger';
     }
 
     return (
