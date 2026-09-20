@@ -146,7 +146,7 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
                                     return (
                                         <td
                                             key={outletId}
-                                            className={`py-2 pr-4 ${row.has_override ? 'bg-amber-50' : ''}`}
+                                            className={`py-2 pr-4 ${row.has_override ? 'bg-warning-bg' : ''}`}
                                         >
                                             <div className="font-semibold text-text tabular-nums">
                                                 {formatCurrency(

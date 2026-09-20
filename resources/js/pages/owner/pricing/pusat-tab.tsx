@@ -165,7 +165,7 @@ export function PusatTab({
                         <span className="text-xs font-medium text-text-muted">
                             Total Produk
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                             <Package className="h-5 w-5" />
                         </span>
                     </div>
@@ -178,7 +178,7 @@ export function PusatTab({
                         <span className="text-xs font-medium text-text-muted">
                             Rata-rata HPP
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-info/10 text-info-text">
                             <DollarSign className="h-5 w-5" />
                         </span>
                     </div>
@@ -204,12 +204,12 @@ export function PusatTab({
                         <span className="text-xs font-medium text-text-muted">
                             Margin Negatif
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                        <span className="bg-danger-bg0/10 flex h-10 w-10 items-center justify-center rounded-xl text-danger-text">
                             <TrendingDown className="h-5 w-5" />
                         </span>
                     </div>
                     <div
-                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.negative_margin_count > 0 ? 'text-red-600' : 'text-text'}`}
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.negative_margin_count > 0 ? 'text-danger' : 'text-text'}`}
                     >
                         {kpis.negative_margin_count}
                     </div>
@@ -321,7 +321,7 @@ export function PusatTab({
                                             </div>
                                         )}
                                         {v.outlet_override_count > 0 && (
-                                            <span className="mt-0.5 inline-block rounded bg-emerald-50 px-1.5 py-0.5 text-xs font-bold text-emerald-600">
+                                            <span className="mt-0.5 inline-block rounded bg-success-bg px-1.5 py-0.5 text-xs font-bold text-success-text">
                                                 {v.outlet_override_count}{' '}
                                                 override
                                             </span>

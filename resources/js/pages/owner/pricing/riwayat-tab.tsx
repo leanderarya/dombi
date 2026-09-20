@@ -176,10 +176,10 @@ export function RiwayatTab({
                                                 className={
                                                     log.new_price >
                                                     log.old_price
-                                                        ? 'font-semibold text-emerald-600'
+                                                        ? 'font-semibold text-success-text'
                                                         : log.new_price <
                                                             log.old_price
-                                                          ? 'font-semibold text-red-600'
+                                                          ? 'font-semibold text-danger'
                                                           : ''
                                                 }
                                             >
@@ -191,8 +191,8 @@ export function RiwayatTab({
                                                     className={`ml-1 text-xs font-medium ${
                                                         log.new_price >
                                                         log.old_price
-                                                            ? 'text-emerald-600'
-                                                            : 'text-red-600'
+                                                            ? 'text-success-text'
+                                                            : 'text-danger'
                                                     }`}
                                                 >
                                                     (

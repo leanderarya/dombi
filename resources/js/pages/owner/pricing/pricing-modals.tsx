@@ -96,16 +96,16 @@ export function GlobalPriceModal({
                     </div>
 
                     <div
-                        className={`rounded-lg p-3 ${isNegative ? 'bg-red-50' : 'bg-surface-muted'}`}
+                        className={`rounded-lg p-3 ${isNegative ? 'bg-danger-bg' : 'bg-surface-muted'}`}
                     >
                         <div className="text-xs text-text-muted">Margin</div>
                         <div
-                            className={`text-lg font-bold tabular-nums ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}
+                            className={`text-lg font-bold tabular-nums ${isNegative ? 'text-danger' : 'text-success-text'}`}
                         >
                             {formatCurrency(margin)}
                         </div>
                         {isNegative && (
-                            <p className="mt-1 text-xs text-red-600">
+                            <p className="mt-1 text-xs text-danger">
                                 Margin negatif — harga jual lebih rendah dari
                                 HPP
                             </p>
@@ -113,7 +113,7 @@ export function GlobalPriceModal({
                     </div>
 
                     {row.outlet_override_count > 0 && (
-                        <p className="text-xs text-amber-600">
+                        <p className="text-xs text-warning-text">
                             {row.outlet_override_count} outlet memiliki
                             override. Perubahan HPP dapat mempengaruhi margin
                             outlet.
@@ -193,11 +193,11 @@ export function OutletPriceModal({
                     </div>
 
                     <div
-                        className={`rounded-lg p-3 ${isNegative ? 'bg-red-50' : 'bg-surface-muted'}`}
+                        className={`rounded-lg p-3 ${isNegative ? 'bg-danger-bg' : 'bg-surface-muted'}`}
                     >
                         <div className="text-xs text-text-muted">Margin</div>
                         <div
-                            className={`text-lg font-bold tabular-nums ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}
+                            className={`text-lg font-bold tabular-nums ${isNegative ? 'text-danger' : 'text-success-text'}`}
                         >
                             {formatCurrency(margin)}
                         </div>

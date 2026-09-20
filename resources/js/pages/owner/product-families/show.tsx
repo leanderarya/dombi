@@ -381,7 +381,7 @@ export default function ProductFamilyShow({ family }: Props) {
         >
             {family.description && (
                 <div className="mb-4 rounded-xl bg-surface p-4 shadow-card">
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-text-muted">
                         {family.description}
                     </p>
                 </div>
@@ -408,7 +408,7 @@ export default function ProductFamilyShow({ family }: Props) {
                         key={f.key}
                         type="button"
                         onClick={() => setVariantFilter(f.key)}
-                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${variantFilter === f.key ? 'bg-emerald-50 text-emerald-600 ring-emerald-200' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${variantFilter === f.key ? 'bg-success-bg text-success-text ring-success-border' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
                     >
                         {f.label}
                     </button>
@@ -418,7 +418,7 @@ export default function ProductFamilyShow({ family }: Props) {
             {/* Empty State */}
             {sorted.length === 0 ? (
                 <EmptyState
-                    icon={<Package className="h-8 w-8 text-slate-400" />}
+                    icon={<Package className="h-8 w-8 text-text-subtle" />}
                     title={
                         family.variants.length === 0
                             ? 'Belum ada variant'
@@ -442,8 +442,8 @@ export default function ProductFamilyShow({ family }: Props) {
                 <>
                     {/* Bulk Edit Bar */}
                     {selectedIds.size > 0 && (
-                        <div className="mb-3 flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2">
-                            <span className="text-sm font-medium text-blue-700">
+                        <div className="mb-3 flex items-center gap-3 rounded-lg border border-info-border bg-info-bg px-4 py-2">
+                            <span className="text-sm font-medium text-info-text">
                                 {selectedIds.size} dipilih
                             </span>
                             <Button
@@ -479,7 +479,7 @@ export default function ProductFamilyShow({ family }: Props) {
                                                 sorted.length > 0
                                             }
                                             onChange={toggleSelectAll}
-                                            className="h-3.5 w-3.5 rounded border-zinc-300 accent-primary"
+                                            className="h-3.5 w-3.5 rounded border-border-strong accent-primary"
                                         />
                                     </th>
                                     <th
@@ -539,7 +539,7 @@ export default function ProductFamilyShow({ family }: Props) {
                                     return (
                                         <tr
                                             key={v.id}
-                                            className={`transition-colors hover:bg-mint-wash/30 ${!v.is_active ? 'opacity-50' : ''} ${isSelected ? 'bg-blue-50/50' : ''}`}
+                                            className={`transition-colors hover:bg-mint-wash/30 ${!v.is_active ? 'opacity-50' : ''} ${isSelected ? 'bg-info-bg/50' : ''}`}
                                         >
                                             <td className="px-3 py-3">
                                                 <input
@@ -548,7 +548,7 @@ export default function ProductFamilyShow({ family }: Props) {
                                                     onChange={() =>
                                                         toggleSelect(v.id)
                                                     }
-                                                    className="h-3.5 w-3.5 rounded border-zinc-300 accent-primary"
+                                                    className="h-3.5 w-3.5 rounded border-border-strong accent-primary"
                                                 />
                                             </td>
                                             <td className="px-3 py-3">
@@ -673,7 +673,7 @@ export default function ProductFamilyShow({ family }: Props) {
                                                             setDeleteId(v.id)
                                                         }
                                                         title="Hapus"
-                                                        className="rounded p-1 text-text-subtle hover:bg-red-50 hover:text-red-600"
+                                                        className="rounded p-1 text-text-subtle hover:bg-danger-bg hover:text-danger-text"
                                                     >
                                                         <Trash2 className="h-3.5 w-3.5" />
                                                     </button>
