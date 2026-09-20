@@ -1,18 +1,21 @@
 import { getOrderStatus } from '@/lib/status-labels';
 
 const chipStyles: Record<string, string> = {
-    pending: 'bg-amber-50 text-amber-800 border-amber-200',
-    confirmed: 'bg-blue-50 text-blue-800 border-blue-200',
-    preparing: 'bg-orange-50 text-orange-800 border-orange-200',
-    ready_for_pickup: 'bg-purple-50 text-purple-800 border-purple-200',
-    picked_up: 'bg-indigo-50 text-indigo-800 border-indigo-200',
-    delivering: 'bg-sky-50 text-sky-800 border-sky-200',
-    completed: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-    cancelled: 'bg-slate-100 text-slate-600 border-slate-200',
-    cancelled_by_customer: 'bg-red-50 text-red-800 border-red-200',
-    cancelled_by_outlet: 'bg-red-50 text-red-800 border-red-200',
-    failed_delivery: 'bg-red-50 text-red-800 border-red-200',
-    failed: 'bg-red-50 text-red-800 border-red-200',
+    pending: 'bg-warning-bg text-warning-text border-warning-border',
+    confirmed: 'bg-info-bg text-info-text border-info-border',
+    preparing:
+        'bg-status-progress-bg text-status-progress border-status-progress-border',
+    ready_for_pickup:
+        'bg-status-active-bg text-status-active border-status-active-border',
+    picked_up:
+        'bg-status-transit-bg text-status-transit border-status-transit-border',
+    delivering: 'bg-info-bg text-info-text border-info-border',
+    completed: 'bg-success-bg text-success-text border-success-border',
+    cancelled: 'bg-surface-muted text-text-muted border-border',
+    cancelled_by_customer: 'bg-danger-bg text-danger-text border-danger-border',
+    cancelled_by_outlet: 'bg-danger-bg text-danger-text border-danger-border',
+    failed_delivery: 'bg-danger-bg text-danger-text border-danger-border',
+    failed: 'bg-danger-bg text-danger-text border-danger-border',
 };
 
 export default function OrderStatusChip({ status }: { status: string }) {

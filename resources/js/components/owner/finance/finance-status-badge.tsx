@@ -9,33 +9,36 @@ const CONFIG: Record<
 > = {
     overdue: {
         label: 'Terlambat',
-        dotClass: 'bg-red-500',
-        badgeClass: 'bg-red-50 text-red-700 border border-red-200',
+        dotClass: 'bg-danger-bg0',
+        badgeClass: 'bg-danger-bg text-danger-text border border-danger-border',
     },
     unpaid: {
         label: 'Belum Bayar',
-        dotClass: 'bg-amber-500',
-        badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200',
+        dotClass: 'bg-warning-bg0',
+        badgeClass:
+            'bg-warning-bg text-warning-text border border-warning-border',
     },
     partial: {
         label: 'Sebagian',
-        dotClass: 'bg-blue-500',
-        badgeClass: 'bg-blue-50 text-blue-700 border border-blue-200',
+        dotClass: 'bg-info-bg0',
+        badgeClass: 'bg-info-bg text-info-text border border-info-border',
     },
     unsettled: {
         label: 'Belum Ditagihkan',
-        dotClass: 'bg-orange-500',
-        badgeClass: 'bg-orange-50 text-orange-700 border border-orange-200',
+        dotClass: 'bg-status-progress-bg0',
+        badgeClass:
+            'bg-status-progress-bg text-status-progress border border-status-progress-border',
     },
     no_activity: {
         label: 'Belum Ada Aktivitas',
-        dotClass: 'bg-slate-400',
-        badgeClass: 'bg-slate-100 text-slate-500 border border-slate-200',
+        dotClass: 'bg-text-subtle',
+        badgeClass: 'bg-surface-muted text-text-muted border border-border',
     },
     paid: {
         label: 'Lunas',
-        dotClass: 'bg-emerald-500',
-        badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+        dotClass: 'bg-success',
+        badgeClass:
+            'bg-success-bg text-success-text border border-success-border',
     },
 };
 

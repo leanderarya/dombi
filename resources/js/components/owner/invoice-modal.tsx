@@ -63,22 +63,20 @@ export default function InvoiceModal({
         >
             <div className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
-                    <span className="text-slate-500">Outlet</span>
-                    <span className="font-medium text-slate-900">
-                        {outletName}
-                    </span>
+                    <span className="text-text-muted">Outlet</span>
+                    <span className="font-medium text-text">{outletName}</span>
                 </div>
                 <div className="flex justify-between">
-                    <span className="text-slate-500">Total Outstanding</span>
-                    <span className="font-semibold text-red-600">
+                    <span className="text-text-muted">Total Outstanding</span>
+                    <span className="font-semibold text-danger">
                         {formatCurrency(totalOutstanding)}
                     </span>
                 </div>
             </div>
 
             {/* Breakdown */}
-            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <div className="mb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
+            <div className="mt-3 rounded-lg border border-border bg-surface-muted p-3">
+                <div className="mb-2 text-xs font-bold tracking-wider text-text-subtle uppercase">
                     Tagihan Belum Dibayar
                 </div>
                 {unpaidBreakdown.map((item) => (
@@ -86,10 +84,10 @@ export default function InvoiceModal({
                         key={item.id}
                         className="flex justify-between py-1 text-xs"
                     >
-                        <span className="text-slate-600">
+                        <span className="text-text-muted">
                             {item.period_label}
                         </span>
-                        <span className="font-semibold text-slate-900">
+                        <span className="font-semibold text-text">
                             {formatCurrency(item.outstanding)}
                         </span>
                     </div>
@@ -97,8 +95,8 @@ export default function InvoiceModal({
             </div>
 
             {/* Preview */}
-            <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
-                <pre className="text-xs leading-relaxed whitespace-pre-wrap text-slate-600">
+            <div className="mt-3 rounded-lg border border-border bg-surface p-3">
+                <pre className="text-xs leading-relaxed whitespace-pre-wrap text-text-muted">
                     {message}
                 </pre>
             </div>
@@ -107,10 +105,10 @@ export default function InvoiceModal({
                 <button
                     type="button"
                     onClick={handleCopy}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-surface py-2.5 text-sm font-bold text-text hover:bg-surface-muted"
                 >
                     {copied ? (
-                        <Check className="h-4 w-4 text-emerald-600" />
+                        <Check className="h-4 w-4 text-success-text" />
                     ) : (
                         <Copy className="h-4 w-4" />
                     )}
@@ -119,7 +117,7 @@ export default function InvoiceModal({
                 <button
                     type="button"
                     onClick={handleWhatsApp}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-bold text-white hover:bg-primary-hover"
                 >
                     <ExternalLink className="h-4 w-4" />
                     Buka WhatsApp

@@ -103,7 +103,7 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
     return (
         <div className="space-y-3">
             {holidays.length === 0 && !showForm && (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-text-subtle">
                     Tidak ada hari libur terjadwal.
                 </p>
             )}
@@ -111,16 +111,16 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
             {holidays.map((h) => (
                 <div
                     key={h.id}
-                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-border bg-surface-muted px-3 py-2"
                 >
                     <div>
-                        <div className="text-sm font-medium text-slate-900">
+                        <div className="text-sm font-medium text-text">
                             {formatDate(h.start_date)}
                             {h.start_date !== h.end_date &&
                                 ` - ${formatDate(h.end_date)}`}
                         </div>
                         {h.reason && (
-                            <div className="text-xs text-slate-500">
+                            <div className="text-xs text-text-muted">
                                 {h.reason}
                             </div>
                         )}
@@ -128,7 +128,7 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
                     <button
                         type="button"
                         onClick={() => handleDelete(h.id)}
-                        className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                        className="rounded-lg p-1.5 text-text-subtle hover:bg-danger-bg hover:text-danger-text"
                     >
                         <Trash2 className="h-4 w-4" />
                     </button>
@@ -136,33 +136,33 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
             ))}
 
             {showForm ? (
-                <div className="space-y-2 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
+                <div className="space-y-2 rounded-lg border border-success-border bg-success-bg/50 p-3">
                     <div className="grid grid-cols-2 gap-2">
                         <label className="block">
-                            <span className="text-xs font-semibold text-slate-500 uppercase">
+                            <span className="text-xs font-semibold text-text-muted uppercase">
                                 Mulai
                             </span>
                             <input
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
+                                className="mt-1 w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-sm"
                             />
                         </label>
                         <label className="block">
-                            <span className="text-xs font-semibold text-slate-500 uppercase">
+                            <span className="text-xs font-semibold text-text-muted uppercase">
                                 Selesai
                             </span>
                             <input
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
+                                className="mt-1 w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-sm"
                             />
                         </label>
                     </div>
                     <label className="block">
-                        <span className="text-xs font-semibold text-slate-500 uppercase">
+                        <span className="text-xs font-semibold text-text-muted uppercase">
                             Alasan
                         </span>
                         <input
@@ -170,11 +170,11 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
                             placeholder="Libur Lebaran, Renovasi, dll."
-                            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
+                            className="mt-1 w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-sm"
                         />
                     </label>
                     {error && (
-                        <p className="text-xs font-medium text-red-600">
+                        <p className="text-xs font-medium text-danger">
                             {error}
                         </p>
                     )}
@@ -183,7 +183,7 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
                             type="button"
                             onClick={handleAdd}
                             disabled={saving || !startDate || !endDate}
-                            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
                         >
                             {saving ? 'Menyimpan...' : 'Tambah'}
                         </button>
@@ -193,7 +193,7 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
                                 setShowForm(false);
                                 setError(null);
                             }}
-                            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-500"
+                            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-text-muted"
                         >
                             Batal
                         </button>
@@ -203,7 +203,7 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
                 <button
                     type="button"
                     onClick={() => setShowForm(true)}
-                    className="flex items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-xs font-semibold text-slate-500 hover:border-emerald-300 hover:text-emerald-700"
+                    className="flex items-center gap-1.5 rounded-lg border border-dashed border-border-strong px-3 py-2 text-xs font-semibold text-text-muted hover:border-success-border hover:text-success-text"
                 >
                     <Plus className="h-3.5 w-3.5" />
                     Tambah Hari Libur

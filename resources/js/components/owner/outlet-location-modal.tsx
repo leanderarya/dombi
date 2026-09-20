@@ -93,7 +93,7 @@ export default function OutletLocationModal({
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Suspense
                         fallback={
-                            <div className="flex h-[300px] items-center justify-center rounded-lg bg-slate-50 text-xs text-slate-500">
+                            <div className="flex h-[300px] items-center justify-center rounded-lg bg-surface-muted text-xs text-text-muted">
                                 Loading peta...
                             </div>
                         }
@@ -105,7 +105,7 @@ export default function OutletLocationModal({
                         />
                     </Suspense>
                     {(errors.latitude || errors.longitude || geo.failed) && (
-                        <p className="text-xs font-semibold text-red-600">
+                        <p className="text-xs font-semibold text-danger">
                             {geo.failed
                                 ? 'Gagal mendeteksi wilayah. Geser marker atau coba lagi. Anda bisa isi manual.'
                                 : 'Pilih lokasi pada peta.'}
@@ -140,17 +140,17 @@ export default function OutletLocationModal({
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                        <label className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                             Alamat Detail
                         </label>
                         <textarea
                             value={data.address}
                             onChange={(e) => setData('address', e.target.value)}
                             rows={2}
-                            className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                            className="mt-1.5 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring"
                         />
                         {errors.address && (
-                            <span className="text-xs font-semibold text-red-600">
+                            <span className="text-xs font-semibold text-danger">
                                 {errors.address}
                             </span>
                         )}
@@ -190,13 +190,13 @@ function InfoBadge({
 }) {
     return (
         <div
-            className={`rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 ${className}`}
+            className={`rounded-lg border border-border bg-surface-muted px-3 py-2 ${className}`}
         >
-            <div className="text-xs font-bold tracking-wider text-slate-400 uppercase">
+            <div className="text-xs font-bold tracking-wider text-text-subtle uppercase">
                 {label}
             </div>
             <div
-                className={`mt-0.5 text-sm font-medium ${loading ? 'text-slate-400' : 'text-slate-900'}`}
+                className={`mt-0.5 text-sm font-medium ${loading ? 'text-text-subtle' : 'text-text'}`}
             >
                 {loading ? 'Mendeteksi...' : value || '-'}
             </div>

@@ -4,10 +4,10 @@ import { cn } from '@/lib/utils';
 type KpiColor = 'success' | 'warning' | 'danger' | 'info';
 
 const colorClasses: Record<KpiColor, string> = {
-    success: 'text-emerald-600',
-    warning: 'text-amber-600',
-    danger: 'text-red-600',
-    info: 'text-blue-600',
+    success: 'text-success-text',
+    warning: 'text-warning-text',
+    danger: 'text-danger',
+    info: 'text-info-text',
 };
 
 interface Props {

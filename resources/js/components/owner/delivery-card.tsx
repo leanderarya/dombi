@@ -30,15 +30,15 @@ interface Props {
 }
 
 const statusBorderMap: Record<string, string> = {
-    waiting_assignment: 'border-l-slate-300',
-    waiting_pickup: 'border-l-amber-400',
+    waiting_assignment: 'border-l-border-strong',
+    waiting_pickup: 'border-l-warning',
     picked_up: 'border-l-blue-400',
-    delivering: 'border-l-indigo-400',
-    completed: 'border-l-emerald-400',
-    failed: 'border-l-red-400',
-    retry_delivery: 'border-l-orange-400',
-    returned_to_outlet: 'border-l-amber-400',
-    cancelled_and_released: 'border-l-slate-300',
+    delivering: 'border-l-status-transit',
+    completed: 'border-l-success',
+    failed: 'border-l-danger',
+    retry_delivery: 'border-l-accent-orange',
+    returned_to_outlet: 'border-l-warning',
+    cancelled_and_released: 'border-l-border-strong',
 };
 
 export default function DeliveryCard({
@@ -56,34 +56,35 @@ export default function DeliveryCard({
         'returned_to_outlet',
     ].includes(item.status);
     const needsAssignment = item.status === 'waiting_assignment';
-    const borderColor = statusBorderMap[item.status] ?? 'border-l-slate-300';
+    const borderColor =
+        statusBorderMap[item.status] ?? 'border-l-border-strong';
 
     return (
         <div
-            className={`rounded-lg border border-l-4 border-slate-200 bg-surface p-3 transition-all duration-150 ${borderColor} ${isFailed ? 'bg-red-50/30' : ''}`}
+            className={`rounded-lg border border-l-4 border-border bg-surface p-3 transition-all duration-150 ${borderColor} ${isFailed ? 'bg-danger-bg/30' : ''}`}
         >
             <Link href={href} className="block">
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-slate-900 tabular-nums">
+                            <span className="text-sm font-bold text-text tabular-nums">
                                 {item.order_code}
                             </span>
                             {item.sla_health && (
                                 <DeliverySlaBadge health={item.sla_health} />
                             )}
                         </div>
-                        <div className="mt-0.5 text-xs text-slate-500">
+                        <div className="mt-0.5 text-xs text-text-muted">
                             {item.customer_name}
                         </div>
-                        <div className="mt-0.5 text-xs text-slate-400">
+                        <div className="mt-0.5 text-xs text-text-subtle">
                             {item.outlet?.name ?? '-'}
                         </div>
                     </div>
                     <DeliveryStatusBadge status={item.status} />
                 </div>
 
-                <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
+                <div className="mt-2 flex items-center gap-3 text-xs text-text-muted">
                     {item.distance_km != null && (
                         <span className="flex items-center gap-1">
                             <svg
@@ -112,7 +113,7 @@ export default function DeliveryCard({
                     )}
                     {item.delivery_age != null && (
                         <span
-                            className={`font-medium ${item.delivery_age > 60 ? 'text-red-600' : 'text-slate-500'}`}
+                            className={`font-medium ${item.delivery_age > 60 ? 'text-danger' : 'text-text-muted'}`}
                         >
                             {formatDeliveryAge(item.delivery_age)}
                         </span>
@@ -121,17 +122,17 @@ export default function DeliveryCard({
 
                 {item.courier && (
                     <div className="mt-1.5 flex items-center gap-1.5 text-xs">
-                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
+                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
                             {item.courier.name.charAt(0)}
                         </div>
-                        <span className="text-slate-600">
+                        <span className="text-text-muted">
                             {item.courier.name}
                         </span>
                     </div>
                 )}
 
                 {item.failed_reason && (
-                    <div className="mt-2 rounded-md bg-red-50 px-2 py-1.5 text-xs text-red-700">
+                    <div className="mt-2 rounded-md bg-danger-bg px-2 py-1.5 text-xs text-danger-text">
                         {item.failed_reason}
                     </div>
                 )}
@@ -145,7 +146,7 @@ export default function DeliveryCard({
                             e.preventDefault();
                             onAssignCourier(item.id);
                         }}
-                        className="flex min-h-[36px] flex-1 items-center justify-center rounded-md bg-emerald-700 text-xs font-semibold text-white transition-colors hover:bg-emerald-800 active:bg-emerald-900"
+                        className="flex min-h-[36px] flex-1 items-center justify-center rounded-md bg-primary text-xs font-semibold text-white transition-colors hover:bg-primary-hover active:bg-primary-hover"
                     >
                         Assign Kurir
                     </button>
@@ -156,7 +157,7 @@ export default function DeliveryCard({
                             e.preventDefault();
                             onResolve(item.id);
                         }}
-                        className="flex min-h-[36px] flex-1 items-center justify-center rounded-md bg-amber-600 text-xs font-semibold text-white transition-colors hover:bg-amber-700 active:bg-amber-800"
+                        className="flex min-h-[36px] flex-1 items-center justify-center rounded-md bg-warning text-xs font-semibold text-white transition-colors hover:bg-warning/90 active:bg-warning/80"
                     >
                         Resolve
                     </button>

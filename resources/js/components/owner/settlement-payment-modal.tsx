@@ -112,40 +112,40 @@ export default function PaymentModal({
             <form onSubmit={handleSubmit}>
                 <div className="mt-4 space-y-2 text-sm">
                     <div className="flex justify-between">
-                        <span className="text-slate-500">Outlet</span>
-                        <span className="font-medium text-slate-900">
+                        <span className="text-text-muted">Outlet</span>
+                        <span className="font-medium text-text">
                             {outletName}
                         </span>
                     </div>
                     <div className="flex justify-between">
-                        <span className="text-slate-500">
+                        <span className="text-text-muted">
                             {isPayout
                                 ? 'Owner harus bayar'
                                 : 'Total Outstanding'}
                         </span>
                         <span
                             className={`font-semibold ${
-                                isPayout ? 'text-emerald-600' : 'text-red-600'
+                                isPayout ? 'text-success-text' : 'text-danger'
                             }`}
                         >
                             {formatCurrency(outstanding)}
                         </span>
                     </div>
                     {isPayout && outletBank?.bank_name && (
-                        <div className="mt-1 rounded-lg bg-emerald-50 p-2">
-                            <div className="text-[11px] font-semibold text-emerald-700 uppercase">
+                        <div className="mt-1 rounded-lg bg-success-bg p-2">
+                            <div className="text-[11px] font-semibold text-success-text uppercase">
                                 Rekening Tujuan
                             </div>
-                            <div className="text-sm font-medium text-slate-900">
+                            <div className="text-sm font-medium text-text">
                                 {outletBank.bank_name} ·{' '}
                                 {outletBank.bank_account_number}
                             </div>
-                            <div className="text-xs text-slate-500">
+                            <div className="text-xs text-text-muted">
                                 a.n. {outletBank.bank_account_holder}
                             </div>
                         </div>
                     )}
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-text-subtle">
                         {isPayout
                             ? 'Owner transfer ke rekening outlet, dialokasikan ke profit tertua (FIFO).'
                             : 'Pembayaran dialokasikan ke tagihan tertua terlebih dahulu (FIFO).'}
@@ -154,13 +154,13 @@ export default function PaymentModal({
 
                 <div className="mt-4 space-y-3">
                     <label className="block">
-                        <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                        <span className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                             {isPayout
                                 ? 'Nominal Ditransfer'
                                 : 'Nominal Diterima'}
                         </span>
                         <div className="relative mt-1">
-                            <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-slate-400">
+                            <span className="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-text-subtle">
                                 Rp
                             </span>
                             <input
@@ -168,7 +168,7 @@ export default function PaymentModal({
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 min={1}
-                                className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pr-4 pl-10 text-sm font-bold tabular-nums focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                                className="w-full rounded-lg border border-border bg-surface py-2.5 pr-4 pl-10 text-sm font-bold tabular-nums focus:border-success focus:ring-1 focus:ring-success-border"
                                 placeholder="0"
                                 autoFocus
                                 required
@@ -177,13 +177,13 @@ export default function PaymentModal({
                     </label>
 
                     <label className="block">
-                        <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                        <span className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                             Metode Pembayaran
                         </span>
                         <select
                             value={paymentMethod}
                             onChange={(e) => setPaymentMethod(e.target.value)}
-                            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm focus:border-success focus:ring-1 focus:ring-success-border"
                         >
                             {PAYMENT_METHODS.map((m) => (
                                 <option key={m.value} value={m.value}>
@@ -194,21 +194,21 @@ export default function PaymentModal({
                     </label>
 
                     <label className="block">
-                        <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                        <span className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                             Nomor Referensi
                         </span>
                         <input
                             type="text"
                             value={referenceNumber}
                             onChange={(e) => setReferenceNumber(e.target.value)}
-                            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm focus:border-success focus:ring-1 focus:ring-success-border"
                             placeholder="BUKTI-001"
                         />
                     </label>
 
                     {!isPayout && (
                         <label className="block">
-                            <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                            <span className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                                 Upload Bukti
                             </span>
                             <input
@@ -218,27 +218,27 @@ export default function PaymentModal({
                                 onChange={(e) =>
                                     setProofFile(e.target.files?.[0] ?? null)
                                 }
-                                className="mt-1 w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border file:border-slate-200 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-50"
+                                className="mt-1 w-full text-sm text-text-muted file:mr-3 file:rounded-lg file:border file:border-border file:bg-surface file:px-3 file:py-2 file:text-sm file:font-medium file:text-text hover:file:bg-surface-muted"
                             />
                         </label>
                     )}
 
                     <label className="block">
-                        <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                        <span className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                             Catatan (opsional)
                         </span>
                         <textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             rows={2}
-                            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm focus:border-success focus:ring-1 focus:ring-success-border"
                             placeholder="Catatan pembayaran..."
                         />
                     </label>
                 </div>
 
                 {error && (
-                    <p className="mt-2 text-xs font-medium text-red-600">
+                    <p className="mt-2 text-xs font-medium text-danger">
                         {error}
                     </p>
                 )}
@@ -247,14 +247,14 @@ export default function PaymentModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                        className="flex-1 rounded-lg border border-border bg-surface py-2.5 text-sm font-bold text-text hover:bg-surface-muted"
                     >
                         Batal
                     </button>
                     <button
                         type="submit"
                         disabled={saving || !amount}
-                        className="flex-[2] rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                        className="flex-[2] rounded-lg bg-primary py-2.5 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-50"
                     >
                         {saving
                             ? 'Menyimpan...'

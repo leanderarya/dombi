@@ -46,7 +46,7 @@ export default function PaymentHistoryCard({
         <div
             className={`rounded-lg border p-5 transition-all duration-200 ${
                 isPending
-                    ? 'border-amber-300 bg-amber-50/30'
+                    ? 'border-warning-border bg-warning-bg/30'
                     : 'border-border bg-surface'
             }`}
         >
@@ -94,7 +94,7 @@ export default function PaymentHistoryCard({
 
             {/* Rejection reason */}
             {payment.rejection_reason && (
-                <div className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+                <div className="mt-2 rounded-lg bg-danger-bg px-3 py-2 text-xs text-danger-text">
                     Alasan ditolak: {payment.rejection_reason}
                 </div>
             )}
@@ -134,7 +134,7 @@ export default function PaymentHistoryCard({
                         type="button"
                         onClick={() => onReject(payment.id)}
                         disabled={processing}
-                        className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-surface px-4 py-2.5 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 disabled:opacity-50"
+                        className="flex items-center justify-center gap-1.5 rounded-lg border border-danger-border bg-surface px-4 py-2.5 text-sm font-semibold text-danger-text transition-all hover:bg-danger-bg disabled:opacity-50"
                     >
                         <X className="h-4 w-4" />
                         Tolak

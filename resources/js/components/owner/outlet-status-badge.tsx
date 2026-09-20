@@ -1,13 +1,16 @@
 const styles: Record<string, string> = {
-    active: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/10',
-    inactive: 'bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-500/10',
+    active: 'bg-success-bg text-success-text ring-1 ring-inset ring-success/10',
+    inactive:
+        'bg-surface-muted text-text-muted ring-1 ring-inset ring-text-muted/10',
     temporarily_closed:
-        'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/10',
+        'bg-warning-bg text-warning-text ring-1 ring-inset ring-warning/10',
     maintenance:
-        'bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-600/10',
-    archived: 'bg-slate-50 text-slate-400 ring-1 ring-inset ring-slate-400/10',
-    low_stock: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/10',
-    busy: 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-600/10',
+        'bg-status-progress-bg text-status-progress ring-1 ring-inset ring-status-progress/10',
+    archived:
+        'bg-surface-muted text-text-subtle ring-1 ring-inset ring-text-subtle/10',
+    low_stock:
+        'bg-warning-bg text-warning-text ring-1 ring-inset ring-warning/10',
+    busy: 'bg-status-transit-bg text-status-transit ring-1 ring-inset ring-status-transit/10',
 };
 
 const labels: Record<string, string> = {

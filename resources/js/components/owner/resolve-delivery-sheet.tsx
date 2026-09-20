@@ -22,7 +22,7 @@ const resolutionOptions = [
         label: 'Kirim Ulang',
         description: 'Assign courier baru dan lanjutkan pengiriman.',
         inventoryNote: 'Reserved stock tetap aktif.',
-        inventoryColor: 'text-blue-700',
+        inventoryColor: 'text-info-text',
         ctaLabel: 'Tugaskan Kurir Baru',
         destructive: false,
     },
@@ -33,7 +33,7 @@ const resolutionOptions = [
             'Batalkan order dan proses refund manual via transfer bank.',
         inventoryNote:
             'Reserved stock akan dilepas. Proses refund dilakukan di luar sistem.',
-        inventoryColor: 'text-amber-700',
+        inventoryColor: 'text-warning-text',
         ctaLabel: 'Proses Refund',
         destructive: true,
     },
@@ -43,7 +43,7 @@ const resolutionOptions = [
         description:
             'Batalkan order dan kembalikan stok ke inventory tanpa refund.',
         inventoryNote: 'Reserved stock akan dilepas kembali ke inventory.',
-        inventoryColor: 'text-red-700',
+        inventoryColor: 'text-danger-text',
         ctaLabel: 'Batalkan Pesanan',
         destructive: true,
     },
@@ -106,32 +106,32 @@ export default function ResolveDeliverySheet({
             </p>
             <div className="mt-4">
                 {/* Incident Summary */}
-                <div className="rounded-lg border border-red-100 bg-red-50/50 p-3">
-                    <div className="text-xs font-bold tracking-wider text-red-600 uppercase">
+                <div className="rounded-lg border border-danger-border bg-danger-bg/50 p-3">
+                    <div className="text-xs font-bold tracking-wider text-danger uppercase">
                         Insiden
                     </div>
                     <div className="mt-1.5 space-y-1 text-xs">
                         <div className="flex justify-between">
-                            <span className="text-slate-500">Alasan</span>
-                            <span className="font-medium text-slate-900">
+                            <span className="text-text-muted">Alasan</span>
+                            <span className="font-medium text-text">
                                 {delivery.failed_reason ?? '-'}
                             </span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500">Kurir</span>
-                            <span className="text-slate-700">
+                            <span className="text-text-muted">Kurir</span>
+                            <span className="text-text">
                                 {delivery.courier?.name ?? '-'}
                             </span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500">Pelanggan</span>
-                            <span className="text-slate-700">
+                            <span className="text-text-muted">Pelanggan</span>
+                            <span className="text-text">
                                 {order?.customer_name ?? '-'}
                             </span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-slate-500">Outlet</span>
-                            <span className="text-slate-700">
+                            <span className="text-text-muted">Outlet</span>
+                            <span className="text-text">
                                 {order?.outlet?.name ?? '-'}
                             </span>
                         </div>
@@ -151,26 +151,26 @@ export default function ResolveDeliverySheet({
                                     className={`block rounded-lg border p-3 transition-all duration-150 active:opacity-80 ${
                                         isSelected
                                             ? opt.destructive
-                                                ? 'border-red-300 bg-red-50/30'
-                                                : 'border-emerald-300 bg-emerald-50/20'
-                                            : 'border-slate-200'
+                                                ? 'border-danger bg-danger-bg/30'
+                                                : 'border-success-border bg-success-bg/20'
+                                            : 'border-border'
                                     }`}
                                 >
                                     <div className="flex items-start gap-2.5">
                                         <div
-                                            className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 ${isSelected ? (opt.destructive ? 'border-red-600 bg-red-600' : 'border-emerald-600 bg-emerald-600') : 'border-slate-300'}`}
+                                            className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 ${isSelected ? (opt.destructive ? 'border-danger bg-danger' : 'border-primary bg-primary') : 'border-border-strong'}`}
                                         >
                                             {isSelected && (
                                                 <div className="flex h-full items-center justify-center">
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                                                    <div className="h-1.5 w-1.5 rounded-full bg-surface" />
                                                 </div>
                                             )}
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <div className="text-sm font-semibold text-slate-900">
+                                            <div className="text-sm font-semibold text-text">
                                                 {opt.label}
                                             </div>
-                                            <div className="mt-0.5 text-xs text-slate-500">
+                                            <div className="mt-0.5 text-xs text-text-muted">
                                                 {opt.description}
                                             </div>
                                         </div>
@@ -194,7 +194,7 @@ export default function ResolveDeliverySheet({
                         })}
                     </div>
                     {form.errors.resolution && (
-                        <p className="mt-1.5 text-xs text-red-600">
+                        <p className="mt-1.5 text-xs text-danger">
                             {form.errors.resolution}
                         </p>
                     )}
@@ -202,7 +202,7 @@ export default function ResolveDeliverySheet({
                     {/* Inventory Impact */}
                     {selectedOption && (
                         <div
-                            className={`mt-3 flex items-center gap-2 rounded-md border border-slate-100 bg-slate-50 px-3 py-2 text-xs font-medium ${selectedOption.inventoryColor}`}
+                            className={`mt-3 flex items-center gap-2 rounded-md border border-border bg-surface-muted px-3 py-2 text-xs font-medium ${selectedOption.inventoryColor}`}
                         >
                             <Package className="h-4 w-4" />{' '}
                             {selectedOption.inventoryNote}
@@ -216,12 +216,12 @@ export default function ResolveDeliverySheet({
                             onChange={(e) =>
                                 form.setData('resolution_notes', e.target.value)
                             }
-                            className="min-h-16 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                            className="min-h-16 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-success-border focus:ring-1 focus:ring-success-border"
                             placeholder="Tambahkan catatan operasional (wajib)..."
                             required
                         />
                         {form.errors.resolution_notes && (
-                            <p className="mt-1 text-xs text-red-600">
+                            <p className="mt-1 text-xs text-danger">
                                 {form.errors.resolution_notes}
                             </p>
                         )}
@@ -229,7 +229,7 @@ export default function ResolveDeliverySheet({
 
                     {/* Destructive Confirmation */}
                     {isDestructive && confirmDestructive && (
-                        <div className="mt-2 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-2 text-xs font-medium text-red-800">
+                        <div className="mt-2 flex items-center gap-2 rounded-md border border-danger-border bg-danger-bg p-2 text-xs font-medium text-danger-text">
                             <TriangleAlert className="h-4 w-4 shrink-0" />{' '}
                             Tindakan ini akan melepas reserved stock dan
                             membatalkan order secara permanen.

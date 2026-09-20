@@ -23,17 +23,17 @@ export default function MarginBar({
     let color: string;
 
     if (margin >= 5000) {
-        color = 'bg-emerald-500';
+        color = 'bg-success';
     } else if (margin > 0) {
-        color = 'bg-amber-500';
+        color = 'bg-warning-bg0';
     } else {
-        color = 'bg-red-500';
+        color = 'bg-danger-bg0';
     }
 
     return (
         <div
             className={cn(
-                'h-1.5 w-16 overflow-hidden rounded-full bg-slate-100',
+                'h-1.5 w-16 overflow-hidden rounded-full bg-surface-muted',
                 className,
             )}
         >
@@ -50,20 +50,18 @@ export function MarginBarInline({ margin, maxMargin, sellingPrice }: Props) {
 
     if (sp <= 0 && margin <= 0) {
         return (
-            <span className="font-bold text-red-600 tabular-nums">
-                {margin}
-            </span>
+            <span className="font-bold text-danger tabular-nums">{margin}</span>
         );
     }
 
     let textColor: string;
 
     if (margin >= 5000) {
-        textColor = 'text-emerald-600';
+        textColor = 'text-success-text';
     } else if (margin > 0) {
-        textColor = 'text-amber-600';
+        textColor = 'text-warning-text';
     } else {
-        textColor = 'text-red-600';
+        textColor = 'text-danger';
     }
 
     return (
