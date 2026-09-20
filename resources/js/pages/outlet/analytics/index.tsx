@@ -3,6 +3,7 @@ import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import RevenueTrendChart from '@/components/outlet/revenue-trend-chart';
 import TopProductsChart from '@/components/outlet/top-products-chart';
+import { Button } from '@/components/ui/button';
 import FilterChips from '@/components/ui/filter-chips';
 import { Skeleton, SkeletonKpiGrid } from '@/components/ui/skeleton';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
@@ -134,13 +135,14 @@ export default function OutletAnalytics({
                                     onChange={(e) => setTo(e.target.value)}
                                     className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
                                 />
-                                <button
+                                <Button
                                     type="button"
                                     onClick={handleCustomApply}
-                                    className="min-h-11 shrink-0 rounded-lg bg-primary px-4 text-sm font-bold text-white active:opacity-80"
+                                    size="lg"
+                                    className="shrink-0"
                                 >
                                     Terapkan
-                                </button>
+                                </Button>
                             </div>
                         )}
 
