@@ -199,7 +199,7 @@ export default function CourierManagement() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                    <span className="text-xs font-semibold tracking-wider text-text-muted uppercase">
                         Periode
                     </span>
                     {PERIODS.map((p) => (
@@ -224,7 +224,7 @@ export default function CourierManagement() {
                     <OwnerTable>
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-muted uppercase">
                                     <th className="px-4 py-3">Kurir</th>
                                     <th className="px-4 py-3">Sumber</th>
                                     <th className="px-4 py-3">Status</th>
@@ -310,7 +310,7 @@ export default function CourierManagement() {
                     <OwnerTable>
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-muted uppercase">
                                     <th className="px-4 py-3">Kandidat</th>
                                     <th className="px-4 py-3">Plat</th>
                                     <th className="px-4 py-3">Foto</th>
@@ -403,7 +403,7 @@ export default function CourierManagement() {
                     <OwnerTable>
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-muted uppercase">
                                     <th className="px-4 py-3">Kandidat</th>
                                     <th className="px-4 py-3">Outlet</th>
                                     <th className="px-4 py-3">Alasan</th>
@@ -441,7 +441,7 @@ export default function CourierManagement() {
                     <OwnerTable>
                         <table className="w-full">
                             <thead>
-                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-muted uppercase">
                                     <th className="px-4 py-3">Outlet</th>
                                     <th className="px-4 py-3 text-right">
                                         Delivery

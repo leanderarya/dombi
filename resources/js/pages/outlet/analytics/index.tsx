@@ -172,7 +172,7 @@ export default function OutletAnalytics({
                         </div>
 
                         <div className="rounded-xl border border-border bg-surface p-4">
-                            <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                            <div className="mb-3 text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                 Produk Terlaris
                             </div>
                             <div
@@ -184,7 +184,7 @@ export default function OutletAnalytics({
                         </div>
 
                         <div className="rounded-xl border border-border bg-surface p-4">
-                            <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                            <div className="mb-3 text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                 Trend Revenue
                             </div>
                             <div

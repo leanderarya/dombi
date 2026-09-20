@@ -533,7 +533,7 @@ function CancelDialog({
                             )
                         }
                         placeholder="Contoh: 1234"
-                        className="mt-1 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text tabular-nums placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="mt-1 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text tabular-nums placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                     <p className="mt-1 text-[11px] text-text-subtle">
                         Untuk keamanan pembatalan pesanan pickup
@@ -559,7 +559,7 @@ function CancelDialog({
                         value={cancelNote}
                         onChange={(e) => onNoteChange(e.target.value)}
                         placeholder="Jelaskan alasan pembatalan..."
-                        className="min-h-20 w-full rounded-chip border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        className="min-h-20 w-full rounded-chip border border-border px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
             )}

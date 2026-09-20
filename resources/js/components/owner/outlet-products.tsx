@@ -144,7 +144,7 @@ export default function OutletProducts({ outletId }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari produk..."
-                        className="w-full bg-transparent py-2 text-sm placeholder:text-text-subtle focus:outline-none"
+                        className="w-full bg-transparent py-2 text-sm placeholder:text-text-muted focus:outline-none"
                     />
                 </div>
                 <button

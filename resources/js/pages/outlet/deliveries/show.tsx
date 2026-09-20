@@ -231,7 +231,7 @@ export default function OutletDeliveryShow({ delivery }: any) {
                         <StatusBadge variant="danger" size="sm">
                             Gagal
                         </StatusBadge>
-                        <span className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                        <span className="text-xs font-bold tracking-wider text-text-muted uppercase">
                             Alasan Gagal
                         </span>
                     </div>

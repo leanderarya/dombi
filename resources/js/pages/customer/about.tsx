@@ -46,7 +46,7 @@ export default function About() {
 
                 {/* Values */}
                 <section className="mt-6">
-                    <h2 className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                    <h2 className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                         Nilai Kami
                     </h2>
                     <div className="mt-2 space-y-2">
@@ -72,7 +72,7 @@ export default function About() {
 
                 {/* App Info */}
                 <section className="mt-6">
-                    <h2 className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                    <h2 className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                         Informasi Aplikasi
                     </h2>
                     <div className="mt-2 rounded-thumb border border-border bg-surface p-4">

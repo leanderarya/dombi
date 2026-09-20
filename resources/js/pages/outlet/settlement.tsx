@@ -229,7 +229,7 @@ export default function OutletSettlement({
                             </div>
                         ) : (
                             <div className="rounded-xl border border-danger-border bg-danger-bg p-4">
-                                <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                <div className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                     Total Belum Disetor
                                 </div>
                                 <div className="mt-1 text-3xl font-bold text-danger tabular-nums">
@@ -531,7 +531,7 @@ export default function OutletSettlement({
                                         accent
                                     />
                                     <div className="border-t border-border pt-2">
-                                        <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                        <div className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                             Rincian Net Settlement
                                         </div>
                                     </div>
@@ -981,7 +981,7 @@ function PaymentDetailSheet({
 
                     {payment.notes && (
                         <div className="rounded-xl border border-border p-3 text-sm text-text-muted">
-                            <div className="text-[11px] font-semibold tracking-wider text-text-subtle uppercase">
+                            <div className="text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                 Catatan
                             </div>
                             <p className="mt-1">{payment.notes}</p>

@@ -495,7 +495,7 @@ function LocationSheetContent({
                             {isLoggedIn && savedAddresses.length > 0 && (
                                 <>
                                     <div className="h-px bg-border" />
-                                    <div className="px-1 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                    <div className="px-1 text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                         Alamat Tersimpan
                                     </div>
                                     {savedAddresses.map((addr) => (
@@ -738,7 +738,7 @@ function LocationSheetContent({
                             {canAdd ? (
                                 <>
                                     <div>
-                                        <label className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                        <label className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                                             Label Alamat (opsional)
                                         </label>
                                         <div className="mt-2 flex gap-2">
@@ -778,7 +778,7 @@ function LocationSheetContent({
                                                 setSaveLabel(e.target.value)
                                             }
                                             placeholder="Atau ketik label sendiri..."
-                                            className="mt-2 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                            className="mt-2 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
                                             maxLength={20}
                                         />
                                     </div>

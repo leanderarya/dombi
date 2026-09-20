@@ -51,7 +51,7 @@ export default function AddressForm({
         <form onSubmit={onSubmit} className="space-y-5">
             {/* Map */}
             <section>
-                <label className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                <label className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
                     Pilih Lokasi di Peta
                 </label>
                 <div className="mt-2">
@@ -122,7 +122,7 @@ export default function AddressForm({
                 <textarea
                     value={data.address}
                     onChange={(e) => setData('address', e.target.value)}
-                    className="mt-1.5 min-h-20 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
+                    className="mt-1.5 min-h-20 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
                     placeholder="Jalan, nomor, RT/RW, detail"
                     required
                 />
@@ -194,7 +194,7 @@ export default function AddressForm({
                 <input
                     value={data.landmark}
                     onChange={(e) => setData('landmark', e.target.value)}
-                    className="mt-1.5 min-h-11 w-full rounded-chip border border-border px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
+                    className="mt-1.5 min-h-11 w-full rounded-chip border border-border px-3 text-sm text-text placeholder:text-text-muted focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
                     placeholder="Rumah cat hijau dekat mushola"
                 />
                 {errors.landmark && (
@@ -215,7 +215,7 @@ export default function AddressForm({
                 <textarea
                     value={data.delivery_notes}
                     onChange={(e) => setData('delivery_notes', e.target.value)}
-                    className="mt-1.5 min-h-16 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
+                    className="mt-1.5 min-h-16 w-full rounded-chip border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-muted focus:border-primary/20 focus:ring-1 focus:ring-primary/20"
                     placeholder="Instruksi tambahan untuk kurir"
                 />
                 {errors.delivery_notes && (
@@ -288,7 +288,7 @@ function Field({
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 inputMode={inputMode}
-                className={`mt-1.5 min-h-11 w-full rounded-chip border px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary/20 focus:ring-1 focus:ring-primary/20 ${error ? 'border-danger' : 'border-border'}`}
+                className={`mt-1.5 min-h-11 w-full rounded-chip border px-3 text-sm text-text placeholder:text-text-muted focus:border-primary/20 focus:ring-1 focus:ring-primary/20 ${error ? 'border-danger' : 'border-border'}`}
                 placeholder={placeholder}
                 required={required}
             />

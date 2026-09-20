@@ -500,7 +500,7 @@ function MapSearchBox({
                     onChange={(e) => handleSearch(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setOpen(true)}
                     placeholder="Cari lokasi outlet..."
-                    className="flex-1 bg-transparent text-sm text-text placeholder:text-text-subtle focus:outline-none"
+                    className="flex-1 bg-transparent text-sm text-text placeholder:text-text-muted focus:outline-none"
                 />
                 {query && (
                     <button

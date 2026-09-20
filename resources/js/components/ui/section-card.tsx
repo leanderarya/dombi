@@ -17,7 +17,7 @@ export default function SectionCard({ children, label, labelRight, className = '
         <div className="mb-6">
             {(label || labelRight) && (
                 <div className="mb-2 flex items-center justify-between px-1">
-                    {label && <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">{label}</h2>}
+                    {label && <h2 className="text-xs font-bold uppercase tracking-wider text-text-muted">{label}</h2>}
                     {labelRight}
                 </div>
             )}

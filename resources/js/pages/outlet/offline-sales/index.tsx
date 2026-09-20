@@ -93,7 +93,7 @@ export default function OfflineSalesIndex({
                         {groupedSales.map((group: any) => (
                             <div key={group.date}>
                                 <div className="mb-1.5 flex items-center justify-between">
-                                    <span className="text-xs font-bold tracking-wide text-text-subtle uppercase">
+                                    <span className="text-xs font-bold tracking-wide text-text-muted uppercase">
                                         {formatDate(group.date)}
                                     </span>
                                     <span className="text-xs font-semibold text-text-muted tabular-nums">

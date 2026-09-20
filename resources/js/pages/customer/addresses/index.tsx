@@ -67,7 +67,7 @@ export default function AddressesIndex({ addresses }: any) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari alamat..."
-                        className="min-h-11 w-full bg-transparent text-sm text-text placeholder:text-text-subtle focus:outline-none"
+                        className="min-h-11 w-full bg-transparent text-sm text-text placeholder:text-text-muted focus:outline-none"
                     />
                 </div>
 

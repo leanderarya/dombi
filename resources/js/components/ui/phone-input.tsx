@@ -59,7 +59,7 @@ export default function PhoneInput({
                     placeholder={placeholder}
                     disabled={disabled}
                     maxLength={13}
-                    className="flex-1 bg-transparent px-3 py-2.5 text-sm text-text outline-none placeholder:text-text-subtle"
+                    className="flex-1 bg-transparent px-3 py-2.5 text-sm text-text outline-none placeholder:text-text-muted"
                 />
             </div>
             {hint && !error && (
