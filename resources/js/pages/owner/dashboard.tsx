@@ -120,14 +120,22 @@ function getStockSeverity(shortage: number): {
     bar: string;
 } {
     if (shortage >= 8) {
-        return { dot: 'bg-red-500', text: 'text-red-700', bar: 'bg-red-400' };
+        return {
+            dot: 'bg-danger-bg0',
+            text: 'text-danger-text',
+            bar: 'bg-danger',
+        };
     }
 
     if (shortage >= 4) {
-        return { dot: 'bg-red-400', text: 'text-red-600', bar: 'bg-red-300' };
+        return {
+            dot: 'bg-danger',
+            text: 'text-danger',
+            bar: 'bg-danger-border',
+        };
     }
 
-    return { dot: 'bg-amber-400', text: 'text-amber-700', bar: 'bg-amber-400' };
+    return { dot: 'bg-warning', text: 'text-warning-text', bar: 'bg-warning' };
 }
 
 /** SVG dual-line chart — revenue trend from backend */
@@ -504,7 +512,7 @@ export default function Dashboard({
                         <span className="text-xs font-medium text-text-muted">
                             Total Penjualan
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-600">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-[11px] font-semibold text-success-text">
                             <TrendingUp className="h-3 w-3" /> +8.2%
                         </span>
                     </div>
@@ -522,7 +530,7 @@ export default function Dashboard({
                         <span className="text-xs font-medium text-text-muted">
                             Pesanan Hari Ini
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-600">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-[11px] font-semibold text-success-text">
                             <Check className="h-3 w-3" /> Optimal
                         </span>
                     </div>
@@ -543,7 +551,7 @@ export default function Dashboard({
                         <span className="text-xs font-medium text-text-muted">
                             Tindakan Pending
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-600">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-warning-bg px-2 py-0.5 text-[11px] font-semibold text-warning-text">
                             {totalPendingActions} Pending
                         </span>
                     </div>
@@ -567,8 +575,8 @@ export default function Dashboard({
                         <span
                             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                                 kpis.criticalStock > 0
-                                    ? 'bg-red-50 text-red-600'
-                                    : 'bg-emerald-50 text-emerald-600'
+                                    ? 'bg-danger-bg text-danger'
+                                    : 'bg-success-bg text-success-text'
                             }`}
                         >
                             {kpis.criticalStock > 0
@@ -578,9 +586,7 @@ export default function Dashboard({
                     </div>
                     <div
                         className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${
-                            kpis.criticalStock > 0
-                                ? 'text-red-600'
-                                : 'text-text'
+                            kpis.criticalStock > 0 ? 'text-danger' : 'text-text'
                         }`}
                     >
                         {kpis.criticalStock}{' '}
@@ -675,7 +681,7 @@ export default function Dashboard({
 
                         {(inventoryRisks ?? []).length === 0 && (
                             <div className="flex flex-col items-center justify-center py-8">
-                                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                                <CheckCircle2 className="h-5 w-5 text-success-text" />
                                 <div className="mt-2 text-sm font-medium text-text">
                                     Stok aman
                                 </div>
@@ -684,8 +690,8 @@ export default function Dashboard({
                     </div>
 
                     {kpis.criticalStock > 0 && (
-                        <div className="flex items-center gap-2.5 rounded-xl border border-amber-200/60 bg-amber-50 p-3 text-xs text-amber-800">
-                            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+                        <div className="flex items-center gap-2.5 rounded-xl border border-warning-border/60 bg-warning-bg p-3 text-xs text-warning-text">
+                            <AlertTriangle className="h-4 w-4 shrink-0 text-warning-text" />
                             <span>
                                 <strong>Stok Kritis:</strong>{' '}
                                 {kpis.criticalStock} produk butuh restock
@@ -739,7 +745,7 @@ export default function Dashboard({
                                     {activeSettlementAlerts.map((alert) => (
                                         <tr
                                             key={alert.outlet.id}
-                                            className="transition-colors hover:bg-emerald-50/40"
+                                            className="transition-colors hover:bg-success-bg/40"
                                         >
                                             <td className="px-4 py-3.5">
                                                 <div className="font-mono font-bold text-primary">
@@ -753,11 +759,11 @@ export default function Dashboard({
                                             </td>
                                             <td className="px-4 py-3.5">
                                                 <div className="flex items-center gap-1.5 text-text-muted">
-                                                    <Clock className="h-3.5 w-3.5 text-amber-500" />
+                                                    <Clock className="h-3.5 w-3.5 text-warning-text" />
                                                     {alert.daysOverdue} hari
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3.5 text-right font-semibold text-amber-700 tabular-nums">
+                                            <td className="px-4 py-3.5 text-right font-semibold text-warning-text tabular-nums">
                                                 {formatCurrency(
                                                     alert.outstandingAmount,
                                                 )}
@@ -801,7 +807,7 @@ export default function Dashboard({
                                 Butuh tindakan segera
                             </p>
                         </div>
-                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-primary">
+                        <span className="rounded-full bg-success-bg px-2 py-0.5 text-xs font-semibold text-primary">
                             {totalPendingActions} Aktif
                         </span>
                     </div>
@@ -810,14 +816,14 @@ export default function Dashboard({
                         {actionRequired.restocks > 0 && (
                             <Link
                                 href="/owner/restocks?status=requested"
-                                className="group flex w-full items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3 transition-all hover:border-primary hover:bg-emerald-50/40"
+                                className="group flex w-full items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3 transition-all hover:border-primary hover:bg-success-bg/40"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="h-2 w-2 rounded-full bg-red-500" />
+                                    <div className="bg-danger-bg0 h-2 w-2 rounded-full" />
                                     <span className="text-xs font-semibold text-text">
                                         Restock Stok Kritis
                                     </span>
-                                    <span className="rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold text-red-600">
+                                    <span className="rounded-md bg-danger-bg px-2 py-1 text-[10px] font-bold text-danger">
                                         {actionRequired.restocks}
                                     </span>
                                 </div>
@@ -828,14 +834,14 @@ export default function Dashboard({
                         {actionRequired.returns > 0 && (
                             <Link
                                 href="/owner/returns?status=submitted"
-                                className="group flex w-full items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3 transition-all hover:border-primary hover:bg-emerald-50/40"
+                                className="group flex w-full items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3 transition-all hover:border-primary hover:bg-success-bg/40"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="h-2 w-2 rounded-full bg-amber-400" />
+                                    <div className="h-2 w-2 rounded-full bg-warning" />
                                     <span className="text-xs font-semibold text-text">
                                         Return Menunggu
                                     </span>
-                                    <span className="rounded-md bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-600">
+                                    <span className="rounded-md bg-warning-bg px-2 py-1 text-[10px] font-bold text-warning-text">
                                         {actionRequired.returns}
                                     </span>
                                 </div>
@@ -846,14 +852,14 @@ export default function Dashboard({
                         {actionRequired.exchanges > 0 && (
                             <Link
                                 href="/owner/exchanges?status=submitted"
-                                className="group flex w-full items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3 transition-all hover:border-primary hover:bg-emerald-50/40"
+                                className="group flex w-full items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3 transition-all hover:border-primary hover:bg-success-bg/40"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="h-2 w-2 rounded-full bg-blue-500" />
+                                    <div className="bg-info-bg0 h-2 w-2 rounded-full" />
                                     <span className="text-xs font-semibold text-text">
                                         Tukar Produk
                                     </span>
-                                    <span className="rounded-md bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-600">
+                                    <span className="rounded-md bg-info-bg px-2 py-1 text-[10px] font-bold text-info-text">
                                         {actionRequired.exchanges}
                                     </span>
                                 </div>
@@ -864,14 +870,14 @@ export default function Dashboard({
                         {actionRequired.pendingSettlementVerifications > 0 && (
                             <Link
                                 href="/owner/finance?tab=pembayaran"
-                                className="group flex w-full items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3 transition-all hover:border-primary hover:bg-emerald-50/40"
+                                className="group flex w-full items-center justify-between rounded-xl border border-border bg-surface-muted/50 p-3 transition-all hover:border-primary hover:bg-success-bg/40"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="h-2 w-2 rounded-full bg-violet-500" />
+                                    <div className="h-2 w-2 rounded-full bg-status-active" />
                                     <span className="text-xs font-semibold text-text">
                                         Verifikasi Pembayaran
                                     </span>
-                                    <span className="rounded-md bg-violet-50 px-2 py-1 text-[10px] font-bold text-violet-600">
+                                    <span className="rounded-md bg-status-active-bg px-2 py-1 text-[10px] font-bold text-status-active">
                                         {
                                             actionRequired.pendingSettlementVerifications
                                         }
@@ -883,7 +889,7 @@ export default function Dashboard({
 
                         {totalPendingActions === 0 && (
                             <div className="flex flex-col items-center justify-center py-6">
-                                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                                <CheckCircle2 className="h-5 w-5 text-success-text" />
                                 <div className="mt-2 text-sm font-medium text-text">
                                     Semua ditangani
                                 </div>
@@ -898,7 +904,7 @@ export default function Dashboard({
                 (inventoryRisks ?? []).length === 0 &&
                 activeSettlementAlerts.length === 0 && (
                     <div className="mt-6 flex flex-col items-center justify-center rounded-2xl border border-border bg-surface py-14">
-                        <Sparkles className="h-7 w-7 text-emerald-600" />
+                        <Sparkles className="h-7 w-7 text-success-text" />
                         <div className="mt-3 text-sm font-medium text-text">
                             Hari ini tenang
                         </div>

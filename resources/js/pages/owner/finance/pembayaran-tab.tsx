@@ -141,17 +141,17 @@ export default function PembayaranTab({
                         <span className="text-xs font-medium text-text-muted">
                             Pending
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                        <span className="bg-warning-bg0/10 flex h-10 w-10 items-center justify-center rounded-xl text-warning-text">
                             <Clock className="h-5 w-5" />
                         </span>
                     </div>
                     <div
-                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${(paymentKpis?.pending_count ?? 0) > 0 ? 'text-amber-600' : 'text-text'}`}
+                        className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${(paymentKpis?.pending_count ?? 0) > 0 ? 'text-warning-text' : 'text-text'}`}
                     >
                         {paymentKpis?.pending_count ?? 0}
                     </div>
                     {(paymentKpis?.pending_count ?? 0) > 0 && (
-                        <p className="text-[11px] text-amber-500">
+                        <p className="text-[11px] text-warning-text">
                             Perlu verifikasi
                         </p>
                     )}
@@ -161,7 +161,7 @@ export default function PembayaranTab({
                         <span className="text-xs font-medium text-text-muted">
                             Hari Ini
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                             <DollarSign className="h-5 w-5" />
                         </span>
                     </div>
@@ -174,11 +174,11 @@ export default function PembayaranTab({
                         <span className="text-xs font-medium text-text-muted">
                             Bulan Ini
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                             <CheckCircle className="h-5 w-5" />
                         </span>
                     </div>
-                    <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                    <div className="font-heading text-xl font-bold text-success-text tabular-nums sm:text-2xl">
                         {formatCurrency(paymentKpis?.verified_month ?? 0)}
                     </div>
                 </div>
@@ -194,10 +194,10 @@ export default function PembayaranTab({
                     const colorMap: Record<string, string> = {
                         all: 'text-text bg-surface-muted ring-border',
                         pending_verification:
-                            'text-amber-600 bg-amber-50 ring-amber-200',
+                            'text-warning-text bg-warning-bg ring-warning-border',
                         verified:
-                            'text-emerald-600 bg-emerald-50 ring-emerald-200',
-                        rejected: 'text-red-600 bg-red-50 ring-red-200',
+                            'text-success-text bg-success-bg ring-success-border',
+                        rejected: 'text-danger bg-danger-bg ring-danger-border',
                     };
 
                     return (
@@ -243,10 +243,10 @@ export default function PembayaranTab({
 
             {rejectingId && (
                 <div
-                    className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4"
+                    className="mb-4 rounded-lg border border-danger-border bg-danger-bg p-4"
                     aria-label="Form penolakan pembayaran"
                 >
-                    <div className="text-sm font-semibold text-red-800">
+                    <div className="text-sm font-semibold text-danger-text">
                         Alasan Penolakan
                     </div>
                     <Textarea

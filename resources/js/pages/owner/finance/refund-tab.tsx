@@ -127,8 +127,8 @@ export default function RefundTab({
                 {/* Empty state */}
                 {refunds.data.length === 0 ? (
                     <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface p-10">
-                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
-                            <CheckCircle className="h-6 w-6 text-emerald-500" />
+                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-success-bg">
+                            <CheckCircle className="h-6 w-6 text-success-text" />
                         </span>
                         <div className="text-center">
                             <p className="text-sm font-medium text-text">
@@ -382,12 +382,12 @@ export default function RefundTab({
 
                                             {/* Rejection info */}
                                             {rejection && (
-                                                <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800">
+                                                <div className="rounded-lg bg-danger-bg px-3 py-2 text-xs text-danger-text">
                                                     <p className="font-medium">
                                                         {rejection.label}
                                                     </p>
                                                     {rejection.note && (
-                                                        <p className="mt-0.5 text-red-600">
+                                                        <p className="mt-0.5 text-danger">
                                                             {rejection.note}
                                                         </p>
                                                     )}
