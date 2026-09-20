@@ -191,7 +191,7 @@ export function PusatTab({
                         <span className="text-xs font-medium text-text-muted">
                             Rata-rata Margin
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-status-active/10 text-status-active">
                             <TrendingUp className="h-5 w-5" />
                         </span>
                     </div>
