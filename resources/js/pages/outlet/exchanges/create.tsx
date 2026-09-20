@@ -184,6 +184,7 @@ export default function OutletExchangesCreate({
                                 {pairs.length > 1 && (
                                     <Button
                                         onClick={() => removePair(index)}
+                                        aria-label="Hapus pasangan"
                                         variant="ghost"
                                         size="icon"
                                         className="h-11 w-11 text-text-subtle hover:bg-danger-bg hover:text-danger-text"
