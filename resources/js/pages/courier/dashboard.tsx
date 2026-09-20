@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { AlertCircle, ArrowRight, MapPin, Package } from 'lucide-react';
 import { useState } from 'react';
 import PushBanner from '@/components/shared/push-banner';
+import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
@@ -82,7 +83,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                             {courier.is_online ? 'Online' : 'Offline'}
                         </div>
                     </div>
-                    <button
+                    <Button
                         onClick={handleAvailabilityToggle}
                         disabled={loadingAction !== null}
                         className={`min-h-11 rounded-lg px-5 py-3 text-sm font-bold transition-colors disabled:opacity-50 ${
@@ -96,7 +97,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                             : courier.is_online
                               ? 'Offline'
                               : 'Online'}
-                    </button>
+                    </Button>
                 </div>
             </SectionCard>
 

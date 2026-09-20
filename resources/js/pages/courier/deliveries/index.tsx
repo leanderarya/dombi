@@ -2,6 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
 import { Truck, Route, Clock, MapPin, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
@@ -67,10 +68,11 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
             {/* Route Optimization — only when active deliveries exist */}
             {hasActiveDeliveries && (
                 <div className="mt-4 mb-4">
-                    <button
+                    <Button
                         onClick={fetchOptimizedRoute}
                         disabled={loadingRoute}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white active:opacity-80 disabled:opacity-50"
+                        size="lg"
+                        className="w-full"
                     >
                         {loadingRoute ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -78,7 +80,7 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
                             <Route className="h-4 w-4" />
                         )}
                         {loadingRoute ? 'Menghitung Rute...' : 'Optimasi Rute'}
-                    </button>
+                    </Button>
                 </div>
             )}
 

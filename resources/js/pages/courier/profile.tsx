@@ -1,5 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import CourierLayout from '@/layouts/courier-layout';
 
 export default function CourierProfile() {
@@ -28,14 +29,15 @@ export default function CourierProfile() {
 
             {/* Actions */}
             <div className="mb-6 rounded-xl bg-surface">
-                <button
+                <Button
                     type="button"
                     onClick={() => router.post('/logout')}
-                    className="flex w-full items-center gap-3 px-4 py-3.5 text-danger active:opacity-80"
+                    variant="ghost"
+                    className="w-full justify-start gap-3 px-4 py-3.5 text-danger hover:text-danger"
                 >
                     <LogOut className="h-5 w-5" />
                     <span className="text-sm font-medium">Keluar</span>
-                </button>
+                </Button>
             </div>
 
             {/* Version */}
