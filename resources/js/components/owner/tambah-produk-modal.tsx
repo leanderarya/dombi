@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import OwnerModalShell from '@/components/owner/owner-modal-shell';
+import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/format';
 import {
     fetchAvailableProducts,
@@ -237,23 +238,26 @@ function TambahProdukModalContent({
                     </p>
                 )}
                 <div className="flex gap-3">
-                    <button
+                    <Button
                         type="button"
                         onClick={closeModal}
-                        className="flex-1 rounded-lg border border-border bg-surface py-2.5 text-sm font-bold text-text hover:bg-surface-muted"
+                        variant="outline"
+                        size="lg"
+                        className="flex-1"
                     >
                         Batal
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="button"
                         onClick={handleSubmit}
                         disabled={saving || selected.size === 0}
-                        className="flex-[2] rounded-lg bg-primary py-2.5 text-sm font-bold text-white hover:bg-primary-hover disabled:opacity-50"
+                        size="lg"
+                        className="flex-[2]"
                     >
                         {saving
                             ? 'Menambahkan...'
                             : `Tambahkan ${selected.size} Produk`}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </OwnerModalShell>
