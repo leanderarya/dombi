@@ -1,5 +1,6 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -129,13 +130,14 @@ export default function OutletOrderReportShow({ report }: any) {
             {/* Respond Button (pending only) */}
             {isPending && !respondMode && (
                 <div className="mt-4">
-                    <button
+                    <Button
                         type="button"
                         onClick={() => setRespondMode(true)}
-                        className="flex min-h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80"
+                        size="cta"
+                        className="w-full"
                     >
                         Tanggapi Laporan
-                    </button>
+                    </Button>
                 </div>
             )}
 
@@ -166,16 +168,17 @@ export default function OutletOrderReportShow({ report }: any) {
                         >
                             Batal
                         </button>
-                        <button
+                        <Button
                             type="button"
                             onClick={handleRespond}
                             disabled={form.processing}
-                            className="flex h-11 flex-1 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                            size="lg"
+                            className="flex-1"
                         >
                             {form.processing
                                 ? 'Mengirim...'
                                 : 'Kirim Tanggapan'}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

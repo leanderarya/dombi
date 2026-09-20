@@ -737,13 +737,14 @@ function OpnameSheet({
                     )}
                 </div>
 
-                <button
+                <Button
                     type="submit"
                     disabled={processing}
-                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:bg-primary-hover disabled:opacity-50"
+                    size="lg"
+                    className="w-full"
                 >
                     {processing ? 'Menyimpan...' : 'Simpan Opname'}
-                </button>
+                </Button>
             </form>
 
             {/* Confirmation Dialog */}
@@ -769,21 +770,24 @@ function OpnameSheet({
                     </p>
                 )}
                 <div className="mt-4 flex gap-2">
-                    <button
+                    <Button
                         type="button"
                         onClick={() => setShowConfirm(false)}
-                        className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
+                        variant="outline"
+                        size="cta"
+                        className="flex-1"
                     >
                         Batal
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="button"
                         onClick={confirmSubmit}
                         disabled={processing}
-                        className="flex h-12 flex-1 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                        size="cta"
+                        className="flex-1"
                     >
                         {processing ? 'Menyimpan...' : 'Ya, Simpan'}
-                    </button>
+                    </Button>
                 </div>
             </Dialog>
         </BottomSheet>

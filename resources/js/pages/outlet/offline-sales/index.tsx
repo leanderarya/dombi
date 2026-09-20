@@ -205,20 +205,24 @@ export default function OfflineSalesIndex({
                     Penjualan ini akan dihapus dan stok akan dikembalikan.
                 </p>
                 <div className="mt-4 flex gap-2">
-                    <button
+                    <Button
                         type="button"
                         onClick={() => setDeleteTarget(null)}
-                        className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
+                        variant="outline"
+                        size="cta"
+                        className="flex-1"
                     >
                         Batal
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="button"
                         onClick={handleDelete}
-                        className="flex h-12 flex-1 items-center justify-center rounded-xl bg-danger text-sm font-bold text-white active:opacity-80"
+                        variant="destructive"
+                        size="cta"
+                        className="flex-1"
                     >
                         Hapus
-                    </button>
+                    </Button>
                 </div>
             </BottomSheet>
         </OutletLayout>
