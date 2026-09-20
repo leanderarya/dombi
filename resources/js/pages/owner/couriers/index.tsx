@@ -79,7 +79,7 @@ export default function CouriersIndex({
                             <span className="text-xs font-medium text-text-muted">
                                 Total Kurir
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-info)]/10 text-[var(--color-info)]">
                                 <Users className="h-5 w-5" />
                             </span>
                         </div>
@@ -93,11 +93,11 @@ export default function CouriersIndex({
                             <span className="text-xs font-medium text-text-muted">
                                 Online
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                                 <Truck className="h-5 w-5" />
                             </span>
                         </div>
-                        <div className="font-heading text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">
+                        <div className="font-heading text-xl font-bold text-success-text tabular-nums sm:text-2xl">
                             {stats.online}
                         </div>
                     </div>
@@ -107,7 +107,7 @@ export default function CouriersIndex({
                             <span className="text-xs font-medium text-text-muted">
                                 Pengiriman Hari Ini
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning-text">
                                 <Bike className="h-5 w-5" />
                             </span>
                         </div>
@@ -121,7 +121,7 @@ export default function CouriersIndex({
                             <span className="text-xs font-medium text-text-muted">
                                 Lokasi Aktif
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-status-active)]/10 text-[var(--color-status-active)]">
                                 <Users className="h-5 w-5" />
                             </span>
                         </div>
@@ -180,11 +180,11 @@ export default function CouriersIndex({
                                             </div>
                                             {courier.is_online ? (
                                                 <span className="flex h-2.5 w-2.5 items-center justify-center">
-                                                    <span className="absolute h-2.5 w-2.5 animate-ping rounded-full bg-emerald-400 opacity-75" />
-                                                    <span className="relative h-2 w-2 rounded-full bg-emerald-500" />
+                                                    <span className="absolute h-2.5 w-2.5 animate-ping rounded-full bg-success opacity-75" />
+                                                    <span className="relative h-2 w-2 rounded-full bg-success" />
                                                 </span>
                                             ) : (
-                                                <span className="h-2 w-2 rounded-full bg-gray-300" />
+                                                <span className="h-2 w-2 rounded-full bg-border-strong" />
                                             )}
                                         </div>
 
@@ -325,7 +325,7 @@ export default function CouriersIndex({
                                 })}
                             </div>
                             {form.errors.vehicle_type && (
-                                <p className="mt-1 text-xs text-red-500">
+                                <p className="mt-1 text-xs text-danger">
                                     {form.errors.vehicle_type}
                                 </p>
                             )}

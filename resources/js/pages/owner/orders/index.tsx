@@ -80,7 +80,7 @@ export default function OwnerOrdersIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Pesanan Hari Ini
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-success)]/10 text-[var(--color-success)]">
                             <ShoppingCart className="h-5 w-5" />
                         </span>
                     </div>
@@ -97,7 +97,7 @@ export default function OwnerOrdersIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Pendapatan
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                             <DollarSign className="h-5 w-5" />
                         </span>
                     </div>
@@ -114,7 +114,7 @@ export default function OwnerOrdersIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Butuh Tindakan
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning-text">
                             <Clock className="h-5 w-5" />
                         </span>
                     </div>
@@ -131,7 +131,7 @@ export default function OwnerOrdersIndex({
                         <span className="text-xs font-medium text-text-muted">
                             Selesai
                         </span>
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-info)]/10 text-[var(--color-info)]">
                             <CheckCircle className="h-5 w-5" />
                         </span>
                     </div>
@@ -298,7 +298,7 @@ export default function OwnerOrdersIndex({
                                 return (
                                     <TableRow
                                         key={order.id}
-                                        className="border-t border-border/20 transition-colors hover:bg-emerald-50/40"
+                                        className="border-t border-border/20 transition-colors hover:bg-primary/40"
                                     >
                                         <TableCell className="px-4 py-3 font-mono font-bold text-primary tabular-nums">
                                             {order.order_code}

@@ -82,17 +82,17 @@ export default function OwnerExchangesIndex({
                             <span className="text-xs font-medium text-text-muted">
                                 Tertunda
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning-text">
                                 <Repeat2 className="h-5 w-5" />
                             </span>
                         </div>
                         <div
-                            className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_exchanges > 0 ? 'text-amber-600' : 'text-text'}`}
+                            className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_exchanges > 0 ? 'text-warning-text' : 'text-text'}`}
                         >
                             {dashboard.pending_exchanges}
                         </div>
                         {dashboard.pending_exchanges > 0 && (
-                            <p className="text-[11px] text-amber-500">
+                            <p className="text-[11px] text-warning-text">
                                 Perlu ditinjau
                             </p>
                         )}
@@ -102,7 +102,7 @@ export default function OwnerExchangesIndex({
                             <span className="text-xs font-medium text-text-muted">
                                 Nilai Tukar
                             </span>
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-info)]/10 text-[var(--color-info)]">
                                 <Wallet className="h-5 w-5" />
                             </span>
                         </div>
@@ -116,7 +116,7 @@ export default function OwnerExchangesIndex({
                                 <span className="text-xs font-medium text-text-muted">
                                     Total
                                 </span>
-                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success-text">
                                     <PackageX className="h-5 w-5" />
                                 </span>
                             </div>

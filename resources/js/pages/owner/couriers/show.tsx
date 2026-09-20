@@ -144,8 +144,8 @@ export default function CourierShow({
                         className={cn(
                             'min-h-11',
                             courier.is_active
-                                ? 'border-red-200 text-red-600 hover:bg-red-50'
-                                : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50',
+                                ? 'border-danger-border text-danger hover:bg-danger'
+                                : 'border-success-border text-success-text hover:bg-primary',
                         )}
                     >
                         {courier.is_active ? 'Nonaktifkan' : 'Aktifkan'}
@@ -360,7 +360,7 @@ export default function CourierShow({
                                         {recentDeliveries.map((d: any) => (
                                             <tr
                                                 key={d.id}
-                                                className="border-t border-border transition-colors hover:bg-emerald-50/40"
+                                                className="border-t border-border transition-colors hover:bg-primary/40"
                                             >
                                                 <td className="px-4 py-2 font-bold text-text tabular-nums">
                                                     {d.order?.order_code ?? '-'}
@@ -432,7 +432,7 @@ export default function CourierShow({
                                 </div>
                             </div>
                             <div className="rounded-xl border border-border bg-surface-muted/50 p-3 text-center">
-                                <div className="font-heading text-2xl font-bold text-emerald-600 tabular-nums">
+                                <div className="font-heading text-2xl font-bold text-success-text tabular-nums">
                                     {courier.today_deliveries_count ?? 0}
                                 </div>
                                 <div className="text-xs font-medium text-text-muted">
@@ -445,7 +445,7 @@ export default function CourierShow({
                         <div className="mt-4 space-y-2">
                             <Link
                                 href={`/owner/deliveries?courier_id=${courier.id}`}
-                                className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-surface p-3 text-sm font-semibold text-text transition-colors hover:border-primary hover:bg-emerald-50/40"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-surface p-3 text-sm font-semibold text-text transition-colors hover:border-primary hover:bg-primary/40"
                             >
                                 <Truck
                                     className="h-4 w-4 text-text-subtle"
@@ -455,7 +455,7 @@ export default function CourierShow({
                             </Link>
                             <Link
                                 href={`/owner/orders?courier_id=${courier.id}`}
-                                className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-surface p-3 text-sm font-semibold text-text transition-colors hover:border-primary hover:bg-emerald-50/40"
+                                className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-surface p-3 text-sm font-semibold text-text transition-colors hover:border-primary hover:bg-primary/40"
                             >
                                 <Package
                                     className="h-4 w-4 text-text-subtle"
@@ -469,13 +469,13 @@ export default function CourierShow({
                     {/* Outlet Assignment */}
                     {legacyClassification?.isLegacy && (
                         <div
-                            className="rounded-2xl border border-amber-200 bg-amber-50 p-5"
+                            className="rounded-2xl border border-warning-border bg-warning p-5"
                             aria-label="Klasifikasi Kurir Legacy"
                         >
-                            <div className="mb-1 text-xs font-semibold text-amber-900">
+                            <div className="mb-1 text-xs font-semibold text-warning-text">
                                 Klasifikasi Kurir Legacy
                             </div>
-                            <p className="text-xs text-amber-800">
+                            <p className="text-xs text-warning-text">
                                 Profil lama belum punya sumber kurir.
                                 Klasifikasikan dulu sebelum plotting outlet.
                             </p>
@@ -550,7 +550,7 @@ export default function CourierShow({
                                         </select>
                                         {classificationForm.errors
                                             .outlet_id && (
-                                            <p className="mt-1 text-xs text-red-600">
+                                            <p className="mt-1 text-xs text-danger">
                                                 {
                                                     classificationForm.errors
                                                         .outlet_id

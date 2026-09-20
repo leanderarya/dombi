@@ -136,13 +136,13 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                             value={formatDate(delivery.delivered_time)}
                         />
                         {delivery.failed_reason && (
-                            <div className="mt-2 rounded-md bg-red-50 p-2 text-sm text-red-700">
+                            <div className="mt-2 rounded-md bg-danger p-2 text-sm text-danger-text">
                                 <strong>Alasan gagal:</strong>{' '}
                                 {delivery.failed_reason}
                             </div>
                         )}
                         {delivery.resolution_status && (
-                            <div className="mt-2 rounded-md bg-amber-50 p-2 text-sm text-amber-800">
+                            <div className="mt-2 rounded-md bg-warning p-2 text-sm text-warning-text">
                                 <strong>Resolusi:</strong>{' '}
                                 {delivery.resolution_status.replaceAll(
                                     '_',
@@ -154,7 +154,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                                     </div>
                                 )}
                                 {delivery.resolved_by && (
-                                    <div className="mt-1 text-amber-600">
+                                    <div className="mt-1 text-warning-text">
                                         oleh {delivery.resolved_by.name} -{' '}
                                         {formatDate(delivery.resolved_at)}
                                     </div>
@@ -266,18 +266,18 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {canResolve && (
                         <div
                             aria-label="Insiden belum diselesaikan"
-                            className="rounded-2xl border border-amber-200 bg-amber-50 p-5"
+                            className="rounded-2xl border border-warning-border bg-warning p-5"
                         >
                             <div className="mb-3 flex items-center gap-2">
                                 <AlertTriangle
                                     aria-hidden="true"
-                                    className="h-4 w-4 text-amber-600"
+                                    className="h-4 w-4 text-warning-text"
                                 />
-                                <h3 className="font-heading text-base font-bold text-amber-900">
+                                <h3 className="font-heading text-base font-bold text-warning-text">
                                     Insiden Belum Diselesaikan
                                 </h3>
                             </div>
-                            <p className="text-xs text-amber-700">
+                            <p className="text-xs text-warning-text">
                                 Delivery ini gagal dan membutuhkan tindakan
                                 operasional.
                             </p>
