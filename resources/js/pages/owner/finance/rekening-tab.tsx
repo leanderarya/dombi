@@ -1,5 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
-import { Banknote, CheckCircle2 } from 'lucide-react';
+import { Banknote, CheckCircle2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -149,7 +149,8 @@ export default function RekeningTab({
                 <h2 className="text-sm font-semibold text-text">
                     Rekening Pembayaran
                 </h2>
-                <Button size="sm" onClick={handleAddClick}>
+                <Button size="lg" onClick={handleAddClick}>
+                    <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
                     Tambah Rekening
                 </Button>
             </div>

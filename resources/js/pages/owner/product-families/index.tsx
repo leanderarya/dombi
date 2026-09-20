@@ -149,6 +149,7 @@ export default function ProductFamiliesIndex({ families }: Props) {
             subtitle="Kelola kelompok produk dan variant Anda"
             headerRight={
                 <Button
+                    size="lg"
                     onClick={() => {
                         reset();
                         setEditingId(null);

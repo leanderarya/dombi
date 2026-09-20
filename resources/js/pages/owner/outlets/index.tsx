@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Building } from 'lucide-react';
+import { Building, Plus } from 'lucide-react';
 import { useState } from 'react';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
@@ -101,10 +101,11 @@ export default function OutletsIndex({ outlets }: any) {
                 <Link
                     href="/owner/outlets/create"
                     className={cn(
-                        buttonVariants({ variant: 'primary', size: 'md' }),
+                        buttonVariants({ variant: 'primary', size: 'lg' }),
                     )}
                 >
-                    + Tambah Outlet
+                    <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
+                    Tambah Outlet
                 </Link>
             }
         >

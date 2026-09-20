@@ -1,5 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
-import { Bike, Car, Package, Truck, Users } from 'lucide-react';
+import { Bike, Car, Package, Truck, Users, Plus } from 'lucide-react';
 import { useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -66,8 +66,9 @@ export default function CouriersIndex({
             title="Kurir"
             subtitle="Kelola kurir pengiriman"
             headerRight={
-                <Button onClick={() => setShowCreate(true)}>
-                    + Tambah Kurir
+                <Button size="lg" onClick={() => setShowCreate(true)}>
+                    <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
+                    Tambah Kurir
                 </Button>
             }
         >

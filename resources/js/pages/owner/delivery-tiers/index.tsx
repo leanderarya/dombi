@@ -152,6 +152,7 @@ export default function DeliveryTiersIndex({
             subtitle="Kelola tarif pengiriman berdasarkan jarak"
             headerRight={
                 <Button
+                    size="lg"
                     onClick={() => {
                         setAddDialogOpen(true);
                         addForm.reset();
