@@ -2,6 +2,7 @@ import { Head, useForm } from '@inertiajs/react';
 import { ArrowRight, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 
@@ -181,12 +182,14 @@ export default function OutletExchangesCreate({
                                     Pasangan {index + 1}
                                 </span>
                                 {pairs.length > 1 && (
-                                    <button
+                                    <Button
                                         onClick={() => removePair(index)}
-                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle hover:bg-danger-bg hover:text-danger-text"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-11 w-11 text-text-subtle hover:bg-danger-bg hover:text-danger-text"
                                     >
                                         <Trash2 className="h-4 w-4" />
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
 
@@ -318,15 +321,16 @@ export default function OutletExchangesCreate({
                             </div>
                         </div>
                     </div>
-                    <button
+                    <Button
                         onClick={handleSubmit}
                         disabled={form.processing || validCount === 0}
-                        className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white active:bg-primary disabled:opacity-50"
+                        size="lg"
+                        className="w-full"
                     >
                         {form.processing
                             ? 'Mengirim...'
                             : 'Ajukan Tukar Produk'}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </OutletLayout>

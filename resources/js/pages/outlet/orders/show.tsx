@@ -624,17 +624,18 @@ export default function OutletOrderShow({
                             </div>
                         )}
                     </div>
-                    <button
+                    <Button
                         type="submit"
                         disabled={
                             assignForm.processing || !assignForm.data.courier_id
                         }
-                        className="flex min-h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                        size="lg"
+                        className="w-full"
                     >
                         {assignForm.processing
                             ? 'Mengassign...'
                             : 'Assign Kurir'}
-                    </button>
+                    </Button>
                 </form>
             </BottomSheet>
 
@@ -650,10 +651,11 @@ export default function OutletOrderShow({
 
                 <div className="mt-4 space-y-2">
                     {rejectionReasons.map((reason: string) => (
-                        <button
+                        <Button
                             key={reason}
                             type="button"
                             onClick={() => rejectForm.setData('reason', reason)}
+                            aria-pressed={rejectForm.data.reason === reason}
                             className={`flex h-11 w-full items-center rounded-lg border px-4 text-left text-sm font-medium transition-all ${
                                 rejectForm.data.reason === reason
                                     ? 'border-primary bg-primary-light text-primary'
@@ -661,7 +663,7 @@ export default function OutletOrderShow({
                             }`}
                         >
                             {reason}
-                        </button>
+                        </Button>
                     ))}
                 </div>
 
@@ -689,14 +691,16 @@ export default function OutletOrderShow({
                     </p>
                 )}
 
-                <button
+                <Button
                     type="button"
                     onClick={handleReject}
                     disabled={!rejectForm.data.reason || rejectForm.processing}
-                    className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-danger text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                    variant="destructive"
+                    size="cta"
+                    className="mt-4 w-full"
                 >
                     {rejectForm.processing ? 'Menolak...' : 'Tolak Pesanan'}
-                </button>
+                </Button>
             </Dialog>
 
             {/* Cancel Reason Sheet */}
@@ -711,10 +715,11 @@ export default function OutletOrderShow({
 
                 <div className="mt-4 space-y-2">
                     {cancellationReasons.map((reason: string) => (
-                        <button
+                        <Button
                             key={reason}
                             type="button"
                             onClick={() => cancelForm.setData('reason', reason)}
+                            aria-pressed={cancelForm.data.reason === reason}
                             className={`flex h-11 w-full items-center rounded-lg border px-4 text-left text-sm font-medium transition-all ${
                                 cancelForm.data.reason === reason
                                     ? 'border-primary bg-primary-light text-primary'
@@ -722,7 +727,7 @@ export default function OutletOrderShow({
                             }`}
                         >
                             {reason}
-                        </button>
+                        </Button>
                     ))}
                 </div>
 
@@ -745,16 +750,18 @@ export default function OutletOrderShow({
                     </p>
                 )}
 
-                <button
+                <Button
                     type="button"
                     onClick={handleCancel}
                     disabled={!cancelForm.data.reason || cancelForm.processing}
-                    className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-danger text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                    variant="destructive"
+                    size="cta"
+                    className="mt-4 w-full"
                 >
                     {cancelForm.processing
                         ? 'Membatalkan...'
                         : 'Batalkan Pesanan'}
-                </button>
+                </Button>
             </BottomSheet>
         </OutletLayout>
     );

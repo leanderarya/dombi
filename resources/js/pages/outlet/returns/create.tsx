@@ -178,7 +178,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                                 <button
                                     type="button"
                                     onClick={() => removeImage(index)}
-                                    className="bg-danger-bg0 absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full text-white"
+                                    className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-danger text-white"
                                 >
                                     <X className="h-3.5 w-3.5" />
                                 </button>

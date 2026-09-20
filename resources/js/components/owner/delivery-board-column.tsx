@@ -12,15 +12,15 @@ interface Props {
 
 const colorMap: Record<string, { bg: string; dot: string; text: string }> = {
     slate: { bg: 'bg-surface-muted', dot: 'bg-text-subtle', text: 'text-text' },
-    blue: { bg: 'bg-info-bg', dot: 'bg-info-bg0', text: 'text-info-text' },
+    blue: { bg: 'bg-info-bg', dot: 'bg-info', text: 'text-info-text' },
     purple: {
         bg: 'bg-status-active-bg',
-        dot: 'bg-status-active-bg0',
+        dot: 'bg-status-active',
         text: 'text-status-active',
     },
     amber: {
         bg: 'bg-warning-bg',
-        dot: 'bg-warning-bg0',
+        dot: 'bg-warning',
         text: 'text-warning-text',
     },
     green: {

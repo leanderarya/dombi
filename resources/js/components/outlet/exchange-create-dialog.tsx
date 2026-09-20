@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { X, Plus, Minus } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { Button } from '@/components/ui/button';
 import CustomSelect from '@/components/ui/custom-select';
 
 interface VariantOption {
@@ -77,12 +78,14 @@ export default function ExchangeCreateDialog({
                     <h2 className="text-base font-bold text-text">
                         Buat Penukaran
                     </h2>
-                    <button
+                    <Button
                         onClick={onClose}
-                        className="flex h-11 w-11 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                        variant="ghost"
+                        size="icon"
+                        className="h-11 w-11"
                     >
                         <X className="h-4 w-4" />
-                    </button>
+                    </Button>
                 </div>
 
                 <form
@@ -93,7 +96,7 @@ export default function ExchangeCreateDialog({
                         {/* Return Section */}
                         <div className="space-y-2.5 rounded-xl border border-danger-border bg-danger-bg/50 p-2.5">
                             <div className="mb-1 flex items-center gap-2">
-                                <div className="bg-danger-bg0 h-2 w-2 shrink-0 rounded-full" />
+                                <div className="h-2 w-2 shrink-0 rounded-full bg-danger" />
                                 <span className="text-xs font-bold text-danger-text">
                                     Dikembalikan
                                 </span>
@@ -282,19 +285,20 @@ export default function ExchangeCreateDialog({
 
                     {/* Footer */}
                     <div className="border-t border-border bg-surface-muted/50 px-4 py-3">
-                        <button
+                        <Button
                             type="submit"
                             disabled={
                                 form.processing ||
                                 !form.data.return_variant_id ||
                                 !form.data.replacement_variant_id
                             }
-                            className="h-11 w-full rounded-xl bg-primary text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                            size="lg"
+                            className="w-full"
                         >
                             {form.processing
                                 ? 'Mengirim...'
                                 : 'Kirim Penukaran'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

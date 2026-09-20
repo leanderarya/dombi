@@ -141,7 +141,7 @@ export default function PembayaranTab({
                         <span className="text-xs font-medium text-text-muted">
                             Pending
                         </span>
-                        <span className="bg-warning-bg0/10 flex h-10 w-10 items-center justify-center rounded-xl text-warning-text">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning-text">
                             <Clock className="h-5 w-5" />
                         </span>
                     </div>

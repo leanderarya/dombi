@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { Button } from '@/components/ui/button';
 import CustomSelect from '@/components/ui/custom-select';
 
 interface Variant {
@@ -92,12 +93,14 @@ export default function OfflineSaleDialog({
                     <h2 className="text-sm font-bold text-text">
                         {sale ? 'Edit Penjualan' : 'Catat Penjualan'}
                     </h2>
-                    <button
+                    <Button
                         onClick={onClose}
-                        className="flex h-11 w-11 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted"
+                        variant="ghost"
+                        size="icon"
+                        className="h-11 w-11"
                     >
                         <X className="h-4 w-4" />
-                    </button>
+                    </Button>
                 </div>
 
                 <form onSubmit={handleSubmit}>

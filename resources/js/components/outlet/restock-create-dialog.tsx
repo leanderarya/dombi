@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { X, Plus, Minus, StickyNote, ChevronDown } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { Button } from '@/components/ui/button';
 import CustomSelect from '@/components/ui/custom-select';
 
 interface MenuItem {
@@ -94,12 +95,14 @@ export default function RestockCreateDialog({
                     <h2 className="text-base font-bold text-text">
                         Buat Restock
                     </h2>
-                    <button
+                    <Button
                         onClick={onClose}
-                        className="flex h-11 w-11 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                        variant="ghost"
+                        size="icon"
+                        className="h-11 w-11"
                     >
                         <X className="h-4 w-4" />
-                    </button>
+                    </Button>
                 </div>
 
                 <form
@@ -208,13 +211,14 @@ export default function RestockCreateDialog({
                                 {selectedCount} produk · {totalQty} pcs
                             </span>
                         </div>
-                        <button
+                        <Button
                             type="submit"
                             disabled={form.processing || selectedCount === 0}
-                            className="h-11 w-full rounded-xl bg-primary text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                            size="lg"
+                            className="w-full"
                         >
                             {form.processing ? 'Mengirim...' : 'Kirim Restock'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

@@ -2,6 +2,7 @@ import { useForm } from '@inertiajs/react';
 import { X, Plus, Minus, Camera, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Button } from '@/components/ui/button';
 import CustomSelect from '@/components/ui/custom-select';
 
 interface VariantOption {
@@ -149,12 +150,14 @@ export default function ReturnCreateDialog({
                     <h2 className="text-base font-bold text-text">
                         Ajukan Return
                     </h2>
-                    <button
+                    <Button
                         onClick={onClose}
-                        className="flex h-11 w-11 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                        variant="ghost"
+                        size="icon"
+                        className="h-11 w-11"
                     >
                         <X className="h-4 w-4" />
-                    </button>
+                    </Button>
                 </div>
 
                 <form
@@ -206,7 +209,7 @@ export default function ReturnCreateDialog({
                                         <button
                                             type="button"
                                             onClick={() => removeImage(index)}
-                                            className="bg-danger-bg0 absolute top-0.5 right-0.5 flex h-7 w-7 items-center justify-center rounded-full text-white"
+                                            className="absolute top-0.5 right-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-danger text-white"
                                         >
                                             <Trash2 className="h-3 w-3" />
                                         </button>
@@ -341,15 +344,16 @@ export default function ReturnCreateDialog({
                         <div className="mb-3 flex items-center justify-between text-xs text-text-muted">
                             <span>{selectedSummary.totalItems} produk</span>
                         </div>
-                        <button
+                        <Button
                             type="submit"
                             disabled={
                                 form.processing || selectedVariants.size === 0
                             }
-                            className="h-11 w-full rounded-xl bg-primary text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
+                            size="lg"
+                            className="w-full"
                         >
                             {form.processing ? 'Mengirim...' : 'Ajukan Return'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

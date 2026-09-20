@@ -1,5 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import SectionCard from '@/components/ui/section-card';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 import StockLevelBadge from '@/components/ui/stock-level-badge';
@@ -89,13 +90,15 @@ export default function CreateRestock({ families, inventories }: any) {
                                     Item {index + 1}
                                 </div>
                                 {form.data.items.length > 1 && (
-                                    <button
+                                    <Button
                                         type="button"
                                         onClick={() => removeItem(index)}
-                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle active:bg-danger-bg active:text-danger-text"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-11 w-11 text-text-subtle active:bg-danger-bg active:text-danger-text"
                                     >
                                         <Trash2 className="h-4 w-4" />
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
 
@@ -182,14 +185,16 @@ export default function CreateRestock({ families, inventories }: any) {
             </div>
 
             {/* Add Item Button */}
-            <button
+            <Button
                 type="button"
                 onClick={addItem}
-                className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border text-sm font-medium text-text-muted active:bg-surface-muted"
+                variant="outline"
+                size="cta"
+                className="mt-3 w-full gap-2 border-dashed text-text-muted"
             >
                 <Plus className="h-4 w-4" />
                 Tambah Item
-            </button>
+            </Button>
 
             {/* Notes */}
             <div>
