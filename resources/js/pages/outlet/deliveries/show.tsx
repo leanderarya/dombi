@@ -108,7 +108,7 @@ export default function OutletDeliveryShow({ delivery }: any) {
                 <SectionCard label="Perbarui Status Kiriman">
                     <div className="mt-2 flex flex-wrap gap-2">
                         {actions.map((action) => (
-                            <button
+                            <Button
                                 key={action.status}
                                 type="button"
                                 onClick={() =>
@@ -121,7 +121,7 @@ export default function OutletDeliveryShow({ delivery }: any) {
                                 }`}
                             >
                                 {action.label}
-                            </button>
+                            </Button>
                         ))}
                     </div>
                 </SectionCard>

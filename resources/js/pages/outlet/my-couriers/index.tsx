@@ -186,13 +186,10 @@ export default function MyCouriers({
                     <SectionCard
                         label="Kurir Aktif"
                         labelRight={
-                            <button
-                                onClick={openNominate}
-                                className="inline-flex items-center gap-1 rounded-lg bg-primary px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-hover active:opacity-80"
-                            >
+                            <Button onClick={openNominate} size="sm">
                                 <Plus className="h-3.5 w-3.5" />
                                 Calonkan Kurir Baru
-                            </button>
+                            </Button>
                         }
                     >
                         {active.length === 0 ? (

@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
@@ -134,12 +135,13 @@ export default function OutletExchangesShow({ exchange }: any) {
                 {/* Actions */}
                 {exchange.status === 'shipped' && (
                     <div className="mt-6">
-                        <button
+                        <Button
                             onClick={handleConfirmReceived}
-                            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white active:opacity-80"
+                            size="lg"
+                            className="w-full"
                         >
                             Konfirmasi Barang Diterima
-                        </button>
+                        </Button>
                     </div>
                 )}
             </div>
