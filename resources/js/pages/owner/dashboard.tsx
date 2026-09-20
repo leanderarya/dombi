@@ -575,7 +575,7 @@ export default function Dashboard({
                         <span
                             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                                 kpis.criticalStock > 0
-                                    ? 'bg-danger-bg text-danger'
+                                    ? 'bg-danger-bg text-danger-text'
                                     : 'bg-success-bg text-success-text'
                             }`}
                         >
@@ -823,7 +823,7 @@ export default function Dashboard({
                                     <span className="text-xs font-semibold text-text">
                                         Restock Stok Kritis
                                     </span>
-                                    <span className="rounded-md bg-danger-bg px-2 py-1 text-[10px] font-bold text-danger">
+                                    <span className="rounded-md bg-danger-bg px-2 py-1 text-[10px] font-bold text-danger-text">
                                         {actionRequired.restocks}
                                     </span>
                                 </div>
