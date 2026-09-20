@@ -14,6 +14,7 @@ import {
     UserRound,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
 import SideSheet from '@/components/ui/side-sheet';
 import type { OutletBadgeCounts } from '@/hooks/use-outlet-badges';
 
@@ -224,17 +225,18 @@ export default function OutletNavigationSheet({
 
             {/* Logout */}
             <div className="border-t border-border px-3 py-3">
-                <button
+                <Button
                     type="button"
                     onClick={() => {
                         onClose();
                         router.post('/logout');
                     }}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-medium text-danger-text active:bg-danger-bg"
+                    variant="ghost"
+                    className="w-full justify-start gap-3 px-3 py-3 text-[13px] font-medium text-danger-text hover:bg-danger-bg hover:text-danger-text"
                 >
                     <LogOut className="h-5 w-5" />
                     <span>Keluar</span>
-                </button>
+                </Button>
             </div>
         </SideSheet>
     );

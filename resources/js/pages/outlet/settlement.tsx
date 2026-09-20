@@ -446,6 +446,10 @@ export default function OutletSettlement({
                                             onClick={() =>
                                                 setSelectedPayment(payment)
                                             }
+                                            aria-pressed={
+                                                selectedPayment?.id ===
+                                                payment.id
+                                            }
                                             className="w-full rounded-xl border border-border bg-surface-muted p-3 text-left transition-colors active:bg-surface"
                                         >
                                             <div className="flex items-start justify-between">

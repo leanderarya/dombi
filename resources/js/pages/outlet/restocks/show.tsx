@@ -68,12 +68,14 @@ export default function OutletRestockShow({ restock }: any) {
                 <div className="flex items-center gap-2">
                     <StatusBadge status={restock.status} />
                     {restock.status === 'requested' && (
-                        <button
+                        <Button
                             onClick={() => setShowCancelDialog(true)}
-                            className="rounded-lg border border-danger-border px-3 py-1.5 text-xs font-semibold text-danger-text hover:bg-danger-bg"
+                            variant="outline"
+                            size="sm"
+                            className="border-danger-border text-danger-text hover:bg-danger-bg"
                         >
                             Batalkan
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>
