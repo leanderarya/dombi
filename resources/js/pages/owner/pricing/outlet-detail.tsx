@@ -302,12 +302,12 @@ export default function OutletDetail({
                         Margin Negatif
                     </div>
                     <div
-                        className={`mt-1 font-heading text-xl font-bold tabular-nums ${negativeCount > 0 ? 'text-red-600' : 'text-text'}`}
+                        className={`mt-1 font-heading text-xl font-bold tabular-nums ${negativeCount > 0 ? 'text-danger' : 'text-text'}`}
                     >
                         {negativeCount}
                     </div>
                     {negativeCount > 0 && (
-                        <div className="text-[11px] text-red-600">
+                        <div className="text-[11px] text-danger">
                             Perlu perbaikan
                         </div>
                     )}
@@ -470,7 +470,7 @@ export default function OutletDetail({
                             {paginated.map((row) => (
                                 <TableRow
                                     key={row.product_id}
-                                    className="transition-colors hover:bg-emerald-50/40"
+                                    className="transition-colors hover:bg-success-bg/40"
                                 >
                                     <TableCell className="px-6 py-4">
                                         <div className="flex items-center gap-2">
@@ -480,7 +480,7 @@ export default function OutletDetail({
                                                     : row.name}
                                             </span>
                                             {row.has_override ? (
-                                                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+                                                <span className="rounded-full bg-success-bg px-2 py-0.5 text-[10px] font-bold text-success-text">
                                                     Custom
                                                 </span>
                                             ) : (
@@ -531,7 +531,7 @@ export default function OutletDetail({
                                                         )
                                                     }
                                                     title="Reset ke harga pusat"
-                                                    className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-text-subtle transition-colors hover:bg-red-50 hover:text-red-600"
+                                                    className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-text-subtle transition-colors hover:bg-danger-bg hover:text-danger-text"
                                                 >
                                                     <RotateCcw className="h-3.5 w-3.5" />
                                                 </button>
@@ -543,7 +543,7 @@ export default function OutletDetail({
                                                     setModalOpen(true);
                                                 }}
                                                 title="Ubah harga"
-                                                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-text-subtle transition-colors hover:bg-emerald-50/40 hover:text-primary"
+                                                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-text-subtle transition-colors hover:bg-success-bg/40 hover:text-primary"
                                             >
                                                 <Pencil className="h-3.5 w-3.5" />
                                             </button>

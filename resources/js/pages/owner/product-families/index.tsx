@@ -276,7 +276,7 @@ export default function ProductFamiliesIndex({ families }: Props) {
                                                         key={v.id}
                                                         className={`rounded-full px-2 py-0.5 text-[11px] ${
                                                             v.is_active
-                                                                ? 'border border-primary/10 bg-white text-primary'
+                                                                ? 'border border-primary/10 bg-surface text-primary'
                                                                 : 'bg-surface-muted text-text-muted'
                                                         }`}
                                                     >
@@ -295,7 +295,7 @@ export default function ProductFamiliesIndex({ families }: Props) {
                                     {/* Status */}
                                     <td className="px-6 py-4">
                                         {family.is_active ? (
-                                            <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
+                                            <span className="rounded-full bg-success-bg px-2.5 py-0.5 text-[11px] font-bold text-success-text">
                                                 AKTIF
                                             </span>
                                         ) : (
@@ -332,7 +332,7 @@ export default function ProductFamiliesIndex({ families }: Props) {
                                                 onClick={() =>
                                                     setDeleteId(family.id)
                                                 }
-                                                className="p-1.5 text-text-muted transition-colors hover:text-red-600"
+                                                className="p-1.5 text-text-muted transition-colors hover:text-danger"
                                                 aria-label={`Hapus ${family.name}`}
                                             >
                                                 <Trash2 className="h-3.5 w-3.5" />

@@ -648,7 +648,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                     <div className="flex shrink-0 items-center gap-2">
                                         {section.flavorGroup &&
                                             !section.flavorGroup.image && (
-                                                <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700 ring-1 ring-amber-200">
+                                                <span className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] text-warning-text ring-1 ring-warning-border">
                                                     Missing Image
                                                 </span>
                                             )}
@@ -755,7 +755,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 </span>
                                                                             )}
                                                                             {!p.image && (
-                                                                                <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700 ring-1 ring-amber-200">
+                                                                                <span className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] text-warning-text ring-1 ring-warning-border">
                                                                                     No
                                                                                     Image
                                                                                 </span>
@@ -785,8 +785,8 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                     className={
                                                                         marginPct <
                                                                         20
-                                                                            ? 'text-amber-600'
-                                                                            : 'text-emerald-700'
+                                                                            ? 'text-warning-text'
+                                                                            : 'text-success-text'
                                                                     }
                                                                 >
                                                                     {marginPct.toFixed(
@@ -804,9 +804,9 @@ export default function ProductCategoryShow({ category }: Props) {
                                                             </td>
                                                             <td className="px-3 py-3 text-right tabular-nums">
                                                                 {hasNoStock ? (
-                                                                    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700 ring-1 ring-red-200">
+                                                                    <span className="inline-flex items-center gap-1 rounded-full bg-danger-bg px-2 py-0.5 text-[11px] font-semibold text-danger-text ring-1 ring-danger-border">
                                                                         0
-                                                                        <span className="ml-1 rounded bg-red-100 px-1 py-0 text-[9px]">
+                                                                        <span className="ml-1 rounded bg-danger-bg px-1 py-0 text-[9px]">
                                                                             No
                                                                             Center
                                                                             Stock
@@ -817,7 +817,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                         className={
                                                                             p.center_stock <=
                                                                             5
-                                                                                ? 'font-bold text-amber-600'
+                                                                                ? 'font-bold text-warning-text'
                                                                                 : 'text-text'
                                                                         }
                                                                     >
@@ -877,7 +877,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 p.id,
                                                                             )
                                                                         }
-                                                                        className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-red-50 hover:text-red-600"
+                                                                        className="flex h-11 w-11 items-center justify-center rounded text-text-subtle hover:bg-danger-bg hover:text-danger-text"
                                                                     >
                                                                         <Trash2 className="h-3.5 w-3.5" />
                                                                     </button>

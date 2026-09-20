@@ -192,7 +192,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                         className={`flex min-h-11 shrink-0 items-center rounded-full px-3.5 text-xs font-semibold ring-1 transition-all ${
                             statusFilter === f.key
                                 ? 'bg-primary/10 text-primary ring-primary/20'
-                                : 'bg-surface text-text-muted ring-border hover:bg-emerald-50/40'
+                                : 'bg-surface text-text-muted ring-border hover:bg-success-bg/40'
                         }`}
                     >
                         {f.label}
@@ -241,7 +241,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                 {filtered.map((cat) => (
                                     <TableRow
                                         key={cat.id}
-                                        className="group transition-colors hover:bg-emerald-50/40"
+                                        className="group transition-colors hover:bg-success-bg/40"
                                     >
                                         <TableCell className="px-6 py-4">
                                             <div className="flex items-center gap-3">
@@ -265,7 +265,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                         </TableCell>
                                         <TableCell className="px-6 py-4">
                                             {cat.is_active ? (
-                                                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
+                                                <span className="rounded-full bg-success-bg px-2.5 py-0.5 text-[11px] font-bold text-success-text">
                                                     AKTIF
                                                 </span>
                                             ) : (
@@ -300,7 +300,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                                     onClick={() =>
                                                         setDeleteId(cat.id)
                                                     }
-                                                    className="flex min-h-11 min-w-11 items-center justify-center text-text-muted transition-colors hover:text-red-600"
+                                                    className="flex min-h-11 min-w-11 items-center justify-center text-text-muted transition-colors hover:text-danger"
                                                     aria-label={`Hapus ${cat.name}`}
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />

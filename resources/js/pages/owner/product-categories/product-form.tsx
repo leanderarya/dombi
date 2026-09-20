@@ -541,7 +541,7 @@ export default function ProductForm({
                     </div>
                 </div>
                 {isEditing && (
-                    <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold tracking-wide text-amber-700 ring-1 ring-amber-200">
+                    <span className="rounded-full bg-warning-bg px-2.5 py-1 text-[10px] font-bold tracking-wide text-warning-text ring-1 ring-warning-border">
                         EDIT MODE
                     </span>
                 )}
@@ -641,14 +641,14 @@ export default function ProductForm({
                             </div>
                             <div className="flex items-baseline gap-2">
                                 <span
-                                    className={`text-sm font-bold tabular-nums ${singleMargin.amount < 0 ? 'text-red-600' : singleMargin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}
+                                    className={`text-sm font-bold tabular-nums ${singleMargin.amount < 0 ? 'text-danger' : singleMargin.pct < 20 ? 'text-warning-text' : 'text-success-text'}`}
                                 >
                                     {singleMargin.valid
                                         ? formatCurrency(singleMargin.amount)
                                         : '-'}
                                 </span>
                                 <span
-                                    className={`text-xs tabular-nums ${singleMargin.amount < 0 ? 'text-red-600' : singleMargin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}
+                                    className={`text-xs tabular-nums ${singleMargin.amount < 0 ? 'text-danger' : singleMargin.pct < 20 ? 'text-warning-text' : 'text-success-text'}`}
                                 >
                                     {singleMargin.valid
                                         ? `${singleMargin.pct.toFixed(1)}%`
@@ -765,7 +765,7 @@ export default function ProductForm({
                         label="Foto Produk"
                     />
                     {singleForm.errors.image && (
-                        <p className="text-xs text-red-600">
+                        <p className="text-xs text-danger">
                             {singleForm.errors.image}
                         </p>
                     )}
@@ -786,7 +786,7 @@ export default function ProductForm({
                         </span>
                     </div>
 
-                    <div className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50/40 p-3">
+                    <div className="flex items-center gap-2 rounded-2xl border border-warning-border bg-warning-bg/40 p-3">
                         <Checkbox
                             label="Rekomendasi"
                             checked={singleForm.data.is_recommended}
@@ -881,9 +881,9 @@ export default function ProductForm({
                             />
                         </div>
 
-                        <div className="flex items-center justify-between rounded-2xl bg-emerald-50/60 p-3 ring-1 ring-emerald-200">
+                        <div className="flex items-center justify-between rounded-2xl bg-success-bg/60 p-3 ring-1 ring-success-border">
                             <div>
-                                <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                                <div className="flex items-center gap-1 text-[11px] font-semibold text-success-text">
                                     <TrendingUp className="h-3 w-3" /> Margin &
                                     Jumlah
                                 </div>
@@ -894,14 +894,14 @@ export default function ProductForm({
                             <div className="text-right">
                                 <div className="flex items-center justify-end gap-2">
                                     <span
-                                        className={`text-sm font-bold tabular-nums ${bulkMargin.amount < 0 ? 'text-red-600' : bulkMargin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}
+                                        className={`text-sm font-bold tabular-nums ${bulkMargin.amount < 0 ? 'text-danger' : bulkMargin.pct < 20 ? 'text-warning-text' : 'text-success-text'}`}
                                     >
                                         {bulkMargin.valid
                                             ? formatCurrency(bulkMargin.amount)
                                             : '-'}
                                     </span>
                                     <span
-                                        className={`rounded px-1.5 py-0.5 text-xs font-bold tabular-nums ${bulkMargin.pct < 20 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}
+                                        className={`rounded px-1.5 py-0.5 text-xs font-bold tabular-nums ${bulkMargin.pct < 20 ? 'bg-warning-bg text-warning-text' : 'bg-success-bg text-success-text'}`}
                                     >
                                         {bulkMargin.valid
                                             ? `${bulkMargin.pct.toFixed(1)}%`
@@ -932,7 +932,7 @@ export default function ProductForm({
                     {/* Flavors input */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-text">
-                            Daftar Rasa <span className="text-red-500">*</span>
+                            Daftar Rasa <span className="text-danger">*</span>
                             <span className="ml-2 text-[11px] font-normal text-text-subtle">
                                 Ketik + Enter atau koma untuk tambah chip
                             </span>
@@ -1072,12 +1072,12 @@ export default function ProductForm({
                     </div>
 
                     {bulkErrors.flavors && (
-                        <p className="text-xs text-red-600">
+                        <p className="text-xs text-danger">
                             {bulkErrors.flavors}
                         </p>
                     )}
                     {bulkErrors.selling_price && (
-                        <p className="text-xs text-red-600">
+                        <p className="text-xs text-danger">
                             {bulkErrors.selling_price}
                         </p>
                     )}
@@ -1144,7 +1144,7 @@ export default function ProductForm({
                             info="This image is shared by all Coffee sizes. Replacing it will update the image shown for every Coffee size."
                         />
                         {bulkSizeErrors.image && (
-                            <p className="text-xs text-red-600">
+                            <p className="text-xs text-danger">
                                 {bulkSizeErrors.image}
                             </p>
                         )}
@@ -1310,7 +1310,7 @@ export default function ProductForm({
                                                 </td>
                                                 <td className="px-2 py-1.5">
                                                     <span
-                                                        className={`inline-block rounded px-1.5 py-0.5 text-xs font-bold tabular-nums ${margin.amount < 0 ? 'text-red-600' : margin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}
+                                                        className={`inline-block rounded px-1.5 py-0.5 text-xs font-bold tabular-nums ${margin.amount < 0 ? 'text-danger' : margin.pct < 20 ? 'text-warning-text' : 'text-success-text'}`}
                                                     >
                                                         {margin.valid
                                                             ? `${margin.pct.toFixed(1)}%`
@@ -1319,7 +1319,7 @@ export default function ProductForm({
                                                 </td>
                                                 <td className="px-2 py-1.5">
                                                     <span
-                                                        className={`text-xs font-bold tabular-nums ${margin.amount < 0 ? 'text-red-600' : 'text-emerald-700'}`}
+                                                        className={`text-xs font-bold tabular-nums ${margin.amount < 0 ? 'text-danger' : 'text-success-text'}`}
                                                     >
                                                         {margin.valid
                                                             ? formatCurrency(
@@ -1338,7 +1338,7 @@ export default function ProductForm({
                                                                     i,
                                                                 )
                                                             }
-                                                            className="flex h-11 w-11 items-center justify-center rounded text-text-muted opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
+                                                            className="flex h-11 w-11 items-center justify-center rounded text-text-muted opacity-0 transition group-hover:opacity-100 hover:bg-danger-bg hover:text-danger-text"
                                                         >
                                                             <X className="h-3.5 w-3.5" />
                                                         </button>
@@ -1424,7 +1424,7 @@ export default function ProductForm({
                         )}
 
                     {bulkSizeErrors.rows && (
-                        <p className="text-xs text-red-600">
+                        <p className="text-xs text-danger">
                             {bulkSizeErrors.rows}
                         </p>
                     )}
@@ -1455,11 +1455,11 @@ export default function ProductForm({
             {(singleForm.hasErrors ||
                 Object.keys(bulkErrors).length > 0 ||
                 Object.keys(bulkSizeErrors).length > 0) && (
-                <div className="rounded-xl bg-red-50 p-3 ring-1 ring-red-200">
-                    <p className="text-xs font-semibold text-red-700">
+                <div className="rounded-xl bg-danger-bg p-3 ring-1 ring-danger-border">
+                    <p className="text-xs font-semibold text-danger-text">
                         Periksa kembali isian form:
                     </p>
-                    <ul className="mt-1 list-disc pl-4 text-[11px] text-red-600">
+                    <ul className="mt-1 list-disc pl-4 text-[11px] text-danger">
                         {Object.entries({
                             ...singleForm.errors,
                             ...(mode === 'bulk' ? bulkErrors : {}),

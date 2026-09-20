@@ -38,7 +38,7 @@ export default function VariantForm({
     return (
         <form
             onSubmit={onSubmit}
-            className="mb-4 rounded-lg border border-border bg-white p-4"
+            className="mb-4 rounded-lg border border-border bg-surface p-4"
             aria-label={editing ? 'Edit Variant' : 'Tambah Variant'}
         >
             <h2 className="mb-3 text-sm font-semibold text-text">
@@ -89,7 +89,7 @@ export default function VariantForm({
                             }
                             required
                             error={form.errors.name}
-                            className="bg-white"
+                            className="bg-surface"
                         />
                         <Input
                             label="SKU"
@@ -98,7 +98,7 @@ export default function VariantForm({
                             onChange={(e) =>
                                 form.setData('sku', e.target.value)
                             }
-                            className="bg-white"
+                            className="bg-surface"
                         />
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-3">
@@ -111,7 +111,7 @@ export default function VariantForm({
                             }
                             required
                             min="0"
-                            className="bg-white"
+                            className="bg-surface"
                         />
                         <Input
                             label="Stok Pusat"
@@ -121,7 +121,7 @@ export default function VariantForm({
                                 form.setData('center_stock', e.target.value)
                             }
                             min="0"
-                            className="bg-white"
+                            className="bg-surface"
                         />
                     </div>
                 </div>
@@ -133,9 +133,9 @@ export default function VariantForm({
                         onChange={(e) =>
                             form.setData('is_active', e.target.checked)
                         }
-                        className="rounded border-zinc-300"
+                        className="rounded border-border-strong"
                     />
-                    <span className="text-sm text-zinc-700">Aktif</span>
+                    <span className="text-sm text-text">Aktif</span>
                 </label>
                 <div className="flex gap-2">
                     <Button
