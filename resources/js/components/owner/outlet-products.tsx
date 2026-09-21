@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/format';
 import { getOwnerStockStatus } from '@/lib/status-labels';
 import RestockModal from './restock-modal';
@@ -137,16 +138,14 @@ export default function OutletProducts({ outletId }: Props) {
         <div className="space-y-3">
             {/* Header */}
             <div className="flex items-center gap-2">
-                <div className="flex flex-1 items-center gap-2 rounded-lg border border-border bg-surface px-3 focus-within:ring-1 focus-within:ring-ring">
-                    <Search className="h-4 w-4 shrink-0 text-text-subtle" />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Cari produk..."
-                        className="w-full bg-transparent py-2 text-sm placeholder:text-text-muted focus:outline-none"
-                    />
-                </div>
+                <Input
+                    type="text"
+                    icon={Search}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Cari produk..."
+                    className="flex-1"
+                />
                 <button
                     type="button"
                     onClick={() => setAddOpen(true)}
