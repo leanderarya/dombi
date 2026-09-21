@@ -1,8 +1,9 @@
 import { Head, useForm } from '@inertiajs/react';
-import { X } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 import { useState, useRef, useMemo } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 
@@ -228,12 +229,13 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                     <label className="text-sm font-semibold text-text">
                         Pilih Produk
                     </label>
-                    <input
+                    <Input
                         type="text"
+                        icon={Search}
                         placeholder="Cari produk..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="mt-2 w-full rounded-xl border border-border p-3 text-sm"
+                        className="mt-2"
                     />
                     <div className="mt-2 space-y-2">
                         {filteredVariants.map((v: any) => {
