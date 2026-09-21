@@ -45,7 +45,7 @@ export default function OrderCardShell({
         ? `/customer/orders/${orderId}`
         : `/track/${recoveryToken}`;
 
-    const cardClass = '[--card-spacing:--spacing(4)] gap-3';
+    const cardClass = '[--card-spacing:--spacing(4)] gap-3 px-(--card-spacing)';
 
     if (isClickable) {
         return (
