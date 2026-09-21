@@ -1452,6 +1452,8 @@ class NotificationService
                 data: $data,
                 entityType: $entityType,
                 entityId: $entityId,
+                type: $type,
+                role: $userType,
                 throwOnFailure: false,
             );
 
@@ -1478,10 +1480,16 @@ class NotificationService
         array $data = [],
         ?string $entityType = null,
         ?int $entityId = null,
+        ?string $type = null,
+        ?string $role = null,
         bool $throwOnFailure = false,
     ): void {
         try {
-            $pushUrl = $data['url'] ?? $this->getPushUrl($entityType, $entityId);
+            $pushUrl = Notification::destinationUrl(
+                $type ?? '',
+                $data,
+                $role ?? ($customerId ? 'customer' : null),
+            );
 
             if ($userId) {
                 $user = User::find($userId);
