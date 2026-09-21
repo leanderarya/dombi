@@ -23,13 +23,13 @@ export default function OrderTotalRow({
             className={`flex items-center justify-between gap-2 ${className ?? ''}`}
         >
             <div
-                className={`text-control tabular-nums ${
+                className={`min-w-0 truncate text-control tabular-nums ${
                     muted ? 'text-text-subtle' : 'text-text-muted'
                 }`}
             >
                 {label}
             </div>
-            {children}
+            <div className="flex shrink-0 items-center gap-2">{children}</div>
         </div>
     );
 }
