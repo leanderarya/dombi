@@ -19,6 +19,8 @@ class Order extends Model
 
     public const STATUS_PENDING_CONFIRMATION = 'pending_confirmation';
 
+    public const STATUS_AWAITING_PREPARATION = 'awaiting_preparation';
+
     public const STATUS_CONFIRMED = 'confirmed';
 
     public const STATUS_PREPARING = 'preparing';
@@ -43,6 +45,7 @@ class Order extends Model
 
     public const ALL_STATUSES = [
         self::STATUS_PENDING_CONFIRMATION,
+        self::STATUS_AWAITING_PREPARATION,
         self::STATUS_CONFIRMED,
         self::STATUS_PREPARING,
         self::STATUS_READY_FOR_PICKUP,
@@ -58,6 +61,7 @@ class Order extends Model
 
     public const ACTIVE_STATUSES = [
         self::STATUS_PENDING_CONFIRMATION,
+        self::STATUS_AWAITING_PREPARATION,
         self::STATUS_CONFIRMED,
         self::STATUS_PREPARING,
         self::STATUS_READY_FOR_PICKUP,
@@ -140,7 +144,7 @@ class Order extends Model
                     ? $outlet->confirmation_timeout_minutes
                     : (is_numeric(config('order.confirmation_timeout_minutes')) && config('order.confirmation_timeout_minutes') > 0
                         ? config('order.confirmation_timeout_minutes')
-                        : 30);
+                        : 15);
                 $order->confirmation_expires_at = now()->addMinutes(max(1, (int) $timeout));
             }
         });

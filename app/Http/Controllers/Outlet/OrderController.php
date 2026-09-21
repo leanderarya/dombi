@@ -27,6 +27,7 @@ class OrderController extends Controller
         $tab = $request->string('tab', 'aktif')->toString();
 
         $operationalStatuses = [
+            'awaiting_preparation',
             'pending_confirmation', 'confirmed', 'preparing',
             'ready_for_pickup', 'picked_up', 'delivering',
         ];
@@ -53,9 +54,9 @@ class OrderController extends Controller
                                 ->orWhere('confirmation_expires_at', '>', now());
                         });
                 })
-                // Critical-first: pending_confirmation (belum expired) paling lama di atas,
-                // lalu order lain per created_at asc. Order yang menunggu konfirmasi terlama = paling urgent.
-                ->orderByRaw("CASE WHEN status = 'pending_confirmation' AND (confirmation_expires_at IS NULL OR confirmation_expires_at > NOW()) THEN 0 ELSE 1 END")
+                // Critical-first: order berbayar yang menunggu disiapkan paling atas,
+                // lalu pending_confirmation yang belum expired, sisanya per created_at asc.
+                ->orderByRaw("CASE WHEN status = 'awaiting_preparation' THEN 0 WHEN status = 'pending_confirmation' AND (confirmation_expires_at IS NULL OR confirmation_expires_at > NOW()) THEN 1 ELSE 2 END")
                 ->oldest(),
                 fn ($q) => $q->latest()
             )
@@ -67,11 +68,16 @@ class OrderController extends Controller
             "outlet:{$outlet->id}:pending_orders",
             5,
             fn () => Order::where('outlet_id', $outlet->id)
-                ->where('status', 'pending_confirmation')
                 ->where('payment_status', 'paid')
                 ->where(function ($q) {
-                    $q->whereNull('confirmation_expires_at')
-                        ->orWhere('confirmation_expires_at', '>', now());
+                    $q->where('status', 'awaiting_preparation')
+                        ->orWhere(function ($q2) {
+                            $q2->where('status', 'pending_confirmation')
+                                ->where(function ($q3) {
+                                    $q3->whereNull('confirmation_expires_at')
+                                        ->orWhere('confirmation_expires_at', '>', now());
+                                });
+                        });
                 })
                 ->count()
         );

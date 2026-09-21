@@ -5,7 +5,7 @@ $positiveInteger = static fn (mixed $value, int $default): int => filter_var($va
 ]) ?: $default;
 
 return [
-    'confirmation_timeout_minutes' => $positiveInteger(env('ORDER_CONFIRMATION_TIMEOUT_MINUTES', 30), 30),
+    'confirmation_timeout_minutes' => $positiveInteger(env('ORDER_CONFIRMATION_TIMEOUT_MINUTES', 15), 15),
 
     // Minutes given to customer to retry payment after a failed/expired attempt.
     // Resets confirmation_expires_at so the order doesn't expire immediately.

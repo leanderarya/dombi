@@ -14,6 +14,7 @@ interface StatusConfig {
 
 const ORDER_STATUSES: Record<string, StatusConfig> = {
     pending_confirmation: { label: 'Menunggu Konfirmasi', variant: 'warning' },
+    awaiting_preparation: { label: 'Menunggu Disiapkan', variant: 'warning' },
     pending_payment: { label: 'Menunggu Pembayaran', variant: 'warning' },
     confirmed: { label: 'Diterima', variant: 'info' },
     preparing: { label: 'Disiapkan', variant: 'info' },
@@ -214,6 +215,7 @@ export function getOwnerStockStatus(
 
 const ORDER_STATUS_TONE: Record<string, string> = {
     pending_confirmation: 'bg-amber-50 text-amber-800 ring-amber-200',
+    awaiting_preparation: 'bg-warning-bg text-warning-text ring-warning-border',
     confirmed: 'bg-blue-50 text-blue-800 ring-blue-200',
     preparing: 'bg-orange-50 text-orange-800 ring-orange-200',
     ready_for_pickup: 'bg-purple-50 text-purple-800 ring-purple-200',

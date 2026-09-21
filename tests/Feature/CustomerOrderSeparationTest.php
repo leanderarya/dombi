@@ -15,7 +15,7 @@ class CustomerOrderSeparationTest extends TestCase
     public function test_order_model_has_status_constants(): void
     {
         $this->assertSame(
-            ['pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering'],
+            ['pending_confirmation', 'awaiting_preparation', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering'],
             Order::ACTIVE_STATUSES
         );
 

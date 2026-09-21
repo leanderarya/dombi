@@ -104,6 +104,7 @@ export default function OutletOrderShow({
     };
 
     const isPending = order.status === 'pending_confirmation';
+    const isAwaitingPreparation = order.status === 'awaiting_preparation';
     const isConfirmed = order.status === 'confirmed';
     const isPreparing = order.status === 'preparing';
     const isDeliveryOrder = order.fulfillment_type !== 'pickup';
@@ -128,6 +129,19 @@ export default function OutletOrderShow({
             label: 'Tolak',
             variant: 'secondary' as const,
             onClick: () => setShowRejectSheet(true),
+        });
+    }
+
+    if (isAwaitingPreparation) {
+        actions.push({
+            label: 'Siapkan',
+            variant: 'primary' as const,
+            onClick: () => setConfirmAction('preparing'),
+        });
+        actions.push({
+            label: 'Tolak',
+            variant: 'secondary' as const,
+            onClick: () => setShowCancelSheet(true),
         });
     }
 

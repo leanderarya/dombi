@@ -8,7 +8,7 @@ class OrderTimingConfigTest extends TestCase
 {
     public function test_order_timing_defaults_are_centralized(): void
     {
-        $this->assertSame(30, config('order.confirmation_timeout_minutes'));
+        $this->assertSame(15, config('order.confirmation_timeout_minutes'));
         $this->assertSame(15, config('order.payment_retry_window_minutes'));
         $this->assertSame(24, config('order.doku_reconciliation_deadline_hours'));
     }
@@ -29,7 +29,7 @@ class OrderTimingConfigTest extends TestCase
     public function test_invalid_order_timing_environment_values_use_documented_defaults(): void
     {
         foreach ([
-            'ORDER_CONFIRMATION_TIMEOUT_MINUTES' => 30,
+            'ORDER_CONFIRMATION_TIMEOUT_MINUTES' => 15,
             'ORDER_PAYMENT_RETRY_WINDOW_MINUTES' => 15,
             'DOKU_RECONCILIATION_DEADLINE_HOURS' => 24,
         ] as $variable => $default) {
