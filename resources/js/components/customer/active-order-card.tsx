@@ -194,7 +194,7 @@ export default function ActiveOrderCard({ order }: Props) {
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex items-center justify-between gap-2">
-                        <span className="truncate font-heading text-[15px] font-extrabold text-text">
+                        <span className="min-w-0 truncate font-heading text-[15px] font-extrabold text-text">
                             {fulfillmentLabel(order.fulfillment_type)}
                         </span>
                         <StatusBadge
