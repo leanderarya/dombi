@@ -49,7 +49,7 @@ const INVENTORY_ACTION_TYPES = new Set([
 
 const typeIcons: Record<string, ReactNode> = {
     // Pesanan
-    'order.confirmed': <CircleCheck className="h-5 w-5 text-emerald-600" />,
+    'order.confirmed': <CircleCheck className="h-5 w-5 text-primary" />,
     'order.rejected': <CircleX className="h-5 w-5 text-red-600" />,
     'order.expired': <Clock className="h-5 w-5 text-amber-600" />,
     'order.cancelled': <Ban className="h-5 w-5 text-slate-500" />,
@@ -63,15 +63,13 @@ const typeIcons: Record<string, ReactNode> = {
     ),
     'order.refund_rolled_back': <Undo2 className="h-5 w-5 text-amber-600" />,
     'order.refund_rejected': <CircleX className="h-5 w-5 text-red-600" />,
-    'order.refund_processed': (
-        <CircleCheck className="h-5 w-5 text-emerald-600" />
-    ),
+    'order.refund_processed': <CircleCheck className="h-5 w-5 text-primary" />,
     'order.refund_failed': <TriangleAlert className="h-5 w-5 text-red-600" />,
     // Pengiriman
     'delivery.courier_assigned': <Truck className="h-5 w-5 text-blue-600" />,
-    'delivery.picked_up': <Package className="h-5 w-5 text-emerald-600" />,
+    'delivery.picked_up': <Package className="h-5 w-5 text-primary" />,
     'delivery.out_for_delivery': <Bike className="h-5 w-5 text-blue-600" />,
-    'delivery.completed': <CircleCheck className="h-5 w-5 text-emerald-600" />,
+    'delivery.completed': <CircleCheck className="h-5 w-5 text-primary" />,
     'delivery.failed': <TriangleAlert className="h-5 w-5 text-red-600" />,
     'delivery.returned_to_outlet': <Undo2 className="h-5 w-5 text-amber-600" />,
     // Operasional
@@ -90,13 +88,13 @@ const typeIcons: Record<string, ReactNode> = {
     // Inventaris — Restock
     'inventory.restock_created': <Package className="h-5 w-5 text-blue-600" />,
     'inventory.restock_approved': (
-        <CircleCheck className="h-5 w-5 text-emerald-600" />
+        <CircleCheck className="h-5 w-5 text-primary" />
     ),
     'inventory.restock_rejected': <CircleX className="h-5 w-5 text-red-600" />,
     // Inventaris — Distribusi
     'inventory.distribution_sent': <Truck className="h-5 w-5 text-blue-600" />,
     'inventory.distribution_received': (
-        <Package className="h-5 w-5 text-emerald-600" />
+        <Package className="h-5 w-5 text-primary" />
     ),
     // Inventaris — Return & Tukar
     'inventory.return_request_created': (
@@ -291,9 +289,9 @@ export default function NotificationSheet({
                         </div>
                     )}
                     {pushState === 'active' && (
-                        <div className="mt-3 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 py-2.5">
-                            <CircleCheck className="h-4 w-4 shrink-0 text-emerald-600" />
-                            <p className="text-xs font-medium text-emerald-700">
+                        <div className="mt-3 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary-light/50 px-3 py-2.5">
+                            <CircleCheck className="h-4 w-4 shrink-0 text-primary" />
+                            <p className="text-xs font-medium text-primary">
                                 Notifikasi aktif
                             </p>
                         </div>

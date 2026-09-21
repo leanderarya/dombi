@@ -193,12 +193,12 @@ function AssignCourierSheetContent({
                                             }
                                             className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all duration-150 active:opacity-80 ${
                                                 isSelected
-                                                    ? 'border-emerald-300 bg-emerald-50/30'
+                                                    ? 'border-primary/30 bg-primary-light/30'
                                                     : 'border-slate-200 bg-white'
                                             } ${isDisabled ? 'opacity-60' : ''}`}
                                         >
                                             <div
-                                                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}
+                                                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-emerald-600 bg-primary' : 'border-slate-300'}`}
                                             >
                                                 {isSelected && (
                                                     <div className="h-1.5 w-1.5 rounded-full bg-white" />
@@ -256,7 +256,7 @@ function AssignCourierSheetContent({
                             disabled={
                                 !sheetState.selectedCourier || form.processing
                             }
-                            className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-bold text-white transition-all duration-150 active:bg-emerald-800 active:opacity-80 disabled:bg-slate-300"
+                            className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white transition-all duration-150 active:bg-primary-hover active:opacity-80 disabled:bg-slate-300"
                         >
                             {form.processing
                                 ? 'Assigning...'

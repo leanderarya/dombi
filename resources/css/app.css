@@ -164,17 +164,6 @@ html[data-role='courier'] {
         0 8px 15px rgba(37, 99, 235, 0.12), 0 3px 6px rgba(37, 99, 235, 0.06);
 }
 
-/* TODO(courier slice): this patch is load-bearing — courier components still
-   emit .bg-emerald-50/.text-emerald-700, so removing it before migrating them
-   onto semantic tokens would turn those surfaces emerald. Delete together
-   with the courier migration in Fase D. */
-html[data-role='courier'] .bg-emerald-50 {
-    background-color: var(--color-blue-50);
-}
-html[data-role='courier'] .text-emerald-700 {
-    color: var(--color-blue-700);
-}
-
 /* ─── Native Feel Quick Wins ─────────────────────────────── */
 
 /* Smooth scroll for anchor links and scroll-into-view */
