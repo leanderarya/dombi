@@ -557,19 +557,10 @@ export default function ProductCategoryShow({ category }: Props) {
             />
 
             <div className="mb-4 flex items-center justify-end gap-2">
-                <Button
-                    variant="outline"
-                    size="lg"
-                    className="min-h-11 border-transparent bg-accent-orange text-white hover:bg-accent-orange-hover"
-                    onClick={() => setShowBulkForm(true)}
-                >
+                <Button size="lg" onClick={() => setShowBulkForm(true)}>
                     <Layers className="mr-1 h-4 w-4" /> Tambah Multi Rasa
                 </Button>
-                <Button
-                    size="lg"
-                    className="min-h-11 bg-accent-orange hover:bg-accent-orange-hover"
-                    onClick={openCreateProduct}
-                >
+                <Button size="lg" onClick={openCreateProduct}>
                     <Plus className="mr-1 h-4 w-4" /> Tambah Produk
                 </Button>
             </div>

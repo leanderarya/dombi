@@ -124,7 +124,7 @@ export default function CreateCourier() {
                     <div className="flex items-center gap-3 pt-2">
                         <Button
                             type="submit"
-                            className="min-h-11 bg-accent-orange text-white shadow-sm hover:bg-accent-orange-hover"
+                            size="lg"
                             loading={form.processing}
                             disabled={form.processing}
                         >
