@@ -137,7 +137,7 @@ export default function OutletProducts({ outletId }: Props) {
         <div className="space-y-3">
             {/* Header */}
             <div className="flex items-center gap-2">
-                <div className="flex flex-1 items-center gap-2 rounded-lg border border-border bg-surface px-3">
+                <div className="flex flex-1 items-center gap-2 rounded-lg border border-border bg-surface px-3 focus-within:ring-1 focus-within:ring-ring">
                     <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                     <input
                         type="text"
