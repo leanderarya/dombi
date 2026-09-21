@@ -15,6 +15,7 @@ class NotificationController extends Controller
 
         $notifications = (clone $query)->latest()->limit(50)->get();
         $unreadCount = (clone $query)->unread()->count();
+        $role = $request->user()->isCustomer() ? 'customer' : $request->user()->role;
 
         return response()->json([
             'notifications' => $notifications->map(fn (Notification $n) => [
@@ -23,6 +24,7 @@ class NotificationController extends Controller
                 'title' => $n->title,
                 'message' => $n->message,
                 'data' => $n->data,
+                'url' => Notification::destinationUrl($n->type, $n->data ?? [], $role),
                 'read_at' => $n->read_at?->toISOString(),
                 'created_at' => $n->created_at->toISOString(),
                 'time_ago' => $n->created_at->diffForHumans(),

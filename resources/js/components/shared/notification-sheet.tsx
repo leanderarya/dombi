@@ -26,6 +26,7 @@ interface Notification {
     title: string;
     message: string;
     data: Record<string, unknown> | null;
+    url?: string | null;
     read_at: string | null;
     created_at: string;
     time_ago: string;
@@ -179,6 +180,7 @@ export default function NotificationSheet({
         id: number,
         type: string,
         data: Record<string, unknown> | null,
+        url?: string | null,
     ) => {
         try {
             await fetch(`/notifications/${id}/read`, {
@@ -195,6 +197,14 @@ export default function NotificationSheet({
             setUnreadCount((prev) => Math.max(0, prev - 1));
         } catch {
             // Silently fail
+        }
+
+        // Server-resolved destination — works for every role.
+        if (url && url.startsWith('/')) {
+            onClose();
+            router.visit(url);
+
+            return;
         }
 
         // Navigate for inventory action types
@@ -318,6 +328,7 @@ export default function NotificationSheet({
                                             notification.id,
                                             notification.type,
                                             notification.data,
+                                            notification.url,
                                         )
                                     }
                                     className={`w-full rounded-lg border p-3 text-left transition-colors ${
