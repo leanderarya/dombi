@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import CollapsibleCard from '@/components/ui/collapsible-card';
 import Dialog from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
 import RestockStatusBadge from '@/components/ui/restock-status-badge';
 import SectionCard from '@/components/ui/section-card';
 import { SkeletonPage } from '@/components/ui/skeleton';
@@ -169,17 +170,13 @@ export default function OutletInventory({
                         </div>
 
                         {/* Search */}
-                        <div className="relative">
-                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-subtle" />
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Cari produk..."
-                                style={{ paddingLeft: 40 }}
-                                className="w-full rounded-xl border border-border py-2.5 pr-4 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
-                            />
-                        </div>
+                        <Input
+                            type="text"
+                            icon={Search}
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Cari produk..."
+                        />
 
                         {/* Critical */}
                         {filteredCriticalFamilies.length > 0 && (
