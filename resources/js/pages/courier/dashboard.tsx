@@ -136,7 +136,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                                         </div>
                                         <div className="mt-1 flex items-center gap-1.5 text-sm text-text-muted">
                                             <MapPin className="h-4 w-4 shrink-0" />
-                                            <span className="line-clamp-1">
+                                            <span className="line-clamp-1 min-w-0">
                                                 {task.customer_address}
                                             </span>
                                         </div>
