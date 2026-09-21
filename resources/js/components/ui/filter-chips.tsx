@@ -18,6 +18,19 @@ interface Props {
 export const FILTER_CHIP_BASE =
     'shrink-0 rounded-full font-semibold transition-colors active:opacity-80';
 
+/**
+ * Which combination belongs where, as the code stands today — the audit found
+ * the three pairings map to a job rather than to taste, so nothing is merged:
+ *
+ * - `md` + `solid` (the defaults): status filters on the outlet and courier
+ *   list screens, ten places.
+ * - `sm` + `ring`: the owner role, plus the outlet reports and analytics
+ *   screens, where the chips pick a *period* rather than a status.
+ * - `caption` + `neutral`: the customer order history, matching the kanvas
+ *   `Filter/Semua` frame. Do not change it without the frame.
+ */
+
+
 const sizeStyles = {
     sm: 'px-3.5 py-1.5 text-xs',
     md: 'px-4 py-2 text-xs',
