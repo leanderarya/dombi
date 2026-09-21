@@ -1158,9 +1158,7 @@ export default function ProductForm({
                             </h4>
                             <Button
                                 type="button"
-                                variant="outline"
                                 size="lg"
-                                className="min-h-11 border-transparent bg-accent-orange text-white hover:bg-accent-orange-hover"
                                 onClick={addBulkSizeRow}
                             >
                                 <Plus className="h-4 w-4" /> Tambah Ukuran
