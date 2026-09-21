@@ -34,30 +34,37 @@ class DemoOrderSeeder extends Seeder
         abort_unless($guest, 500, 'No guest customer found. Run CustomerSeeder first.');
 
         $now = now();
-        $statuses = [
+
+        // Statuses that are legal per fulfillment type, so seeded rows stay
+        // realistic: a pickup order never reaches picked_up/delivering.
+        $pickupStatuses = [
             'pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup',
-            'picked_up', 'delivering', 'delivering', 'completed', 'completed', 'completed',
-            'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet',
-            'failed_delivery', 'expired',
+            'completed', 'cancelled_by_customer', 'rejected_by_outlet', 'expired',
+        ];
+        $deliveryStatuses = [
+            'awaiting_preparation', 'picked_up', 'delivering', 'delivering',
+            'completed', 'completed', 'failed_delivery', 'cancelled_by_outlet', 'expired',
         ];
 
         $orders = [];
         $idx = 1;
 
-        // 15 orders for registered customer
-        foreach (array_slice($statuses, 0, 15) as $cycle => $status) {
-            $orders[] = $this->createOrder($registered, $outlets, $products, $now, $idx++, $status);
-        }
+        // 30 orders for the two customers. Fulfillment alternates so both the
+        // active and the history section carry a pickup and a delivery card.
+        foreach ([$registered, $guest] as $customer) {
+            for ($cycle = 0; $cycle < 15; $cycle++) {
+                $isPickup = $idx % 2 === 1;
+                $pool = $isPickup ? $pickupStatuses : $deliveryStatuses;
+                $status = $pool[$cycle % count($pool)];
 
-        // 15 orders for guest customer
-        foreach (array_slice($statuses, 0, 15) as $cycle => $status) {
-            $orders[] = $this->createOrder($guest, $outlets, $products, $now, $idx++, $status);
+                $orders[] = $this->createOrder($customer, $outlets, $products, $now, $idx++, $status, $isPickup);
+            }
         }
 
         $this->printChecklist($orders);
     }
 
-    private function createOrder(Customer $customer, $outlets, $products, CarbonInterface $now, int $idx, string $status): Order
+    private function createOrder(Customer $customer, $outlets, $products, CarbonInterface $now, int $idx, string $status, bool $isPickup = false): Order
     {
         $outlet = $outlets->random();
         $product1 = $products->random();
@@ -83,7 +90,7 @@ class DemoOrderSeeder extends Seeder
             'order_code' => 'DEMO-'.$now->format('Ymd').'-'.str_pad($idx, 4, '0', STR_PAD_LEFT),
             'recovery_token' => Str::random(8),
             'status' => $status,
-            'fulfillment_type' => 'delivery_dombi',
+            'fulfillment_type' => $isPickup ? 'pickup' : 'delivery_dombi',
             'subtotal' => $subtotal,
             'delivery_fee' => $fee,
             'total' => $total,
@@ -93,7 +100,13 @@ class DemoOrderSeeder extends Seeder
             'paid_at' => $paid ? $orderedAt->copy()->addMinutes(rand(2, 10)) : null,
             'customer_name' => $customer->name,
             'customer_phone' => $customer->phone ?? '089000000001',
-            'customer_address' => 'Alamat dummy order '.$idx,
+            // Delivery cards render an address line, and a long one is what
+            // exercises its clamp: keep both lengths in the data set.
+            'customer_address' => $isPickup
+                ? 'Ambil di '.$outlet->name
+                : ($idx % 4 === 0
+                    ? 'Jl. Setiabudi No. 77, Banyumanik, Kota Semarang'
+                    : 'Jl. Prof. Soedarto No. 127, RT 04 / RW 07, Kel. Tembalang, Kec. Tembalang, Kota Semarang, Jawa Tengah 50275'),
             'ordered_at' => $orderedAt,
             'confirmed_at' => in_array($status, ['confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering', 'completed', 'completed'], true) ? $orderedAt->copy()->addMinutes(rand(5, 20)) : null,
             'completed_at' => $status === 'completed' ? $orderedAt->copy()->addHours(rand(1, 3)) : null,
@@ -142,11 +155,15 @@ class DemoOrderSeeder extends Seeder
         echo "\nOrder codes (cek pesanan customer di bawah):\n";
         foreach ($orders as $order) {
             $type = $order->customer?->user_id ? 'REGISTERED' : 'GUEST';
+            $shape = $order->fulfillment_type === 'pickup'
+                ? 'pickup'
+                : 'delivery/'.mb_strlen((string) $order->customer_address);
             echo sprintf(
-                "  %s  [%s]  %-22s  %-18s  %s  Rp %s\n",
+                "  %s  [%s]  %-22s  %-15s  %-18s  %s  Rp %s\n",
                 $order->order_code,
                 $type,
                 $order->status,
+                $shape,
                 $order->customer_name ?? $order->customer_phone,
                 $order->customer_phone,
                 number_format($order->total, 0, ',', '.'),
