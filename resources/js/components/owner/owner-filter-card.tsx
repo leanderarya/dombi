@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ChevronDown, ChevronUp, Filter, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 
@@ -182,25 +183,25 @@ export default function OwnerFilterCard({
                 {tambahHref && (
                     <Link
                         href={tambahHref}
-                        className="inline-flex h-8 items-center gap-1 rounded-md bg-primary px-3 text-xs font-semibold text-white transition-colors hover:bg-primary-hover"
+                        className={buttonVariants({
+                            variant: 'primary',
+                            size: 'lg',
+                        })}
                     >
-                        <Plus className="h-3.5 w-3.5" />
+                        <Plus className="size-4" aria-hidden="true" />
                         {tambahLabel}
                     </Link>
                 )}
                 {tambahOnClick && (
-                    <button
+                    <Button
                         type="button"
+                        size="lg"
+                        variant={tambahActive ? 'outline' : 'default'}
                         onClick={tambahOnClick}
-                        className={`inline-flex h-8 items-center gap-1 rounded-md px-3 text-xs font-semibold transition-colors ${
-                            tambahActive
-                                ? 'border border-border bg-surface text-text active:bg-surface-muted'
-                                : 'bg-primary text-white hover:bg-primary-hover'
-                        }`}
                     >
-                        <Plus className="h-3.5 w-3.5" />
+                        <Plus className="size-4" aria-hidden="true" />
                         {tambahActive ? 'Batal' : tambahLabel}
-                    </button>
+                    </Button>
                 )}
             </div>
         </div>
