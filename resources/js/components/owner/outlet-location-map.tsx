@@ -494,7 +494,7 @@ function MapSearchBox({
 
     return (
         <div className="relative border-b border-border bg-surface">
-            <div className="flex items-center gap-2 px-3 py-2">
+            <div className="flex items-center gap-2 px-3 py-2 focus-within:ring-1 focus-within:ring-ring">
                 <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                 <input
                     type="text"

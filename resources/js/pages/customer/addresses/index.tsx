@@ -60,7 +60,7 @@ export default function AddressesIndex({ addresses }: any) {
                 <Head title="Alamat Saya" />
 
                 {/* Search */}
-                <div className="flex items-center gap-2.5 rounded-thumb border border-border bg-surface px-3.5">
+                <div className="flex items-center gap-2.5 rounded-thumb border border-border bg-surface px-3.5 focus-within:ring-1 focus-within:ring-ring">
                     <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                     <input
                         type="text"
