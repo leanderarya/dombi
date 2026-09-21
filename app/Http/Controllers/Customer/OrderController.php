@@ -161,8 +161,19 @@ class OrderController extends Controller
     {
         $order = Order::where('order_code', $orderCode)->firstOrFail();
 
-        // Only allow confirmation for pending orders
-        if ($order->status !== Order::STATUS_PENDING_CONFIRMATION) {
+        // The post-payment landing page: serve any order that is still in play,
+        // including the paid ones waiting to be prepared.
+        $visibleStatuses = [
+            Order::STATUS_PENDING_CONFIRMATION,
+            Order::STATUS_AWAITING_PREPARATION,
+            Order::STATUS_CONFIRMED,
+            Order::STATUS_PREPARING,
+            Order::STATUS_READY_FOR_PICKUP,
+            Order::STATUS_PICKED_UP,
+            Order::STATUS_DELIVERING,
+        ];
+
+        if (! in_array($order->status, $visibleStatuses, true)) {
             return Inertia::render('customer/orders/confirm', [
                 'order' => null,
                 'isLoggedIn' => $request->user() !== null,

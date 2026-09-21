@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\OrderStatusService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 class AwaitingPreparationFlowTest extends TestCase
@@ -82,6 +83,17 @@ class AwaitingPreparationFlowTest extends TestCase
         $this->assertSame(Order::STATUS_CANCELLED_BY_OUTLET, $order->status);
         $this->assertSame('refund_pending', $order->payment_status);
         $this->assertSame('outlet_cancellation', $order->refund_reason);
+    }
+
+    public function test_confirm_page_serves_an_order_waiting_to_be_prepared(): void
+    {
+        [$order] = $this->paidOrder();
+
+        $this->get("/customer/orders/confirm/{$order->order_code}")
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('customer/orders/confirm')
+                ->where('order.id', $order->id));
     }
 
     public function test_backfill_moves_only_the_paid_orders(): void
