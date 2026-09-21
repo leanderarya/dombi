@@ -66,6 +66,18 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
         }
     }, [open, updatePos]);
 
+    useEffect(() => {
+        if (!open) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setOpen(false);
+                triggerRef.current?.focus();
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [open]);
+
     const handleSelect = (val: string) => {
         onChange(val);
         setOpen(false);
@@ -87,13 +99,14 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
             <div
                 ref={dropdownRef}
                 style={{ top: pos.top, left: pos.left, width: pos.width }}
-                className="fixed z-[9999] overflow-hidden rounded-xl border border-border bg-white shadow-xl"
+                role="listbox"
+                className="fixed z-[9999] overflow-hidden rounded-xl border border-border bg-surface shadow-xl"
             >
                 {/* Search */}
                 {searchable && (
                     <div className="border-b border-border px-3 py-2.5">
-                        <div className="flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2">
-                            <Search className="h-4 w-4 shrink-0 text-text-subtle" />
+                        <div className="flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2 focus-within:ring-1 focus-within:ring-ring">
+                            <Search className="h-4 w-4 shrink-0 text-text-muted" aria-hidden="true" />
                             <input
                                 type="text"
                                 value={search}
@@ -116,6 +129,7 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
                                 key={option.value}
                                 type="button"
                                 onClick={() => handleSelect(option.value)}
+                                aria-current={option.value === value || undefined}
                                 className={cn(
                                     'flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors',
                                     option.value === value
@@ -144,10 +158,12 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
                 ref={triggerRef}
                 type="button"
                 onClick={() => setOpen(!open)}
+                aria-haspopup="listbox"
+                aria-expanded={open}
                 className={cn(
-                    'flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-colors',
+                    'flex min-h-11 w-full items-center justify-between rounded-control border px-4 py-3 text-left transition-colors',
                     open ? 'border-primary ring-1 ring-primary/20' : 'border-border',
-                    selected ? 'text-text' : 'text-text-subtle',
+                    selected ? 'text-text' : 'text-text-muted',
                 )}
             >
                 <span className="truncate text-sm font-medium">{selected?.label ?? placeholder}</span>

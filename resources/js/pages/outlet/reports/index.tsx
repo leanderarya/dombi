@@ -3,6 +3,7 @@ import { CheckCircle, Download, LoaderCircle } from 'lucide-react';
 import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import { Button } from '@/components/ui/button';
+import DateRange from '@/components/ui/date-range';
 import FilterChips from '@/components/ui/filter-chips';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
@@ -91,29 +92,13 @@ export default function OutletReports({ outlet, preview }: Props) {
                 />
 
                 {period === 'custom' && (
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="date"
-                            value={dateFrom}
-                            onChange={(e) => setDateFrom(e.target.value)}
-                            className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
-                        />
-                        <span className="text-xs text-text-muted">sampai</span>
-                        <input
-                            type="date"
-                            value={dateTo}
-                            onChange={(e) => setDateTo(e.target.value)}
-                            className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
-                        />
-                        <Button
-                            type="button"
-                            onClick={handleCustomApply}
-                            size="lg"
-                            className="shrink-0 active:opacity-80"
-                        >
-                            Terapkan
-                        </Button>
-                    </div>
+                    <DateRange
+                        from={dateFrom}
+                        to={dateTo}
+                        onFromChange={setDateFrom}
+                        onToChange={setDateTo}
+                        onApply={handleCustomApply}
+                    />
                 )}
 
                 <Button
