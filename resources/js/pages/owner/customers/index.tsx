@@ -1,5 +1,7 @@
 import { router } from '@inertiajs/react';
 import { Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
 import EmptyState from '@/components/ui/empty-state';
@@ -16,10 +18,32 @@ import {
 } from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/format';
 
-export default function CustomersIndex({ customers }: any) {
+export default function CustomersIndex({ customers, filters }: any) {
+    const [search, setSearch] = useState<string>(filters?.search ?? '');
+
+    useEffect(() => {
+        const applied = filters?.search ?? '';
+
+        if (search === applied) {
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            router.get('/owner/customers', search ? { search } : {}, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            });
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [search, filters?.search]);
+
     if (!customers) {
         return <SkeletonPage />;
     }
+
+    const isSearching = Boolean(filters?.search);
 
     return (
         <OwnerPageShell
@@ -27,11 +51,25 @@ export default function CustomersIndex({ customers }: any) {
             subtitle="Informasi pelanggan dan riwayat transaksi"
         >
             <div className="space-y-6">
+                <OwnerFilterCard
+                    searchPlaceholder="Cari nama atau no. HP pelanggan..."
+                    searchValue={search}
+                    onSearch={setSearch}
+                />
+
                 {customers.data.length === 0 ? (
                     <EmptyState
                         icon={<Users className="h-8 w-8" />}
-                        title="Belum ada pelanggan"
-                        description="Pelanggan akan muncul setelah ada transaksi"
+                        title={
+                            isSearching
+                                ? 'Pelanggan tidak ditemukan'
+                                : 'Belum ada pelanggan'
+                        }
+                        description={
+                            isSearching
+                                ? `Tidak ada nama atau nomor HP yang cocok dengan "${filters.search}".`
+                                : 'Pelanggan akan muncul setelah ada transaksi'
+                        }
                     />
                 ) : (
                     <OwnerTable>
