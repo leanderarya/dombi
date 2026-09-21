@@ -17,23 +17,23 @@ class ExpirePendingOrdersTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_pending_confirmation_defaults_to_thirty_minutes(): void
+    public function test_pending_confirmation_defaults_to_fifteen_minutes(): void
     {
         Carbon::setTestNow('2026-08-28 12:00:00');
 
         $order = Order::factory()->create(['status' => Order::STATUS_PENDING_CONFIRMATION]);
 
-        $this->assertSame('2026-08-28T12:30:00+00:00', $order->confirmation_expires_at->toIso8601String());
+        $this->assertSame('2026-08-28T12:15:00+00:00', $order->confirmation_expires_at->toIso8601String());
     }
 
-    public function test_pending_confirmation_uses_thirty_minute_fallback_when_config_is_unset(): void
+    public function test_pending_confirmation_uses_fifteen_minute_fallback_when_config_is_unset(): void
     {
         Carbon::setTestNow('2026-08-28 12:00:00');
         config(['order.confirmation_timeout_minutes' => null]);
 
         $order = Order::factory()->create(['status' => Order::STATUS_PENDING_CONFIRMATION]);
 
-        $this->assertSame('2026-08-28T12:30:00+00:00', $order->confirmation_expires_at->toIso8601String());
+        $this->assertSame('2026-08-28T12:15:00+00:00', $order->confirmation_expires_at->toIso8601String());
     }
 
     public function test_outlet_confirmation_timeout_overrides_default(): void

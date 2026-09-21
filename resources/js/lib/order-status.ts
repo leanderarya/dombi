@@ -153,6 +153,7 @@ export function normalizeOrder(order: NormalizedOrder): NormalizedOrder {
 
 const STATUS_LABELS: Record<string, string> = {
     pending_confirmation: 'Menunggu Konfirmasi',
+    awaiting_preparation: 'Menunggu Disiapkan',
     confirmed: 'Pesanan Dikonfirmasi',
     preparing: 'Pesanan Disiapkan',
     ready_for_pickup: 'Siap Diambil',

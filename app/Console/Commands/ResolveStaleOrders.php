@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 class ResolveStaleOrders extends Command
 {
     protected $signature = 'orders:resolve-stale
+        {--awaiting-preparation-hours=2 : Hours before paid orders still waiting to be prepared are cancelled}
         {--preparing-hours=24 : Hours before stale preparing orders are cancelled}
         {--ready-hours=24 : Hours before stale ready_for_pickup orders are cancelled}
         {--failed-days=7 : Days before unresolved failed_deliveries are auto-resolved}
@@ -27,6 +28,34 @@ class ResolveStaleOrders extends Command
     ): int {
         $dryRun = $this->option('dry-run');
         $totalResolved = 0;
+
+        // 0. Cancel paid orders the outlet never started preparing
+        $awaitingHours = (int) $this->option('awaiting-preparation-hours');
+        $staleAwaiting = Order::query()
+            ->where('status', Order::STATUS_AWAITING_PREPARATION)
+            ->where('updated_at', '<', now()->subHours($awaitingHours))
+            ->get();
+
+        $this->info("Found {$staleAwaiting->count()} stale awaiting_preparation orders (>{$awaitingHours}h).");
+
+        foreach ($staleAwaiting as $order) {
+            if ($dryRun) {
+                $this->line("  [DRY RUN] Would cancel order #{$order->id} ({$order->order_code})");
+            } else {
+                try {
+                    $orderStatusService->transition($order, 'cancelled_by_outlet', [
+                        'reason' => "Auto-cancelled: not prepared within {$awaitingHours}h",
+                        'actor_type' => 'system',
+                        'notes' => "Auto-cancelled: outlet did not start preparing within {$awaitingHours} hours.",
+                    ]);
+                    $this->line("  Cancelled order #{$order->id} ({$order->order_code})");
+                    $totalResolved++;
+                } catch (\Throwable $e) {
+                    $this->error("  Failed to cancel order #{$order->id}: {$e->getMessage()}");
+                    Log::error("ResolveStaleOrders: failed to cancel awaiting_preparation order #{$order->id}", ['error' => $e->getMessage()]);
+                }
+            }
+        }
 
         // 1. Cancel stale preparing orders
         $preparingHours = (int) $this->option('preparing-hours');

@@ -266,6 +266,7 @@ class InventoryReconcile extends Command
             ->where('orders.outlet_id', $outletId)
             ->where('order_items.product_id', $productId)
             ->whereIn('orders.status', [
+                'awaiting_preparation',
                 'pending_confirmation',
                 'confirmed',
                 'preparing',

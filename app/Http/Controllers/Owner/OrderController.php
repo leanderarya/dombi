@@ -51,8 +51,8 @@ class OrderController extends Controller
                 }
 
                 $compoundMap = [
-                    'needs_action' => ['pending_confirmation', 'ready_for_pickup', 'failed_delivery'],
-                    'active' => ['confirmed', 'preparing', 'delivering'],
+                    'needs_action' => ['awaiting_preparation', 'pending_confirmation', 'ready_for_pickup', 'failed_delivery'],
+                    'active' => ['awaiting_preparation', 'confirmed', 'preparing', 'delivering'],
                     'cancelled' => ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'],
                 ];
 
@@ -80,7 +80,7 @@ class OrderController extends Controller
 
             return [
                 'total_today' => Order::whereDate('created_at', $today)->count(),
-                'pending' => Order::whereIn('status', ['pending_confirmation', 'ready_for_pickup'])->count(),
+                'pending' => Order::whereIn('status', ['awaiting_preparation', 'pending_confirmation', 'ready_for_pickup'])->count(),
                 'completed_today' => Order::where('status', 'completed')->whereDate('updated_at', $today)->count(),
                 'revenue_today' => (float) Order::where('status', 'completed')->whereDate('updated_at', $today)->sum('total'),
             ];

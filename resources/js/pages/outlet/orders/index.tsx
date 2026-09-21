@@ -14,6 +14,7 @@ import { getOrderStatus } from '@/lib/status-labels';
 
 const operationalFilters = [
     { key: '', label: 'Semua' },
+    { key: 'awaiting_preparation', label: 'Perlu Disiapkan' },
     { key: 'pending_confirmation', label: 'Menunggu Konfirmasi' },
     { key: 'confirmed', label: 'Diterima' },
     { key: 'preparing', label: 'Disiapkan' },
@@ -31,6 +32,7 @@ const historyFilters = [
 ];
 
 const statusDotColors: Record<string, string> = {
+    awaiting_preparation: 'bg-warning',
     pending_confirmation: 'bg-warning',
     confirmed: 'bg-info',
     preparing: 'bg-accent-orange',

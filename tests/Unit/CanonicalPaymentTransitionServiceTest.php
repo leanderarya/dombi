@@ -61,7 +61,7 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $this->assertTrue($expires->between($before->copy()->addMinutes(17)->subSecond(), now()->addMinutes(17)->addSecond()));
     }
 
-    public function test_pending_confirmation_success_stays_pending_and_does_not_claim_fulfilment(): void
+    public function test_pending_confirmation_success_moves_to_awaiting_preparation_without_claiming_fulfilment(): void
     {
         [$order, $attempt] = $this->attempt(['status' => Order::STATUS_PENDING_CONFIRMATION]);
 
@@ -70,7 +70,7 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         ));
 
         $this->assertFalse($result->fulfilmentWinner);
-        $this->assertSame(Order::STATUS_PENDING_CONFIRMATION, $order->fresh()->status);
+        $this->assertSame(Order::STATUS_AWAITING_PREPARATION, $order->fresh()->status);
         $this->assertNull($order->fresh()->fulfilment_claimed_at);
         $this->assertNull($order->fresh()->fulfilment_claimed_by);
         $this->assertNull($attempt->fresh()->fulfilment_claimed_at);

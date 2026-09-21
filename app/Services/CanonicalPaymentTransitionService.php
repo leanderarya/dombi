@@ -217,6 +217,11 @@ class CanonicalPaymentTransitionService
     private function claimOrRefund(PaymentAttempt $attempt, Order $order): bool
     {
         if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
+            app(OrderStatusService::class)->transition($order, Order::STATUS_AWAITING_PREPARATION, [
+                'actor_type' => 'system',
+                'notes' => 'Pembayaran berhasil, pesanan siap disiapkan.',
+            ]);
+
             return false;
         }
 

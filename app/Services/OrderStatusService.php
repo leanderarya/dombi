@@ -13,7 +13,8 @@ use Illuminate\Validation\ValidationException;
 class OrderStatusService
 {
     private const TRANSITIONS = [
-        'pending_confirmation' => ['confirmed', 'rejected_by_outlet', 'cancelled_by_customer', 'expired'],
+        'pending_confirmation' => ['awaiting_preparation', 'confirmed', 'rejected_by_outlet', 'cancelled_by_customer', 'expired'],
+        'awaiting_preparation' => ['preparing', 'cancelled_by_outlet', 'cancelled_by_customer'],
         'confirmed' => ['preparing', 'cancelled_by_outlet'],
         'preparing' => ['ready_for_pickup', 'cancelled_by_outlet'],
         'ready_for_pickup' => ['picked_up', 'delivering', 'cancelled_by_outlet'],
@@ -218,7 +219,7 @@ class OrderStatusService
                 return $order;
             }
 
-            if (! in_array($order->status, [Order::STATUS_PENDING_CONFIRMATION, Order::STATUS_CONFIRMED, Order::STATUS_PREPARING, Order::STATUS_READY_FOR_PICKUP], true)) {
+            if (! in_array($order->status, [Order::STATUS_PENDING_CONFIRMATION, Order::STATUS_AWAITING_PREPARATION, Order::STATUS_CONFIRMED, Order::STATUS_PREPARING, Order::STATUS_READY_FOR_PICKUP], true)) {
                 throw new InvalidOrderTransitionException($order->status, Order::STATUS_COMPLETED);
             }
 

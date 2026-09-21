@@ -16,6 +16,10 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
         label: 'Menunggu Konfirmasi',
         variant: 'warning',
     },
+    awaiting_preparation: {
+        label: 'Menunggu Disiapkan',
+        variant: 'warning',
+    },
     pending_payment: {
         label: 'Menunggu Pembayaran',
         variant: 'warning',
