@@ -2,12 +2,12 @@ import { Link, router } from '@inertiajs/react';
 import {
     AlertTriangle,
     ArrowRight,
-    Check,
     CheckCircle2,
     ChevronRight,
     Clock,
     MoreHorizontal,
     Sparkles,
+    TrendingDown,
     TrendingUp,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -31,6 +31,8 @@ interface DashboardProps {
         outstandingAmount: number;
         pendingActions: number;
         criticalStock: number;
+        ordersToday: number;
+        completedToday: number;
     };
     actionRequired: {
         restocks: number;
@@ -481,6 +483,12 @@ export default function Dashboard({
         actionRequired.returns +
         actionRequired.exchanges +
         actionRequired.pendingSettlementVerifications;
+    const yesterdayRevenue = revenueTrend.values.at(-2) ?? 0;
+    const todayRevenue = revenueTrend.values.at(-1) ?? 0;
+    const revenueChangePercent =
+        yesterdayRevenue > 0
+            ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100
+            : null;
     const activeSettlementAlerts = (settlementAlerts ?? []).filter(
         (a) => !dismissed.has(a.outlet.id),
     );
@@ -512,15 +520,29 @@ export default function Dashboard({
                         <span className="text-xs font-medium text-text-muted">
                             Total Penjualan
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-[11px] font-semibold text-success-text">
-                            <TrendingUp className="h-3 w-3" /> +8.2%
-                        </span>
+                        {revenueChangePercent !== null && (
+                            <span
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                    revenueChangePercent >= 0
+                                        ? 'bg-success-bg text-success-text'
+                                        : 'bg-danger-bg text-danger-text'
+                                }`}
+                            >
+                                {revenueChangePercent >= 0 ? (
+                                    <TrendingUp className="h-3 w-3" />
+                                ) : (
+                                    <TrendingDown className="h-3 w-3" />
+                                )}
+                                {revenueChangePercent >= 0 ? '+' : ''}
+                                {revenueChangePercent.toFixed(1)}%
+                            </span>
+                        )}
                     </div>
                     <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
                         {formatCurrency(revenueTrend.total)}
                     </div>
                     <p className="text-[11px] text-text-muted">
-                        Vs kemarin: {formatCurrency(revenueTrend.total * 0.92)}
+                        Vs kemarin: {formatCurrency(yesterdayRevenue)}
                     </p>
                 </div>
 
@@ -530,18 +552,15 @@ export default function Dashboard({
                         <span className="text-xs font-medium text-text-muted">
                             Pesanan Hari Ini
                         </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-[11px] font-semibold text-success-text">
-                            <Check className="h-3 w-3" /> Optimal
-                        </span>
                     </div>
                     <div className="font-heading text-xl font-bold text-text tabular-nums sm:text-2xl">
-                        32{' '}
+                        {kpis.ordersToday}{' '}
                         <span className="text-sm font-normal text-text-muted">
                             Order
                         </span>
                     </div>
                     <p className="text-[11px] text-text-muted">
-                        18 Selesai terkirim
+                        {kpis.completedToday} Selesai terkirim
                     </p>
                 </div>
 

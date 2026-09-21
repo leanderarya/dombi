@@ -30,7 +30,7 @@ export default function OwnerProfile() {
                         <div className="mt-4 grid grid-cols-2 gap-2">
                             <InfoBox
                                 label="Role"
-                                value="Owner"
+                                value={user?.role ?? 'owner'}
                                 icon={
                                     <Shield
                                         className="h-3.5 w-3.5"
