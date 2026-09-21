@@ -597,7 +597,7 @@ export default function CheckoutCustomer({
                                                         }
                                                     </span>
                                                 )}
-                                                <span className="line-clamp-1 text-xs text-text">
+                                                <span className="line-clamp-1 min-w-0 text-xs text-text">
                                                     {
                                                         addressPresentation.displayAddress
                                                     }

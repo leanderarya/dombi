@@ -153,8 +153,8 @@ export default function OrderHistoryCard({ order }: Props) {
             {/* Delivery address */}
             {!isPickup && order.customer_address && (
                 <div className="mt-2 flex items-start gap-2 text-xs text-text-muted">
-                    <div className="mt-0.5 h-4 w-px bg-border" />
-                    <span className="line-clamp-1">
+                    <div className="mt-0.5 h-4 w-px shrink-0 bg-border" />
+                    <span className="line-clamp-1 min-w-0">
                         {order.customer_address}
                     </span>
                 </div>
