@@ -19,6 +19,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_SSH_USER }}
           password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
           port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          capture_stdout: true
           script: |
             set -eu
             APP_PATH='domains/dombicenter.com/public_html/app'
@@ -51,6 +52,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_SSH_USER }}
           password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
           port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          capture_stdout: true
           script: |
             set -eu
             APP_PATH='domains/dombicenter.com/public_html/app'
