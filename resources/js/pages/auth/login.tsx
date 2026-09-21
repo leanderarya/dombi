@@ -54,7 +54,7 @@ export default function Login({ auth }: Props) {
                             {user.email}
                         </div>
                         <div className="mt-1">
-                            <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
+                            <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-primary">
                                 {roleLabels[user.role] ?? user.role}
                             </span>
                         </div>
@@ -67,7 +67,7 @@ export default function Login({ auth }: Props) {
                                     roleDashboards[user.role] ?? '/dashboard',
                                 )
                             }
-                            className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-emerald-700 text-sm font-semibold text-white active:bg-emerald-800"
+                            className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white active:bg-primary-hover"
                         >
                             Buka Dashboard
                         </button>
@@ -105,7 +105,7 @@ export default function Login({ auth }: Props) {
                             setData('usePhone', false);
                             setData('phone', '');
                         }}
-                        className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${!data.usePhone ? 'bg-emerald-600 text-white' : 'text-zinc-500'}`}
+                        className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${!data.usePhone ? 'bg-primary text-white' : 'text-zinc-500'}`}
                     >
                         Email
                     </button>
@@ -115,7 +115,7 @@ export default function Login({ auth }: Props) {
                             setData('usePhone', true);
                             setData('email', '');
                         }}
-                        className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${data.usePhone ? 'bg-emerald-600 text-white' : 'text-zinc-500'}`}
+                        className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${data.usePhone ? 'bg-primary text-white' : 'text-zinc-500'}`}
                     >
                         No. HP
                     </button>
@@ -163,7 +163,7 @@ export default function Login({ auth }: Props) {
                 </label>
                 <button
                     disabled={processing}
-                    className="mt-6 w-full rounded-md bg-emerald-700 px-4 py-2 font-medium text-white"
+                    className="mt-6 w-full rounded-md bg-primary px-4 py-2 font-medium text-white"
                 >
                     Login
                 </button>

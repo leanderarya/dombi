@@ -36,7 +36,7 @@ class ErrorBoundary extends Component<
                     </p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white"
+                        className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white"
                     >
                         Muat ulang
                     </button>

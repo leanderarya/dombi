@@ -1,5 +1,5 @@
 const styles: Record<string, string> = {
-    normal: 'bg-emerald-100 text-emerald-800',
+    normal: 'bg-emerald-100 text-primary',
     warning: 'bg-amber-100 text-amber-800',
     critical: 'bg-red-100 text-red-800',
 };

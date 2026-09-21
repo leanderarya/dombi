@@ -80,15 +80,15 @@ export default function PushBanner({ variant, onDismiss }: Props) {
 
     // variant === 'confirm'
     return (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+        <div className="rounded-2xl border border-primary/20 bg-primary-light p-4">
             {pushState === 'denied' ? (
                 <div className="flex items-center gap-3">
-                    <BellOff className="h-5 w-5 shrink-0 text-emerald-600" />
+                    <BellOff className="h-5 w-5 shrink-0 text-primary" />
                     <div>
-                        <p className="text-sm font-semibold text-emerald-800">
+                        <p className="text-sm font-semibold text-primary">
                             Notifikasi dimatikan
                         </p>
-                        <p className="mt-0.5 text-xs text-emerald-600">
+                        <p className="mt-0.5 text-xs text-primary">
                             Aktifkan lewat Settings browser / iPhone
                         </p>
                     </div>
@@ -97,21 +97,21 @@ export default function PushBanner({ variant, onDismiss }: Props) {
                 <div className="flex items-center gap-3">
                     {pushState === 'active' ? (
                         <>
-                            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                            <p className="text-sm font-semibold text-emerald-800">
+                            <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
+                            <p className="text-sm font-semibold text-primary">
                                 Notifikasi aktif ✓
                             </p>
                         </>
                     ) : (
                         <>
-                            <Bell className="h-5 w-5 shrink-0 text-emerald-600" />
+                            <Bell className="h-5 w-5 shrink-0 text-primary" />
                             <div className="min-w-0 flex-1">
-                                <p className="text-sm font-semibold text-emerald-800">
+                                <p className="text-sm font-semibold text-primary">
                                     Pantau pesananmu secara real-time
                                 </p>
                                 <button
                                     onClick={handleEnable}
-                                    className="mt-2 inline-flex min-h-10 items-center rounded-xl bg-white px-5 text-xs font-bold text-emerald-700 shadow-sm active:opacity-80"
+                                    className="mt-2 inline-flex min-h-10 items-center rounded-xl bg-white px-5 text-xs font-bold text-primary shadow-sm active:opacity-80"
                                 >
                                     Aktifkan Notifikasi
                                 </button>

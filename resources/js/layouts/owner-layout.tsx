@@ -212,12 +212,12 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                         className={`${collapsed ? 'px-3 py-5' : 'px-4 pt-6 pb-5'}`}
                     >
                         {collapsed ? (
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/20 font-heading text-lg font-bold text-emerald-300">
+                            <div className="bg-primary-light0/20 flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 font-heading text-lg font-bold text-emerald-300">
                                 D
                             </div>
                         ) : (
                             <div className="flex items-center gap-3 border-b border-emerald-800/60 pb-4">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/20 font-heading text-lg font-bold text-emerald-300">
+                                <div className="bg-primary-light0/20 flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 font-heading text-lg font-bold text-emerald-300">
                                     D
                                 </div>
                                 <div>
@@ -255,7 +255,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                                 </div>
                                 <button
                                     onClick={() => router.post('/logout')}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-200/70 transition-colors hover:bg-emerald-800/40 hover:text-white"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-200/70 transition-colors hover:bg-primary-hover/40 hover:text-white"
                                     title="Logout"
                                 >
                                     <LogoutIcon />
@@ -273,7 +273,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
 
                                 <a
                                     href="/owner/profile"
-                                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium text-emerald-200/70 transition-all hover:bg-emerald-800/40 hover:text-white"
+                                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium text-emerald-200/70 transition-all hover:bg-primary-hover/40 hover:text-white"
                                 >
                                     <Settings className="h-4 w-4" />
                                     <span>Pengaturan Sistem</span>
@@ -281,7 +281,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
 
                                 <button
                                     onClick={() => router.post('/logout')}
-                                    className="w-full rounded-xl px-3 py-2 text-sm font-medium text-emerald-200/70 transition-colors hover:bg-emerald-800/40 hover:text-white"
+                                    className="w-full rounded-xl px-3 py-2 text-sm font-medium text-emerald-200/70 transition-colors hover:bg-primary-hover/40 hover:text-white"
                                 >
                                     Logout
                                 </button>

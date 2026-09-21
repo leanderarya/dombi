@@ -46,13 +46,13 @@ export default function UpdateBanner() {
     }
 
     return (
-        <div className="safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-emerald-200 bg-emerald-50 px-4 py-3 text-center shadow-lg">
-            <p className="text-sm font-medium text-emerald-800">
+        <div className="safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-primary/20 bg-primary-light px-4 py-3 text-center shadow-lg">
+            <p className="text-sm font-medium text-primary">
                 Versi baru tersedia
             </p>
             <button
                 onClick={() => window.location.reload()}
-                className="mt-1 rounded-md bg-emerald-700 px-4 py-1.5 text-sm font-medium text-white active:bg-emerald-800"
+                className="mt-1 rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white active:bg-primary-hover"
             >
                 Refresh Sekarang
             </button>
