@@ -43,3 +43,85 @@ jobs:
 
             echo '=== recent doku/payment log lines (last 10) ==='
             grep -iE 'doku|payment' storage/logs/laravel.log 2>/dev/null | tail -10 || echo '(no log)'
+
+      - name: Read recent orders, payment attempts and queue state (read-only)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          script: |
+            set -eu
+            APP_PATH='domains/dombicenter.com/public_html/app'
+            cd "$APP_PATH"
+
+            php <<'PHP'
+            <?php
+
+            use Illuminate\Support\Facades\DB;
+
+            require 'vendor/autoload.php';
+            $app = require 'bootstrap/app.php';
+            $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+            $v = static function ($value) {
+                if (is_object($value)) {
+                    return $value->value ?? $value->name ?? 'object';
+                }
+
+                return $value ?? '-';
+            };
+
+            echo "=== last 8 orders ===\n";
+            foreach (App\Models\Order::latest('id')->take(8)->get() as $order) {
+                printf(
+                    "%d | %s | %s | pay=%s/%s | %s | total=%s | %s | %s\n",
+                    $order->id,
+                    $order->order_code,
+                    $v($order->status),
+                    $v($order->payment_status),
+                    $v($order->payment_method),
+                    $v($order->fulfillment_type),
+                    $order->total,
+                    $order->created_at,
+                    $order->customer_phone,
+                );
+            }
+
+            echo "=== last 3 payment attempts ===\n";
+            foreach (App\Models\PaymentAttempt::latest('id')->take(3)->get() as $attempt) {
+                $raw = is_array($attempt->raw_response) ? $attempt->raw_response : [];
+                printf(
+                    "%d | %s | order=%s | creation=%s | settlement=%s | gateway=%s | session_token=%s | raw_keys=%s | updated=%s\n",
+                    $attempt->id,
+                    $attempt->invoice_number,
+                    $attempt->order_id,
+                    $v($attempt->creation_state),
+                    $v($attempt->settlement_status),
+                    $attempt->gateway_status ?? '-',
+                    $attempt->session_token ? 'yes' : 'no',
+                    implode(',', array_slice(array_keys($raw), 0, 8)),
+                    $attempt->updated_at,
+                );
+            }
+
+            echo "=== queue, outbox, webhooks ===\n";
+            printf("jobs pending: %d\n", DB::table('jobs')->count());
+            printf("jobs failed: %d\n", DB::table('failed_jobs')->count());
+            printf("outbox pending: %d\n", DB::table('payment_outbox_events')->where('status', 'pending')->count());
+            printf("webhooks last 24h: %d\n", DB::table('payment_webhook_logs')->where('created_at', '>=', now()->subDay())->count());
+
+            echo "=== doku credential presence (lengths only, no characters) ===\n";
+            printf("client_id: %s\n", config('doku.client_id') ? 'set ('.strlen(config('doku.client_id')).' chars)' : 'EMPTY');
+            printf("api_key: %s\n", config('doku.api_key') ? 'set ('.strlen(config('doku.api_key')).' chars)' : 'EMPTY');
+            printf("sandbox: %s\n", config('doku.sandbox') ? 'true' : 'false');
+            printf("base_url: %s\n", config('doku.base_url'));
+            printf("callback_url: %s\n", config('doku.callback_url') ?? 'unset');
+            PHP
+
+            echo '=== queue worker / scheduler processes ==='
+            pgrep -af 'queue:work|horizon|schedule:run' || echo '(none found)'
+
+            echo '=== payment failure taxonomy in log (last 40 matches) ==='
+            grep -iE 'creation_failed|creation_timeout|invalid_response|webhook_rejected|DOKU payment creation failed|http_4[0-9][0-9]|http_5[0-9][0-9]' storage/logs/laravel.log 2>/dev/null | tail -40 || echo '(no matches)'
