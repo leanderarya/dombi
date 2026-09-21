@@ -3,7 +3,7 @@ import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import RevenueTrendChart from '@/components/outlet/revenue-trend-chart';
 import TopProductsChart from '@/components/outlet/top-products-chart';
-import { Button } from '@/components/ui/button';
+import DateRange from '@/components/ui/date-range';
 import FilterChips from '@/components/ui/filter-chips';
 import { Skeleton, SkeletonKpiGrid } from '@/components/ui/skeleton';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
@@ -119,31 +119,13 @@ export default function OutletAnalytics({
                         />
 
                         {period === 'custom' && (
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="date"
-                                    value={from}
-                                    onChange={(e) => setFrom(e.target.value)}
-                                    className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
-                                />
-                                <span className="text-xs text-text-muted">
-                                    sampai
-                                </span>
-                                <input
-                                    type="date"
-                                    value={to}
-                                    onChange={(e) => setTo(e.target.value)}
-                                    className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
-                                />
-                                <Button
-                                    type="button"
-                                    onClick={handleCustomApply}
-                                    size="lg"
-                                    className="shrink-0 active:opacity-80"
-                                >
-                                    Terapkan
-                                </Button>
-                            </div>
+                            <DateRange
+                                from={from}
+                                to={to}
+                                onFromChange={setFrom}
+                                onToChange={setTo}
+                                onApply={handleCustomApply}
+                            />
                         )}
 
                         <div className="grid grid-cols-2 gap-3">

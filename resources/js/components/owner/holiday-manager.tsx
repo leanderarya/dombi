@@ -1,5 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { Input } from '@/components/ui/input';
 import { formatDate } from '@/lib/format';
 import { toastMutation } from '@/lib/toast-mutation';
 
@@ -142,22 +143,22 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
                             <span className="text-xs font-semibold text-text-muted uppercase">
                                 Mulai
                             </span>
-                            <input
+                            <Input
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-sm"
+                                className="mt-1"
                             />
                         </label>
                         <label className="block">
                             <span className="text-xs font-semibold text-text-muted uppercase">
                                 Selesai
                             </span>
-                            <input
+                            <Input
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-sm"
+                                className="mt-1"
                             />
                         </label>
                     </div>

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import CollapsibleCard from '@/components/ui/collapsible-card';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
+import { Input } from '@/components/ui/input';
 import SectionCard from '@/components/ui/section-card';
 import { Skeleton, SkeletonTable } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
@@ -867,7 +868,7 @@ function PaymentSheet({
                     <label className="mb-1.5 block text-xs font-semibold text-text">
                         Tanggal Transfer
                     </label>
-                    <input
+                    <Input
                         type="date"
                         value={data.payment_date}
                         onChange={(e) =>
@@ -875,7 +876,6 @@ function PaymentSheet({
                         }
                         required
                         max={new Date().toISOString().split('T')[0]}
-                        className="w-full rounded-lg border border-border px-3 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                     {errors.payment_date && (
                         <p className="mt-1 text-xs text-danger">
