@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -35,7 +36,11 @@ class CustomerController extends Controller
 
     public function show(Customer $customer): Response
     {
-        $orders = $customer->orders()->with('outlet')->latest()->get();
+        $orders = $customer->orders()
+            ->where('status', '!=', Order::STATUS_EXPIRED)
+            ->with('outlet')
+            ->latest()
+            ->get();
 
         $stats = [
             'total_orders' => $orders->count(),
