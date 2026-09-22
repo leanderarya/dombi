@@ -8,7 +8,6 @@
 
     <meta name="theme-color" content="#047857">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Dombi">
     <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192">
     <link rel="manifest" href="/internal-manifest.json">
@@ -19,7 +18,7 @@
     
     @inertiaHead
 </head>
-<body class="font-sans antialiased bg-slate-50">
+<body class="font-sans antialiased">
     @inertia
 </body>
 </html>
