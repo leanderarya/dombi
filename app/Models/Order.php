@@ -85,6 +85,21 @@ class Order extends Model
         PaymentStatus::RefundFailed->value,
     ];
 
+    /**
+     * Payment statuses that prove money left the customer. An expired order in
+     * one of these states stays in the customer's history so the manual refund
+     * transfer remains traceable.
+     */
+    public const MONEY_MOVED_PAYMENT_STATUSES = [
+        PaymentStatus::Paid->value,
+        PaymentStatus::Settled->value,
+        PaymentStatus::RefundPending->value,
+        PaymentStatus::RefundInProgress->value,
+        PaymentStatus::Refunded->value,
+        PaymentStatus::RefundRejected->value,
+        PaymentStatus::RefundFailed->value,
+    ];
+
     public const FULFILLMENT_PICKUP = 'pickup';
 
     public const FULFILLMENT_DELIVERY_DOMBI = 'delivery_dombi';
@@ -340,6 +355,10 @@ class Order extends Model
                                 ]);
                         });
                     });
+            })
+            ->where(function ($status) {
+                $status->where('status', '!=', self::STATUS_EXPIRED)
+                    ->orWhereIn('payment_status', self::MONEY_MOVED_PAYMENT_STATUSES);
             });
     }
 
