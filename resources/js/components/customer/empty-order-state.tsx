@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { CheckCircle, Package, Search } from 'lucide-react';
+import { CheckCircle, Milk, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
 
 const content = {
     'no-orders': {
-        icon: Package,
+        icon: Milk,
         title: 'Yuk belanja lagi',
         description:
             'Belum ada pesanan aktif saat ini. Mulai pesan dan nikmati kesegarannya!',
