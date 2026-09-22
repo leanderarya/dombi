@@ -73,7 +73,7 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
     expired: {
         label: 'Kadaluarsa',
         variant: 'neutral',
-        reason: 'Outlet tidak konfirmasi tepat waktu',
+        reason: 'Pesanan tidak diselesaikan dalam batas waktu',
     },
 };
 
