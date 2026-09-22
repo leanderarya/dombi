@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import BrandMark from '@/components/ui/brand-mark';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -178,8 +179,8 @@ export default function OrderInfoCard({
                             className="flex items-start justify-between gap-3"
                         >
                             <div className="flex min-w-0 items-center gap-3">
-                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-control bg-surface-muted text-lg">
-                                    {item.product_name.charAt(0)}
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-control bg-surface-muted text-[22px] leading-none">
+                                    &#x1F95B;
                                 </div>
                                 <div className="min-w-0">
                                     <h3 className="truncate text-xs font-bold text-text">
@@ -449,9 +450,7 @@ function ReceiptDialog({
                 <DialogHeader>
                     <DialogTitle>
                         <div className="flex items-center gap-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-chip bg-primary text-xs font-bold text-white">
-                                D
-                            </div>
+                            <BrandMark size="sm" />
                             <span>E-Receipt Dombi</span>
                         </div>
                     </DialogTitle>
