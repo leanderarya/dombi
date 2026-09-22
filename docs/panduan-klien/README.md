@@ -2,9 +2,10 @@
 
 Folder ini berisi panduan yang ditujukan untuk **tim Dombi**, bukan pengembang: cara menyiapkan aset yang perlu diunggah ke aplikasi, langkah demi langkah dan tanpa istilah teknis.
 
-| #   | Aset                             | Kebutuhan saat ini                       |
-| --- | -------------------------------- | ---------------------------------------- |
-| 01  | [Foto produk](01-foto-produk.md) | 7 foto — satu untuk tiap rasa di katalog |
+| #   | Aset                                       | Kebutuhan saat ini                                  |
+| --- | ------------------------------------------ | --------------------------------------------------- |
+| 01  | [Foto produk](01-foto-produk.md)           | 7 foto — satu untuk tiap rasa di katalog            |
+| 02  | [Detail aset aplikasi](02-detail-asset.md) | Peta semua aset gambar: rasio, ukuran, konten, dan screenshot |
 
 Aset berikutnya akan ditambahkan di folder ini, dengan penomoran yang berurutan.
 
