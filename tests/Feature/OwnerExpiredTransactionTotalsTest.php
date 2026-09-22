@@ -78,4 +78,43 @@ class OwnerExpiredTransactionTotalsTest extends TestCase
                 ->where('summary.totalOrders', 1)
                 ->where('ordersByStatus.expired', 1));
     }
+
+    public function test_cancelled_filter_excludes_expired(): void
+    {
+        Order::factory()->create([
+            'status' => Order::STATUS_CANCELLED_BY_OUTLET,
+            'payment_status' => 'paid',
+        ]);
+        $expired = Order::factory()->create([
+            'status' => Order::STATUS_EXPIRED,
+            'payment_status' => null,
+        ]);
+
+        $response = $this->actingAs($this->owner)->get('/owner/orders?status=cancelled');
+        $response->assertOk();
+
+        $ids = collect($response->viewData('page')['props']['orders']['data'])->pluck('id');
+
+        $this->assertCount(1, $ids);
+        $this->assertFalse($ids->contains($expired->id));
+    }
+
+    public function test_expired_filter_lists_only_expired_orders(): void
+    {
+        Order::factory()->create([
+            'status' => Order::STATUS_CANCELLED_BY_OUTLET,
+            'payment_status' => 'paid',
+        ]);
+        $expired = Order::factory()->create([
+            'status' => Order::STATUS_EXPIRED,
+            'payment_status' => null,
+        ]);
+
+        $this->actingAs($this->owner)
+            ->get('/owner/orders?status=expired')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('orders.data', 1)
+                ->where('orders.data.0.id', $expired->id));
+    }
 }

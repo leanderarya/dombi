@@ -53,7 +53,7 @@ class OrderController extends Controller
                 $compoundMap = [
                     'needs_action' => ['awaiting_preparation', 'pending_confirmation', 'ready_for_pickup', 'failed_delivery'],
                     'active' => ['awaiting_preparation', 'confirmed', 'preparing', 'delivering'],
-                    'cancelled' => ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'],
+                    'cancelled' => ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet'],
                 ];
 
                 if (isset($compoundMap[$status])) {
