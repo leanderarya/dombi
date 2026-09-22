@@ -1,5 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
-
 /**
  * The product row the approved kanvas repeats in every order card:
  * a 54px thumbnail tile, the product name, and an optional sub-line.
@@ -10,7 +8,6 @@ import type { LucideIcon } from 'lucide-react';
 interface Props {
     title: string;
     subtitle?: string | null;
-    icon?: LucideIcon;
     /** Renders the tile in a muted dead-state palette. */
     muted?: boolean;
     className?: string;
@@ -19,24 +16,17 @@ interface Props {
 export default function OrderItemRow({
     title,
     subtitle,
-    icon: Icon,
     muted = false,
     className,
 }: Props) {
     return (
         <div className={`flex items-center gap-3 ${className ?? ''}`}>
             <div
-                className={`flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-thumb ${
+                className={`flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-thumb text-[22px] leading-none ${
                     muted ? 'bg-surface-muted/60' : 'bg-surface-muted'
                 }`}
             >
-                {Icon && (
-                    <Icon
-                        className={`h-[22px] w-[22px] ${
-                            muted ? 'text-text-subtle' : 'text-primary'
-                        }`}
-                    />
-                )}
+                &#x1F95B;
             </div>
             <div className="min-w-0">
                 <div

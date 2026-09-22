@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Clock, Package, RefreshCw } from 'lucide-react';
+import { Clock, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import BrandMark from '@/components/ui/brand-mark';
 import { Button } from '@/components/ui/button';
 import OrderItemRow from '@/components/ui/order-item-row';
 import OrderMetaRow from '@/components/ui/order-meta-row';
@@ -187,11 +188,7 @@ export default function ActiveOrderCard({ order }: Props) {
         >
             {/* Header: Mark + Fulfillment + Status badge + Date */}
             <div className="flex items-start gap-3">
-                <div className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-primary-light">
-                    <span className="font-heading text-lg font-extrabold text-primary">
-                        D
-                    </span>
-                </div>
+                <BrandMark />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="flex items-center justify-between gap-2">
                         <span className="min-w-0 truncate font-heading text-[15px] font-extrabold text-text">
@@ -261,7 +258,6 @@ export default function ActiveOrderCard({ order }: Props) {
             {/* Product — icon + name (matches history card) */}
             {firstItem && (
                 <OrderItemRow
-                    icon={Package}
                     title={firstItem.product_name}
                     subtitle={
                         itemCount > 1
