@@ -22,6 +22,7 @@ export default function OrderItemRow({
     return (
         <div className={`flex items-center gap-3 ${className ?? ''}`}>
             <div
+                aria-hidden="true"
                 className={`flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-thumb text-[22px] leading-none ${
                     muted ? 'bg-surface-muted/60' : 'bg-surface-muted'
                 }`}

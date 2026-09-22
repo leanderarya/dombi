@@ -179,7 +179,10 @@ export default function OrderInfoCard({
                             className="flex items-start justify-between gap-3"
                         >
                             <div className="flex min-w-0 items-center gap-3">
-                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-control bg-surface-muted text-[22px] leading-none">
+                                <div
+                                    aria-hidden="true"
+                                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-control bg-surface-muted text-[22px] leading-none"
+                                >
                                     &#x1F95B;
                                 </div>
                                 <div className="min-w-0">

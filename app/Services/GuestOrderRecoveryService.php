@@ -62,7 +62,9 @@ class GuestOrderRecoveryService
             ->get()
             ->map(fn (Order $order) => $this->formatOrder($order));
 
-        // Guest users also see recent history (includes expired/cancelled for "Pesan Ulang")
+        // Guest users also see recent history for "Pesan Ulang": cancelled and
+        // other terminal orders are included, while expired orders appear only
+        // when money moved, so the manual refund stays traceable.
         $recentOrders = $activeOnly
             ? Order::query()
                 ->where('customer_id', $customer->id)

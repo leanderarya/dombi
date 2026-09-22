@@ -127,7 +127,7 @@ export default function CustomerShow({ customer, orders, stats }: any) {
                     />
                     <OwnerDetailRow
                         label="Terakhir Belanja"
-                        value={formatDate(customer.last_order_at)}
+                        value={formatDate(stats.last_order_at)}
                     />
                     <OwnerDetailRow
                         label="Tanggal Daftar"
