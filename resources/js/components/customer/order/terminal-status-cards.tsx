@@ -125,7 +125,7 @@ export default function TerminalStatusCards({ order, reorderHref }: Props) {
                 action={reorderLink}
             >
                 <div className="text-sm">
-                    Outlet tidak memberikan konfirmasi dalam batas waktu.
+                    Pesanan tidak diselesaikan dalam batas waktu.
                 </div>
             </Notice>
         );

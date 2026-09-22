@@ -67,7 +67,7 @@ const STATUS_GUIDANCE: Record<
     },
     expired: {
         description: 'Pesanan kadaluarsa',
-        nextStep: 'Outlet tidak konfirmasi dalam batas waktu',
+        nextStep: 'Pesanan tidak diselesaikan dalam batas waktu',
     },
     refund_pending: {
         description: 'Refund sedang diproses',
