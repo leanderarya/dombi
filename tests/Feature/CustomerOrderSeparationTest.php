@@ -136,6 +136,28 @@ class CustomerOrderSeparationTest extends TestCase
         $this->assertTrue($historyIds->contains($refunded->id));
     }
 
+    public function test_history_scope_keeps_expired_order_whose_payment_was_paid(): void
+    {
+        $customer = Customer::factory()->create();
+
+        // ExpirePendingOrders (Case 1) expires ANY pending_confirmation order past
+        // its confirmation window without checking payment_status, so an order can
+        // legitimately land at status = expired with payment_status = paid. Money
+        // moved, so it must stay in the customer's history.
+        $paidThenExpired = Order::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => Order::STATUS_EXPIRED,
+            'payment_status' => 'paid',
+        ]);
+
+        $historyIds = Order::query()
+            ->where('customer_id', $customer->id)
+            ->visibleAsCustomerHistory()
+            ->pluck('id');
+
+        $this->assertTrue($historyIds->contains($paidThenExpired->id));
+    }
+
     public function test_history_scope_still_lists_other_terminal_orders(): void
     {
         $customer = Customer::factory()->create();

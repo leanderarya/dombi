@@ -92,6 +92,35 @@ class OwnerCustomerTest extends TestCase
                 ->where('stats.avg_order', 40000));
     }
 
+    public function test_customer_list_aggregates_exclude_expired_orders(): void
+    {
+        $customer = Customer::factory()->create(['name' => 'Dewi']);
+
+        $kept = Order::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => Order::STATUS_COMPLETED,
+            'payment_status' => 'paid',
+            'total' => 40000,
+            'created_at' => now()->subDay(),
+        ]);
+        Order::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => Order::STATUS_EXPIRED,
+            'payment_status' => null,
+            'total' => 90000,
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($this->owner)
+            ->get('/owner/customers')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('customers.data', 1)
+                ->where('customers.data.0.orders_count', 1)
+                ->where('customers.data.0.total_spend', fn ($value) => (float) $value === 40000.0)
+                ->where('customers.data.0.last_order_at', $kept->created_at->toISOString()));
+    }
+
     public function test_owner_cannot_view_unknown_customer(): void
     {
         $response = $this->actingAs($this->owner)->get('/owner/customers/999');

@@ -15,9 +15,16 @@ class CustomerController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
 
+        // Only non-expired orders count as transactions here, matching show().
+        // last_order_at is likewise recomputed from those orders so the list's
+        // "Terakhir Belanja" agrees with the detail page's stats.last_order_at
+        // instead of the raw Customer.last_order_at stamped at order creation.
+        $notExpired = fn ($q) => $q->where('status', '!=', Order::STATUS_EXPIRED);
+
         $customers = Customer::query()
-            ->withCount('orders')
-            ->withSum('orders as total_spend', 'total')
+            ->withCount(['orders as orders_count' => $notExpired])
+            ->withSum(['orders as total_spend' => $notExpired], 'total')
+            ->withMax(['orders as last_order_at' => $notExpired], 'created_at')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
