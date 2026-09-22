@@ -119,7 +119,7 @@ class AnalyticsController extends Controller
         // Single query for order stats using conditional aggregation
         // Revenue uses completed_at (when money was received), not created_at
         $orderStats = (clone $ordersQuery)
-            ->selectRaw('COUNT(*) as total')
+            ->selectRaw("SUM(CASE WHEN status != 'expired' THEN 1 ELSE 0 END) as total")
             ->selectRaw("SUM(CASE WHEN status = 'completed' AND completed_at BETWEEN ? AND ? THEN total ELSE 0 END) as revenue")
             ->addBinding([$dateFrom->startOfDay(), $dateTo->endOfDay()], 'select')
             ->selectRaw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed")

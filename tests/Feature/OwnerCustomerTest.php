@@ -66,6 +66,32 @@ class OwnerCustomerTest extends TestCase
             ->where('stats.last_order_at', null));
     }
 
+    public function test_customer_stats_exclude_expired_orders(): void
+    {
+        $customer = Customer::factory()->create(['name' => 'Rina']);
+        Order::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => Order::STATUS_COMPLETED,
+            'payment_status' => 'paid',
+            'total' => 40000,
+        ]);
+        Order::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => Order::STATUS_EXPIRED,
+            'payment_status' => null,
+            'total' => 90000,
+        ]);
+
+        $this->actingAs($this->owner)
+            ->get("/owner/customers/{$customer->id}")
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('orders', 1)
+                ->where('stats.total_orders', 1)
+                ->where('stats.total_spend', 40000)
+                ->where('stats.avg_order', 40000));
+    }
+
     public function test_owner_cannot_view_unknown_customer(): void
     {
         $response = $this->actingAs($this->owner)->get('/owner/customers/999');
