@@ -1,4 +1,3 @@
-import { Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/format';
 
@@ -33,7 +32,9 @@ export default function CheckoutItemCard({
                         className="h-full w-full object-cover"
                     />
                 ) : (
-                    <Package className="h-6 w-6 text-text-subtle" />
+                    <span aria-hidden="true" className="text-2xl leading-none">
+                        &#x1F95B;
+                    </span>
                 )}
             </div>
 

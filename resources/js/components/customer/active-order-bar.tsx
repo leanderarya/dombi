@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ChevronRight, Package, X } from 'lucide-react';
+import { ChevronRight, Milk, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { customerFloatingBarBottom } from '@/layouts/customer-mobile-layout-state';
@@ -69,7 +69,7 @@ export default function ActiveOrderBar({
         >
             <div className="mx-auto flex w-full max-w-lg items-center gap-3 rounded-xl border border-white/10 bg-text px-4 py-3 shadow-lg">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-bright/20">
-                    <Package className="h-4 w-4 text-brand-bright" />
+                    <Milk className="h-4 w-4 text-brand-bright" />
                 </div>
 
                 <Link

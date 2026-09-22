@@ -3,7 +3,7 @@ import {
     ChevronDown,
     Circle,
     Clock,
-    Package,
+    Milk,
     Truck,
     UserCheck,
     XCircle,
@@ -19,13 +19,13 @@ type TimelineStep = {
 
 const TIMELINE_STEPS: TimelineStep[] = [
     { key: 'pending_confirmation', label: 'Pesanan Dibuat', icon: Clock },
-    { key: 'confirmed', label: 'Outlet Menerima Pesanan', icon: Package },
-    { key: 'preparing', label: 'Pesanan Sedang Disiapkan', icon: Package },
+    { key: 'confirmed', label: 'Outlet Menerima Pesanan', icon: Milk },
+    { key: 'preparing', label: 'Pesanan Sedang Disiapkan', icon: Milk },
     {
         key: 'ready_for_pickup',
         label: 'Menunggu Kurir',
         pickupLabel: 'Siap Diambil',
-        icon: Package,
+        icon: Milk,
     },
     { key: 'picked_up', label: 'Kurir Mengambil Pesanan', icon: UserCheck },
     { key: 'delivering', label: 'Dalam Perjalanan', icon: Truck },
