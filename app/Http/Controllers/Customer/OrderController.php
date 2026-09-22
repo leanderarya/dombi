@@ -566,7 +566,7 @@ class OrderController extends Controller
                 'cancelled_by_outlet',
                 'rejected_by_outlet',
             ],
-            'failed' => ['failed_delivery', 'expired'],
+            'failed' => ['failed_delivery'],
             default => [],
         };
     }
