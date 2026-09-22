@@ -34,6 +34,7 @@ const statusFilters = [
     { key: 'active', label: 'Aktif' },
     { key: 'completed', label: 'Selesai' },
     { key: 'cancelled', label: 'Dibatalkan' },
+    { key: 'expired', label: 'Kadaluarsa' },
     { key: 'offline', label: 'Offline' },
 ];
 
