@@ -164,6 +164,21 @@ html[data-role='courier'] {
         0 8px 15px rgba(37, 99, 235, 0.12), 0 3px 6px rgba(37, 99, 235, 0.06);
 }
 
+/* ─── Status Bar Surface ─────────────────────────────────── */
+
+/* iOS reads `apple-mobile-web-app-status-bar-style` at install time and
+   paints its own chrome over the safe area. That tag is deliberately absent
+   from the app shells (WebKit bug 317153 — black-translucent is deprecated
+   and iOS 26.1+ renders a scrim on top of the page instead), so the system
+   falls back to sampling the page for the status bar colour. A transparent
+   root resolves that sample to white, which is the band this declares away.
+   Keep this colour in step with the `theme-color` meta tag in the shells and
+   `theme_color` in both manifests — they paint the same surface. */
+html,
+body {
+    background-color: #047857;
+}
+
 /* ─── Native Feel Quick Wins ─────────────────────────────── */
 
 /* Smooth scroll for anchor links and scroll-into-view */
