@@ -133,12 +133,12 @@ Tempat-tempat berikut saat ini **tidak menampilkan gambar sama sekali**, hanya i
 | Tempat                              | Keadaan sekarang                                    |
 | ----------------------------------- | --------------------------------------------------- |
 | Kartu riwayat dan pesanan aktif     | Lambang susu 🥛 di kotak abu-abu — lihat bagian 2b  |
-| Keranjang dan halaman checkout      | Ikon paket; foto produk belum ditampilkan           |
+| Keranjang dan halaman checkout      | Lambang susu 🥛; foto produk belum ditampilkan      |
 | Kartu "Produk Lainnya" di detail    | Hanya emoji 🥛                                      |
 | Ikon kategori produk                | Hanya tulisan dan ikon bawaan                       |
 | Logo outlet atau toko               | Belum ada kolomnya — brand tampil sebagai huruf "D" |
 | Logo metode pembayaran              | Hanya tulisan nama metode                           |
-| Gambar saat daftar kosong           | Hanya ikon bawaan                                   |
+| Gambar saat daftar kosong           | Ikon susu bawaan aplikasi                           |
 | Foto profil pelanggan               | Mengikuti akun Google, tidak bisa diunggah manual   |
 
 ### c. Aset bawaan aplikasi — diurus pengembang
