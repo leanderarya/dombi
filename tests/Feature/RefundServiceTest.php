@@ -227,7 +227,9 @@ class RefundServiceTest extends TestCase
             'refund_destination_status' => 'missing',
         ]);
 
-        $history = app(RefundService::class)->submitDestination($order, 'bank', 'owner', 1, [
+        $owner = User::factory()->create(['role' => 'owner']);
+
+        $history = app(RefundService::class)->submitDestination($order, 'bank', 'owner', $owner->id, [
             'bank_name' => 'BCA',
             'account_number' => '1234567890',
             'account_holder' => 'Arya',
@@ -328,7 +330,9 @@ class RefundServiceTest extends TestCase
             'metadata' => ['rejection_reason' => 'invalid_destination', 'rejection_note' => 'Old note'],
         ]);
 
-        app(RefundService::class)->submitDestination($order, 'bank', 'owner', 1, [
+        $owner = User::factory()->create(['role' => 'owner']);
+
+        app(RefundService::class)->submitDestination($order, 'bank', 'owner', $owner->id, [
             'bank_name' => 'BCA',
             'account_number' => '1234567890',
             'account_holder' => 'Arya',

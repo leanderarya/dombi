@@ -30,13 +30,32 @@ class RefundObligationTest extends TestCase
         $obligation = app(RefundObligationService::class)->createForAttempt($attempt, 'encrypted');
         $obligation->update([
             'bank_name' => 'Bank Rahasia', 'account_number' => '123456789', 'account_holder' => 'Pemilik Rahasia',
-            'ewallet_provider' => 'Dana', 'ewallet_number' => '08123456789', 'ewallet_holder' => 'Pemilik Ewallet',
         ]);
 
         $raw = DB::table('refund_obligations')->where('id', $obligation->id)->first();
         $this->assertNotSame('Bank Rahasia', $raw->bank_name);
         $this->assertSame('Bank Rahasia', $obligation->fresh()->bank_name);
         $this->assertSame('123456789', $obligation->fresh()->account_number);
+        $this->assertSame('Pemilik Rahasia', $obligation->fresh()->account_holder);
+    }
+
+    public function test_ewallet_destination_fields_are_encrypted_at_rest_and_round_trip(): void
+    {
+        $attempt = PaymentAttempt::create([
+            'order_id' => Order::factory()->create()->id, 'attempt_key' => 'encrypted-ewallet-attempt',
+            'invoice_number' => 'encrypted-ewallet-invoice', 'merchant_request_id' => 'encrypted-ewallet-request',
+            'amount_snapshot' => 12500, 'currency_snapshot' => 'IDR',
+        ]);
+        $obligation = app(RefundObligationService::class)->createForAttempt($attempt, 'encrypted_ewallet');
+        $obligation->update([
+            'ewallet_provider' => 'Dana', 'ewallet_number' => '08123456789', 'ewallet_holder' => 'Pemilik Ewallet',
+        ]);
+
+        $raw = DB::table('refund_obligations')->where('id', $obligation->id)->first();
+        $this->assertNotSame('Dana', $raw->ewallet_provider);
+        $this->assertSame('Dana', $obligation->fresh()->ewallet_provider);
+        $this->assertSame('08123456789', $obligation->fresh()->ewallet_number);
+        $this->assertSame('Pemilik Ewallet', $obligation->fresh()->ewallet_holder);
     }
 
     public function test_manual_refund_request_creates_canonical_obligation(): void

@@ -6,6 +6,7 @@ use App\Enums\PaymentStatus;
 use App\Enums\RefundObligationStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Order;
+use App\Models\OrderRefundDestination;
 use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
 use App\Models\RefundStatusHistory;
@@ -185,6 +186,8 @@ class RefundService
 
                 $locked->update($updateData);
 
+                $this->recordDestinationHistory($locked, OrderRefundDestination::EVENT_SUBMITTED, $destinationType, $data, $actorType, $actorId);
+
                 $history = RefundStatusHistory::create([
                     'order_id' => $locked->id,
                     'from_status' => PaymentStatus::RefundRejected->value,
@@ -201,12 +204,14 @@ class RefundService
             }
 
             if ($locked->refund_destination_status === Order::REFUND_DESTINATION_MISSING) {
+                $destinationEvent = OrderRefundDestination::EVENT_SUBMITTED;
                 if ($actorType === 'owner') {
                     $event = RefundStatusHistory::EVENT_GUEST_DESTINATION_SUBMITTED_BY_OWNER;
                 } else {
                     $event = RefundStatusHistory::EVENT_DESTINATION_SUBMITTED;
                 }
             } elseif ($locked->refund_destination_status === Order::REFUND_DESTINATION_VALID) {
+                $destinationEvent = OrderRefundDestination::EVENT_UPDATED;
                 if ($actorType === 'owner') {
                     $event = RefundStatusHistory::EVENT_GUEST_DESTINATION_UPDATED_BY_OWNER;
                 } else {
@@ -219,6 +224,8 @@ class RefundService
             $updateData['refund_destination_status'] = Order::REFUND_DESTINATION_VALID;
 
             $locked->update($updateData);
+
+            $this->recordDestinationHistory($locked, $destinationEvent, $destinationType, $data, $actorType, $actorId);
 
             $history = RefundStatusHistory::create([
                 'order_id' => $locked->id,
@@ -633,6 +640,31 @@ class RefundService
             'ewallet_provider' => $data['ewallet_provider'], 'ewallet_number' => $data['ewallet_number'],
             'ewallet_holder' => $data['ewallet_holder'], 'destination_submitted_at' => now(),
         ];
+    }
+
+    private function recordDestinationHistory(
+        Order $order,
+        string $event,
+        string $destinationType,
+        array $data,
+        string $actorType,
+        ?int $actorId,
+    ): void {
+        $isBank = $destinationType === 'bank';
+
+        OrderRefundDestination::create([
+            'order_id' => $order->id,
+            'event' => $event,
+            'destination_type' => $destinationType,
+            'bank_name' => $isBank ? $data['bank_name'] : null,
+            'account_number' => $isBank ? $data['account_number'] : null,
+            'account_holder' => $isBank ? $data['account_holder'] : null,
+            'ewallet_provider' => $isBank ? null : $data['ewallet_provider'],
+            'ewallet_number' => $isBank ? null : $data['ewallet_number'],
+            'ewallet_holder' => $isBank ? null : $data['ewallet_holder'],
+            'actor_type' => $actorType,
+            'actor_id' => $actorId,
+        ]);
     }
 
     private function buildDestinationUpdateData(string $destinationType, array $data): array
