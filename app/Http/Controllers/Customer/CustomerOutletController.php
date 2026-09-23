@@ -24,7 +24,11 @@ class CustomerOutletController extends Controller
 
         $outlets = Outlet::query()
             ->active()
-            ->with(['inventories' => fn ($q) => $q->where('is_active', true)])
+            ->with([
+                'inventories' => fn ($q) => $q->where('is_active', true),
+                'operatingHours',
+                'holidays',
+            ])
             ->get();
 
         $result = $outlets->map(function (Outlet $outlet) use ($latitude, $longitude): array {

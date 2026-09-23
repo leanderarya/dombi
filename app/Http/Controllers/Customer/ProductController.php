@@ -121,7 +121,13 @@ class ProductController extends Controller
         $otherCategories = ProductCategory::query()
             ->where('is_active', true)
             ->where('id', '!=', $category->id)
-            ->with(['products' => fn ($q) => $q->where('is_active', true)])
+            ->with(['products' => function ($query) use ($outletId) {
+                $query->where('is_active', true);
+
+                if ($outletId) {
+                    $query->with(['outletPrices' => fn ($price) => $price->where('outlet_id', $outletId)]);
+                }
+            }])
             ->orderBy('name')
             ->limit(4)
             ->get()
