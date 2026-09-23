@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Outlet;
+use App\Models\OutletHoliday;
 use App\Models\OutletInventory;
 use App\Services\Concerns\CalculatesDistance;
 use Illuminate\Support\Collection;
@@ -23,24 +24,24 @@ class OutletAssignmentService
     {
         $outlets = Outlet::query()
             ->active()
-            ->with('inventories')
+            ->with(['inventories', 'holidays', 'operatingHours'])
             ->get();
 
         // Filter out holidays
         $local = now('Asia/Jakarta');
         $today = $local->toDateString();
         $outlets = $outlets->reject(function (Outlet $outlet) use ($today) {
-            return $outlet->holidays()
-                ->where('start_date', '<=', $today)
-                ->where('end_date', '>=', $today)
-                ->exists();
+            return $outlet->holidays->contains(
+                fn (OutletHoliday $holiday): bool => $holiday->start_date->toDateString() <= $today
+                    && $holiday->end_date->toDateString() >= $today
+            );
         });
 
         // Filter out closed hours
         $currentTime = $local->format('H:i:s');
         $currentDay = (int) $local->format('w'); // 0=Sunday
         $outlets = $outlets->reject(function (Outlet $outlet) use ($currentTime, $currentDay) {
-            $hours = $outlet->operatingHours()->where('day_of_week', $currentDay)->first();
+            $hours = $outlet->operatingHoursForDay($currentDay);
             if ($hours && $hours->is_closed) {
                 return true;
             }
@@ -87,7 +88,11 @@ class OutletAssignmentService
     ): ?Outlet {
         $outlets = Outlet::query()
             ->active()
-            ->with(['inventories' => fn ($q) => $q->where('product_id', $productId)->where('is_active', true)])
+            ->with([
+                'inventories' => fn ($q) => $q->where('product_id', $productId)->where('is_active', true),
+                'operatingHours',
+                'holidays',
+            ])
             ->get()
             ->reject(fn (Outlet $outlet) => $outlet->id === $excludeOutletId)
             ->filter(fn (Outlet $outlet) => $outlet->isOpen())

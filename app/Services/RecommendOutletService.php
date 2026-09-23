@@ -96,14 +96,14 @@ class RecommendOutletService
     private function getNextOpenTime(Outlet $outlet): ?string
     {
         $today = (int) now()->format('w');
-        $hours = $outlet->operatingHours()->where('day_of_week', $today)->first();
+        $hours = $outlet->operatingHoursForDay($today);
         if ($hours && ! $hours->is_closed) {
             return $hours->open_time;
         }
 
         for ($i = 1; $i <= 7; $i++) {
             $day = ($today + $i) % 7;
-            $next = $outlet->operatingHours()->where('day_of_week', $day)->first();
+            $next = $outlet->operatingHoursForDay($day);
             if ($next && ! $next->is_closed) {
                 return now()->addDays($i)->format('l').' '.$next->open_time;
             }

@@ -264,7 +264,7 @@ class FinanceSettlementController extends Controller
         foreach ($validQueues as $queue) {
             $refundCounts[$queue] = 0;
         }
-        Order::withCanonicalRefund(array_map(static fn (RefundObligationStatus $status): string => $status->value, RefundObligationStatus::cases()))->with('paymentAttempts.refundObligations')->chunk(200, function ($orders) use (&$refundCounts): void {
+        Order::withCanonicalRefund(array_map(static fn (RefundObligationStatus $status): string => $status->value, RefundObligationStatus::cases()))->with(['customer', 'paymentAttempts.refundObligations'])->chunk(200, function ($orders) use (&$refundCounts): void {
             foreach ($orders as $order) {
                 $queue = $this->refundPayloads->queueState($order);
                 if ($queue !== null && isset($refundCounts[$queue])) {

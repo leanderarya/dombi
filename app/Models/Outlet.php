@@ -73,16 +73,12 @@ class Outlet extends Model
     {
         $local = now('Asia/Jakarta');
         $today = $local->toDateString();
-        $hasHoliday = $this->holidays()
-            ->where('start_date', '<=', $today)
-            ->where('end_date', '>=', $today)
-            ->exists();
-        if ($hasHoliday) {
+        if ($this->hasHolidayOn($today)) {
             return false;
         }
 
         $currentDay = (int) $local->format('w');
-        $hours = $this->operatingHours()->where('day_of_week', $currentDay)->first();
+        $hours = $this->operatingHoursForDay($currentDay);
         if (! $hours || $hours->is_closed) {
             return false;
         }
@@ -94,20 +90,44 @@ class Outlet extends Model
     {
         $local = now('Asia/Jakarta');
         $today = (int) $local->format('w');
-        $hours = $this->operatingHours()->where('day_of_week', $today)->first();
+        $hours = $this->operatingHoursForDay($today);
         if ($hours && ! $hours->is_closed) {
             return substr($hours->open_time, 0, 5);
         }
 
         for ($i = 1; $i <= 7; $i++) {
             $day = ($today + $i) % 7;
-            $next = $this->operatingHours()->where('day_of_week', $day)->first();
+            $next = $this->operatingHoursForDay($day);
             if ($next && ! $next->is_closed) {
                 return now('Asia/Jakarta')->addDays($i)->locale('id')->isoFormat('dddd').' '.substr($next->open_time, 0, 5);
             }
         }
 
         return null;
+    }
+
+    private function hasHolidayOn(string $date): bool
+    {
+        if ($this->relationLoaded('holidays')) {
+            return $this->holidays->contains(
+                fn (OutletHoliday $holiday): bool => $holiday->start_date->toDateString() <= $date
+                    && $holiday->end_date->toDateString() >= $date
+            );
+        }
+
+        return $this->holidays()
+            ->where('start_date', '<=', $date)
+            ->where('end_date', '>=', $date)
+            ->exists();
+    }
+
+    public function operatingHoursForDay(int $day): ?OutletOperatingHours
+    {
+        if ($this->relationLoaded('operatingHours')) {
+            return $this->operatingHours->firstWhere('day_of_week', $day);
+        }
+
+        return $this->operatingHours()->where('day_of_week', $day)->first();
     }
 
     // ─── Relationships ─────────────────────────────────────

@@ -2,10 +2,18 @@
 
 namespace App\Services;
 
+use Closure;
 use RuntimeException;
 
 class DokuConfigurationGuard
 {
+    private Closure $dnsResolver;
+
+    public function __construct(?Closure $dnsResolver = null)
+    {
+        $this->dnsResolver = $dnsResolver ?? static fn (string $host): array => dns_get_record($host, DNS_A | DNS_AAAA) ?: [];
+    }
+
     public function validate(): void
     {
         if (config('app.env') !== 'production') {
@@ -54,8 +62,8 @@ class DokuConfigurationGuard
             return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
         }
 
-        $records = dns_get_record($host, DNS_A | DNS_AAAA);
-        if ($records === false || $records === []) {
+        $records = ($this->dnsResolver)($host);
+        if ($records === []) {
             return false;
         }
 

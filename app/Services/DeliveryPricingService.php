@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\DeliveryTier;
 use App\Services\Concerns\CalculatesDistance;
+use Illuminate\Support\Facades\Cache;
 
 class DeliveryPricingService
 {
@@ -39,18 +40,22 @@ class DeliveryPricingService
     }
 
     /**
-     * Load tiers from DB, fallback to config.
+     * Load tiers from cache, fallback to config.
      */
     private function loadTiers(): array
     {
-        $dbTiers = DeliveryTier::active()->get();
-
-        if ($dbTiers->isNotEmpty()) {
-            return $dbTiers->map(fn (DeliveryTier $t) => [
+        $tiers = Cache::remember(
+            DeliveryTier::PRICING_CACHE_KEY,
+            now()->addDay(),
+            fn (): array => DeliveryTier::active()->get()->map(fn (DeliveryTier $t) => [
                 'min_km' => (float) $t->min_km,
                 'max_km' => (float) $t->max_km,
                 'fee' => (float) $t->fee,
-            ])->all();
+            ])->all(),
+        );
+
+        if ($tiers !== []) {
+            return $tiers;
         }
 
         return array_map(fn (array $tier) => [

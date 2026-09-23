@@ -123,7 +123,9 @@ class Product extends Model
 
     public function priceForOutlet(int $outletId): float
     {
-        $override = $this->outletPrices()->where('outlet_id', $outletId)->value('selling_price');
+        $override = $this->relationLoaded('outletPrices')
+            ? $this->outletPrices->firstWhere('outlet_id', $outletId)?->selling_price
+            : $this->outletPrices()->where('outlet_id', $outletId)->value('selling_price');
 
         return $override !== null ? (float) $override : (float) $this->selling_price;
     }

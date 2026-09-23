@@ -3,12 +3,25 @@
 namespace Tests\Feature;
 
 use App\Services\DokuConfigurationGuard;
+use Closure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class DokuProductionConfigTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->bindResolver(static fn (string $host): array => [['ip' => '93.184.216.34']]);
+    }
+
+    private function bindResolver(Closure $resolver): void
+    {
+        $this->app->bind(DokuConfigurationGuard::class, fn (): DokuConfigurationGuard => new DokuConfigurationGuard($resolver));
+    }
 
     public function test_production_doku_configuration_rejects_missing_credentials(): void
     {
@@ -62,6 +75,34 @@ class DokuProductionConfigTest extends TestCase
 
         app(DokuConfigurationGuard::class)->validate();
         $this->assertTrue(true);
+    }
+
+    public function test_production_doku_configuration_rejects_unresolvable_application_url(): void
+    {
+        $this->bindResolver(static fn (string $host): array => []);
+
+        config([
+            'app.env' => 'production', 'doku.client_id' => 'client', 'doku.api_key' => 'secret',
+            'doku.sandbox' => false, 'doku.base_url' => 'https://api.doku.com',
+            'app.url' => 'https://unresolvable.example', 'doku.callback_url' => 'https://unresolvable.example/payment/doku/notify',
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        app(DokuConfigurationGuard::class)->validate();
+    }
+
+    public function test_production_doku_configuration_rejects_private_resolved_address(): void
+    {
+        $this->bindResolver(static fn (string $host): array => [['ip' => '10.0.0.5']]);
+
+        config([
+            'app.env' => 'production', 'doku.client_id' => 'client', 'doku.api_key' => 'secret',
+            'doku.sandbox' => false, 'doku.base_url' => 'https://api.doku.com',
+            'app.url' => 'https://internal.example', 'doku.callback_url' => 'https://internal.example/payment/doku/notify',
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+        app(DokuConfigurationGuard::class)->validate();
     }
 
     public function test_production_doku_configuration_rejects_insecure_application_url_independently_of_callback(): void
