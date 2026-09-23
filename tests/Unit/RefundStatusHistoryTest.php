@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\Order;
 use App\Models\RefundStatusHistory;
 use Carbon\CarbonInterface;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LogicException;
 use Tests\TestCase;
@@ -113,14 +114,19 @@ class RefundStatusHistoryTest extends TestCase
         $history->delete();
     }
 
-    public function test_cascade_deletes_on_parent_order_delete_at_database_level(): void
+    public function test_refund_history_blocks_its_order_from_being_deleted(): void
     {
         $order = Order::factory()->create();
         $history = RefundStatusHistory::factory()->create(['order_id' => $order->id]);
-        $historyId = $history->id;
 
-        $order->delete();
+        try {
+            $order->delete();
+            $this->fail('Deleting an order that still has refund history should be blocked.');
+        } catch (QueryException) {
+            $this->assertTrue(true);
+        }
 
-        $this->assertDatabaseMissing('refund_status_histories', ['id' => $historyId]);
+        $this->assertDatabaseHas('orders', ['id' => $order->id]);
+        $this->assertDatabaseHas('refund_status_histories', ['id' => $history->id]);
     }
 }
