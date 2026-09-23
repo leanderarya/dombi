@@ -364,7 +364,7 @@ class OrderService
         return (int) OutletInventory::query()
             ->where('product_id', $productId)
             ->whereHas('outlet', fn ($q) => $q->where('status', 'active'))
-            ->selectRaw('MAX(current_stock - reserved_stock) as max_available')
+            ->selectRaw('MAX(CASE WHEN current_stock >= reserved_stock THEN current_stock - reserved_stock ELSE 0 END) as max_available')
             ->value('max_available') ?? 0;
     }
 
@@ -601,7 +601,7 @@ class OrderService
 
         for ($attempt = 0; $attempt < self::ORDER_CODE_MAX_RETRIES; $attempt++) {
             $count = Order::query()
-                ->whereDate('created_at', Carbon::today())
+                ->whereOnDay('created_at', Carbon::today())
                 ->lockForUpdate()
                 ->count() + 1 + $attempt;
 

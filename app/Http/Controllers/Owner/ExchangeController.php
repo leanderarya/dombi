@@ -36,15 +36,15 @@ class ExchangeController extends Controller
         }
 
         if ($request->filled('date')) {
-            $query->whereDate('created_at', $request->date('date'));
+            $query->whereOnDay('created_at', $request->date('date'));
         }
 
         if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+            $query->whereFromDay('created_at', $request->date_from);
         }
 
         if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+            $query->whereUntilDay('created_at', $request->date_to);
         }
 
         if ($request->filled('reason')) {

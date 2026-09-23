@@ -18,12 +18,12 @@ class DashboardController extends Controller
 
         $completedToday = Delivery::where('courier_id', $courierId)
             ->where('status', 'completed')
-            ->whereDate('updated_at', $todayStart)
+            ->whereOnDay('updated_at', $todayStart)
             ->count();
 
         $failedToday = Delivery::where('courier_id', $courierId)
             ->where('status', 'failed')
-            ->whereDate('updated_at', $todayStart)
+            ->whereOnDay('updated_at', $todayStart)
             ->count();
 
         $totalToday = $completedToday + $failedToday;
@@ -33,7 +33,7 @@ class DashboardController extends Controller
             ->where('status', 'completed')
             ->whereNotNull('pickup_time')
             ->whereNotNull('delivered_time')
-            ->whereDate('updated_at', $todayStart)
+            ->whereOnDay('updated_at', $todayStart)
             ->get(['pickup_time', 'delivered_time']);
 
         $avgDeliveryTime = null;
@@ -66,7 +66,7 @@ class DashboardController extends Controller
 
         $completedTodayList = Delivery::where('courier_id', $courierId)
             ->where('status', 'completed')
-            ->whereDate('updated_at', $todayStart)
+            ->whereOnDay('updated_at', $todayStart)
             ->with(['order:id,order_code,customer_name,outlet_id', 'order.outlet:id,name'])
             ->orderBy('delivered_time', 'desc')
             ->limit(10)

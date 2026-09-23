@@ -48,8 +48,8 @@ class SettlementController extends Controller
         $orderIds = $settlements->flatMap(function ($s) use ($outlet) {
             return Order::where('outlet_id', $outlet->id)
                 ->where('status', 'completed')
-                ->whereDate('completed_at', '>=', $s->period_start->toDateString())
-                ->whereDate('completed_at', '<=', $s->period_end->toDateString())
+                ->whereFromDay('completed_at', $s->period_start)
+                ->whereUntilDay('completed_at', $s->period_end)
                 ->pluck('id');
         })->unique();
         $outletMargin = OrderItem::whereIn('order_id', $orderIds)->sum(DB::raw('outlet_margin_snapshot * quantity'));
@@ -143,8 +143,8 @@ class SettlementController extends Controller
             // Margin for this specific week
             $weekOrderIds = Order::where('outlet_id', $outlet->id)
                 ->where('status', 'completed')
-                ->whereDate('completed_at', '>=', $s->period_start->toDateString())
-                ->whereDate('completed_at', '<=', $s->period_end->toDateString())
+                ->whereFromDay('completed_at', $s->period_start)
+                ->whereUntilDay('completed_at', $s->period_end)
                 ->pluck('id');
 
             $weekMargin = $weekOrderIds->isNotEmpty()
@@ -205,8 +205,8 @@ class SettlementController extends Controller
         $weekEnd = $settlement->period_end->toDateString();
 
         $offlineSales = OfflineSale::where('outlet_id', $outlet->id)
-            ->whereDate('created_at', '>=', $weekStart)
-            ->whereDate('created_at', '<=', $weekEnd)
+            ->whereFromDay('created_at', $weekStart)
+            ->whereUntilDay('created_at', $weekEnd)
             ->with(['product.category'])
             ->get()
             ->map(fn ($s) => [

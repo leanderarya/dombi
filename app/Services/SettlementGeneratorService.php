@@ -38,8 +38,8 @@ class SettlementGeneratorService
 
         // Get all offline sales for this outlet within the same week
         $offlineSales = OfflineSale::where('outlet_id', $outlet->id)
-            ->whereDate('created_at', '>=', $weekStart)
-            ->whereDate('created_at', '<=', $weekEnd)
+            ->whereFromDay('created_at', $weekStart)
+            ->whereUntilDay('created_at', $weekEnd)
             ->get();
 
         if ($orders->isEmpty() && $offlineSales->isEmpty()) {
@@ -71,8 +71,8 @@ class SettlementGeneratorService
             ->whereIn('payment_status', ['refunded', 'refund_in_progress'])
             ->whereNotNull('refund_amount')
             ->where('refund_amount', '>', 0)
-            ->whereDate('refund_requested_at', '>=', $weekStart)
-            ->whereDate('refund_requested_at', '<=', $weekEnd)
+            ->whereFromDay('refund_requested_at', $weekStart)
+            ->whereUntilDay('refund_requested_at', $weekEnd)
             ->sum('refund_amount');
 
         // 4. Offline sales = Σ(center_price * qty) — money received by outlet, must be remitted
@@ -167,8 +167,8 @@ class SettlementGeneratorService
 
             // Find all unique weeks from offline sales
             $offlineWeeks = OfflineSale::where('outlet_id', $outlet->id)
-                ->whereDate('created_at', '>=', $from->toDateString())
-                ->whereDate('created_at', '<=', $to->toDateString())
+                ->whereFromDay('created_at', $from)
+                ->whereUntilDay('created_at', $to)
                 ->get()
                 ->map(fn ($s) => $s->created_at->startOfWeek(Carbon::MONDAY)->toDateString())
                 ->unique();

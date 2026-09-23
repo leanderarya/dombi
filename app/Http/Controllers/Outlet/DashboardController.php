@@ -45,13 +45,13 @@ class DashboardController extends Controller
                 ->count(),
             'preparingOrders' => (clone $visibleOrders(Order::query()))->where('status', 'preparing')->count(),
             'readyForCustomerPickup' => (clone $visibleOrders(Order::query()))->where('status', Order::STATUS_READY_FOR_PICKUP)->where('fulfillment_type', Order::FULFILLMENT_PICKUP)->count(),
-            'todayOrders' => (clone $visibleOrders(Order::query()))->whereDate('created_at', today())->count(),
+            'todayOrders' => (clone $visibleOrders(Order::query()))->whereOnDay('created_at', today())->count(),
             'expiredToday' => Order::where('outlet_id', $outlet->id)
                 ->where('status', 'expired')
-                ->whereDate('expired_at', today())
+                ->whereOnDay('expired_at', today())
                 ->count(),
             'lowStocks' => OutletInventory::where('outlet_id', $outlet->id)
-                ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
+                ->whereLowStock()
                 ->count(),
             'pendingRestocks' => RestockRequest::where('outlet_id', $outlet->id)
                 ->whereIn('status', ['requested', 'preparing', 'shipped'])
@@ -75,7 +75,7 @@ class DashboardController extends Controller
             'waitingPickup' => (clone $outletDeliveries)->where('status', 'waiting_pickup')->count(),
             'inTransit' => (clone $outletDeliveries)->whereIn('status', ['picked_up', 'delivering'])->count(),
             'failed' => (clone $outletDeliveries)->where('status', 'failed')->count(),
-            'completedToday' => (clone $outletDeliveries)->where('status', 'completed')->whereDate('updated_at', today())->count(),
+            'completedToday' => (clone $outletDeliveries)->where('status', 'completed')->whereOnDay('updated_at', today())->count(),
             'avgDispatchTime' => $this->avgDispatchTime($outlet->id),
         ];
 
@@ -104,7 +104,7 @@ class DashboardController extends Controller
             'stats' => $stats,
             'lowStockItems' => OutletInventory::with('product:id,name')
                 ->where('outlet_id', $outlet->id)
-                ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
+                ->whereLowStock()
                 ->get(['id', 'product_id', 'current_stock', 'reserved_stock', 'minimum_stock']),
             'deliveryStats' => $deliveryStats,
             'greeting' => $greeting,
@@ -130,8 +130,7 @@ class DashboardController extends Controller
                 'verifiedPayments' => (float) $reconciliation['verified_payments'],
                 'margin' => (float) Settlement::where('outlet_id', $outlet->id)
                     ->where('period_type', 'weekly')
-                    ->whereMonth('period_start', now()->month)
-                    ->whereYear('period_start', now()->year)
+                    ->whereInMonth('period_start', now())
                     ->sum(DB::raw('sales_amount - amount_due')),
             ],
         ]);
@@ -168,7 +167,7 @@ class DashboardController extends Controller
     {
         $orders = Order::where('outlet_id', $outletId)
             ->whereHas('delivery')
-            ->whereDate('updated_at', today())
+            ->whereOnDay('updated_at', today())
             ->with('delivery')
             ->get();
 

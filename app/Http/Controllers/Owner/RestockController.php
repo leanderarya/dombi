@@ -30,7 +30,7 @@ class RestockController extends Controller
                         ->whereHas('outlet', fn ($outletQuery) => $outletQuery->where('name', 'like', "%{$search}%"))
                         ->orWhere('id', $search);
                 }))
-                ->when($request->filled('date'), fn ($query) => $query->whereDate('created_at', $request->date('date')))
+                ->when($request->filled('date'), fn ($query) => $query->whereOnDay('created_at', $request->date('date')))
                 ->latest()
                 ->paginate(20)
                 ->withQueryString(),

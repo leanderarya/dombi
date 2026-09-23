@@ -25,7 +25,7 @@ class DeliveryController extends Controller
             ->when($request->filled('courier_id'), fn ($query) => $query->where('courier_id', $request->integer('courier_id')))
             ->when($request->filled('outlet_id'), fn ($query) => $query->whereHas('order', fn ($orderQuery) => $orderQuery->where('outlet_id', $request->integer('outlet_id'))))
             ->when($request->filled('search'), fn ($query) => $query->whereHas('order', fn ($orderQuery) => $orderQuery->where('order_code', 'like', '%'.$request->string('search')->toString().'%')))
-            ->when($request->filled('date'), fn ($query) => $query->whereDate('created_at', $request->date('date')))
+            ->when($request->filled('date'), fn ($query) => $query->whereOnDay('created_at', $request->date('date')))
             ->latest()
             ->paginate(20)
             ->withQueryString();

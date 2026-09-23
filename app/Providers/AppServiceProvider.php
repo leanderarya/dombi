@@ -7,6 +7,8 @@ use App\Services\DokuConfigurationGuard;
 use App\Services\NotificationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureQueryMacros();
         $this->configureRateLimiting();
         Event::listen('payment.paid', function (array $payload): void {
             if (($order = Order::find($payload['order_id'] ?? null))?->outlet_id) {
@@ -51,6 +55,64 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    protected function configureQueryMacros(): void
+    {
+        $dayStart = static function (mixed $day): ?CarbonImmutable {
+            if ($day === null || $day === '') {
+                return null;
+            }
+
+            try {
+                return CarbonImmutable::parse($day)->startOfDay();
+            } catch (Throwable) {
+                return null;
+            }
+        };
+
+        $macros = [
+            'whereOnDay' => function (string $column, mixed $day) use ($dayStart) {
+                $start = $dayStart($day);
+                if ($start === null) {
+                    return $this->whereRaw('1 = 0');
+                }
+
+                return $this->where($column, '>=', $start)->where($column, '<', $start->addDay());
+            },
+            'whereFromDay' => function (string $column, mixed $day) use ($dayStart) {
+                $start = $dayStart($day);
+                if ($start === null) {
+                    return $this->whereRaw('1 = 0');
+                }
+
+                return $this->where($column, '>=', $start);
+            },
+            'whereUntilDay' => function (string $column, mixed $day) use ($dayStart) {
+                $start = $dayStart($day);
+                if ($start === null) {
+                    return $this->whereRaw('1 = 0');
+                }
+
+                return $this->where($column, '<', $start->addDay());
+            },
+            'whereInMonth' => function (string $column, mixed $day) use ($dayStart) {
+                $start = $dayStart($day);
+                if ($start === null) {
+                    return $this->whereRaw('1 = 0');
+                }
+
+                $start = $start->startOfMonth();
+
+                return $this->where($column, '>=', $start)->where($column, '<', $start->addMonth());
+            },
+        ];
+
+        foreach ([EloquentBuilder::class, QueryBuilder::class] as $builder) {
+            foreach ($macros as $name => $macro) {
+                $builder::macro($name, $macro);
+            }
+        }
     }
 
     protected function configureRateLimiting(): void

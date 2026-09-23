@@ -33,7 +33,7 @@ class OrderController extends Controller
                 'product' => fn ($q) => $q->with('category:id,name'),
             ])
                 ->when($request->filled('outlet_id'), fn ($q) => $q->where('outlet_id', $request->integer('outlet_id')))
-                ->when($request->filled('date'), fn ($q) => $q->whereDate('created_at', $request->date('date')))
+                ->when($request->filled('date'), fn ($q) => $q->whereOnDay('created_at', $request->date('date')))
                 ->latest()
                 ->paginate(20)
                 ->withQueryString();
@@ -64,7 +64,7 @@ class OrderController extends Controller
             })
             ->when($request->filled('outlet_id'), fn ($query) => $query->where('outlet_id', $request->integer('outlet_id')))
             ->when($request->filled('courier_id'), fn ($query) => $query->whereHas('delivery', fn ($deliveryQuery) => $deliveryQuery->where('courier_id', $request->integer('courier_id'))))
-            ->when($request->filled('date'), fn ($query) => $query->whereDate('created_at', $request->date('date')))
+            ->when($request->filled('date'), fn ($query) => $query->whereOnDay('created_at', $request->date('date')))
             ->when($request->filled('search'), fn ($query) => $query->where('order_code', 'like', '%'.$request->string('search')->toString().'%'))
             ->latest()
             ->paginate(20)
@@ -79,10 +79,10 @@ class OrderController extends Controller
             $today = now()->toDateString();
 
             return [
-                'total_today' => Order::where('status', '!=', Order::STATUS_EXPIRED)->whereDate('created_at', $today)->count(),
+                'total_today' => Order::where('status', '!=', Order::STATUS_EXPIRED)->whereOnDay('created_at', $today)->count(),
                 'pending' => Order::whereIn('status', ['awaiting_preparation', 'pending_confirmation', 'ready_for_pickup'])->count(),
-                'completed_today' => Order::where('status', 'completed')->whereDate('updated_at', $today)->count(),
-                'revenue_today' => (float) Order::where('status', 'completed')->whereDate('updated_at', $today)->sum('total'),
+                'completed_today' => Order::where('status', 'completed')->whereOnDay('updated_at', $today)->count(),
+                'revenue_today' => (float) Order::where('status', 'completed')->whereOnDay('updated_at', $today)->sum('total'),
             ];
         });
 

@@ -69,7 +69,7 @@ class CourierService
 
     public function getTodayDeliveryCount(): int
     {
-        return Delivery::whereDate('created_at', today())->count();
+        return Delivery::whereOnDay('created_at', today())->count();
     }
 
     private function generateEmail(string $phone): string

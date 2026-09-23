@@ -53,10 +53,10 @@ class DashboardController extends Controller
                 'outstandingAmount' => (float) ($collection['hero']['total_outstanding'] ?? 0),
                 'pendingActions' => $pendingRestocks + $pendingReturns + $pendingExchanges + $pendingSettlementVerifications,
                 'criticalStock' => $criticalCenterStock->count(),
-                'ordersToday' => (int) Order::query()->where('status', '!=', Order::STATUS_EXPIRED)->whereDate('created_at', Carbon::today())->count(),
+                'ordersToday' => (int) Order::query()->where('status', '!=', Order::STATUS_EXPIRED)->whereOnDay('created_at', Carbon::today())->count(),
                 'completedToday' => (int) Order::query()
                     ->where('status', Order::STATUS_COMPLETED)
-                    ->whereDate('completed_at', Carbon::today())
+                    ->whereOnDay('completed_at', Carbon::today())
                     ->count(),
             ],
             'actionRequired' => [

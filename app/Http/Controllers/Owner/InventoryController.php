@@ -54,9 +54,9 @@ class InventoryController extends Controller
         $data['outletSections'] = $outletSections;
         $data['stats'] = [
             'totalSku' => OutletInventory::count(),
-            'lowStock' => OutletInventory::whereRaw('(current_stock - reserved_stock) <= minimum_stock')->count(),
+            'lowStock' => OutletInventory::query()->whereLowStock()->count(),
             'totalReserved' => (int) OutletInventory::sum('reserved_stock'),
-            'critical' => OutletInventory::whereRaw('(current_stock - reserved_stock) <= 0')->count(),
+            'critical' => OutletInventory::query()->whereCriticalStock()->count(),
         ];
 
         // Central stock (loaded when tab is pusat)

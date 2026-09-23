@@ -31,8 +31,8 @@ class OfflineSaleController extends Controller
         $period = $request->string('period', 'all')->toString();
 
         $salesQuery = OfflineSale::where('outlet_id', $outlet->id)
-            ->when($weekStart, fn ($q) => $q->whereDate('created_at', '>=', $weekStart))
-            ->when($weekEnd, fn ($q) => $q->whereDate('created_at', '<=', $weekEnd));
+            ->when($weekStart, fn ($q) => $q->whereFromDay('created_at', $weekStart))
+            ->when($weekEnd, fn ($q) => $q->whereUntilDay('created_at', $weekEnd));
 
         // Period preset (minggu ini / bulan ini) — overrides week_start/week_end
         if ($period === 'week') {
@@ -60,7 +60,7 @@ class OfflineSaleController extends Controller
             ->values();
 
         $products = OutletInventory::where('outlet_id', $outlet->id)
-            ->whereRaw('current_stock - reserved_stock > 0')
+            ->whereInStock()
             ->with(['product' => function ($q) {
                 $q->select('id', 'product_category_id', 'name', 'center_price')
                     ->with('category:id,name');
@@ -96,7 +96,7 @@ class OfflineSaleController extends Controller
         $weekEnd = $offlineSale->created_at->copy()->endOfWeek()->toDateString();
         $settlement = Settlement::where('outlet_id', $outlet->id)
             ->where('period_type', 'weekly')
-            ->whereDate('period_start', $weekStart)
+            ->whereOnDay('period_start', $weekStart)
             ->first();
 
         return Inertia::render('outlet/offline-sales/show', [

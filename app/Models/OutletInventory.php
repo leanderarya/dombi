@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,5 +40,24 @@ class OutletInventory extends Model
     public function getAvailableStockAttribute(): int
     {
         return $this->current_stock - $this->reserved_stock;
+    }
+
+    /**
+     * Compares stock without subtracting, so an over-reserved row cannot overflow
+     * MySQL's unsigned arithmetic.
+     */
+    public function scopeWhereLowStock(Builder $query): Builder
+    {
+        return $query->whereRaw('current_stock <= reserved_stock + minimum_stock');
+    }
+
+    public function scopeWhereCriticalStock(Builder $query): Builder
+    {
+        return $query->whereRaw('current_stock <= reserved_stock');
+    }
+
+    public function scopeWhereInStock(Builder $query): Builder
+    {
+        return $query->whereRaw('current_stock > reserved_stock');
     }
 }
