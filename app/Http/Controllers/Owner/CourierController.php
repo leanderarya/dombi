@@ -32,7 +32,7 @@ class CourierController extends Controller
             ->with('courierProfile')
             ->withCount([
                 'courierDeliveries as active_deliveries_count' => fn ($query) => $query->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering']),
-                'courierDeliveries as today_deliveries_count' => fn ($query) => $query->whereDate('created_at', today()),
+                'courierDeliveries as today_deliveries_count' => fn ($query) => $query->whereOnDay('created_at', today()),
             ])
             ->latest()
             ->paginate(15);
@@ -68,7 +68,7 @@ class CourierController extends Controller
         $courier->load('courierProfile');
         $courier->loadCount([
             'courierDeliveries as total_deliveries_count',
-            'courierDeliveries as today_deliveries_count' => fn ($query) => $query->whereDate('created_at', today()),
+            'courierDeliveries as today_deliveries_count' => fn ($query) => $query->whereOnDay('created_at', today()),
             'courierDeliveries as active_deliveries_count' => fn ($query) => $query->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering']),
         ]);
 

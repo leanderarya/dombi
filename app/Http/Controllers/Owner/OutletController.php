@@ -27,7 +27,7 @@ class OutletController extends Controller
                 ->withCount([
                     'orders as active_orders_count' => fn ($query) => $query->whereIn('status', Order::ACTIVE_STATUSES),
                     'inventories as inventory_items_count',
-                    'inventories as low_stock_count' => fn ($query) => $query->whereRaw('(current_stock - reserved_stock) <= minimum_stock'),
+                    'inventories as low_stock_count' => fn ($query) => $query->whereLowStock(),
                     'restockRequests as pending_restocks_count' => fn ($query) => $query->whereIn('status', ['requested', 'preparing', 'shipped']),
                 ])
                 ->latest()
@@ -60,9 +60,9 @@ class OutletController extends Controller
         $outlet->load(['user:id,email,is_active,must_change_password,outlet_id']);
         $outlet->loadCount([
             'orders as active_orders_count' => fn ($query) => $query->whereIn('status', Order::ACTIVE_STATUSES),
-            'orders as today_orders_count' => fn ($query) => $query->whereDate('created_at', today()),
+            'orders as today_orders_count' => fn ($query) => $query->whereOnDay('created_at', today()),
             'inventories as inventory_items_count',
-            'inventories as low_stock_count' => fn ($query) => $query->whereRaw('(current_stock - reserved_stock) <= minimum_stock'),
+            'inventories as low_stock_count' => fn ($query) => $query->whereLowStock(),
             'restockRequests as pending_restocks_count' => fn ($query) => $query->whereIn('status', ['requested', 'preparing', 'shipped']),
         ]);
 
@@ -100,8 +100,7 @@ class OutletController extends Controller
                     ->count(),
                 'paid_this_month' => (float) Settlement::where('outlet_id', $outlet->id)
                     ->where('status', Settlement::STATUS_PAID)
-                    ->whereMonth('paid_at', now()->month)
-                    ->whereYear('paid_at', now()->year)
+                    ->whereInMonth('paid_at', now())
                     ->sum('paid_amount'),
                 'recent_settlements' => Settlement::where('outlet_id', $outlet->id)
                     ->latest('period_date')

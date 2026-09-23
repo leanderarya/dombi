@@ -70,7 +70,7 @@ class DeliveryIntelligenceService
     {
         return Delivery::where('courier_id', $courier->id)
             ->where('status', 'completed')
-            ->whereDate('updated_at', today())
+            ->whereOnDay('updated_at', today())
             ->count();
     }
 
@@ -78,7 +78,7 @@ class DeliveryIntelligenceService
     {
         return Delivery::where('courier_id', $courier->id)
             ->where('status', 'failed')
-            ->whereDate('updated_at', today())
+            ->whereOnDay('updated_at', today())
             ->count();
     }
 
@@ -88,7 +88,7 @@ class DeliveryIntelligenceService
             ->where('status', 'completed')
             ->whereNotNull('pickup_time')
             ->whereNotNull('delivered_time')
-            ->whereDate('updated_at', today())
+            ->whereOnDay('updated_at', today())
             ->get(['pickup_time', 'delivered_time']);
 
         if ($deliveries->isEmpty()) {
@@ -264,7 +264,7 @@ class DeliveryIntelligenceService
     {
         $total = Delivery::where('courier_id', $courier->id)
             ->whereIn('status', ['completed', 'failed'])
-            ->whereDate('updated_at', today())
+            ->whereOnDay('updated_at', today())
             ->count();
 
         if ($total === 0) {
@@ -273,7 +273,7 @@ class DeliveryIntelligenceService
 
         $failed = Delivery::where('courier_id', $courier->id)
             ->where('status', 'failed')
-            ->whereDate('updated_at', today())
+            ->whereOnDay('updated_at', today())
             ->count();
 
         return round(($failed / $total) * 100, 1);
@@ -334,7 +334,7 @@ class DeliveryIntelligenceService
             ->get()
             ->map(function (Outlet $outlet): array {
                 $deliveries = Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
-                    ->whereDate('updated_at', today())
+                    ->whereOnDay('updated_at', today())
                     ->get();
 
                 $completed = $deliveries->where('status', 'completed');
@@ -362,7 +362,7 @@ class DeliveryIntelligenceService
         $orders = Order::where('outlet_id', $outlet->id)
             ->where('status', '!=', 'pending_confirmation')
             ->whereHas('delivery')
-            ->whereDate('updated_at', today())
+            ->whereOnDay('updated_at', today())
             ->with('delivery')
             ->get();
 
@@ -386,7 +386,7 @@ class DeliveryIntelligenceService
         $deliveries = Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
             ->where('status', 'completed')
             ->whereNotNull('pickup_time')
-            ->whereDate('updated_at', today())
+            ->whereOnDay('updated_at', today())
             ->get();
 
         if ($deliveries->isEmpty()) {
@@ -410,7 +410,7 @@ class DeliveryIntelligenceService
             ->where('status', 'completed')
             ->whereNotNull('pickup_time')
             ->whereNotNull('delivered_time')
-            ->whereDate('updated_at', today())
+            ->whereOnDay('updated_at', today())
             ->get();
 
         if ($deliveries->isEmpty()) {
@@ -430,8 +430,8 @@ class DeliveryIntelligenceService
     public function getHealthScore(): array
     {
         $slaViolations = $this->getSlaViolations();
-        $failedToday = Delivery::where('status', 'failed')->whereDate('updated_at', today())->count();
-        $completedToday = Delivery::where('status', 'completed')->whereDate('updated_at', today())->count();
+        $failedToday = Delivery::where('status', 'failed')->whereOnDay('updated_at', today())->count();
+        $completedToday = Delivery::where('status', 'completed')->whereOnDay('updated_at', today())->count();
         $overloadedCouriers = $this->getAllCouriersCapacity()->filter(fn ($c) => $c['capacity_status'] === 'overloaded')->count();
         $highRetryCount = $this->getHighRetryDeliveries(2)->count();
 

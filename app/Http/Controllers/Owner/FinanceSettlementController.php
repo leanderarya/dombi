@@ -208,11 +208,10 @@ class FinanceSettlementController extends Controller
 
         $pendingCount = SettlementPayment::where('status', SettlementPayment::STATUS_PENDING)->count();
         $verifiedToday = SettlementPayment::where('status', SettlementPayment::STATUS_VERIFIED)
-            ->whereDate('verified_at', now())
+            ->whereOnDay('verified_at', now())
             ->sum('amount');
         $verifiedMonth = SettlementPayment::where('status', SettlementPayment::STATUS_VERIFIED)
-            ->whereMonth('verified_at', now()->month)
-            ->whereYear('verified_at', now()->year)
+            ->whereInMonth('verified_at', now())
             ->sum('amount');
 
         // Rekening tab data
