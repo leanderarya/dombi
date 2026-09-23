@@ -45,7 +45,7 @@ class NetSettlementTest extends TestCase
             'customer_id' => null,
             'outlet_id' => $this->outlet->id,
             'status' => 'completed',
-            'fulfillment_type' => 'delivery',
+            'fulfillment_type' => Order::FULFILLMENT_DELIVERY_DOMBI,
             'payment_method' => 'qris',
             'payment_status' => 'paid',
             'subtotal' => $sellingPrice * $qty,
@@ -131,7 +131,7 @@ class NetSettlementTest extends TestCase
     {
         // Online order: outlet_share=5000, delivery_cost=3000 → net=2000
         $order = $this->createCompletedOrder(15000, 10000, 1, 5000);
-        $this->createDelivery($order, 'delivered', 3000);
+        $this->createDelivery($order, 'completed', 3000);
 
         $settlement = $this->service->generateForOutlet($this->outlet, now());
 
@@ -140,6 +140,18 @@ class NetSettlementTest extends TestCase
         $this->assertEqualsWithDelta(3000.0, (float) $settlement->total_delivery_cost, 0.01);
         $this->assertEqualsWithDelta(2000.0, (float) $settlement->net_amount, 0.01);
         $this->assertEquals(Settlement::DIRECTION_OWNER_PAYS, $settlement->direction);
+    }
+
+    public function test_delivery_cost_is_charged_even_when_the_delivery_did_not_complete(): void
+    {
+        $order = $this->createCompletedOrder(15000, 10000, 1, 5000);
+        $this->createDelivery($order, 'failed', 3000);
+
+        $settlement = $this->service->generateForOutlet($this->outlet, now());
+
+        $this->assertNotNull($settlement);
+        $this->assertEqualsWithDelta(3000.0, (float) $settlement->total_delivery_cost, 0.01);
+        $this->assertEqualsWithDelta(2000.0, (float) $settlement->net_amount, 0.01);
     }
 
     public function test_refund_deducted_from_outlet_share(): void
@@ -178,10 +190,10 @@ class NetSettlementTest extends TestCase
     {
         // Online: 2 orders with outlet_share=5000 each = 10000
         $order1 = $this->createCompletedOrder(15000, 10000, 1, 5000);
-        $this->createDelivery($order1, 'delivered', 2000);
+        $this->createDelivery($order1, 'completed', 2000);
 
         $order2 = $this->createCompletedOrder(15000, 10000, 1, 3000);
-        $this->createDelivery($order2, 'delivered', 1000);
+        $this->createDelivery($order2, 'completed', 1000);
 
         // Refund on order1: 15000
         $order1->update([

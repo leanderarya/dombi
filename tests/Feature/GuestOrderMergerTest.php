@@ -119,7 +119,7 @@ class GuestOrderMergerTest extends TestCase
         $report = OrderReport::create([
             'order_id' => $context['order']->id,
             'customer_id' => $context['customer']->id,
-            'type' => 'wrong_item',
+            'type' => 'wrong_items',
             'notes' => 'Item salah',
         ]);
 

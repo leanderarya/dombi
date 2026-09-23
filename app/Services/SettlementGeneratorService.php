@@ -60,9 +60,7 @@ class SettlementGeneratorService
         // Owner pays all courier salaries, so all costs are deducted from outlet share
         $orderIds = $orders->pluck('id');
         $deliveryCostTotal = $orderIds->isNotEmpty()
-            ? (float) Delivery::whereIn('order_id', $orderIds)
-                ->where('status', 'delivered')
-                ->sum('courier_cost')
+            ? (float) Delivery::whereIn('order_id', $orderIds)->sum('courier_cost')
             : 0.0;
 
         // 3. Refunds = Σ(refund_amount) for orders refunded this week
