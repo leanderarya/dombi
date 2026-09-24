@@ -25,7 +25,7 @@ export default function OwnerSegmentedTabs({
                 <button
                     key={tab.key}
                     onClick={() => onChange(tab.key)}
-                    className={`relative rounded-lg px-5 py-2 text-[12px] font-semibold transition-all duration-200 ${
+                    className={`relative rounded-lg px-3 py-2 text-[12px] font-semibold transition-all duration-200 sm:px-5 ${
                         activeTab === tab.key
                             ? 'bg-surface text-primary shadow-sm'
                             : 'text-text-muted hover:text-primary'

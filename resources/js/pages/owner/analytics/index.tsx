@@ -75,7 +75,7 @@ export default function AnalyticsIndex(props: Props) {
                         role="tab"
                         aria-selected={activeTab === tab.key}
                         onClick={() => handleTabChange(tab.key)}
-                        className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                        className={`relative rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 sm:px-5 ${
                             activeTab === tab.key
                                 ? 'bg-white text-text shadow-sm'
                                 : 'text-text-muted hover:text-text'
