@@ -361,6 +361,39 @@ class FavoritePersistenceTest extends TestCase
         ]);
     }
 
+    // ── Page vs JSON on the same URL ─────────────────────────────────
+
+    public function test_plain_page_visit_renders_the_favorites_page_not_json(): void
+    {
+        [$user, $customer] = $this->createUserWithCustomer();
+        $variant = $this->createVariant();
+
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant->id]);
+
+        // A refresh, bookmark or shared link carries no XHR headers. This URL
+        // is also the JSON endpoint useFavorites() polls, so answering a plain
+        // navigation with raw JSON broke the Favorit tab.
+        $this->actingAs($user)
+            ->get('/customer/favorites')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('customer/favorites'));
+    }
+
+    public function test_favorites_poller_still_receives_json(): void
+    {
+        [$user, $customer] = $this->createUserWithCustomer();
+        $variant = $this->createVariant();
+
+        Favorite::create(['customer_id' => $customer->id, 'product_id' => $variant->id]);
+
+        // useFavorites() sends X-Requested-With but no X-Inertia header.
+        $this->actingAs($user)
+            ->withHeaders(['X-Requested-With' => 'XMLHttpRequest'])
+            ->get('/customer/favorites')
+            ->assertOk()
+            ->assertJson(['product_ids' => [$variant->id]]);
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────
 
     private function createUserWithCustomer(): array
