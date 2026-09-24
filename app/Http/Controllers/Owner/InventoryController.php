@@ -9,6 +9,7 @@ use App\Http\Requests\Owner\UpdateInventoryRequest;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Services\InventoryService;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
