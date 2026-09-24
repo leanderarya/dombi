@@ -13,19 +13,23 @@ class FavoriteController extends Controller
 {
     public function index(Request $request): JsonResponse|Response
     {
-        $user = $request->user();
+        // This URL is both the Favorit tab and the JSON endpoint that
+        // useFavorites() polls. Serve the page to Inertia visits and to plain
+        // browser navigations (refresh, bookmark, shared link); only
+        // non-Inertia callers that ask for data get JSON.
+        if (! $request->header('X-Inertia') && ($request->ajax() || $request->wantsJson())) {
+            $user = $request->user();
 
-        $productIds = $user
-            ? Favorite::where('customer_id', $user->getCustomerOrCreate()->id)
-                ->pluck('product_id')
-                ->toArray()
-            : [];
+            $productIds = $user
+                ? Favorite::where('customer_id', $user->getCustomerOrCreate()->id)
+                    ->pluck('product_id')
+                    ->toArray()
+                : [];
 
-        if ($request->header('X-Inertia')) {
-            return Inertia::render('customer/favorites');
+            return response()->json(['product_ids' => $productIds]);
         }
 
-        return response()->json(['product_ids' => $productIds]);
+        return Inertia::render('customer/favorites');
     }
 
     public function toggle(Request $request): JsonResponse
