@@ -19,12 +19,19 @@ export default function OwnerTable({
         </div>
     );
 
-    if (noWrapper) {
-        return content;
-    }
-
+    // The scroll container is needed whatever the styling: `minWidth` forces
+    // the table wider than a phone viewport, and without an overflow container
+    // that width spills out of the card (or gets clipped by a parent) instead
+    // of scrolling. `noWrapper` therefore drops only the visual chrome — the
+    // background, shadow and ring that callers already draw themselves.
     return (
-        <div className="overflow-x-auto rounded-xl bg-surface shadow-card ring-1 ring-foreground/10">
+        <div
+            className={
+                noWrapper
+                    ? 'overflow-x-auto'
+                    : 'overflow-x-auto rounded-xl bg-surface shadow-card ring-1 ring-foreground/10'
+            }
+        >
             {content}
         </div>
     );
