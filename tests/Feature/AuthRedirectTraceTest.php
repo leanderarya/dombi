@@ -263,4 +263,35 @@ class AuthRedirectTraceTest extends TestCase
         // Owner can access owner dashboard
         $this->get('/owner/dashboard')->assertOk();
     }
+
+    // ─── INTENDED URL MUST NOT HIJACK THE LOGIN DESTINATION ────────
+
+    public function test_login_ignores_intended_url_written_by_background_pollers(): void
+    {
+        $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+
+        // The logged-out login screen runs auth-only pollers (notifications
+        // unread-count, push subscribe). Each one hits the auth middleware and
+        // stamps url.intended with that JSON endpoint before the user submits.
+        $this->withSession(['url.intended' => '/notifications/unread-count']);
+
+        $this->post('/login', [
+            'email' => $customer->email,
+            'password' => 'password',
+        ])->assertRedirect('/dashboard');
+    }
+
+    public function test_dashboard_sends_customer_to_the_customer_home(): void
+    {
+        $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+
+        // /dashboard is served by the internal Inertia root, which has no
+        // customer pages. It hands the browser to the customer root instead of
+        // returning a page the client cannot resolve. Inertia requests get a
+        // 409 + X-Inertia-Location; plain requests get a redirect to the same
+        // target, which is what this asserts.
+        $this->actingAs($customer)
+            ->get('/dashboard')
+            ->assertRedirect('/customer/home');
+    }
 }
