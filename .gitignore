@@ -58,3 +58,10 @@ docs/superpowers/
 .opencode/
 graphify-out/
 AGENTS.md
+
+# Local artifacts — audit evidence, design sources, scratch reports
+# (docs/evidence/orders-list-20260918/ already tracked; ignore affects new files only)
+docs/evidence/
+docs/design-references/
+docs/ritual_check/
+*.pen
