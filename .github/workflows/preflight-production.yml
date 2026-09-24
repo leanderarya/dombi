@@ -1,0 +1,144 @@
+name: Preflight Production
+
+# READ-ONLY. This workflow runs before promoting develop to main so the
+# migrations in that promotion are known to apply cleanly. It never writes:
+# every query is a SELECT plus migrate:status, and the only files it touches
+# are a throwaway script in /tmp on the server.
+#
+# Why this exists: 2026_09_22_000005_add_status_check_constraints throws when
+# existing rows sit outside StatusConstraints::ALLOWED_VALUES. MySQL DDL
+# auto-commits, so that failure would leave earlier migrations applied and
+# later ones not. Checking first is cheaper than recovering from that.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: preflight-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the allowed-value map from the checked-out code
+        id: map
+        run: |
+          set -eu
+          # StatusConstraints has no framework dependencies, so the map can be
+          # built without composer install.
+          MAP="$(php -r '
+            require "app/Support/StatusConstraints.php";
+            $out = [];
+            foreach (App\Support\StatusConstraints::ALLOWED_VALUES as $table => $columns) {
+                foreach (array_keys($columns) as $column) {
+                    $out[$table][$column] = App\Support\StatusConstraints::allowedFor($table, $column);
+                }
+            }
+            echo json_encode($out);
+          ')"
+          echo "columns=$(php -r 'echo count(json_decode($argv[1], true), COUNT_RECURSIVE);' "$MAP")"
+          {
+            echo 'map<<PREFLIGHT_EOF'
+            echo "$MAP"
+            echo 'PREFLIGHT_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Read-only production checks via SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          PREFLIGHT_MAP: ${{ steps.map.outputs.map }}
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          envs: PREFLIGHT_MAP
+          script: |
+            set -eu
+            APP_PATH='domains/dombicenter.com/public_html/app'
+            cd "$APP_PATH"
+
+            echo '=== deployed identity ==='
+            printf 'commit: '; git rev-parse --short HEAD 2>/dev/null || echo unavailable
+            printf 'branch: '; git branch --show-current 2>/dev/null || echo unavailable
+
+            cat > /tmp/preflight_readonly.php <<'PHP'
+            <?php
+            $base = rtrim(getenv('APP_BASE'), '/');
+            require $base.'/vendor/autoload.php';
+            $app = require $base.'/bootstrap/app.php';
+            $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+            $schema = Illuminate\Support\Facades\Schema::class;
+            $db = Illuminate\Support\Facades\DB::class;
+
+            $map = json_decode(getenv('PREFLIGHT_MAP') ?: '[]', true) ?: [];
+            $fail = 0;
+            $checked = 0;
+            echo "=== status values outside StatusConstraints::ALLOWED_VALUES ===\n";
+            foreach ($map as $table => $columns) {
+                foreach ($columns as $column => $allowed) {
+                    if (! $schema::hasTable($table) || ! $schema::hasColumn($table, $column)) {
+                        echo sprintf("SKIP  %s.%s (table or column missing)\n", $table, $column);
+                        continue;
+                    }
+                    $checked++;
+                    $bad = $db::table($table)
+                        ->whereNotNull($column)
+                        ->whereNotIn($column, $allowed)
+                        ->distinct()
+                        ->limit(20)
+                        ->pluck($column)
+                        ->all();
+                    if ($bad === []) {
+                        echo sprintf("OK    %s.%s\n", $table, $column);
+                    } else {
+                        $fail++;
+                        echo sprintf(
+                            "FAIL  %s.%s -> %s\n",
+                            $table,
+                            $column,
+                            implode(', ', array_map('strval', $bad))
+                        );
+                    }
+                }
+            }
+            echo "\n";
+            echo $fail === 0
+                ? sprintf("RESULT: %d/%d columns within the allowed set - constraint migration will apply\n", $checked, $checked)
+                : sprintf("RESULT: %d of %d columns would abort the constraint migration\n", $fail, $checked);
+            PHP
+
+            echo
+            APP_BASE="$PWD" php /tmp/preflight_readonly.php || true
+            rm -f /tmp/preflight_readonly.php
+
+            echo '=== settlement_payments orphan check (FK migration self-heals these) ==='
+            php artisan tinker --execute='
+              $orphans = DB::table("settlement_payments")
+                  ->whereNotNull("settlement_id")
+                  ->whereNotExists(fn ($q) => $q->select(DB::raw(1))->from("settlements")->whereColumn("settlements.id", "settlement_payments.settlement_id"))
+                  ->count();
+              echo "orphan settlement_id rows: ".$orphans.PHP_EOL;
+            ' 2>&1 | tail -3
+
+            echo '=== pending migrations (what this deploy would run) ==='
+            php artisan migrate:status 2>&1 | grep -iE 'pending' || echo '(none pending)'
+
+            echo '=== newest backups (proves the 02:30 schedule runs; caps the RPO) ==='
+            find storage -type f \( -name '*.zip' -o -name '*.tar' -o -name '*.gz' \) -path '*backup*' -print0 2>/dev/null \
+              | xargs -0 ls -lt 2>/dev/null | head -5 || echo '(no backup archives found under storage/)'
+
+            echo '=== scheduler heartbeat ==='
+            php artisan schedule:list 2>&1 | head -5 || true
+
+      - name: Summarise
+        if: always()
+        run: echo "Preflight finished. Review the SSH step output above before promoting to main."
