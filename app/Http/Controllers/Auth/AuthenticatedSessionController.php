@@ -53,7 +53,12 @@ class AuthenticatedSessionController extends Controller
         $request->session()->put('login_at', now()->timestamp);
         $request->session()->put('last_activity_at', now()->timestamp);
 
-        return redirect()->intended(route('dashboard'));
+        // Deliberately not redirect()->intended(): the login screen runs
+        // authenticated background pollers (unread-count, push subscribe), and
+        // each one that hits an auth route while logged out stamps
+        // url.intended with that JSON endpoint. Honouring it would send the
+        // user to e.g. /notifications/unread-count after signing in.
+        return redirect()->route('dashboard');
     }
 
     public function destroy(Request $request): RedirectResponse
