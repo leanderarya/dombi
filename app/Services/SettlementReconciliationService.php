@@ -7,6 +7,7 @@ use App\Models\Outlet;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class SettlementReconciliationService
@@ -133,6 +134,193 @@ class SettlementReconciliationService
     }
 
     /**
+     * Reconciliation for many outlets at once, keyed by outlet id.
+     *
+     * Produces the same values as getOutletReconciliation() without running its
+     * per-outlet aggregate queries once per outlet.
+     *
+     * @param  array<int, int>  $outletIds
+     * @return array<int, array<string, mixed>>
+     */
+    public function getOutletReconciliations(array $outletIds): array
+    {
+        if ($outletIds === []) {
+            return [];
+        }
+
+        $settlementTotals = $this->settlementTotalsByOutlet($outletIds);
+        $paymentTotals = $this->paymentTotalsByOutlet($outletIds);
+        $lastPayments = $this->lastPaymentsByOutlet($outletIds);
+        $deliveryTotals = $this->deliveryTotalsByOutlet($outletIds);
+
+        $reconciliations = [];
+
+        foreach ($outletIds as $outletId) {
+            $reconciliations[$outletId] = $this->buildReconciliation(
+                $settlementTotals[$outletId] ?? null,
+                $paymentTotals[$outletId] ?? null,
+                $lastPayments[$outletId] ?? null,
+                $deliveryTotals[$outletId] ?? null,
+            );
+        }
+
+        return $reconciliations;
+    }
+
+    /**
+     * @param  array<int, int>  $outletIds
+     * @return Collection<int, object>
+     */
+    private function settlementTotalsByOutlet(array $outletIds): Collection
+    {
+        return DB::table('settlements')
+            ->whereIn('outlet_id', $outletIds)
+            ->where('period_type', 'weekly')
+            ->groupBy('outlet_id')
+            ->selectRaw('
+                outlet_id,
+                SUM(CASE WHEN status != ? THEN amount_due ELSE 0 END) as center_share,
+                SUM(sales_amount) as sales_amount,
+                SUM(delivery_fee_amount) as delivery_fees,
+                SUM(adjustment_amount) as adjustments,
+                SUM(total_online_share) as online_share,
+                SUM(total_delivery_cost) as delivery_cost,
+                SUM(total_refund) as refund,
+                SUM(total_offline_sales) as offline_sales,
+                SUM(net_amount) as net_amount
+            ', [Settlement::STATUS_PAID])
+            ->get()
+            ->keyBy('outlet_id');
+    }
+
+    /**
+     * @param  array<int, int>  $outletIds
+     * @return Collection<int, object>
+     */
+    private function paymentTotalsByOutlet(array $outletIds): Collection
+    {
+        return DB::table('settlement_payments')
+            ->whereIn('outlet_id', $outletIds)
+            ->groupBy('outlet_id')
+            ->selectRaw('
+                outlet_id,
+                SUM(CASE WHEN status = ? THEN amount ELSE 0 END) as verified,
+                SUM(CASE WHEN status = ? THEN amount ELSE 0 END) as pending,
+                SUM(CASE WHEN status = ? THEN amount ELSE 0 END) as rejected
+            ', [
+                SettlementPayment::STATUS_VERIFIED,
+                SettlementPayment::STATUS_PENDING,
+                SettlementPayment::STATUS_REJECTED,
+            ])
+            ->get()
+            ->keyBy('outlet_id');
+    }
+
+    /**
+     * Newest verified payment per outlet. Ties on payment_date resolve to the
+     * highest id so the result is deterministic.
+     *
+     * @param  array<int, int>  $outletIds
+     * @return Collection<int, object>
+     */
+    private function lastPaymentsByOutlet(array $outletIds): Collection
+    {
+        return DB::query()
+            ->fromSub(
+                DB::table('settlement_payments')
+                    ->whereIn('outlet_id', $outletIds)
+                    ->where('status', SettlementPayment::STATUS_VERIFIED)
+                    ->selectRaw('
+                        outlet_id, payment_date, amount, reference_number,
+                        ROW_NUMBER() OVER (PARTITION BY outlet_id ORDER BY payment_date DESC, id DESC) as row_num
+                    '),
+                'ranked'
+            )
+            ->where('row_num', 1)
+            ->get()
+            ->keyBy('outlet_id');
+    }
+
+    /**
+     * @param  array<int, int>  $outletIds
+     * @return Collection<int, object>
+     */
+    private function deliveryTotalsByOutlet(array $outletIds): Collection
+    {
+        return DB::table('deliveries')
+            ->join('orders', 'deliveries.order_id', '=', 'orders.id')
+            ->whereIn('orders.outlet_id', $outletIds)
+            ->where('orders.status', Order::STATUS_COMPLETED)
+            ->groupBy('orders.outlet_id')
+            ->selectRaw("
+                orders.outlet_id,
+                COUNT(CASE WHEN deliveries.courier_type = 'dombi' THEN 1 END) as dombi_count,
+                SUM(CASE WHEN deliveries.courier_type = 'dombi' THEN orders.delivery_fee ELSE 0 END) as dombi_fee,
+                COUNT(CASE WHEN deliveries.courier_type = 'eksternal' THEN 1 END) as eksternal_count,
+                SUM(CASE WHEN deliveries.courier_type = 'eksternal' THEN orders.delivery_fee ELSE 0 END) as eksternal_fee,
+                SUM(CASE WHEN deliveries.courier_type = 'eksternal' THEN deliveries.courier_cost ELSE 0 END) as eksternal_cost
+            ")
+            ->get()
+            ->keyBy('outlet_id');
+    }
+
+    private function buildReconciliation(?object $settlements, ?object $payments, ?object $lastPayment, ?object $deliveries): array
+    {
+        $centerShare = (float) ($settlements->center_share ?? 0);
+        $salesAmount = (float) ($settlements->sales_amount ?? 0);
+        $deliveryFees = (float) ($settlements->delivery_fees ?? 0);
+        $adjustments = (float) ($settlements->adjustments ?? 0);
+        $netAmount = (float) ($settlements->net_amount ?? 0);
+
+        $verifiedPayments = (float) ($payments->verified ?? 0);
+        $pendingPayments = (float) ($payments->pending ?? 0);
+        $rejectedPayments = (float) ($payments->rejected ?? 0);
+
+        $outstanding = max(0, $centerShare - $verifiedPayments - $adjustments);
+
+        $dombiCount = (int) ($deliveries->dombi_count ?? 0);
+        $dombiFee = (float) ($deliveries->dombi_fee ?? 0);
+        $eksternalCount = (int) ($deliveries->eksternal_count ?? 0);
+        $eksternalFee = (float) ($deliveries->eksternal_fee ?? 0);
+        $eksternalCost = (float) ($deliveries->eksternal_cost ?? 0);
+
+        $totalDeliveryFee = $dombiFee + $eksternalFee;
+
+        return [
+            'center_share' => $centerShare,
+            'sales_amount' => $salesAmount,
+            'delivery_fees' => $deliveryFees,
+            'gross_revenue' => $salesAmount + $deliveryFees,
+            'verified_payments' => $verifiedPayments,
+            'pending_payments' => $pendingPayments,
+            'rejected_payments' => $rejectedPayments,
+            'adjustments' => $adjustments,
+            'outstanding' => $outstanding,
+            'net_amount' => $netAmount,
+            'breakdown' => [
+                'online_outlet_share' => (float) ($settlements->online_share ?? 0),
+                'delivery_cost' => (float) ($settlements->delivery_cost ?? 0),
+                'refund' => (float) ($settlements->refund ?? 0),
+                'offline_sales' => (float) ($settlements->offline_sales ?? 0),
+            ],
+            'last_payment' => $lastPayment ? [
+                'date' => Carbon::parse($lastPayment->payment_date)->toDateString(),
+                'amount' => (float) $lastPayment->amount,
+                'reference' => $lastPayment->reference_number,
+            ] : null,
+            'total_delivery_fee' => $totalDeliveryFee,
+            'dombi_delivery_count' => $dombiCount,
+            'dombi_delivery_fee' => $dombiFee,
+            'dombi_net_income' => $dombiFee,
+            'eksternal_delivery_count' => $eksternalCount,
+            'eksternal_delivery_fee' => $eksternalFee,
+            'eksternal_courier_cost' => $eksternalCost,
+            'eksternal_net_income' => $eksternalFee - $eksternalCost,
+            'net_delivery_income' => $totalDeliveryFee - $eksternalCost,
+        ];
+    }
+
+    /**
      * Get owner dashboard reconciliation data.
      */
     public function getOwnerReconciliation(?Carbon $from = null, ?Carbon $to = null): array
@@ -249,19 +437,13 @@ class SettlementReconciliationService
     {
         $outlets = Outlet::where('status', 'active')->get();
 
-        // Use all-time range for collection center
-        $allTimeFrom = Carbon::parse('2020-01-01');
-        $allTimeTo = Carbon::now()->endOfDay();
-
         // ── Per-outlet reconciliation (all-time) ──
-        $outletRows = [];
-        foreach ($outlets as $outlet) {
-            $rec = $this->getOutletReconciliation($outlet->id, $allTimeFrom, $allTimeTo);
-            $outletRows[] = [
-                'outlet' => ['id' => $outlet->id, 'name' => $outlet->name],
-                ...$rec,
-            ];
-        }
+        $reconciliations = $this->getOutletReconciliations($outlets->pluck('id')->all());
+
+        $outletRows = $outlets->map(fn (Outlet $outlet): array => [
+            'outlet' => ['id' => $outlet->id, 'name' => $outlet->name],
+            ...$reconciliations[$outlet->id],
+        ])->all();
 
         // Sort by outstanding descending
         usort($outletRows, fn ($a, $b) => $b['outstanding'] <=> $a['outstanding']);
@@ -292,27 +474,22 @@ class SettlementReconciliationService
             ->toArray();
 
         // ── Collection priority list (outlets with outstanding > 0) ──
+        $oldestUnpaidDueDates = DB::table('settlements')
+            ->whereIn('outlet_id', $outlets->pluck('id')->all())
+            ->where('status', '!=', Settlement::STATUS_PAID)
+            ->where('amount_due', '>', 0)
+            ->groupBy('outlet_id')
+            ->selectRaw('outlet_id, MIN(due_date) as oldest_due_date')
+            ->pluck('oldest_due_date', 'outlet_id');
+
         $priorityList = [];
         foreach ($outletRows as $row) {
             if ($row['outstanding'] <= 0) {
                 continue;
             }
 
-            // Calculate days overdue: find oldest unpaid settlement
-            $oldestUnpaid = Settlement::query()
-                ->where('outlet_id', $row['outlet']['id'])
-                ->where('status', '!=', Settlement::STATUS_PAID)
-                ->where('amount_due', '>', 0)
-                ->orderBy('due_date', 'asc')
-                ->first();
-
-            $daysOverdue = 0;
-            if ($oldestUnpaid) {
-                $daysOverdue = $oldestUnpaid->due_date
-                    ? (int) $oldestUnpaid->due_date->diffInDays(now(), false)
-                    : 0;
-                $daysOverdue = max(0, $daysOverdue);
-            }
+            // Days overdue, from the oldest unpaid settlement due date
+            $oldestDue = $oldestUnpaidDueDates[$row['outlet']['id']] ?? null;
 
             $priorityList[] = [
                 'outlet' => $row['outlet'],
@@ -320,7 +497,7 @@ class SettlementReconciliationService
                 'center_share' => $row['center_share'],
                 'verified_payments' => $row['verified_payments'],
                 'pending_payments' => $row['pending_payments'],
-                'days_overdue' => $daysOverdue,
+                'days_overdue' => $oldestDue ? max(0, (int) Carbon::parse($oldestDue)->diffInDays(now(), false)) : 0,
             ];
         }
 
@@ -358,18 +535,23 @@ class SettlementReconciliationService
             ->values()
             ->toArray();
 
-        // Margin ranking (from settlements table)
-        $rankByMargin = [];
-        foreach ($outlets as $outlet) {
-            $outletSettlements = Settlement::where('outlet_id', $outlet->id)->get();
-            $grossRevenue = (float) $outletSettlements->sum('sales_amount');
-            $outletMargin = $grossRevenue - (float) $outletSettlements->sum('amount_due');
-            $rankByMargin[] = [
+        // Margin ranking (from settlements table, every period type)
+        $marginTotals = DB::table('settlements')
+            ->whereIn('outlet_id', $outlets->pluck('id')->all())
+            ->groupBy('outlet_id')
+            ->selectRaw('outlet_id, SUM(sales_amount) as gross_revenue, SUM(amount_due) as amount_due')
+            ->get()
+            ->keyBy('outlet_id');
+
+        $rankByMargin = $outlets->map(function (Outlet $outlet) use ($marginTotals): array {
+            $grossRevenue = (float) ($marginTotals[$outlet->id]->gross_revenue ?? 0);
+
+            return [
                 'outlet' => ['id' => $outlet->id, 'name' => $outlet->name],
-                'outlet_margin' => $outletMargin,
+                'outlet_margin' => $grossRevenue - (float) ($marginTotals[$outlet->id]->amount_due ?? 0),
                 'gross_revenue' => $grossRevenue,
             ];
-        }
+        })->all();
         usort($rankByMargin, fn ($a, $b) => $b['outlet_margin'] <=> $a['outlet_margin']);
         $rankByMargin = array_slice($rankByMargin, 0, 5);
 

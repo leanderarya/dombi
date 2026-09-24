@@ -482,6 +482,52 @@ Duplikasi aktor dan timestamp di `orders`: `confirmed_by/at`, `rejected_by/at`,
 bisa di-drop — tapi perlu diverifikasi lebih dulu bahwa tidak ada transisi yang
 histories-nya hilang, dan keputusan itu belum diambil.
 
+## Fase 6 — Dashboard owner: agregat per outlet
+
+**Status: SELESAI.**
+
+`SettlementReconciliationService::getCollectionCenter()` dijalankan setiap kali
+dashboard owner dibuka, dan menjalankan 14 query agregat **per outlet** lewat
+`getOutletReconciliation()`, plus dua query lagi di loop-nya sendiri. Untuk 30
+outlet itu sekitar 480 query dalam satu request.
+
+Yang dikerjakan:
+
+- `getOutletReconciliations(array $outletIds)` — jalur bulk yang menggantikan
+  query per outlet dengan empat query terkelompok: total settlement
+  (`GROUP BY outlet_id` dengan `SUM(CASE WHEN ...)` untuk tiap komponen), total
+  pembayaran per status, pembayaran terverifikasi terbaru per outlet, dan statistik
+  kurir. Semuanya satu query berapa pun jumlah outletnya.
+- Dua loop yang tersisa di `getCollectionCenter` diganti agregat terkelompok:
+  tanggal jatuh tempo tertua per outlet (`MIN(due_date)`) dan margin per outlet.
+- `getOutletReconciliation()` **tetap** sebagai implementasi rujukan untuk satu
+  outlet. Dua jalur ini sengaja hidup berdampingan, dan
+  `SettlementReconciliationBulkTest` membandingkan hasil keduanya untuk setiap
+  outlet sehingga keduanya tidak bisa menyimpang tanpa gagal di CI.
+
+**Terukur:** 6 outlet aktif = 96 query pada jalur lama, 8 query sekarang.
+Jumlahnya tidak lagi tumbuh seiring jumlah outlet.
+
+Dua perilaku sengaja didefinisikan ulang, keduanya sebelumnya tidak terdefinisi:
+
+- **Pembayaran dengan tanggal sama.** `latest('payment_date')` tidak menentukan
+  urutan untuk nilai kembar, jadi baris yang dilaporkan sebagai pembayaran
+  terakhir bersifat arbitrer. Jalur bulk memilih yang paling akhir dicatat
+  (`id` terbesar) dan itu menjadi deterministik.
+- **`orders` yang dihitung per outlet.** Loop margin memuat seluruh settlement
+  per outlet tanpa filter `period_type`, berbeda dari agregat lain yang hanya
+  menghitung settlement weekly. Perbedaan itu dipertahankan apa adanya, dan ada
+  test yang mengunci bahwa settlement `daily` ikut terhitung di margin tapi tidak
+  di `center_share`.
+
+`getOwnerReconciliation()` juga masih menjalankan query per outlet, tapi tidak
+punya pemanggil di `app/` maupun test — hanya kode mati. Tidak diubah karena tidak
+ada cara memverifikasi perubahannya, dan dicatat di sini sebagai kandidat.
+
+Item performa lain dari audit awal yang belum disentuh: `Outlet/SettlementController::index`
+(~3 query per settlement) dan export CSV di `Owner/ReportController` serta
+`FinanceSettlementController` yang memuat seluruh hasil ke memori sebelum streaming.
+
 ## Fase 6 — Satukan sumber relasi pembayaran ke settlement
 
 **Risiko:** tinggi. Menyentuh uang.
