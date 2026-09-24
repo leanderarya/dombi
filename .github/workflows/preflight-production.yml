@@ -130,11 +130,28 @@ jobs:
             ' 2>&1 | tail -3
 
             echo '=== pending migrations (what this deploy would run) ==='
-            php artisan migrate:status 2>&1 | grep -iE 'pending' || echo '(none pending)'
+            # Match the status column, not the migration name: several names
+            # contain the word "pending".
+            STATUS="$(php artisan migrate:status 2>&1 || true)"
+            echo "pending: $(printf '%s\n' "$STATUS" | grep -c 'Pending' || true)  ran: $(printf '%s\n' "$STATUS" | grep -c 'Ran' || true)"
+            printf '%s\n' "$STATUS" | tail -15
 
-            echo '=== newest backups (proves the 02:30 schedule runs; caps the RPO) ==='
-            find storage -type f \( -name '*.zip' -o -name '*.tar' -o -name '*.gz' \) -path '*backup*' -print0 2>/dev/null \
-              | xargs -0 ls -lt 2>/dev/null | head -5 || echo '(no backup archives found under storage/)'
+            echo '=== newest backup: contents (a dump must be inside) ==='
+            NEWEST="$(ls -t storage/app/private/Dombi/*.zip 2>/dev/null | head -1 || true)"
+            if [ -n "$NEWEST" ]; then
+              ls -lh "$NEWEST"
+              unzip -l "$NEWEST" 2>/dev/null | head -20 || echo '(unzip unavailable)'
+            else
+              echo '(no backup archive found)'
+            fi
+
+            echo '=== row counts on the tables the money-precision ALTER touches ==='
+            php artisan tinker --execute='
+              foreach (["orders", "order_items", "payment_attempts", "payment_transactions", "products", "settlements"] as $t) {
+                  if (! Schema::hasTable($t)) { echo str_pad($t, 24)." (missing)\n"; continue; }
+                  echo str_pad($t, 24).number_format(DB::table($t)->count())."\n";
+              }
+            ' 2>&1 | tail -8
 
             echo '=== scheduler heartbeat ==='
             php artisan schedule:list 2>&1 | head -5 || true
