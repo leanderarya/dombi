@@ -52,18 +52,19 @@ const PushInit = () => {
     usePushSubscription();
 
     useEffect(() => {
+        const serviceWorker =
+            'serviceWorker' in navigator ? navigator.serviceWorker : null;
+
         const handleMessage = (event: MessageEvent) => {
             if (event.data?.type === 'NAVIGATE' && event.data?.url) {
                 router.visit(event.data.url);
             }
         };
-        navigator.serviceWorker.addEventListener('message', handleMessage);
+
+        serviceWorker?.addEventListener('message', handleMessage);
 
         return () =>
-            navigator.serviceWorker.removeEventListener(
-                'message',
-                handleMessage,
-            );
+            serviceWorker?.removeEventListener('message', handleMessage);
     }, []);
 
     return null;

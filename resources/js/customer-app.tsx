@@ -69,6 +69,9 @@ const PushInit = () => {
         })();
 
         // Listen for SW navigation messages (iOS PWA notification tap)
+        const serviceWorker =
+            'serviceWorker' in navigator ? navigator.serviceWorker : null;
+
         const handleMessage = (event: MessageEvent) => {
             if (event.data?.type === 'NAVIGATE' && event.data?.url) {
                 import('@inertiajs/react').then(({ router }) =>
@@ -76,16 +79,13 @@ const PushInit = () => {
                 );
             }
         };
-        navigator.serviceWorker.addEventListener('message', handleMessage);
+        serviceWorker?.addEventListener('message', handleMessage);
 
         return () => {
             void nativeListenersPromise.then((listeners) =>
                 Promise.all(listeners.map((listener) => listener.remove())),
             );
-            navigator.serviceWorker.removeEventListener(
-                'message',
-                handleMessage,
-            );
+            serviceWorker?.removeEventListener('message', handleMessage);
         };
     }, []);
 
