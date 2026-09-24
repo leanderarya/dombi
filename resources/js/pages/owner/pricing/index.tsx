@@ -72,7 +72,7 @@ export default function PricingIndex(props: Props) {
                         role="tab"
                         aria-selected={activeTab === tab.key}
                         onClick={() => handleTabChange(tab.key)}
-                        className={`rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                        className={`rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 sm:px-5 ${
                             activeTab === tab.key
                                 ? 'bg-surface text-text shadow-sm'
                                 : 'text-text-muted hover:text-text'
