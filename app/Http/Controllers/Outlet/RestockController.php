@@ -52,7 +52,20 @@ class RestockController extends Controller
         $categories = ProductCategory::where('is_active', true)
             ->with(['products' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
             ->orderBy('name')
-            ->get();
+            ->get()
+            // The page reads families[].variants. Without this alias every
+            // optgroup renders empty, the form posts an empty product_id and
+            // the outlet can never submit a restock request.
+            ->map(fn (ProductCategory $category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'variants' => $category->products
+                    ->map(fn ($product) => [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                    ])
+                    ->values(),
+            ]);
 
         return Inertia::render('outlet/restocks/create', [
             'families' => $categories,

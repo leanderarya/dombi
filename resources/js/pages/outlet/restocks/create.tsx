@@ -131,6 +131,17 @@ export default function CreateRestock({ families, inventories }: any) {
                                         </optgroup>
                                     ))}
                                 </select>
+                                {form.errors[
+                                    `items.${index}.product_id` as keyof typeof form.errors
+                                ] && (
+                                    <div className="mt-1 text-xs text-danger">
+                                        {
+                                            form.errors[
+                                                `items.${index}.product_id` as keyof typeof form.errors
+                                            ]
+                                        }
+                                    </div>
+                                )}
                             </div>
 
                             {inventory && (
@@ -179,6 +190,17 @@ export default function CreateRestock({ families, inventories }: any) {
                                     }
                                     className="mt-1 min-h-11 w-full rounded-lg border border-border px-3 text-sm"
                                 />
+                                {form.errors[
+                                    `items.${index}.requested_quantity` as keyof typeof form.errors
+                                ] && (
+                                    <div className="mt-1 text-xs text-danger">
+                                        {
+                                            form.errors[
+                                                `items.${index}.requested_quantity` as keyof typeof form.errors
+                                            ]
+                                        }
+                                    </div>
+                                )}
                             </div>
                         </SectionCard>
                     );
