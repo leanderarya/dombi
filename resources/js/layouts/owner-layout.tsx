@@ -15,6 +15,7 @@ import NotificationBell from '@/components/shared/notification-bell';
 import NotificationSheet from '@/components/shared/notification-sheet';
 import OfflineBanner from '@/components/shared/offline-banner';
 import UpdateBanner from '@/components/shared/update-banner';
+import BrandMark from '@/components/ui/brand-mark';
 import { SidebarProvider, useSidebar } from '@/contexts/sidebar-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
@@ -212,14 +213,10 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                         className={`${collapsed ? 'px-3 py-5' : 'px-4 pt-6 pb-5'}`}
                     >
                         {collapsed ? (
-                            <div className="bg-primary-light0/20 flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 font-heading text-lg font-bold text-emerald-300">
-                                D
-                            </div>
+                            <BrandMark className="h-9 w-9 rounded-full" />
                         ) : (
                             <div className="flex items-center gap-3 border-b border-emerald-800/60 pb-4">
-                                <div className="bg-primary-light0/20 flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 font-heading text-lg font-bold text-emerald-300">
-                                    D
-                                </div>
+                                <BrandMark className="h-9 w-9 rounded-full" />
                                 <div>
                                     <div className="font-heading text-sm font-bold tracking-wide">
                                         DOMBI

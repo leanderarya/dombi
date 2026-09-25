@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils';
+
 interface Props {
     size?: 'sm' | 'md';
     className?: string;
@@ -10,12 +12,18 @@ const sizeClasses = {
     md: 'h-[42px] w-[42px] rounded-full',
 };
 
-export default function BrandMark({ size = 'md', className = '' }: Props) {
+export default function BrandMark({ size = 'md', className }: Props) {
     return (
         <img
             src="/icons/icon-192.png"
             alt="Dombi"
-            className={`shrink-0 object-cover ${sizeClasses[size]} ${className}`}
+            // Merged rather than concatenated so a caller can override the size
+            // without leaving two conflicting height classes in the attribute.
+            className={cn(
+                'shrink-0 object-cover',
+                sizeClasses[size],
+                className,
+            )}
         />
     );
 }
