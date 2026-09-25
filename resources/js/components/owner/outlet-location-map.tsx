@@ -103,6 +103,8 @@ export default function OutletLocationMap({
     const abortRef = useRef<AbortController | null>(null);
     // ponytail: popupRef typed `any` (react-leaflet Popup ref) — keep simple
     const popupRef = useRef<any>(null);
+    // ponytail: markerRef typed `any` (react-leaflet Marker ref) — keep simple
+    const markerRef = useRef<any>(null);
     const [gpsError, setGpsError] = useState<string | null>(null);
     const [gpsLoading, setGpsLoading] = useState(false);
 
@@ -321,6 +323,7 @@ export default function OutletLocationMap({
                     {/* Selected marker */}
                     {marker && (
                         <Marker
+                            ref={markerRef}
                             position={marker}
                             icon={selectedIcon}
                             draggable={!readOnly}
@@ -351,7 +354,7 @@ export default function OutletLocationMap({
                     )}
                     {!readOnly && (
                         <AutoOpenPopup
-                            popupRef={popupRef}
+                            markerRef={markerRef}
                             marker={marker}
                             readOnly={readOnly}
                         />
@@ -562,21 +565,26 @@ function MapClickHandler({
 }
 
 function AutoOpenPopup({
-    popupRef,
+    markerRef,
     marker,
     readOnly,
 }: {
-    popupRef: React.MutableRefObject<any>;
+    markerRef: React.MutableRefObject<any>;
     marker: LatLng | null;
     readOnly: boolean;
 }) {
-    const map = useMap();
-
     useEffect(() => {
-        if (marker && !readOnly && popupRef.current) {
-            popupRef.current.openOn(map);
+        if (!marker || readOnly) {
+            return;
         }
-    }, [map, marker, readOnly, popupRef]);
+
+        // Open through the marker, not the popup. Marker.openPopup() runs
+        // Leaflet's _prepareOpen, which copies the marker's position onto the
+        // popup. Calling popup.openOn(map) directly skips that, so the popup
+        // renders with an undefined _latlng and Leaflet throws inside
+        // latLngToLayerPoint the first time a marker is placed.
+        markerRef.current?.openPopup?.();
+    }, [markerRef, marker, readOnly]);
 
     return null;
 }
