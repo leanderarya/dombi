@@ -82,22 +82,35 @@ class OutletSeeder extends Seeder
         $this->seedOperatingHours($banyumanik);
 
         // ── Courier ────────────────────────────────────────────────
+        // Three things have to line up before the outlet's Assign Kurir picker
+        // will list this courier: an outlet link (CourierProfile::
+        // availableForOutlet), a location reported within the last 5 minutes
+        // (CourierLocationService), and is_online. Seeding all three is what
+        // makes the courier flow usable straight after a fresh seed - re-run
+        // this seeder to refresh the location once it goes stale.
         $courierUser = User::updateOrCreate(['email' => 'courier@example.com'], [
             'name' => 'Kurir Dombi',
             'password' => $password,
             'role' => 'courier',
             'phone' => '083100000001',
             'is_active' => true,
+            'is_online' => true,
+            'latitude' => -7.0568,
+            'longitude' => 110.4381,
+            'location_updated_at' => now(),
             'must_change_password' => false,
         ]);
 
-        CourierProfile::updateOrCreate(['user_id' => $courierUser->id], [
+        $courierProfile = CourierProfile::updateOrCreate(['user_id' => $courierUser->id], [
+            'courier_source' => 'pusat',
             'invitation_status' => CourierProfile::STATUS_ACTIVE,
             'invited_at' => now(),
             'accepted_at' => now(),
             'total_deliveries' => 0,
             'rating' => 5.00,
         ]);
+
+        $courierProfile->assignedOutlets()->sync([$tembalang->id, $banyumanik->id]);
 
         // ── Test Customer ─────────────────────────────────────────
         User::updateOrCreate(['email' => 'customer@example.com'], [
