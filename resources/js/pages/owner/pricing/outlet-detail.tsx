@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { MarginBarInline } from '@/components/owner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerTable from '@/components/owner/owner-table';
+import SortableTh from '@/components/owner/sortable-th';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -35,22 +36,6 @@ import type {
     SortDir,
     SortKey,
 } from './types';
-
-function SortMarker({
-    col,
-    activeCol,
-    direction,
-}: {
-    col: SortKey;
-    activeCol: SortKey;
-    direction: SortDir;
-}) {
-    return activeCol === col ? (
-        <span className="ml-0.5 text-[10px] text-primary">
-            {direction === 'asc' ? '▲' : '▼'}
-        </span>
-    ) : null;
-}
 
 export default function OutletDetail({
     outlet,
@@ -417,51 +402,38 @@ export default function OutletDetail({
                     <Table>
                         <TableHeader>
                             <tr className="border-b border-border/30 bg-primary/5">
-                                <TableHead
-                                    className="cursor-pointer px-6 py-3.5 text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
+                                <SortableTh
+                                    label="Produk"
+                                    active={sortKey === 'name'}
+                                    dir={sortDir}
                                     onClick={() => toggleSort('name')}
-                                >
-                                    Produk
-                                    <SortMarker
-                                        col="name"
-                                        activeCol={sortKey}
-                                        direction={sortDir}
-                                    />
-                                </TableHead>
-                                <TableHead
-                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
+                                    className="px-6 py-3.5"
+                                />
+                                <SortableTh
+                                    label="HPP"
+                                    active={sortKey === 'center_price'}
+                                    dir={sortDir}
+                                    align="right"
                                     onClick={() => toggleSort('center_price')}
-                                >
-                                    HPP
-                                    <SortMarker
-                                        col="center_price"
-                                        activeCol={sortKey}
-                                        direction={sortDir}
-                                    />
-                                </TableHead>
-                                <TableHead
-                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
+                                    className="px-6 py-3.5"
+                                />
+                                <SortableTh
+                                    label="Harga Jual"
+                                    active={sortKey === 'selling_price'}
+                                    dir={sortDir}
+                                    align="right"
                                     onClick={() => toggleSort('selling_price')}
-                                >
-                                    Harga Jual
-                                    <SortMarker
-                                        col="selling_price"
-                                        activeCol={sortKey}
-                                        direction={sortDir}
-                                    />
-                                </TableHead>
-                                <TableHead
-                                    className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-primary uppercase select-none"
+                                    className="px-6 py-3.5"
+                                />
+                                <SortableTh
+                                    label="Margin"
+                                    active={sortKey === 'margin'}
+                                    dir={sortDir}
+                                    align="right"
                                     onClick={() => toggleSort('margin')}
-                                >
-                                    Margin
-                                    <SortMarker
-                                        col="margin"
-                                        activeCol={sortKey}
-                                        direction={sortDir}
-                                    />
-                                </TableHead>
-                                <TableHead className="px-6 py-3.5 text-center text-[11px] font-semibold tracking-wider text-primary uppercase">
+                                    className="px-6 py-3.5"
+                                />
+                                <TableHead className="px-6 py-3.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
                                     Aksi
                                 </TableHead>
                             </tr>
