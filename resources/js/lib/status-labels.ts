@@ -45,7 +45,10 @@ const DELIVERY_STATUSES: Record<string, StatusConfig> = {
     failed: { label: 'Gagal', variant: 'danger' },
     rejected_by_courier: { label: 'Ditolak Kurir', variant: 'danger' },
     retry_delivery: { label: 'Coba Ulang', variant: 'warning' },
-    returning_to_outlet: { label: 'Dikembalikan ke Outlet', variant: 'warning' },
+    returning_to_outlet: {
+        label: 'Dikembalikan ke Outlet',
+        variant: 'warning',
+    },
     returned_to_outlet: { label: 'Dikembalikan', variant: 'neutral' },
     cancelled_and_released: { label: 'Dibatalkan', variant: 'neutral' },
 };

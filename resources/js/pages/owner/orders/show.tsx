@@ -345,55 +345,63 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                         (!order.delivery ||
                             order.delivery.status ===
                                 'rejected_by_courier') && (
-                        <form
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                form.post(
-                                    `/owner/orders/${order.id}/assign-courier`,
-                                    {
-                                        preserveScroll: true,
-                                        onSuccess: () =>
-                                            toast.success('Kurir ditugaskan'),
-                                        onError: (errors) =>
-                                            toast.error(
-                                                Object.values(errors)
-                                                    .flat()
-                                                    .join(', '),
-                                            ),
-                                    },
-                                );
-                            }}
-                            aria-label="Form assign kurir"
-                            className="rounded-2xl border border-border bg-surface p-5"
-                        >
-                            <div className="mb-3 flex items-center gap-2">
-                                <Truck
-                                    aria-hidden="true"
-                                    className="h-4 w-4 text-primary"
-                                />
-                                <h3 className="font-heading text-base font-bold text-text">
-                                    Assign Kurir
-                                </h3>
-                            </div>
-                            <Select
-                                value={String(form.data.courier_id)}
-                                onChange={(e) =>
-                                    form.setData('courier_id', e.target.value)
-                                }
-                                options={couriers.map((c: any) => ({
-                                    value: String(c.id),
-                                    label: c.name,
-                                }))}
-                            />
-                            <Button
-                                className="mt-3 min-h-11 w-full"
-                                loading={form.processing}
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    form.post(
+                                        `/owner/orders/${order.id}/assign-courier`,
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    'Kurir ditugaskan',
+                                                ),
+                                            onError: (errors) =>
+                                                toast.error(
+                                                    Object.values(errors)
+                                                        .flat()
+                                                        .join(', '),
+                                                ),
+                                        },
+                                    );
+                                }}
+                                aria-label="Form assign kurir"
+                                className="rounded-2xl border border-border bg-surface p-5"
                             >
-                                <Truck aria-hidden="true" className="h-4 w-4" />
-                                Tugaskan Kurir
-                            </Button>
-                        </form>
-                    )}
+                                <div className="mb-3 flex items-center gap-2">
+                                    <Truck
+                                        aria-hidden="true"
+                                        className="h-4 w-4 text-primary"
+                                    />
+                                    <h3 className="font-heading text-base font-bold text-text">
+                                        Assign Kurir
+                                    </h3>
+                                </div>
+                                <Select
+                                    value={String(form.data.courier_id)}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'courier_id',
+                                            e.target.value,
+                                        )
+                                    }
+                                    options={couriers.map((c: any) => ({
+                                        value: String(c.id),
+                                        label: c.name,
+                                    }))}
+                                />
+                                <Button
+                                    className="mt-3 min-h-11 w-full"
+                                    loading={form.processing}
+                                >
+                                    <Truck
+                                        aria-hidden="true"
+                                        className="h-4 w-4"
+                                    />
+                                    Tugaskan Kurir
+                                </Button>
+                            </form>
+                        )}
 
                     {/* Courier */}
                     {order.delivery && (
