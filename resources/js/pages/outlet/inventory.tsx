@@ -38,12 +38,17 @@ export default function OutletInventory({
     const noFamilyItems: any[] = [];
 
     for (const item of inventories) {
-        const familyId = item.variant?.family_id ?? item.variant?.family?.id;
+        // The API sends the product under `product`; `variant` is the older
+        // payload name. Reading `variant` alone pushed every item into
+        // noFamilyItems, so the family groups stayed empty and the Kritis /
+        // Rendah / Sehat summary always read 0.
+        const family = item.variant?.family ?? item.product?.category ?? null;
+        const familyId = item.variant?.family_id ?? family?.id;
 
         if (familyId) {
             if (!familyGroups.has(familyId)) {
                 familyGroups.set(familyId, {
-                    family: item.variant?.family,
+                    family,
                     items: [],
                 });
             }
@@ -87,7 +92,11 @@ export default function OutletInventory({
             item.product?.name ??
             ''
         ).toLowerCase();
-        const family = (item.variant?.family?.name ?? '').toLowerCase();
+        const family = (
+            item.variant?.family?.name ??
+            item.product?.category?.name ??
+            ''
+        ).toLowerCase();
 
         return name.includes(q) || family.includes(q);
     };
