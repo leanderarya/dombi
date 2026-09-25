@@ -108,9 +108,13 @@ export default function OutletOrderShow({
     const isConfirmed = order.status === 'confirmed';
     const isPreparing = order.status === 'preparing';
     const isDeliveryOrder = order.fulfillment_type !== 'pickup';
+    // A rejected assignment leaves a delivery row behind (deliveries.order_id is
+    // unique), and DeliveryService deletes that stale row when it assigns again.
+    // Requiring no delivery at all hid the action forever after a rejection.
+    const needsReassign = order.delivery?.status === 'rejected_by_courier';
     const isReadyForPickup =
         order.status === 'ready_for_pickup' &&
-        !order.delivery &&
+        (!order.delivery || needsReassign) &&
         isDeliveryOrder;
     const isReadyForCustomerPickup =
         order.status === 'ready_for_pickup' &&
@@ -169,7 +173,7 @@ export default function OutletOrderShow({
         });
     }
 
-    if (isReadyForPickup && !order.delivery) {
+    if (isReadyForPickup) {
         actions.push({
             label: 'Assign Kurir',
             variant: 'primary' as const,

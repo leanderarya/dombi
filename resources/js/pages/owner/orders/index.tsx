@@ -327,7 +327,10 @@ export default function OwnerOrdersIndex({
                                             <div className="flex items-center justify-end gap-2">
                                                 {order.status ===
                                                     'ready_for_pickup' &&
-                                                    !order.delivery && (
+                                                    (!order.delivery ||
+                                                        order.delivery
+                                                            .status ===
+                                                            'rejected_by_courier') && (
                                                         <Button
                                                             size="sm"
                                                             onClick={() =>

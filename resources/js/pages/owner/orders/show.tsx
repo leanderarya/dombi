@@ -341,7 +341,10 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     </div>
 
                     {/* Assign Kurir */}
-                    {order.status === 'ready_for_pickup' && !order.delivery && (
+                    {order.status === 'ready_for_pickup' &&
+                        (!order.delivery ||
+                            order.delivery.status ===
+                                'rejected_by_courier') && (
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
