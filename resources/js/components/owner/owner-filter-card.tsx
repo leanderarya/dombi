@@ -160,7 +160,9 @@ export default function OwnerFilterCard({
                         type="date"
                         value={dateValue}
                         onChange={(e) => onDateChange?.(e.target.value)}
-                        className="w-[140px]"
+                        // Wide enough for the native dd/mm/yyyy field plus the
+                        // calendar picker; at 140px the value was clipped.
+                        className="w-[172px]"
                         aria-label="Filter tanggal"
                     />
                 )}
