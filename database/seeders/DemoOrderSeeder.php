@@ -3,11 +3,13 @@
 namespace Database\Seeders;
 
 use App\Models\Customer;
+use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Outlet;
 use App\Models\Product;
+use App\Models\User;
 use App\Support\PhoneNormalizer;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Seeder;
@@ -15,6 +17,8 @@ use Illuminate\Support\Str;
 
 class DemoOrderSeeder extends Seeder
 {
+    private ?int $courierId = null;
+
     public function run(): void
     {
         $customers = Customer::query()->get();
@@ -42,9 +46,11 @@ class DemoOrderSeeder extends Seeder
             'completed', 'cancelled_by_customer', 'rejected_by_outlet', 'expired',
         ];
         $deliveryStatuses = [
-            'awaiting_preparation', 'picked_up', 'delivering', 'delivering',
+            'ready_for_pickup', 'awaiting_preparation', 'picked_up', 'delivering', 'delivering',
             'completed', 'completed', 'failed_delivery', 'cancelled_by_outlet', 'expired',
         ];
+
+        $this->courierId = User::where('role', 'courier')->value('id');
 
         $orders = [];
         $idx = 1;
@@ -129,7 +135,59 @@ class DemoOrderSeeder extends Seeder
             'created_at' => $orderedAt,
         ]);
 
+        $this->createDeliveryIfNeeded($order, $isPickup, $status, $orderedAt, $idx);
+
         return $order;
+    }
+
+    /**
+     * An order sitting in a delivery lifecycle state is only consistent with a
+     * matching delivery row. Without one the courier has no task to work on and
+     * the outlet sees a shipment it cannot act on - and the seeded data set had
+     * neither a single delivery nor an order that could be assigned.
+     */
+    private function createDeliveryIfNeeded(Order $order, bool $isPickup, string $status, CarbonInterface $orderedAt, int $idx): void
+    {
+        if ($isPickup) {
+            return;
+        }
+
+        $map = [
+            'picked_up' => 'picked_up',
+            'delivering' => 'delivering',
+            'completed' => 'completed',
+            'failed_delivery' => 'failed',
+        ];
+
+        if ($status === 'ready_for_pickup') {
+            // Half keep no delivery so an outlet has something to assign, the
+            // other half carry a courier so the courier role has a real task.
+            if ($idx % 4 !== 0) {
+                return;
+            }
+
+            $deliveryStatus = 'waiting_pickup';
+        } else {
+            $deliveryStatus = $map[$status] ?? null;
+        }
+
+        if ($deliveryStatus === null) {
+            return;
+        }
+
+        $pickedUp = in_array($deliveryStatus, ['picked_up', 'delivering', 'completed'], true);
+
+        Delivery::create([
+            'order_id' => $order->id,
+            'courier_id' => $this->courierId,
+            'status' => $deliveryStatus,
+            'courier_type' => 'dombi',
+            'assigned_at' => $orderedAt->copy()->addMinutes(rand(20, 40)),
+            'pickup_time' => $pickedUp ? $orderedAt->copy()->addMinutes(rand(45, 70)) : null,
+            'delivered_time' => $deliveryStatus === 'completed' ? $orderedAt->copy()->addHours(rand(1, 3)) : null,
+            'delivered_to' => $deliveryStatus === 'completed' ? $order->customer_name : null,
+            'failed_reason' => $deliveryStatus === 'failed' ? 'Alamat Tidak Jelas' : null,
+        ]);
     }
 
     private function createItem(Order $order, Product $product, int $qty): void
