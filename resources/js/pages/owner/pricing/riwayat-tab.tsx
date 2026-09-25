@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
+import { Select } from '@/components/ui/select';
 import { SkeletonList } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -102,18 +103,19 @@ export function RiwayatTab({
 
             {outlets && outlets.length > 0 && (
                 <div className="mb-4">
-                    <select
+                    <Select
                         value={outletFilter}
                         onChange={(e) => handleOutletChange(e.target.value)}
-                        className="h-8 rounded-md border border-border bg-surface px-2 text-xs font-medium outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
-                    >
-                        <option value="">Semua Outlet</option>
-                        {outlets.map((o) => (
-                            <option key={o.id} value={o.id}>
-                                {o.name}
-                            </option>
-                        ))}
-                    </select>
+                        options={[
+                            { value: '', label: 'Semua Outlet' },
+                            ...outlets.map((o) => ({
+                                value: String(o.id),
+                                label: o.name,
+                            })),
+                        ]}
+                        className="w-[150px]"
+                        aria-label="Filter outlet"
+                    />
                 </div>
             )}
 
