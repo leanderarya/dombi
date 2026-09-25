@@ -443,8 +443,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('/deliveries/{delivery}/reject', [CourierDeliveryController::class, 'reject'])->name('deliveries.reject');
         Route::post('/deliveries/{delivery}/return-to-outlet', [CourierDeliveryController::class, 'returnToOutlet'])->name('deliveries.return-to-outlet');
         Route::post('/availability/toggle', [CourierAvailabilityController::class, 'toggleOnline'])->name('availability.toggle');
-        Route::post('/shift/start', [CourierAvailabilityController::class, 'startShift'])->name('shift.start');
-        Route::post('/shift/end', [CourierAvailabilityController::class, 'endShift'])->name('shift.end');
         Route::get('/availability/status', [CourierAvailabilityController::class, 'status'])->name('availability.status');
         Route::get('/profile', App\Http\Controllers\Courier\ProfileController::class)->name('profile');
         Route::post('/location', [LocationController::class, 'update'])->name('location.update');

@@ -105,28 +105,6 @@ class User extends Authenticatable
         return $this->isCustomer() && $this->customer === null;
     }
 
-    public function isOnShift(): bool
-    {
-        return $this->shift_started_at !== null && $this->shift_ended_at === null;
-    }
-
-    public function startShift(): void
-    {
-        $this->forceFill([
-            'is_online' => true,
-            'shift_started_at' => now(),
-            'shift_ended_at' => null,
-        ])->save();
-    }
-
-    public function endShift(): void
-    {
-        $this->forceFill([
-            'is_online' => false,
-            'shift_ended_at' => now(),
-        ])->save();
-    }
-
     public function goOnline(): void
     {
         $this->forceFill(['is_online' => true])->save();
