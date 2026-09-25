@@ -143,7 +143,7 @@ export default function InventoriesIndex({
     );
     const [editItem, setEditItem] = useState<any>(null);
     const [search, setSearch] = useState('');
-    const [outletFilter, setOutletFilter] = useState<string>('all');
+    const [outletFilter, setOutletFilter] = useState<string>('');
     const [sortKey, setSortKey] = useState<SortKey>('name');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
@@ -231,7 +231,7 @@ export default function InventoriesIndex({
             });
         }
 
-        if (outletFilter !== 'all') {
+        if (outletFilter) {
             result = result.filter((g) =>
                 g.outlets.some((o: any) => o.outlet_name === outletFilter),
             );
@@ -429,20 +429,13 @@ export default function InventoriesIndex({
                         searchPlaceholder="Cari produk atau outlet..."
                         searchValue={search}
                         onSearch={setSearch}
-                    >
-                        <select
-                            value={outletFilter}
-                            onChange={(e) => setOutletFilter(e.target.value)}
-                            className="h-8 rounded-md border border-border bg-surface px-2 text-xs font-medium outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
-                        >
-                            <option value="all">Semua Outlet</option>
-                            {outletList.map((o: any) => (
-                                <option key={o.id} value={o.name}>
-                                    {o.name}
-                                </option>
-                            ))}
-                        </select>
-                    </OwnerFilterCard>
+                        outletOptions={outletList.map((o: any) => ({
+                            value: o.name,
+                            label: o.name,
+                        }))}
+                        outletValue={outletFilter}
+                        onOutletChange={setOutletFilter}
+                    />
 
                     {sorted.length === 0 ? (
                         <EmptyState
