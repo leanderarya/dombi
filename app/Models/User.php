@@ -169,26 +169,10 @@ class User extends Authenticatable
         return $this->hasMany(CourierInvitation::class, 'courier_user_id');
     }
 
-    public function hasActiveLocation(): bool
-    {
-        return $this->latitude !== null
-            && $this->longitude !== null
-            && $this->location_updated_at !== null
-            && $this->location_updated_at->diffInMinutes(now()) <= 5;
-    }
-
     public function activeDeliveryCount(): int
     {
         return $this->courierDeliveries()
             ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
             ->count();
-    }
-
-    public function canAcceptDelivery(): bool
-    {
-        return $this->is_online
-            && $this->is_active
-            && $this->hasActiveLocation()
-            && $this->activeDeliveryCount() < 3;
     }
 }
