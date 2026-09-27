@@ -10,16 +10,39 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Minishlink\WebPush\ContentEncoding;
 use NotificationChannels\WebPush\HasPushSubscriptions;
+use NotificationChannels\WebPush\PushSubscription;
 
 #[Fillable(['name', 'email', 'password', 'phone', 'provider', 'provider_id', 'avatar', 'role', 'outlet_id', 'is_active', 'latitude', 'longitude', 'location_updated_at', 'vehicle_type', 'vehicle_plate', 'photo'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasPushSubscriptions, Notifiable;
+    use HasFactory, Notifiable;
+
+    use HasPushSubscriptions {
+        updatePushSubscription as private updatePushSubscriptionUnguarded;
+    }
+
+    /**
+     * The package looks the endpoint up and only then creates it, so two requests
+     * racing for the same endpoint collide with the unique index on
+     * push_subscriptions.endpoint and the second one fails with a duplicate entry
+     * error. Retrying is enough: by then the row exists and the package takes its
+     * update path instead.
+     */
+    public function updatePushSubscription(string $endpoint, ?string $key = null, ?string $token = null, ContentEncoding|string|null $contentEncoding = null): PushSubscription
+    {
+        try {
+            return $this->updatePushSubscriptionUnguarded($endpoint, $key, $token, $contentEncoding);
+        } catch (UniqueConstraintViolationException) {
+            return $this->updatePushSubscriptionUnguarded($endpoint, $key, $token, $contentEncoding);
+        }
+    }
 
     /**
      * Get the attributes that should be cast.
