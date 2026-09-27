@@ -236,7 +236,7 @@ export function PusatTab({
                 <OwnerTable minWidth="700px">
                     <Table>
                         <TableHeader>
-                            <tr className="border-b border-border bg-surface-muted/50 text-left">
+                            <tr className="border-b border-border bg-primary/5 text-left">
                                 <SortableTh
                                     label="Produk"
                                     active={sortKey === 'name'}
