@@ -7,6 +7,7 @@ import CourierBottomNav from '@/components/courier/bottom-nav';
 import NotificationBell from '@/components/shared/notification-bell';
 import NotificationSheet from '@/components/shared/notification-sheet';
 import MobileRoleLayout from '@/components/ui/mobile-role-layout';
+import { useCourierLocation } from '@/hooks/use-courier-location';
 import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
 import { useRoleTheme } from '@/hooks/use-role-theme';
 
@@ -36,6 +37,8 @@ export default function CourierLayout({
     const { visible } = useHideOnScroll();
 
     useRoleTheme('courier');
+    // Keeps the outlet's courier picker ranking this courier by distance.
+    useCourierLocation();
 
     const isOnline = auth?.user?.is_online;
     const onlineLabel =
