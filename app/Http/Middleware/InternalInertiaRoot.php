@@ -13,7 +13,12 @@ class InternalInertiaRoot extends Middleware
     {
         return array_merge(parent::share($request), [
             'auth' => [
-                'user' => $request->user()?->only('id', 'name', 'email', 'role'),
+                'user' => $request->user() ? [
+                    ...$request->user()->only('id', 'name', 'email', 'role'),
+                    // The courier layout uses this to decide whether to report a
+                    // location, and for its online label.
+                    'is_online' => (bool) $request->user()->is_online,
+                ] : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
