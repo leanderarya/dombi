@@ -61,6 +61,17 @@ export default function OwnerOrdersIndex({
 
     const currentStatus = filters.status ?? 'needs_action';
 
+    // The empty state used to tell the owner to wait for a customer to order even
+    // when a filter was what emptied the list.
+    const isFiltered =
+        currentStatus !== 'all' ||
+        Boolean(
+            filters.search ||
+            filters.outlet_id ||
+            filters.courier_id ||
+            filters.date,
+        );
+
     const setFilter = (key: string, value: string) => {
         router.get(
             '/owner/orders',
@@ -265,7 +276,11 @@ export default function OwnerOrdersIndex({
                 <EmptyState
                     icon={<Package aria-hidden="true" className="h-8 w-8" />}
                     title="Tidak ada pesanan"
-                    description="Pesanan akan muncul di sini setelah pelanggan melakukan pemesanan"
+                    description={
+                        isFiltered
+                            ? 'Tidak ada pesanan yang cocok dengan filter yang dipilih. Coba ubah atau hapus filternya.'
+                            : 'Pesanan akan muncul di sini setelah pelanggan melakukan pemesanan'
+                    }
                 />
             ) : (
                 <OwnerTable>
