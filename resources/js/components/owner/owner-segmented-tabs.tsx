@@ -19,11 +19,15 @@ export default function OwnerSegmentedTabs({
 }: Props) {
     return (
         <div
+            role="tablist"
             className={`mb-6 inline-flex rounded-lg bg-surface-muted p-1 ${className}`}
         >
             {tabs.map((tab) => (
                 <button
                     key={tab.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab.key}
                     onClick={() => onChange(tab.key)}
                     className={`relative rounded-lg px-3 py-2 text-[12px] font-semibold transition-all duration-200 sm:px-5 ${
                         activeTab === tab.key
