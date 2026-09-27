@@ -57,6 +57,13 @@ export default function OutletFormSheet({
             ...form.data,
             latitude: change.lat.toFixed(7),
             longitude: change.lng.toFixed(7),
+            // The geocoder already returns the full street address but it was
+            // being thrown away, leaving outlets.address empty - and empty becomes
+            // null, which the NOT NULL column rejects.
+            address:
+                change.geo.address?.formatted_address ||
+                form.data.address ||
+                '',
             kelurahan:
                 change.geo.address?.kelurahan || form.data.kelurahan || '',
             kecamatan:
@@ -177,13 +184,13 @@ export default function OutletFormSheet({
                             )}
                         </Section>
 
-                        {/* Section 3: Detail Alamat (optional, manual) */}
+                        {/* Section 3: Alamat */}
                         <Section
-                            title="Detail Alamat"
-                            subtitle="Informasi tambahan untuk memudahkan kurir menemukan lokasi."
+                            title="Alamat"
+                            subtitle="Terisi otomatis dari titik peta. Lengkapi patokan agar kurir mudah menemukan lokasi."
                         >
                             <TextArea
-                                label="Detail"
+                                label="Alamat"
                                 value={form.data.address ?? ''}
                                 onChange={(value) =>
                                     form.setData('address', value)

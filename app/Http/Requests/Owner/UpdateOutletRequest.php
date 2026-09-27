@@ -21,7 +21,7 @@ class UpdateOutletRequest extends FormRequest
             'city' => ['sometimes', 'nullable', 'string', 'max:255'],
             'province' => ['sometimes', 'nullable', 'string', 'max:255'],
             'postal_code' => ['sometimes', 'nullable', 'string', 'max:20'],
-            'address' => ['sometimes', 'nullable', 'string'],
+            'address' => ['sometimes', 'required', 'string'],
             'latitude' => ['sometimes', 'required', 'numeric', 'between:-90,90'],
             'longitude' => ['sometimes', 'required', 'numeric', 'between:-180,180'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:50'],

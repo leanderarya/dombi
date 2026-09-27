@@ -97,6 +97,28 @@ class OwnerOutletManagementTest extends TestCase
         $this->assertTrue(Hash::check(session('outlet_provisioning.temporary_password'), $user->password));
     }
 
+    public function test_outlet_creation_rejects_a_missing_address_instead_of_failing(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+
+        // outlets.address is NOT NULL, and Laravel turns the empty form field
+        // into null before validation, so an omitted address used to skip
+        // validation and blow up on the insert with a 500.
+        $this->actingAs($owner)
+            ->post(route('owner.outlets.store'), [
+                'name' => 'Outlet Tanpa Alamat',
+                'kelurahan' => 'Banyumanik',
+                'kecamatan' => 'Banyumanik',
+                'address' => '',
+                'latitude' => -7.0700000,
+                'longitude' => 110.4200000,
+                'status' => 'active',
+            ])
+            ->assertSessionHasErrors(['address']);
+
+        $this->assertDatabaseMissing('outlets', ['name' => 'Outlet Tanpa Alamat']);
+    }
+
     public function test_generated_outlet_username_is_unique_and_readable(): void
     {
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
