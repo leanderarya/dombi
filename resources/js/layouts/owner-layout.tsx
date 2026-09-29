@@ -81,7 +81,6 @@ const navGroups: NavGroup[] = [
                 label: 'Produk',
                 isActive: (url: string) =>
                     url.startsWith('/owner/products') ||
-                    url.startsWith('/owner/product-families') ||
                     url.startsWith('/owner/product-categories'),
             },
             {

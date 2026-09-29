@@ -43,13 +43,6 @@ class ProductRoutesTest extends TestCase
         );
     }
 
-    public function test_legacy_redirects_exist(): void
-    {
-        // Legacy product-families routes were removed after migration cleanup.
-        // New routes use product-categories instead.
-        $this->assertTrue(true); // no legacy routes expected
-    }
-
     public function test_pricing_routes_use_product_param(): void
     {
         // Ensure new product-based pricing routes exist
