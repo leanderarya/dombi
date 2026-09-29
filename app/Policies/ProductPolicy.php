@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\ExchangeRequestItem;
+use App\Models\OfflineSale;
 use App\Models\OutletProductPrice;
 use App\Models\Product;
 use App\Models\RestockRequestItem;
@@ -83,6 +84,10 @@ class ProductPolicy
             || ExchangeRequestItem::where('product_id', $product->id)
                 ->orWhere('replacement_product_id', $product->id)
                 ->exists()
-            || RestockRequestItem::where('product_id', $product->id)->exists();
+            || RestockRequestItem::where('product_id', $product->id)->exists()
+            // offline_sales.product_id cascades, so without this a hard delete
+            // would take the sale rows with it and quietly change settlement
+            // revenue.
+            || OfflineSale::where('product_id', $product->id)->exists();
     }
 }

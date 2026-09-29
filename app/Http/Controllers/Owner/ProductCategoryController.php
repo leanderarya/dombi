@@ -7,6 +7,7 @@ use App\Http\Requests\Owner\StoreProductCategoryRequest;
 use App\Http\Requests\Owner\UpdateProductCategoryRequest;
 use App\Models\ProductCategory;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -57,5 +58,19 @@ class ProductCategoryController extends Controller
         $category->delete();
 
         return redirect()->route('owner.product-categories.index')->with('success', 'Kategori berhasil dihapus.');
+    }
+
+    /**
+     * Remove a category for good, including one that was already soft deleted.
+     */
+    public function forceDestroy(ProductCategory $category): RedirectResponse
+    {
+        if (Gate::denies('forceDelete', $category)) {
+            return back()->with('error', 'Kategori masih memiliki produk, jadi belum bisa dihapus permanen. Hapus atau pindahkan produknya dulu.');
+        }
+
+        $category->forceDelete();
+
+        return redirect()->route('owner.product-categories.index')->with('success', 'Kategori berhasil dihapus permanen.');
     }
 }

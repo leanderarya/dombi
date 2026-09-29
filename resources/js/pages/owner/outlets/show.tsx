@@ -32,6 +32,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -43,6 +44,8 @@ export default function OutletShow({
     operatingHours,
     auditLogs,
     settlementSummary,
+    canForceDelete = false,
+    historyCounts = {},
 }: any) {
     const location =
         outlet.latitude && outlet.longitude
@@ -50,6 +53,8 @@ export default function OutletShow({
             : null;
 
     const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+    const [showForceDeleteConfirm, setShowForceDeleteConfirm] = useState(false);
+    const [forceDeleteName, setForceDeleteName] = useState('');
     const { flash } = usePage().props as any;
     const [resetOpen, setResetOpen] = useState(false);
     const [infoModalOpen, setInfoModalOpen] = useState(false);
@@ -105,6 +110,22 @@ export default function OutletShow({
         );
     };
 
+    const handleForceDelete = () => {
+        router.delete(`/owner/outlets/${outlet.id}/force`, {
+            onSuccess: () => {
+                setShowForceDeleteConfirm(false);
+                toast.success('Outlet dihapus permanen');
+            },
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
+        });
+    };
+
+    // "21 pesanan dan 3 settlement" - the server sends { label: count }.
+    const historySummary = Object.entries(historyCounts)
+        .map(([label, count]) => `${count} ${label}`)
+        .join(', ');
+
     return (
         <OwnerPageShell
             title={outlet.name}
@@ -121,9 +142,30 @@ export default function OutletShow({
                         <Trash2 className="h-3 w-3" aria-hidden="true" />
                         Arsipkan
                     </Button>
+                    {canForceDelete && (
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            className="min-h-11 active:opacity-80"
+                            onClick={() => {
+                                setForceDeleteName('');
+                                setShowForceDeleteConfirm(true);
+                            }}
+                        >
+                            <Trash2 className="h-3 w-3" aria-hidden="true" />
+                            Hapus Permanen
+                        </Button>
+                    )}
                 </div>
             }
         >
+            {!canForceDelete && (
+                <div className="mb-4 rounded-xl border border-border bg-surface-muted px-4 py-3 text-xs text-text-muted">
+                    Hapus permanen tidak tersedia karena outlet ini punya{' '}
+                    <strong className="text-text">{historySummary}</strong>.
+                    Arsipkan saja supaya riwayatnya tetap tersimpan.
+                </div>
+            )}
             <div className="grid gap-4 lg:grid-cols-3">
                 <div className="space-y-4 lg:col-span-2">
                     <div
@@ -659,6 +701,67 @@ export default function OutletShow({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {canForceDelete && (
+                <Dialog
+                    open={showForceDeleteConfirm}
+                    onOpenChange={setShowForceDeleteConfirm}
+                >
+                    <DialogContent
+                        className="z-[2000]"
+                        overlayClassName="z-[1999]"
+                    >
+                        <DialogHeader>
+                            <DialogTitle>Hapus Permanen?</DialogTitle>
+                            <DialogDescription>
+                                Outlet <strong>{outlet.name}</strong> beserta
+                                akun operasionalnya akan dihapus selamanya.
+                                Tindakan ini tidak bisa dibatalkan.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-2 py-3">
+                            <label
+                                htmlFor="force-delete-outlet-name"
+                                className="block text-sm text-text-muted"
+                            >
+                                Ketik{' '}
+                                <strong className="text-text">
+                                    {outlet.name}
+                                </strong>{' '}
+                                untuk konfirmasi
+                            </label>
+                            <Input
+                                id="force-delete-outlet-name"
+                                value={forceDeleteName}
+                                onChange={(e) =>
+                                    setForceDeleteName(e.target.value)
+                                }
+                                placeholder={outlet.name}
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                variant="outline"
+                                className="min-h-11"
+                                onClick={() => setShowForceDeleteConfirm(false)}
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                className="min-h-11"
+                                disabled={
+                                    forceDeleteName !== outlet.name ||
+                                    forceDeleteName === ''
+                                }
+                                onClick={handleForceDelete}
+                            >
+                                Hapus Permanen
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
 
             <Dialog open={resetOpen} onOpenChange={setResetOpen}>
                 <DialogContent className="z-[2000]" overlayClassName="z-[1999]">

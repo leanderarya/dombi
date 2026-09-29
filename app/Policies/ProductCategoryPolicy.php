@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\ExchangeRequestItem;
+use App\Models\OfflineSale;
 use App\Models\OrderItem;
 use App\Models\OutletInventory;
 use App\Models\OutletProductPrice;
@@ -66,10 +67,14 @@ class ProductCategoryPolicy
 
     /**
      * Determine whether the user can permanently delete the category.
+     *
+     * Stricter than the soft-delete rule on purpose: products.product_category_id
+     * nulls on delete, so erasing a category would silently uncategorise whatever
+     * is still attached to it, including trashed products.
      */
     public function forceDelete(?User $user, ProductCategory $category): bool
     {
-        return ! $this->hasActiveProducts($category) && ! $this->hasProductsWithHistory($category);
+        return ! $category->products()->withTrashed()->exists();
     }
 
     /**
@@ -123,6 +128,12 @@ class ProductCategoryPolicy
         }
 
         if (RestockRequestItem::whereIn('product_id', $productIds)->exists()) {
+            return true;
+        }
+
+        // Mirrors ProductPolicy: offline_sales cascade on product delete, so a
+        // category carrying them must not be removable either.
+        if (OfflineSale::whereIn('product_id', $productIds)->exists()) {
             return true;
         }
 

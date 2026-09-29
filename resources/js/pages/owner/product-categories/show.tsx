@@ -455,6 +455,43 @@ export default function ProductCategoryShow({ category }: Props) {
         });
     };
 
+    /**
+     * Removes the product row for good. The server refuses when it carries any
+     * business history, so the refusal message is the guard rather than the UI.
+     */
+    const handleForceDeleteProduct = () => {
+        if (!deleteId) {
+            return;
+        }
+
+        router.delete(`/owner/products/${deleteId}/force`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Produk berhasil dihapus permanen');
+                setDeleteId(null);
+            },
+            onError: (errors) => {
+                const errMsg = Object.values(errors).flat().join(', ');
+                setDeleteId(null);
+                toast.error(errMsg || 'Gagal menghapus produk permanen');
+            },
+        });
+    };
+
+    const handleForceDeleteCategory = () => {
+        router.delete(`/owner/product-categories/${category.id}/force`, {
+            onSuccess: () => {
+                toast.success('Kategori berhasil dihapus permanen');
+                setDeleteCatDialog(false);
+            },
+            onError: (errors) =>
+                toast.error(
+                    Object.values(errors).flat().join(', ') ||
+                        'Gagal menghapus kategori permanen',
+                ),
+        });
+    };
+
     const handleSoftDeleteDeactivate = () => {
         if (!softDeleteId) {
             return;
@@ -1294,6 +1331,13 @@ export default function ProductCategoryShow({ category }: Props) {
                         >
                             Hapus
                         </Button>
+                        <Button
+                            variant="destructive"
+                            className="min-h-11"
+                            onClick={handleForceDeleteProduct}
+                        >
+                            Hapus Permanen
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -1362,6 +1406,13 @@ export default function ProductCategoryShow({ category }: Props) {
                             onClick={handleDeleteCategory}
                         >
                             Hapus
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            className="min-h-11"
+                            onClick={handleForceDeleteCategory}
+                        >
+                            Hapus Permanen
                         </Button>
                     </DialogFooter>
                 </DialogContent>

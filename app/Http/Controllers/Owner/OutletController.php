@@ -10,11 +10,14 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\RestockRequest;
 use App\Models\Settlement;
+use App\Policies\OutletPolicy;
 use App\Services\OutletAuditService;
 use App\Services\OutletProvisioningService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -55,7 +58,7 @@ class OutletController extends Controller
             ->with('outlet_provisioning', $result['credentials']);
     }
 
-    public function show(Outlet $outlet): Response
+    public function show(Outlet $outlet, OutletPolicy $policy): Response
     {
         $outlet->load(['user:id,email,is_active,must_change_password,outlet_id']);
         $outlet->loadCount([
@@ -68,6 +71,10 @@ class OutletController extends Controller
 
         return Inertia::render('owner/outlets/show', [
             'outlet' => $outlet,
+            // Drives whether the permanent-delete action is offered, and what the
+            // refusal says when it is not.
+            'canForceDelete' => Gate::allows('forceDelete', $outlet),
+            'historyCounts' => $policy->historyCounts($outlet),
             'inventoryHealth' => $outlet->inventories()
                 ->whereNotNull('product_id')
                 ->with('product:id,name,size')
@@ -124,12 +131,59 @@ class OutletController extends Controller
         return redirect()->route('owner.outlets.index')->with('success', 'Outlet berhasil diperbarui.');
     }
 
+    /**
+     * The resource route's delete. Archiving is what the UI means by deleting, so it
+     * delegates to archive() rather than pretending to remove anything.
+     */
     public function destroy(Outlet $outlet): RedirectResponse
     {
-        // Soft delete (archive) instead of hard delete
         $outlet->update(['status' => 'archived']);
 
         return redirect()->route('owner.outlets.index')->with('success', 'Outlet berhasil diarsipkan.');
+    }
+
+    /**
+     * Remove an outlet for good. Only reachable when it has no history at all -
+     * see OutletPolicy::forceDelete.
+     */
+    public function forceDestroy(Request $request, Outlet $outlet, OutletPolicy $policy): RedirectResponse
+    {
+        if (Gate::denies('forceDelete', $outlet)) {
+            return back()->withErrors([
+                'outlet' => 'Outlet ini punya '.$this->describeHistory($policy->historyCounts($outlet)).
+                    ', jadi tidak bisa dihapus permanen. Arsipkan saja supaya riwayatnya tetap tersimpan.',
+            ]);
+        }
+
+        DB::transaction(function () use ($outlet): void {
+            // The operational account is detached rather than deleted: it may carry
+            // its own audit trail, and users.outlet_id already nulls on delete.
+            $outlet->user?->update(['is_active' => false]);
+            $outlet->user?->forceFill(['outlet_id' => null])->save();
+
+            $outlet->forceDelete();
+        });
+
+        return redirect()->route('owner.outlets.index')->with('success', 'Outlet berhasil dihapus permanen.');
+    }
+
+    /**
+     * @param  array<string, int>  $counts
+     */
+    private function describeHistory(array $counts): string
+    {
+        $parts = collect($counts)
+            ->map(fn (int $count, string $label) => $count.' '.$label)
+            ->values()
+            ->all();
+
+        if (count($parts) <= 1) {
+            return implode('', $parts);
+        }
+
+        $last = array_pop($parts);
+
+        return implode(', ', $parts).' dan '.$last;
     }
 
     public function archive(Request $request, Outlet $outlet, OutletAuditService $auditService): RedirectResponse

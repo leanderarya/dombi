@@ -165,17 +165,36 @@ class ProductController extends Controller
             ]);
         }
 
+        $categoryId = $product->product_category_id;
+
         $product->delete();
 
-        if ($product->product_category_id) {
-            return redirect()
-                ->route('owner.product-categories.show', $product->product_category_id)
-                ->with('success', 'Produk berhasil dihapus.');
+        return $this->redirectAfterRemoval($categoryId, 'Produk berhasil dihapus.');
+    }
+
+    /**
+     * Remove a product for good, including one that was already soft deleted.
+     */
+    public function forceDestroy(Product $product): RedirectResponse
+    {
+        if (Gate::denies('forceDelete', $product)) {
+            throw ValidationException::withMessages([
+                'business_history' => 'Produk tidak dapat dihapus permanen karena punya riwayat transaksi atau stok. Nonaktifkan saja.',
+            ]);
         }
 
-        return redirect()
-            ->route('owner.product-categories.index')
-            ->with('success', 'Produk berhasil dihapus.');
+        $categoryId = $product->product_category_id;
+
+        $product->forceDelete();
+
+        return $this->redirectAfterRemoval($categoryId, 'Produk berhasil dihapus permanen.');
+    }
+
+    private function redirectAfterRemoval(?int $categoryId, string $message): RedirectResponse
+    {
+        return $categoryId
+            ? redirect()->route('owner.product-categories.show', $categoryId)->with('success', $message)
+            : redirect()->route('owner.product-categories.index')->with('success', $message);
     }
 
     public function toggle(Product $product): RedirectResponse

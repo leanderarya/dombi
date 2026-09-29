@@ -255,6 +255,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/profile', OwnerProfileController::class)->name('profile');
         Route::resource('outlets', OwnerOutletController::class);
         Route::put('outlets/{outlet}/archive', [OwnerOutletController::class, 'archive'])->name('outlets.archive');
+        Route::delete('outlets/{outlet}/force', [OwnerOutletController::class, 'forceDestroy'])->name('outlets.force-destroy');
         Route::post('outlets/{outlet}/reset-password', [OwnerOutletController::class, 'resetPassword'])
             ->middleware('throttle:10,1')
             ->name('outlets.reset-password');
@@ -284,6 +285,12 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('product-categories/{category}/products/bulk-size', [OwnerProductController::class, 'bulkSize'])->name('product-categories.products.bulk-size');
         Route::post('product-categories/{category}/products/bulk-update', [OwnerProductController::class, 'bulkUpdate'])->name('product-categories.products.bulk-update');
         Route::delete('products/{product}', [OwnerProductController::class, 'destroy'])->name('products.destroy');
+        Route::delete('products/{product}/force', [OwnerProductController::class, 'forceDestroy'])
+            ->withTrashed()
+            ->name('products.force-destroy');
+        Route::delete('product-categories/{category}/force', [OwnerProductCategoryController::class, 'forceDestroy'])
+            ->withTrashed()
+            ->name('product-categories.force-destroy');
         Route::patch('products/{product}/toggle', [OwnerProductController::class, 'toggle'])->name('products.toggle');
         Route::post('products/{product}/duplicate', [OwnerProductController::class, 'duplicate'])->name('products.duplicate');
         Route::patch('product-flavor-groups/{flavorGroup}/image', [OwnerProductFlavorGroupController::class, 'updateImage'])->name('product-flavor-groups.image.update');
