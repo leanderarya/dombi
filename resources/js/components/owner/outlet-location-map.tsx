@@ -615,7 +615,16 @@ function MapInvalidateSize() {
     const map = useMap();
 
     useEffect(() => {
-        setTimeout(() => map.invalidateSize(), 300);
+        // A ResizeObserver, not a one-shot timeout. The map also mounts inside
+        // dialogs, where the open animation keeps changing the container size
+        // for ~200ms after mount - a single delayed call measures a stale box
+        // and leaves grey tiles behind.
+        const observer = new ResizeObserver(() => map.invalidateSize());
+
+        observer.observe(map.getContainer());
+        map.invalidateSize();
+
+        return () => observer.disconnect();
     }, [map]);
 
     return null;

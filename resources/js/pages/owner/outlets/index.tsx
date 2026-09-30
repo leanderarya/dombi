@@ -1,15 +1,15 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { Building, Plus } from 'lucide-react';
 import { useState } from 'react';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { Button, buttonVariants } from '@/components/ui/button';
+import TambahOutletDialog from '@/components/owner/tambah-outlet-dialog';
+import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
-import { cn } from '@/lib/utils';
 
 type FilterKey = 'all' | 'active' | 'inactive' | 'low_stock';
 
@@ -47,10 +47,11 @@ function getOutletStatus(outlet: any): {
     return { label: 'Aktif', variant: 'success' };
 }
 
-export default function OutletsIndex({ outlets }: any) {
+export default function OutletsIndex({ outlets, existingOutlets }: any) {
     const { flash } = usePage<any>().props;
     const [filter, setFilter] = useState<FilterKey>('active');
     const [search, setSearch] = useState('');
+    const [showCreate, setShowCreate] = useState(false);
 
     if (!outlets?.data) {
         return (
@@ -98,15 +99,10 @@ export default function OutletsIndex({ outlets }: any) {
             title="Outlet"
             subtitle="Kelola seluruh outlet Dombi"
             headerRight={
-                <Link
-                    href="/owner/outlets/create"
-                    className={cn(
-                        buttonVariants({ variant: 'primary', size: 'lg' }),
-                    )}
-                >
+                <Button size="lg" onClick={() => setShowCreate(true)}>
                     <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
                     Tambah Outlet
-                </Link>
+                </Button>
             }
         >
             {/* Filter Bar */}
@@ -139,7 +135,7 @@ export default function OutletsIndex({ outlets }: any) {
                     description="Klik tambah untuk mendaftarkan outlet pertama"
                     action={{
                         label: '+ Tambah Outlet',
-                        href: '/owner/outlets/create',
+                        onClick: () => setShowCreate(true),
                     }}
                 />
             ) : (
@@ -247,6 +243,12 @@ export default function OutletsIndex({ outlets }: any) {
 
             <OutletProvisioningSummary
                 provisioning={flash?.outlet_provisioning}
+            />
+
+            <TambahOutletDialog
+                open={showCreate}
+                onClose={() => setShowCreate(false)}
+                existingOutlets={existingOutlets ?? []}
             />
         </OwnerPageShell>
     );

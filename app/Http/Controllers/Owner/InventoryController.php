@@ -9,7 +9,6 @@ use App\Http\Requests\Owner\UpdateInventoryRequest;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Services\InventoryService;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
@@ -60,6 +59,23 @@ class InventoryController extends Controller
             'critical' => OutletInventory::query()->whereCriticalStock()->count(),
         ];
 
+        // Picker data for the Tambah Stok dialog. Flat and unprefixed: the
+        // dialog posts product_id, which is the column name.
+        $data['outlets'] = Outlet::where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $data['products'] = Product::where('is_active', true)
+            ->with('category:id,name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Product $p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'category_name' => $p->category?->name,
+                'size_unit' => $p->size_unit,
+            ]);
+
         // Central stock (loaded when tab is pusat)
         if ($tab === 'pusat') {
             $products = Product::where('is_active', true)
@@ -87,20 +103,6 @@ class InventoryController extends Controller
         }
 
         return Inertia::render('owner/inventories/index', $data);
-    }
-
-    public function create(): Response
-    {
-        $categories = ProductCategory::where('is_active', true)
-            ->with(['products' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
-            ->orderBy('name')
-            ->get();
-
-        return Inertia::render('owner/inventories/create', [
-            'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
-            'families' => $categories, // backward compat for old frontend
-            'categories' => $categories,
-        ]);
     }
 
     /**

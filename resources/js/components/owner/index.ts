@@ -24,5 +24,7 @@ export { default as OwnerSidebarNav } from './owner-sidebar-nav';
 export { default as ResolveDeliverySheet } from './resolve-delivery-sheet';
 export { default as RestockModal } from './restock-modal';
 export { default as SettlementPaymentModal } from './settlement-payment-modal';
+export { default as TambahOutletDialog } from './tambah-outlet-dialog';
 export { default as TambahProdukModal } from './tambah-produk-modal';
+export { default as TambahStokDialog } from './tambah-stok-dialog';
 export { default as MarginBar, MarginBarInline } from './margin-bar';

@@ -1,12 +1,10 @@
-import { Link } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
 import { lazy, Suspense, useMemo, useState } from 'react';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PhoneInput from '@/components/ui/phone-input';
 import { Select } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 
 const OutletLocationMap = lazy(() => import('./outlet-location-map'));
 
@@ -22,7 +20,8 @@ type Props = {
     mode: 'create' | 'edit';
     form: any;
     submit: (event: FormEvent<HTMLFormElement>) => void;
-    outlet?: any;
+    /** Called by the Batal button. Replaces the link back to the index. */
+    onCancel?: () => void;
     existingOutlets?: ExistingOutlet[];
 };
 
@@ -30,7 +29,7 @@ export default function OutletFormSheet({
     mode,
     form,
     submit,
-    outlet,
+    onCancel,
     existingOutlets = [],
 }: Props) {
     const [geo, setGeo] = useState<{
@@ -80,23 +79,10 @@ export default function OutletFormSheet({
     };
 
     const isEdit = mode === 'edit';
-    const title = isEdit ? `Edit ${outlet?.name ?? 'Outlet'}` : 'Tambah Outlet';
     const hasLocation = !!location;
 
     return (
-        <div className="w-full max-w-5xl">
-            {/* Header */}
-            <div className="mb-5 flex items-start justify-between gap-3">
-                <div>
-                    <h1 className="text-xl font-semibold text-text">{title}</h1>
-                    <p className="mt-1 text-xs text-text-muted">
-                        {isEdit
-                            ? 'Perbarui informasi outlet.'
-                            : 'Pilih lokasi pada peta, lalu isi informasi outlet.'}
-                    </p>
-                </div>
-            </div>
-
+        <div className="w-full">
             <form onSubmit={submit}>
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
                     {/* Left Column: Form Fields */}
@@ -304,35 +290,6 @@ export default function OutletFormSheet({
                                 </div>
                             )}
                         </div>
-
-                        {/* Action Bar */}
-                        <div className="sticky bottom-0 -mx-4 border-t border-border bg-surface px-4 py-3 lg:-mx-6 lg:px-6">
-                            <div className="flex items-center gap-3">
-                                <Link
-                                    href="/owner/outlets"
-                                    className={cn(
-                                        buttonVariants({
-                                            variant: 'secondary',
-                                            size: 'lg',
-                                        }),
-                                        'min-h-11 flex-1',
-                                    )}
-                                >
-                                    Batal
-                                </Link>
-                                <Button
-                                    type="submit"
-                                    variant="primary"
-                                    size="lg"
-                                    disabled={form.processing}
-                                    className="min-h-11 flex-[2]"
-                                >
-                                    {form.processing
-                                        ? 'Menyimpan...'
-                                        : 'Simpan Outlet'}
-                                </Button>
-                            </div>
-                        </div>
                     </div>
 
                     {/* Right Column: Map */}
@@ -363,6 +320,30 @@ export default function OutletFormSheet({
                             )}
                         </Section>
                     </div>
+                </div>
+
+                {/* Action Bar. Sits below the grid so the sticky footer no
+                    longer floats over the map when this renders in a dialog. */}
+                <div className="mt-6 flex items-center gap-3 border-t border-border pt-4">
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        size="lg"
+                        onClick={() => onCancel?.()}
+                        className="min-h-11 flex-1"
+                    >
+                        Batal
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        loading={form.processing}
+                        disabled={form.processing}
+                        className="min-h-11 flex-[2]"
+                    >
+                        {isEdit ? 'Simpan Perubahan' : 'Simpan Outlet'}
+                    </Button>
                 </div>
             </form>
         </div>

@@ -6,20 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\PaymentAccount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class PaymentAccountController extends Controller
 {
-    public function index(): Response
-    {
-        $accounts = PaymentAccount::orderBy('bank_name')->get();
-
-        return Inertia::render('owner/finance/payment-accounts', [
-            'accounts' => $accounts,
-        ]);
-    }
-
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -30,7 +19,7 @@ class PaymentAccountController extends Controller
 
         PaymentAccount::create($validated);
 
-        return redirect()->route('owner.finance.payment-accounts.index')
+        return redirect()->route('owner.finance.dashboard', ['tab' => 'rekening'])
             ->with('success', 'Rekening berhasil ditambahkan.');
     }
 
@@ -45,7 +34,7 @@ class PaymentAccountController extends Controller
 
         $account->update($validated);
 
-        return redirect()->route('owner.finance.payment-accounts.index')
+        return redirect()->route('owner.finance.dashboard', ['tab' => 'rekening'])
             ->with('success', 'Rekening berhasil diperbarui.');
     }
 
@@ -53,7 +42,7 @@ class PaymentAccountController extends Controller
     {
         $account->delete();
 
-        return redirect()->route('owner.finance.payment-accounts.index')
+        return redirect()->route('owner.finance.dashboard', ['tab' => 'rekening'])
             ->with('success', 'Rekening berhasil dihapus.');
     }
 }

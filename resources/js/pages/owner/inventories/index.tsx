@@ -8,6 +8,7 @@ import {
     ChevronDown,
     ChevronRight,
     Package,
+    Plus,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -16,6 +17,7 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerSegmentedTabs from '@/components/owner/owner-segmented-tabs';
 import OwnerTable from '@/components/owner/owner-table';
 import SortableTh from '@/components/owner/sortable-th';
+import TambahStokDialog from '@/components/owner/tambah-stok-dialog';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -39,6 +41,7 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { displayProductName } from '@/lib/display';
+import { OUTLET_STATUS_ORDER, outletStockStatus } from '@/lib/inventory-status';
 import { cn } from '@/lib/utils';
 import CentralStockTab from './central-stock-tab';
 
@@ -58,8 +61,16 @@ function getCsrfToken(): string {
     return el?.content ?? '';
 }
 
-/** Aggregate grouped product data for the table */
-function buildProductGroups(outletSections: any[]) {
+/**
+ * Aggregate grouped product data for the table.
+ *
+ * Two passes, because a product can exist without any outlet_inventories row:
+ * the first seeds a group per active product, the second folds in the outlet
+ * rows. Building the map from outlet rows alone hid four products — including
+ * the two whose center stock was 0, which are the ones that most needed
+ * showing.
+ */
+function buildProductGroups(outletSections: any[], centralStock: any[]) {
     const map = new Map<
         number,
         {
@@ -74,6 +85,22 @@ function buildProductGroups(outletSections: any[]) {
             overallStatus: 'critical' | 'low' | 'healthy';
         }
     >();
+
+    for (const product of centralStock ?? []) {
+        if (product?.id && !map.has(product.id)) {
+            map.set(product.id, {
+                variantId: product.id,
+                variant: product,
+                product,
+                outlets: [],
+                totalStock: 0,
+                criticalCount: 0,
+                lowCount: 0,
+                healthyCount: 0,
+                overallStatus: 'healthy',
+            });
+        }
+    }
 
     for (const section of outletSections ?? []) {
         for (const item of section.inventories ?? []) {
@@ -102,13 +129,12 @@ function buildProductGroups(outletSections: any[]) {
             };
             entry.outlets.push(enriched);
 
-            const stock = item.current_stock ?? 0;
-            const available = stock - (item.reserved_stock ?? 0);
-            entry.totalStock += stock;
+            const status = outletStockStatus(item);
+            entry.totalStock += item.current_stock ?? 0;
 
-            if (available <= 0) {
+            if (status === 'critical') {
                 entry.criticalCount++;
-            } else if (available <= (item.minimum_stock ?? 0)) {
+            } else if (status === 'low') {
                 entry.lowCount++;
             } else {
                 entry.healthyCount++;
@@ -137,11 +163,14 @@ export default function InventoriesIndex({
     stats,
     centralStock,
     centralStats,
+    outlets,
+    products,
 }: any) {
     const [activeTab, setActiveTab] = useState<TabKey>(
         (initialTab as TabKey) ?? 'pusat',
     );
     const [editItem, setEditItem] = useState<any>(null);
+    const [showCreate, setShowCreate] = useState(false);
     const [search, setSearch] = useState('');
     const [outletFilter, setOutletFilter] = useState<string>('');
     const [sortKey, setSortKey] = useState<SortKey>('name');
@@ -207,8 +236,8 @@ export default function InventoriesIndex({
     );
 
     const productGroups = useMemo(
-        () => buildProductGroups(outletSections),
-        [outletSections],
+        () => buildProductGroups(outletSections, centralStock),
+        [outletSections, centralStock],
     );
 
     const filtered = useMemo(() => {
@@ -340,6 +369,12 @@ export default function InventoriesIndex({
         <OwnerPageShell
             title="Inventaris"
             subtitle="Pantau stok semua outlet dan pusat"
+            headerRight={
+                <Button size="lg" onClick={() => setShowCreate(true)}>
+                    <Plus className="mr-1 h-4 w-4" aria-hidden="true" />
+                    Tambah Stok
+                </Button>
+            }
         >
             <OwnerSegmentedTabs
                 tabs={TABS.map((t) => ({ key: t.key, label: t.label }))}
@@ -384,7 +419,7 @@ export default function InventoriesIndex({
                             </div>
                             {stats.critical > 0 && (
                                 <p className="text-[11px] text-danger">
-                                    ≤ 2 pcs
+                                    Tersedia ≤ dipesan
                                 </p>
                             )}
                         </div>
@@ -515,21 +550,13 @@ export default function InventoriesIndex({
                                                     break;
                                                 case 'status':
                                                     av =
-                                                        a.current_stock <= 2
-                                                            ? 0
-                                                            : a.current_stock <=
-                                                                (a.minimum_stock ??
-                                                                    0)
-                                                              ? 1
-                                                              : 2;
+                                                        OUTLET_STATUS_ORDER[
+                                                            outletStockStatus(a)
+                                                        ];
                                                     bv =
-                                                        b.current_stock <= 2
-                                                            ? 0
-                                                            : b.current_stock <=
-                                                                (b.minimum_stock ??
-                                                                    0)
-                                                              ? 1
-                                                              : 2;
+                                                        OUTLET_STATUS_ORDER[
+                                                            outletStockStatus(b)
+                                                        ];
                                                     break;
                                                 default:
                                                     av = a.outlet_name;
@@ -587,19 +614,23 @@ export default function InventoriesIndex({
                                                     <TableCell className="px-3 py-3">
                                                         <div className="flex items-center gap-1.5">
                                                             <div className="flex gap-0.5">
+                                                                {group.outlets
+                                                                    .length ===
+                                                                    0 && (
+                                                                    <span className="text-xs text-text-subtle">
+                                                                        Belum
+                                                                        ada di
+                                                                        outlet
+                                                                    </span>
+                                                                )}
                                                                 {group.outlets.map(
                                                                     (
                                                                         o: any,
                                                                     ) => {
                                                                         const s =
-                                                                            o.current_stock <=
-                                                                            2
-                                                                                ? 'critical'
-                                                                                : o.current_stock <=
-                                                                                    (o.minimum_stock ??
-                                                                                        0)
-                                                                                  ? 'low'
-                                                                                  : 'healthy';
+                                                                            outletStockStatus(
+                                                                                o,
+                                                                            );
 
                                                                         return (
                                                                             <span
@@ -958,6 +989,13 @@ export default function InventoriesIndex({
                     </form>
                 </DialogContent>
             </Dialog>
+
+            <TambahStokDialog
+                open={showCreate}
+                onClose={() => setShowCreate(false)}
+                outlets={outlets ?? []}
+                products={products ?? []}
+            />
         </OwnerPageShell>
     );
 }

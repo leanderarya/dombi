@@ -44,11 +44,6 @@ class CourierController extends Controller
         ]);
     }
 
-    public function create(): Response
-    {
-        return Inertia::render('owner/couriers/create');
-    }
-
     public function store(StoreCourierRequest $request): RedirectResponse
     {
         $result = $this->courierService->createCourier(

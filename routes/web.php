@@ -253,7 +253,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('finance/refund-obligations/{obligation}/needs-review', [PaymentRecoveryController::class, 'needsReview'])->name('finance.refund-obligations.needs-review');
         Route::get('/analytics', [OwnerAnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('/profile', OwnerProfileController::class)->name('profile');
-        Route::resource('outlets', OwnerOutletController::class);
+        // No create route: Tambah Outlet is a dialog on the index now.
+        Route::resource('outlets', OwnerOutletController::class)->except('create');
         Route::put('outlets/{outlet}/archive', [OwnerOutletController::class, 'archive'])->name('outlets.archive');
         Route::delete('outlets/{outlet}/force', [OwnerOutletController::class, 'forceDestroy'])->name('outlets.force-destroy');
         Route::post('outlets/{outlet}/reset-password', [OwnerOutletController::class, 'resetPassword'])
@@ -306,7 +307,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('pricing/outlets/{outlet}/bulk-update', [PricingController::class, 'bulkUpdate'])->name('pricing.outlets.bulk-update');
         Route::post('pricing/outlets/{outlet}/copy', [PricingController::class, 'copy'])->name('pricing.outlets.copy');
         Route::get('inventories', [OwnerInventoryController::class, 'index'])->name('inventories.index');
-        Route::get('inventories/create', [OwnerInventoryController::class, 'create'])->name('inventories.create');
         Route::post('inventories', [OwnerInventoryController::class, 'store'])->name('inventories.store');
         Route::get('inventories/{inventory}/edit', [OwnerInventoryController::class, 'edit'])->name('inventories.edit');
         Route::put('inventories/{inventory}', [OwnerInventoryController::class, 'update'])->name('inventories.update');
@@ -327,7 +327,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::resource('delivery-tiers', DeliveryTierController::class)->parameters(['delivery-tiers' => 'tier'])->only(['index', 'store', 'update', 'destroy']);
         Route::patch('delivery-tiers/{tier}/toggle', [DeliveryTierController::class, 'toggle'])->name('delivery-tiers.toggle');
         Route::get('couriers/management', [CourierManagementController::class, 'index'])->name('couriers.management.index');
-        Route::resource('couriers', CourierController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy']);
+        Route::resource('couriers', CourierController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
         Route::get('reports/export-csv', [ReportController::class, 'exportCsv'])->middleware('throttle:export')->name('reports.export-csv');
         Route::get('reports/orders/export', [ReportController::class, 'exportOrders'])->name('reports.orders.export');
         Route::get('reports/settlements/export', [ReportController::class, 'exportSettlements'])->name('reports.settlements.export');
@@ -345,7 +345,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('finance/settlements/{outlet}/payments', [FinanceSettlementController::class, 'recordPayment'])->name('finance.settlements.payments');
         Route::post('finance/settlements/{outlet}/send-invoice', [FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
         Route::post('finance/settlements/{outlet}/payout', [FinanceSettlementController::class, 'recordPayout'])->name('finance.settlements.payout');
-        Route::resource('finance/payment-accounts', PaymentAccountController::class)->only(['store', 'update', 'destroy']);
+        Route::resource('finance/payment-accounts', PaymentAccountController::class)->only(['store', 'update', 'destroy'])->parameters(['payment-accounts' => 'account']);
         Route::get('refunds', [RefundController::class, 'index'])->name('refunds.index');
         Route::post('refunds/{order}/destination', [RefundController::class, 'destination'])->name('refunds.destination');
         Route::post('refunds/{order}/start', [RefundController::class, 'start'])->name('refunds.start');

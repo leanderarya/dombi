@@ -35,12 +35,8 @@ class OutletController extends Controller
                 ])
                 ->latest()
                 ->paginate(15),
-        ]);
-    }
-
-    public function create(): Response
-    {
-        return Inertia::render('owner/outlets/create', [
+            // Seeds the Tambah Outlet dialog's map, which fits its bounds to
+            // these so a new branch is placed relative to the existing ones.
             'existingOutlets' => Outlet::where('status', 'active')
                 ->whereNotNull('latitude')
                 ->whereNotNull('longitude')
