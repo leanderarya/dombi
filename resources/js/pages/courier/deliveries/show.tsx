@@ -119,7 +119,8 @@ export default function CourierDeliveryShow({ delivery }: Props) {
     // and offering an action the order would reject ends in a failed request.
     const orderStatus = order.status;
     const canConfirmPickup =
-        delivery.status === 'waiting_pickup' && orderStatus === 'ready_for_pickup';
+        delivery.status === 'waiting_pickup' &&
+        orderStatus === 'ready_for_pickup';
     const canStartDelivery =
         delivery.status === 'picked_up' && orderStatus === 'picked_up';
     const canComplete =
