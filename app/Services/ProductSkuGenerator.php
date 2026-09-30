@@ -31,7 +31,11 @@ class ProductSkuGenerator
         $base = $this->generate($cat, $name, $flavor, $size, $seq);
         $candidate = $base;
         $i = 0;
-        while (Product::where('sku', $candidate)->exists()) {
+        // Trashed rows keep their sku and the UNIQUE index does not care that they
+        // were soft deleted, so the probe has to see them. Without withTrashed a
+        // deleted product's sku came back as "free", was proposed again, and the
+        // insert died on the constraint.
+        while (Product::withTrashed()->where('sku', $candidate)->exists()) {
             $i++;
             $candidate = $this->generate($cat, $name, $flavor, $size, $seq + $i);
         }
@@ -45,7 +49,7 @@ class ProductSkuGenerator
             $group = ProductFlavorGroup::lockForUpdate()->findOrFail($groupId);
             $cat = $group->category;
             $maxSeq = 0;
-            $existingSkus = Product::where('product_flavor_group_id', $groupId)->pluck('sku');
+            $existingSkus = Product::withTrashed()->where('product_flavor_group_id', $groupId)->pluck('sku');
             foreach ($existingSkus as $sku) {
                 if (preg_match('/-(\d+)$/', $sku, $m)) {
                     $maxSeq = max($maxSeq, (int) $m[1]);
@@ -54,7 +58,7 @@ class ProductSkuGenerator
             $seq = $maxSeq + 1;
             $candidate = $this->generate($cat, $name, $flavor, $size, $seq);
             $retries = 0;
-            while (Product::where('sku', $candidate)->exists() && $retries < 5) {
+            while (Product::withTrashed()->where('sku', $candidate)->exists() && $retries < 5) {
                 $retries++;
                 $seq++;
                 $candidate = $this->generate($cat, $name, $flavor, $size, $seq);

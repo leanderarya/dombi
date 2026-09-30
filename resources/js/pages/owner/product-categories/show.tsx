@@ -11,6 +11,7 @@ import {
     Plus,
     Layers,
     Upload,
+    ArchiveRestore,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -47,6 +48,8 @@ interface Props {
     canForceDelete: boolean;
     /** Ids of products whose `delete` policy passes. A product missing here is soft-delete guarded. */
     deletableProductIds: number[];
+    /** Soft-deleted products of this category. Kept out of grouping/counting on purpose. */
+    trashedProducts?: Product[];
 }
 
 export default function ProductCategoryShow({
@@ -54,6 +57,7 @@ export default function ProductCategoryShow({
     canDelete = false,
     canForceDelete = false,
     deletableProductIds = [],
+    trashedProducts = [],
 }: Props) {
     const [search, setSearch] = useState('');
     const [productFilter, setProductFilter] = useState<string>('all');
@@ -64,6 +68,9 @@ export default function ProductCategoryShow({
     // Soft delete guard dialog
     const [softDeleteId, setSoftDeleteId] = useState<number | null>(null);
     const [softDeleteDialog, setSoftDeleteDialog] = useState(false);
+
+    // Restore confirm dialog
+    const [restoreId, setRestoreId] = useState<number | null>(null);
 
     // Category edit
     const [showCatEdit, setShowCatEdit] = useState(false);
@@ -153,6 +160,18 @@ export default function ProductCategoryShow({
 
         return list;
     }, [category, search, productFilter]);
+
+    // Search applies to the trashed list too, so the same box filters both views.
+    const filteredTrashed = useMemo(() => {
+        const q = search.toLowerCase();
+
+        return trashedProducts.filter(
+            (p) =>
+                !q ||
+                p.name.toLowerCase().includes(q) ||
+                (p.sku?.toLowerCase().includes(q) ?? false),
+        );
+    }, [trashedProducts, search]);
 
     // Group filtered products by flavor group
     const groupedSections = useMemo(() => {
@@ -549,6 +568,29 @@ export default function ProductCategoryShow({
         );
     };
 
+    /**
+     * Undoes a soft delete. Confirmed first: bringing a row back also brings its
+     * flavor+size slot back, and the product only reappears to customers once it
+     * is active again — worth one step rather than a single stray click.
+     */
+    const handleRestore = (p: Product) => {
+        router.patch(
+            `/owner/products/${p.id}/restore`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setRestoreId(null);
+                },
+                onError: (errors) =>
+                    toast.error(
+                        Object.values(errors).flat().join(', ') ||
+                            'Gagal mengembalikan produk',
+                    ),
+            },
+        );
+    };
+
     if (!category) {
         return (
             <OwnerPageShell title="Kategori" subtitle="Memuat...">
@@ -605,350 +647,506 @@ export default function ProductCategoryShow({
                 onSearch={setSearch}
                 filter={productFilter}
                 onFilterChange={setProductFilter}
+                trashedCount={trashedProducts.length}
             />
 
-            <div className="mb-4 flex items-center justify-end gap-2">
-                <Button size="lg" onClick={() => setShowBulkForm(true)}>
-                    <Layers className="mr-1 h-4 w-4" /> Tambah Multi Rasa
-                </Button>
-                <Button size="lg" onClick={openCreateProduct}>
-                    <Plus className="mr-1 h-4 w-4" /> Tambah Produk
-                </Button>
-            </div>
-
-            {filteredProducts.length === 0 ? (
-                <EmptyState
-                    icon={<Package className="h-8 w-8 text-text-muted" />}
-                    title={
-                        category.products?.length === 0
-                            ? 'Belum ada produk'
-                            : 'Tidak ditemukan'
-                    }
-                    description={
-                        category.products?.length === 0
-                            ? 'Tambah produk pertama'
-                            : 'Coba kata kunci lain'
-                    }
-                    action={
-                        category.products?.length === 0
-                            ? {
-                                  label: 'Tambah Produk',
-                                  onClick: openCreateProduct,
-                              }
-                            : undefined
-                    }
-                />
-            ) : (
-                <div className="space-y-4">
-                    {groupedSections.map((section, idx) => {
-                        const gKey = section.flavorGroup?.id ?? 'null';
-                        const isExpanded = expandedGroups.has(gKey);
-                        const sizeCount = new Set(
-                            section.products.map((p) => p.size),
-                        ).size;
-
-                        return (
-                            <div
-                                key={
-                                    gKey === 'null'
-                                        ? `null-${idx}`
-                                        : `fg-${gKey}`
-                                }
-                                className="overflow-hidden rounded-2xl border border-border bg-surface"
-                            >
-                                <button
-                                    type="button"
-                                    onClick={() => toggleGroup(gKey)}
-                                    className="flex min-h-[44px] w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition hover:bg-surface-muted/30"
-                                >
-                                    {isExpanded ? (
-                                        <ChevronDown className="h-4 w-4 shrink-0 text-text-muted" />
-                                    ) : (
-                                        <ChevronRight className="h-4 w-4 shrink-0 text-text-muted" />
-                                    )}
-                                    <ProductImage
-                                        name={
-                                            section.flavorGroup?.flavor ??
-                                            'Tanpa Rasa'
-                                        }
-                                        src={null}
-                                        flavorGroupImage={
-                                            section.flavorGroup?.image ?? null
-                                        }
-                                        size="sm"
-                                    />
-                                    <div className="min-w-0 flex-1">
-                                        <span className="text-sm font-semibold text-text">
-                                            {section.flavorGroup?.flavor ??
-                                                'Tanpa Rasa'}
-                                        </span>
-                                        <span className="ml-2 text-xs text-text-muted tabular-nums">
-                                            {section.products.length} varian ·{' '}
-                                            {sizeCount} ukuran
-                                        </span>
-                                    </div>
-                                    <div className="flex shrink-0 items-center gap-2">
-                                        {section.flavorGroup &&
-                                            !section.flavorGroup.image && (
-                                                <span className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] text-warning-text ring-1 ring-warning-border">
-                                                    Missing Image
-                                                </span>
-                                            )}
-                                        {section.flavorGroup && (
-                                            <Button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setEditingFlavorGroup(
-                                                        section.flavorGroup!,
-                                                    );
-                                                    setFgImageFile(null);
-                                                }}
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-11 w-11 text-text-muted"
-                                                title="Edit gambar grup"
-                                            >
-                                                <Upload className="h-3.5 w-3.5" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                </button>
-
-                                {isExpanded && (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="border-b border-border bg-surface-muted/50 text-left">
-                                                    <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                                        Produk
-                                                    </th>
-                                                    <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                                        Ukuran
-                                                    </th>
-                                                    <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                                        SKU
-                                                    </th>
-                                                    <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                                        HPP
-                                                    </th>
-                                                    <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                                        Hrg Jual
-                                                    </th>
-                                                    <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                                        Margin%
-                                                    </th>
-                                                    <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                                        Stok Pusat
-                                                    </th>
-                                                    <th className="px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                                        Aksi
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-border/50">
-                                                {section.products.map((p) => {
-                                                    const margin =
-                                                        Number(
-                                                            p.selling_price,
-                                                        ) -
-                                                        Number(p.center_price);
-                                                    const marginPct =
-                                                        Number(p.center_price) >
-                                                        0
-                                                            ? (margin /
-                                                                  Number(
-                                                                      p.center_price,
-                                                                  )) *
-                                                              100
-                                                            : 0;
-                                                    const hasNoStock =
-                                                        p.center_stock === 0;
-
-                                                    return (
-                                                        <tr
-                                                            key={p.id}
-                                                            className={`transition hover:bg-mint-wash/30 ${!p.is_active ? 'opacity-60' : ''}`}
-                                                        >
-                                                            <td className="px-3 py-3">
-                                                                <div className="flex items-center gap-2.5">
-                                                                    <ProductImage
-                                                                        name={
-                                                                            p.name
-                                                                        }
-                                                                        src={
-                                                                            p.image
-                                                                        }
-                                                                        flavorGroupImage={
-                                                                            p
-                                                                                .flavor_group
-                                                                                ?.image
-                                                                        }
-                                                                        size="sm"
-                                                                    />
-                                                                    <div className="min-w-0">
-                                                                        <div className="max-w-[200px] truncate font-semibold text-text">
-                                                                            {
-                                                                                p.name
-                                                                            }
-                                                                        </div>
-                                                                        <div className="mt-0.5 flex items-center gap-1.5">
-                                                                            {!p.is_active && (
-                                                                                <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[10px] font-bold text-text-muted">
-                                                                                    NONAKTIF
-                                                                                </span>
-                                                                            )}
-                                                                            {!p.image && (
-                                                                                <span className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] text-warning-text ring-1 ring-warning-border">
-                                                                                    No
-                                                                                    Image
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-3 py-3 text-text-muted">
-                                                                {p.size || '-'}
-                                                            </td>
-                                                            <td className="px-3 py-3 font-mono text-xs text-text-muted tabular-nums">
-                                                                {p.sku || '-'}
-                                                            </td>
-                                                            <td className="px-3 py-3 text-right text-text-muted tabular-nums">
-                                                                {formatCurrency(
-                                                                    p.center_price,
-                                                                )}
-                                                            </td>
-                                                            <td className="px-3 py-3 text-right font-semibold text-text tabular-nums">
-                                                                {formatCurrency(
-                                                                    p.selling_price,
-                                                                )}
-                                                            </td>
-                                                            <td className="px-3 py-3 text-right tabular-nums">
-                                                                <span
-                                                                    className={
-                                                                        marginPct <
-                                                                        20
-                                                                            ? 'text-warning-text'
-                                                                            : 'text-success-text'
-                                                                    }
-                                                                >
-                                                                    {marginPct.toFixed(
-                                                                        1,
-                                                                    )}
-                                                                    %
-                                                                </span>
-                                                                <span className="ml-1 text-[11px] text-text-subtle">
-                                                                    (
-                                                                    {formatCurrency(
-                                                                        margin,
-                                                                    )}
-                                                                    )
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-3 py-3 text-right tabular-nums">
-                                                                {hasNoStock ? (
-                                                                    <span className="inline-flex items-center gap-1 rounded-full bg-danger-bg px-2 py-0.5 text-[11px] font-semibold text-danger-text ring-1 ring-danger-border">
-                                                                        0
-                                                                        <span className="ml-1 rounded bg-danger-bg px-1 py-0 text-[9px]">
-                                                                            No
-                                                                            Center
-                                                                            Stock
-                                                                        </span>
-                                                                    </span>
-                                                                ) : (
-                                                                    <span
-                                                                        className={
-                                                                            p.center_stock <=
-                                                                            5
-                                                                                ? 'font-bold text-warning-text'
-                                                                                : 'text-text'
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            p.center_stock
-                                                                        }
-                                                                    </span>
-                                                                )}
-                                                            </td>
-                                                            <td className="px-3 py-3">
-                                                                <div className="flex items-center justify-center gap-0.5">
-                                                                    <Button
-                                                                        title="Duplikat"
-                                                                        onClick={() =>
-                                                                            handleDuplicate(
-                                                                                p,
-                                                                            )
-                                                                        }
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-11 w-11 text-text-muted"
-                                                                    >
-                                                                        <Copy className="h-3.5 w-3.5" />
-                                                                    </Button>
-                                                                    <Button
-                                                                        title={
-                                                                            p.is_active
-                                                                                ? 'Nonaktifkan'
-                                                                                : 'Aktifkan'
-                                                                        }
-                                                                        onClick={() =>
-                                                                            handleToggle(
-                                                                                p,
-                                                                            )
-                                                                        }
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-11 w-11 text-text-muted"
-                                                                    >
-                                                                        {p.is_active ? (
-                                                                            <ToggleRight className="h-3.5 w-3.5 text-primary" />
-                                                                        ) : (
-                                                                            <ToggleLeft className="h-3.5 w-3.5" />
-                                                                        )}
-                                                                    </Button>
-                                                                    <Button
-                                                                        title="Edit"
-                                                                        onClick={() =>
-                                                                            openEditProduct(
-                                                                                p,
-                                                                            )
-                                                                        }
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-11 w-11 text-text-muted"
-                                                                    >
-                                                                        <Pencil className="h-3.5 w-3.5" />
-                                                                    </Button>
-                                                                    <Button
-                                                                        title="Hapus"
-                                                                        onClick={() =>
-                                                                            setDeleteId(
-                                                                                p.id,
-                                                                            )
-                                                                        }
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-11 w-11 text-text-muted"
-                                                                    >
-                                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                                    </Button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
+            {productFilter !== 'trashed' && (
+                <div className="mb-4 flex items-center justify-end gap-2">
+                    <Button size="lg" onClick={() => setShowBulkForm(true)}>
+                        <Layers className="mr-1 h-4 w-4" /> Tambah Multi Rasa
+                    </Button>
+                    <Button size="lg" onClick={openCreateProduct}>
+                        <Plus className="mr-1 h-4 w-4" /> Tambah Produk
+                    </Button>
                 </div>
             )}
 
-            {/* Category Edit Dialog */}
+            {productFilter !== 'trashed' &&
+                (filteredProducts.length === 0 ? (
+                    <EmptyState
+                        icon={<Package className="h-8 w-8 text-text-muted" />}
+                        title={
+                            category.products?.length === 0
+                                ? 'Belum ada produk'
+                                : 'Tidak ditemukan'
+                        }
+                        description={
+                            category.products?.length === 0
+                                ? 'Tambah produk pertama'
+                                : 'Coba kata kunci lain'
+                        }
+                        action={
+                            category.products?.length === 0
+                                ? {
+                                      label: 'Tambah Produk',
+                                      onClick: openCreateProduct,
+                                  }
+                                : undefined
+                        }
+                    />
+                ) : (
+                    <div className="space-y-4">
+                        {groupedSections.map((section, idx) => {
+                            const gKey = section.flavorGroup?.id ?? 'null';
+                            const isExpanded = expandedGroups.has(gKey);
+                            const sizeCount = new Set(
+                                section.products.map((p) => p.size),
+                            ).size;
+
+                            return (
+                                <div
+                                    key={
+                                        gKey === 'null'
+                                            ? `null-${idx}`
+                                            : `fg-${gKey}`
+                                    }
+                                    className="overflow-hidden rounded-2xl border border-border bg-surface"
+                                >
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleGroup(gKey)}
+                                        className="flex min-h-[44px] w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition hover:bg-surface-muted/30"
+                                    >
+                                        {isExpanded ? (
+                                            <ChevronDown className="h-4 w-4 shrink-0 text-text-muted" />
+                                        ) : (
+                                            <ChevronRight className="h-4 w-4 shrink-0 text-text-muted" />
+                                        )}
+                                        <ProductImage
+                                            name={
+                                                section.flavorGroup?.flavor ??
+                                                'Tanpa Rasa'
+                                            }
+                                            src={null}
+                                            flavorGroupImage={
+                                                section.flavorGroup?.image ??
+                                                null
+                                            }
+                                            size="sm"
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                            <span className="text-sm font-semibold text-text">
+                                                {section.flavorGroup?.flavor ??
+                                                    'Tanpa Rasa'}
+                                            </span>
+                                            <span className="ml-2 text-xs text-text-muted tabular-nums">
+                                                {section.products.length} varian
+                                                · {sizeCount} ukuran
+                                            </span>
+                                        </div>
+                                        <div className="flex shrink-0 items-center gap-2">
+                                            {section.flavorGroup &&
+                                                !section.flavorGroup.image && (
+                                                    <span className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] text-warning-text ring-1 ring-warning-border">
+                                                        Missing Image
+                                                    </span>
+                                                )}
+                                            {section.flavorGroup && (
+                                                <Button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setEditingFlavorGroup(
+                                                            section.flavorGroup!,
+                                                        );
+                                                        setFgImageFile(null);
+                                                    }}
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-11 w-11 text-text-muted"
+                                                    title="Edit gambar grup"
+                                                >
+                                                    <Upload className="h-3.5 w-3.5" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </button>
+
+                                    {isExpanded && (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm">
+                                                <thead>
+                                                    <tr className="border-b border-border bg-surface-muted/50 text-left">
+                                                        <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                            Produk
+                                                        </th>
+                                                        <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                            Ukuran
+                                                        </th>
+                                                        <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                            SKU
+                                                        </th>
+                                                        <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                            HPP
+                                                        </th>
+                                                        <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                            Hrg Jual
+                                                        </th>
+                                                        <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                            Margin%
+                                                        </th>
+                                                        <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                            Stok Pusat
+                                                        </th>
+                                                        <th className="px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                            Aksi
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-border/50">
+                                                    {section.products.map(
+                                                        (p) => {
+                                                            const margin =
+                                                                Number(
+                                                                    p.selling_price,
+                                                                ) -
+                                                                Number(
+                                                                    p.center_price,
+                                                                );
+                                                            const marginPct =
+                                                                Number(
+                                                                    p.center_price,
+                                                                ) > 0
+                                                                    ? (margin /
+                                                                          Number(
+                                                                              p.center_price,
+                                                                          )) *
+                                                                      100
+                                                                    : 0;
+                                                            const hasNoStock =
+                                                                p.center_stock ===
+                                                                0;
+
+                                                            return (
+                                                                <tr
+                                                                    key={p.id}
+                                                                    className={`transition hover:bg-mint-wash/30 ${!p.is_active ? 'opacity-60' : ''}`}
+                                                                >
+                                                                    <td className="px-3 py-3">
+                                                                        <div className="flex items-center gap-2.5">
+                                                                            <ProductImage
+                                                                                name={
+                                                                                    p.name
+                                                                                }
+                                                                                src={
+                                                                                    p.image
+                                                                                }
+                                                                                flavorGroupImage={
+                                                                                    p
+                                                                                        .flavor_group
+                                                                                        ?.image
+                                                                                }
+                                                                                size="sm"
+                                                                            />
+                                                                            <div className="min-w-0">
+                                                                                <div className="max-w-[200px] truncate font-semibold text-text">
+                                                                                    {
+                                                                                        p.name
+                                                                                    }
+                                                                                </div>
+                                                                                <div className="mt-0.5 flex items-center gap-1.5">
+                                                                                    {!p.is_active && (
+                                                                                        <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[10px] font-bold text-text-muted">
+                                                                                            NONAKTIF
+                                                                                        </span>
+                                                                                    )}
+                                                                                    {!p.image && (
+                                                                                        <span className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] text-warning-text ring-1 ring-warning-border">
+                                                                                            No
+                                                                                            Image
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-3 py-3 text-text-muted">
+                                                                        {p.size ||
+                                                                            '-'}
+                                                                    </td>
+                                                                    <td className="px-3 py-3 font-mono text-xs text-text-muted tabular-nums">
+                                                                        {p.sku ||
+                                                                            '-'}
+                                                                    </td>
+                                                                    <td className="px-3 py-3 text-right text-text-muted tabular-nums">
+                                                                        {formatCurrency(
+                                                                            p.center_price,
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="px-3 py-3 text-right font-semibold text-text tabular-nums">
+                                                                        {formatCurrency(
+                                                                            p.selling_price,
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="px-3 py-3 text-right tabular-nums">
+                                                                        <span
+                                                                            className={
+                                                                                marginPct <
+                                                                                20
+                                                                                    ? 'text-warning-text'
+                                                                                    : 'text-success-text'
+                                                                            }
+                                                                        >
+                                                                            {marginPct.toFixed(
+                                                                                1,
+                                                                            )}
+                                                                            %
+                                                                        </span>
+                                                                        <span className="ml-1 text-[11px] text-text-subtle">
+                                                                            (
+                                                                            {formatCurrency(
+                                                                                margin,
+                                                                            )}
+                                                                            )
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="px-3 py-3 text-right tabular-nums">
+                                                                        {hasNoStock ? (
+                                                                            <span className="inline-flex items-center gap-1 rounded-full bg-danger-bg px-2 py-0.5 text-[11px] font-semibold text-danger-text ring-1 ring-danger-border">
+                                                                                0
+                                                                                <span className="ml-1 rounded bg-danger-bg px-1 py-0 text-[9px]">
+                                                                                    No
+                                                                                    Center
+                                                                                    Stock
+                                                                                </span>
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span
+                                                                                className={
+                                                                                    p.center_stock <=
+                                                                                    5
+                                                                                        ? 'font-bold text-warning-text'
+                                                                                        : 'text-text'
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    p.center_stock
+                                                                                }
+                                                                            </span>
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="px-3 py-3">
+                                                                        <div className="flex items-center justify-center gap-0.5">
+                                                                            <Button
+                                                                                title="Duplikat"
+                                                                                onClick={() =>
+                                                                                    handleDuplicate(
+                                                                                        p,
+                                                                                    )
+                                                                                }
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="h-11 w-11 text-text-muted"
+                                                                            >
+                                                                                <Copy className="h-3.5 w-3.5" />
+                                                                            </Button>
+                                                                            <Button
+                                                                                title={
+                                                                                    p.is_active
+                                                                                        ? 'Nonaktifkan'
+                                                                                        : 'Aktifkan'
+                                                                                }
+                                                                                onClick={() =>
+                                                                                    handleToggle(
+                                                                                        p,
+                                                                                    )
+                                                                                }
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="h-11 w-11 text-text-muted"
+                                                                            >
+                                                                                {p.is_active ? (
+                                                                                    <ToggleRight className="h-3.5 w-3.5 text-primary" />
+                                                                                ) : (
+                                                                                    <ToggleLeft className="h-3.5 w-3.5" />
+                                                                                )}
+                                                                            </Button>
+                                                                            <Button
+                                                                                title="Edit"
+                                                                                onClick={() =>
+                                                                                    openEditProduct(
+                                                                                        p,
+                                                                                    )
+                                                                                }
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="h-11 w-11 text-text-muted"
+                                                                            >
+                                                                                <Pencil className="h-3.5 w-3.5" />
+                                                                            </Button>
+                                                                            <Button
+                                                                                title="Hapus"
+                                                                                onClick={() =>
+                                                                                    setDeleteId(
+                                                                                        p.id,
+                                                                                    )
+                                                                                }
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="h-11 w-11 text-text-muted"
+                                                                            >
+                                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                                            </Button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        },
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                ))}
+
+            {productFilter === 'trashed' && (
+                <div className="space-y-4">
+                    <div className="overflow-hidden rounded-2xl border border-warning-border bg-warning-bg/30">
+                        <div className="border-b border-warning-border px-4 py-3">
+                            <span className="text-sm font-semibold text-warning-text">
+                                Produk Terhapus
+                            </span>
+                            <span className="ml-2 text-xs text-text-muted">
+                                Masih ada di database dan bisa dikembalikan.
+                                Selama belum dikembalikan, ukuran dan SKU-nya
+                                tidak bisa dipakai produk baru.
+                            </span>
+                        </div>
+                        {filteredTrashed.length === 0 ? (
+                            <div className="px-4 py-6 text-center text-sm text-text-muted">
+                                {trashedProducts.length === 0
+                                    ? 'Tidak ada produk terhapus di kategori ini.'
+                                    : 'Tidak ada yang cocok dengan pencarian.'}
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="border-b border-border bg-surface-muted/50 text-left">
+                                            <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                Produk
+                                            </th>
+                                            <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                Ukuran
+                                            </th>
+                                            <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                SKU
+                                            </th>
+                                            <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                Dihapus
+                                            </th>
+                                            <th className="px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                Aksi
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border/50">
+                                        {filteredTrashed.map((p) => (
+                                            <tr
+                                                key={p.id}
+                                                className="transition hover:bg-mint-wash/30"
+                                            >
+                                                <td className="px-3 py-3">
+                                                    <div className="font-semibold text-text">
+                                                        {p.name}
+                                                    </div>
+                                                    {p.flavor_group?.flavor && (
+                                                        <div className="mt-0.5 text-xs text-text-muted">
+                                                            {
+                                                                p.flavor_group
+                                                                    .flavor
+                                                            }
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-3 py-3 text-text-muted">
+                                                    {p.size || '-'}
+                                                </td>
+                                                <td className="px-3 py-3 font-mono text-xs text-text-muted tabular-nums">
+                                                    {p.sku || '-'}
+                                                </td>
+                                                <td className="px-3 py-3 text-text-muted tabular-nums">
+                                                    {p.deleted_at
+                                                        ? new Date(
+                                                              p.deleted_at,
+                                                          ).toLocaleDateString(
+                                                              'id-ID',
+                                                              {
+                                                                  day: 'numeric',
+                                                                  month: 'short',
+                                                                  year: 'numeric',
+                                                              },
+                                                          )
+                                                        : '-'}
+                                                </td>
+                                                <td className="px-3 py-3">
+                                                    <div className="flex items-center justify-center">
+                                                        <Button
+                                                            onClick={() =>
+                                                                setRestoreId(
+                                                                    p.id,
+                                                                )
+                                                            }
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="min-h-11"
+                                                        >
+                                                            <ArchiveRestore className="mr-1 h-3.5 w-3.5" />
+                                                            Kembalikan
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Restore Product */}
+            <Dialog
+                open={restoreId !== null}
+                onOpenChange={() => setRestoreId(null)}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Kembalikan Produk</DialogTitle>
+                        <DialogDescription>
+                            Produk ini akan muncul lagi di daftar dan slot rasa
+                            serta ukurannya terpakai kembali. Statusnya tetap
+                            seperti sebelum dihapus, jadi nonaktifkan dulu kalau
+                            belum mau dijual.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            className="min-h-11"
+                            onClick={() => setRestoreId(null)}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            className="min-h-11"
+                            onClick={() =>
+                                handleRestore({
+                                    id: restoreId!,
+                                } as Product)
+                            }
+                        >
+                            Kembalikan
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <Dialog
                 open={showCatEdit}
                 onOpenChange={(o) => !o && setShowCatEdit(false)}

@@ -17,6 +17,8 @@ export interface ProductCategory {
     products_count?: number;
     flavor_groups?: ProductFlavorGroup[];
     products?: Product[];
+    /** Set only on rows served by the trashed list. */
+    deleted_at?: string | null;
 }
 export interface Product {
     id: number;
@@ -46,6 +48,8 @@ export interface Product {
     is_active: boolean;
     is_recommended?: boolean;
     stock_status?: 'available' | 'low' | 'out_of_stock';
+    /** Set only on rows served by the trashed lists. */
+    deleted_at?: string | null;
 }
 export interface ProductPricingRow {
     product_id: number;

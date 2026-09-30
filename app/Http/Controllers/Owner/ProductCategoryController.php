@@ -21,7 +21,20 @@ class ProductCategoryController extends Controller
             ->orderBy('name')
             ->get();
 
-        return Inertia::render('owner/product-categories/index', ['categories' => $cats]);
+        // A trashed category is unreachable from every other page, so the index is
+        // the only door back to it. Nothing blocks the restore: destroy() refuses a
+        // category that still has a live product, and product_categories has no
+        // UNIQUE index — the name is only held by the store/update rules, which
+        // count trashed rows, so no live category could have taken it meanwhile.
+        $trashed = ProductCategory::onlyTrashed()
+            ->withCount(['products' => fn ($q) => $q->withTrashed()])
+            ->orderBy('name')
+            ->get();
+
+        return Inertia::render('owner/product-categories/index', [
+            'categories' => $cats,
+            'trashedCategories' => $trashed,
+        ]);
     }
 
     public function show(ProductCategory $category): Response
@@ -36,6 +49,17 @@ class ProductCategoryController extends Controller
         // and let the server refuse after the fact; the category's two rules also
         // differ (soft delete also refuses active products), so one boolean cannot
         // stand in for both.
+        //
+        // trashedProducts is a separate list rather than rows merged into the
+        // main one: the page groups by flavor group and counts "varian" per
+        // group, and letting deleted rows back into that math would misreport a
+        // live catalogue.
+        $trashedProducts = $category->products()
+            ->onlyTrashed()
+            ->with('flavorGroup')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('owner/product-categories/show', [
             'category' => $category,
             'canDelete' => Gate::allows('delete', $category),
@@ -44,6 +68,7 @@ class ProductCategoryController extends Controller
                 ->filter(fn (Product $product) => Gate::allows('delete', $product))
                 ->pluck('id')
                 ->values(),
+            'trashedProducts' => $trashedProducts,
         ]);
     }
 
@@ -86,5 +111,19 @@ class ProductCategoryController extends Controller
         $category->forceDelete();
 
         return redirect()->route('owner.product-categories.index')->with('success', 'Kategori berhasil dihapus permanen.');
+    }
+
+    /**
+     * Undo a soft delete, including one made before this action existed.
+     *
+     * The category's own products that were trashed while it was down stay
+     * trashed; they keep their sku slots and come back one by one from the
+     * category page, where a collision can be reported per row.
+     */
+    public function restore(ProductCategory $category): RedirectResponse
+    {
+        $category->restore();
+
+        return redirect()->route('owner.product-categories.show', $category)->with('success', 'Kategori berhasil dikembalikan.');
     }
 }

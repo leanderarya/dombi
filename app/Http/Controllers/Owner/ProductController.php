@@ -74,6 +74,10 @@ class ProductController extends Controller
             }
         }
 
+        // Guard first: it writes nothing, while the image above is already on
+        // disk, so failing here leaves no orphaned file behind.
+        $this->guardTrashedSizeSlot($data['product_flavor_group_id'] ?? null, $data['size'] ?? null);
+
         $data['sku'] = $data['sku'] ?? $skuGen->uniqueForCategory(
             $category->id,
             $data['name'],
@@ -87,6 +91,36 @@ class ProductController extends Controller
             ->route('owner.product-categories.show', $category)
             ->with('new_product_id', $product->id)
             ->with('success', 'Produk berhasil dibuat.');
+    }
+
+    /**
+     * Refuse a flavor+size combination a trashed product is still holding.
+     *
+     * products carries UNIQUE (product_flavor_group_id, normalized_size) and a
+     * soft-deleted row keeps its slot, so the insert would die on the constraint
+     * — a 500 on a form that looks perfectly valid. The row is still there and
+     * still recoverable, so the answer is to name it and let the owner restore
+     * or erase it, not to quietly rename it out of the way.
+     *
+     * Only a row this exact store would collide with is considered, so an
+     * unrelated trashed product does not block a valid create.
+     */
+    private function guardTrashedSizeSlot(?int $groupId, ?string $size, string $field = 'size'): void
+    {
+        if (! $groupId || ! $size) {
+            return;
+        }
+
+        $holder = Product::onlyTrashed()
+            ->where('product_flavor_group_id', $groupId)
+            ->where('normalized_size', strtolower(str_replace(' ', '', trim($size))))
+            ->first();
+
+        if ($holder) {
+            throw ValidationException::withMessages([
+                $field => "Ukuran {$size} masih dipakai produk terhapus \"{$holder->name}\" (SKU {$holder->sku}). Kembalikan produk itu dari daftar Produk Terhapus, atau hapus permanen, baru tambah yang baru.",
+            ]);
+        }
     }
 
     public function bulkStore(
@@ -197,6 +231,18 @@ class ProductController extends Controller
             : redirect()->route('owner.product-categories.index')->with('success', $message);
     }
 
+    /**
+     * Undo a soft delete, including one made before this action existed.
+     */
+    public function restore(Product $product): RedirectResponse
+    {
+        $categoryId = $product->product_category_id;
+
+        $product->restore();
+
+        return $this->redirectAfterRemoval($categoryId, 'Produk berhasil dikembalikan.');
+    }
+
     public function toggle(Product $product): RedirectResponse
     {
         $product->update(['is_active' => ! $product->is_active]);
@@ -281,6 +327,10 @@ class ProductController extends Controller
                         'sizes' => "Ukuran {$row['size']} sudah ada di rasa {$data['flavor']}",
                     ]);
                 }
+
+                // Inside the sizing form, message key 'sizes' is what the dialog
+                // reads — a bare 'size' would never surface.
+                $this->guardTrashedSizeSlot($group->id, $row['size'], 'sizes');
 
                 $name = trim($data['flavor'].' '.$row['size']);
                 $sku = $row['sku'] ?? $skuGen->uniqueForGroup($group->id, $name, $data['flavor'], $row['size']);

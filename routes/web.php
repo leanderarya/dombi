@@ -285,9 +285,15 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::delete('products/{product}/force', [OwnerProductController::class, 'forceDestroy'])
             ->withTrashed()
             ->name('products.force-destroy');
+        Route::patch('products/{product}/restore', [OwnerProductController::class, 'restore'])
+            ->withTrashed()
+            ->name('products.restore');
         Route::delete('product-categories/{category}/force', [OwnerProductCategoryController::class, 'forceDestroy'])
             ->withTrashed()
             ->name('product-categories.force-destroy');
+        Route::patch('product-categories/{category}/restore', [OwnerProductCategoryController::class, 'restore'])
+            ->withTrashed()
+            ->name('product-categories.restore');
         Route::patch('products/{product}/toggle', [OwnerProductController::class, 'toggle'])->name('products.toggle');
         Route::post('products/{product}/duplicate', [OwnerProductController::class, 'duplicate'])->name('products.duplicate');
         Route::patch('product-flavor-groups/{flavorGroup}/image', [OwnerProductFlavorGroupController::class, 'updateImage'])->name('product-flavor-groups.image.update');

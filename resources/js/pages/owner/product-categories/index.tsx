@@ -1,5 +1,12 @@
 import { router } from '@inertiajs/react';
-import { Package, Pencil, Plus, Trash2, ChevronRight } from 'lucide-react';
+import {
+    Package,
+    Pencil,
+    Plus,
+    Trash2,
+    ChevronRight,
+    ArchiveRestore,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
@@ -30,6 +37,8 @@ import type { ProductCategory } from '@/types/product';
 
 interface Props {
     categories: ProductCategory[];
+    /** Soft-deleted categories. This page is the only way back to them. */
+    trashedCategories?: ProductCategory[];
 }
 
 const statusFilters = [
@@ -46,12 +55,16 @@ interface FormData {
     is_active: boolean;
 }
 
-export default function ProductCategoriesIndex({ categories }: Props) {
+export default function ProductCategoriesIndex({
+    categories,
+    trashedCategories = [],
+}: Props) {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<FilterKey>('all');
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [restoreId, setRestoreId] = useState<number | null>(null);
     const [processing, setProcessing] = useState(false);
 
     const [form, setForm] = useState<FormData>({
@@ -152,6 +165,22 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                     'Gagal menghapus - pastikan kategori tidak memiliki produk',
                 ),
         });
+    };
+
+    const handleRestore = () => {
+        if (!restoreId) {
+            return;
+        }
+
+        router.patch(
+            `/owner/product-categories/${restoreId}/restore`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setRestoreId(null),
+                onError: () => toast.error('Gagal mengembalikan kategori'),
+            },
+        );
     };
 
     return (
@@ -420,6 +449,109 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                             onClick={handleDelete}
                         >
                             Hapus
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {trashedCategories.length > 0 && (
+                <div className="mt-6 overflow-hidden rounded-2xl border border-warning-border bg-warning-bg/30">
+                    <div className="border-b border-warning-border px-6 py-3">
+                        <span className="text-sm font-semibold text-warning-text">
+                            Kategori Terhapus
+                        </span>
+                        <span className="ml-2 text-xs text-text-muted">
+                            Nama kategorinya masih terpakai selama belum
+                            dikembalikan atau dihapus permanen.
+                        </span>
+                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="border-b border-border/30 bg-surface-muted/50">
+                                <TableHead className="px-6 py-4 text-left">
+                                    Kategori
+                                </TableHead>
+                                <TableHead className="px-6 py-4 text-left">
+                                    Produk
+                                </TableHead>
+                                <TableHead className="px-6 py-4 text-left">
+                                    Dihapus
+                                </TableHead>
+                                <TableHead className="px-6 py-4 text-right">
+                                    Aksi
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-border/20">
+                            {trashedCategories.map((cat) => (
+                                <TableRow key={cat.id}>
+                                    <TableCell className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-muted text-text-muted">
+                                                <Package className="h-4 w-4" />
+                                            </div>
+                                            <span className="text-sm font-semibold text-text">
+                                                {cat.name}
+                                            </span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4">
+                                        <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] text-text-muted tabular-nums">
+                                            {cat.products_count ?? 0} produk
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4 text-text-muted tabular-nums">
+                                        {cat.deleted_at
+                                            ? new Date(
+                                                  cat.deleted_at,
+                                              ).toLocaleDateString('id-ID', {
+                                                  day: 'numeric',
+                                                  month: 'short',
+                                                  year: 'numeric',
+                                              })
+                                            : '-'}
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4 text-right">
+                                        <Button
+                                            variant="outline"
+                                            className="min-h-11"
+                                            onClick={() => setRestoreId(cat.id)}
+                                        >
+                                            <ArchiveRestore className="mr-1 h-4 w-4" />
+                                            Kembalikan
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+            )}
+
+            <Dialog
+                open={restoreId !== null}
+                onOpenChange={() => setRestoreId(null)}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Kembalikan Kategori</DialogTitle>
+                        <DialogDescription>
+                            Kategori ini akan muncul lagi di daftar dan nama
+                            yang dipakainya terpakai kembali. Produknya yang
+                            ikut terhapus tidak otomatis kembali; buka
+                            kategorinya untuk mengembalikan satu per satu.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            className="min-h-11"
+                            onClick={() => setRestoreId(null)}
+                        >
+                            Batal
+                        </Button>
+                        <Button className="min-h-11" onClick={handleRestore}>
+                            Kembalikan
                         </Button>
                     </DialogFooter>
                 </DialogContent>
