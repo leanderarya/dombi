@@ -402,7 +402,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/scan', [OutletScanController::class, 'index'])->name('scan');
         Route::get('/scan/{order_code}', [OutletScanController::class, 'lookup'])->name('scan.lookup');
         Route::get('/restocks', [OutletRestockController::class, 'index'])->name('restocks.index');
-        Route::get('/restocks/create', [OutletRestockController::class, 'create'])->name('restocks.create');
         Route::post('/restocks', [OutletRestockController::class, 'store'])->name('restocks.store');
         Route::get('/restocks/{restockRequest}', [OutletRestockController::class, 'show'])->name('restocks.show');
         Route::post('/restocks/{restockRequest}/cancel', [OutletRestockController::class, 'cancel'])->name('restocks.cancel');
@@ -413,7 +412,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
         Route::post('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'store'])->name('settlement-payments.store');
         Route::get('/returns', [OutletReturnController::class, 'index'])->name('returns.index');
-        Route::get('/returns/create', [OutletReturnController::class, 'create'])->name('returns.create');
         Route::post('/returns', [OutletReturnController::class, 'store'])->name('returns.store');
         Route::get('/returns/{returnRequest}', [OutletReturnController::class, 'show'])->name('returns.show');
         Route::post('/returns/{returnRequest}/cancel', [OutletReturnController::class, 'cancel'])->name('returns.cancel');

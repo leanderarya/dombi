@@ -44,38 +44,6 @@ class RestockController extends Controller
         ]);
     }
 
-    public function create(Request $request): Response
-    {
-        $outlet = $request->user()->outlet;
-        abort_unless($outlet, 403);
-
-        $categories = ProductCategory::where('is_active', true)
-            ->with(['products' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
-            ->orderBy('name')
-            ->get()
-            // The page reads families[].variants. Without this alias every
-            // optgroup renders empty, the form posts an empty product_id and
-            // the outlet can never submit a restock request.
-            ->map(fn (ProductCategory $category) => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'variants' => $category->products
-                    ->map(fn ($product) => [
-                        'id' => $product->id,
-                        'name' => $product->name,
-                    ])
-                    ->values(),
-            ]);
-
-        return Inertia::render('outlet/restocks/create', [
-            'families' => $categories,
-            'categories' => $categories,
-            'inventories' => OutletInventory::with('product.category')
-                ->where('outlet_id', $outlet->id)
-                ->get(),
-        ]);
-    }
-
     public function store(StoreRestockRequest $request, RestockService $restockService): RedirectResponse
     {
         $restock = $restockService->createRequest($request->user(), $request->validated());

@@ -18,26 +18,6 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_outlet_return_create_only_lists_variants_owned_by_outlet_inventory(): void
-    {
-        $context = $this->makeContext();
-        $otherVariant = $this->makeVariant('Unowned Variant 1L');
-
-        $this->actingAs($context['outletUser'])
-            ->get(route('outlet.returns.create'))
-            ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->component('outlet/returns/create')
-                ->has('variants', 1)
-                ->where('variants.0.id', $context['variant']->id)
-            );
-
-        $this->assertDatabaseMissing('outlet_inventories', [
-            'outlet_id' => $context['outlet']->id,
-            'product_id' => $otherVariant->id,
-        ]);
-    }
-
     public function test_outlet_exchange_create_only_lists_variants_owned_by_outlet_inventory(): void
     {
         $context = $this->makeContext();

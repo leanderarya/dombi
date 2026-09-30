@@ -56,38 +56,6 @@ class ReturnController extends Controller
         ]);
     }
 
-    public function create(Request $request): Response
-    {
-        $outlet = $request->user()->outlet;
-        abort_unless($outlet, 403);
-
-        $products = OutletInventory::query()
-            ->where('outlet_id', $outlet->id)
-            ->whereNotNull('product_id')
-            ->with(['product.category'])
-            ->get()
-            ->filter(fn (OutletInventory $inventory) => $inventory->product && $inventory->product->is_active)
-            ->map(function (OutletInventory $inventory) {
-                $product = $inventory->product;
-
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'full_name' => $product->full_display_name,
-                    'selling_price' => $product->selling_price,
-                    'current_stock' => $inventory->current_stock,
-                    'reserved_stock' => $inventory->reserved_stock,
-                    'available_stock' => $inventory->available_stock,
-                ];
-            })
-            ->values();
-
-        return Inertia::render('outlet/returns/create', [
-            'variants' => $products,
-            'reasons' => ReturnRequest::REASONS,
-        ]);
-    }
-
     public function show(Request $request, ReturnRequest $returnRequest): Response
     {
         $outlet = $request->user()->outlet;
