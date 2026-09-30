@@ -66,7 +66,17 @@ class OrderController extends Controller
             ->when($request->filled('outlet_id'), fn ($query) => $query->where('outlet_id', $request->integer('outlet_id')))
             ->when($request->filled('courier_id'), fn ($query) => $query->whereHas('delivery', fn ($deliveryQuery) => $deliveryQuery->where('courier_id', $request->integer('courier_id'))))
             ->when($request->filled('date'), fn ($query) => $query->whereOnDay('created_at', QueryDate::parse($request->query('date'))))
-            ->when($request->filled('search'), fn ($query) => $query->where('order_code', 'like', '%'.$request->string('search')->toString().'%'))
+            ->when($request->filled('search'), function ($query) use ($request) {
+                // The placeholder promises "kode atau pelanggan", so the search
+                // has to reach the customer name too. Order codes are the fast
+                // path; the relation lookup only runs for rows that miss them.
+                $search = $request->string('search')->toString();
+
+                $query->where(function ($searchQuery) use ($search) {
+                    $searchQuery->where('order_code', 'like', '%'.$search.'%')
+                        ->orWhereHas('customer', fn ($customerQuery) => $customerQuery->where('name', 'like', '%'.$search.'%'));
+                });
+            })
             ->latest()
             ->paginate(20)
             ->withQueryString();

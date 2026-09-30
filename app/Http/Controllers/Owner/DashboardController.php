@@ -52,6 +52,10 @@ class DashboardController extends Controller
             'kpis' => [
                 'outstandingAmount' => (float) ($collection['hero']['total_outstanding'] ?? 0),
                 'pendingActions' => $pendingRestocks + $pendingReturns + $pendingExchanges + $pendingSettlementVerifications,
+                // Products whose CENTER stock sits under their size threshold.
+                // Unit is products, not outlet rows — the inventories page counts
+                // the latter, and the two pages used to present both as "Stok
+                // Kritis" with no unit to tell them apart.
                 'criticalStock' => $criticalCenterStock->count(),
                 'ordersToday' => (int) Order::query()->where('status', '!=', Order::STATUS_EXPIRED)->whereOnDay('created_at', Carbon::today())->count(),
                 'completedToday' => (int) Order::query()

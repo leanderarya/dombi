@@ -589,7 +589,7 @@ export default function Dashboard({
                 <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-text-muted">
-                            Stok Kritis
+                            Stok Kritis Pusat
                         </span>
                         <span
                             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
@@ -599,7 +599,7 @@ export default function Dashboard({
                             }`}
                         >
                             {kpis.criticalStock > 0
-                                ? `${kpis.criticalStock} Item`
+                                ? `${kpis.criticalStock} Produk`
                                 : 'Semua Aman'}
                         </span>
                     </div>
@@ -610,13 +610,13 @@ export default function Dashboard({
                     >
                         {kpis.criticalStock}{' '}
                         <span className="text-sm font-normal text-text-muted">
-                            Item
+                            produk
                         </span>
                     </div>
                     <p className="text-[11px] text-text-muted">
                         {kpis.criticalStock > 0
-                            ? 'Perlu restock segera'
-                            : 'Semua stok aman'}
+                            ? 'Stok pusat di bawah ambang ukuran'
+                            : 'Stok pusat aman'}
                     </p>
                 </div>
             </div>
@@ -712,9 +712,10 @@ export default function Dashboard({
                         <div className="flex items-center gap-2.5 rounded-xl border border-warning-border/60 bg-warning-bg p-3 text-xs text-warning-text">
                             <AlertTriangle className="h-4 w-4 shrink-0 text-warning-text" />
                             <span>
-                                <strong>Stok Kritis:</strong>{' '}
-                                {kpis.criticalStock} produk butuh restock
-                                segera.
+                                <strong>Stok Kritis Pusat:</strong>{' '}
+                                {kpis.criticalStock} produk di gudang pusat di
+                                bawah ambang — restock dulu sebelum kirim ke
+                                outlet.
                             </span>
                         </div>
                     )}
