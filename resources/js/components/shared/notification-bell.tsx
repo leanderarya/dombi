@@ -116,7 +116,11 @@ export default function NotificationBell({
             {pushState === 'loading' && (
                 <button
                     onClick={requestEnable}
-                    className={`absolute -bottom-7 left-1/2 min-h-6 -translate-x-1/2 rounded px-1.5 text-[10px] font-medium whitespace-nowrap ${labelClassName}`}
+                    // Anchored to the wrapper's right edge, not centred on the 44px
+                    // bell. The hint is 99px wide, so centring pushed ~28px past a
+                    // right-aligned bell and 12px outside a 390px viewport with no
+                    // scrollbar to reach it.
+                    className={`absolute right-0 -bottom-7 min-h-6 rounded px-1.5 text-[10px] font-medium whitespace-nowrap ${labelClassName}`}
                 >
                     Aktifkan Notifikasi
                 </button>

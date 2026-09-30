@@ -28,6 +28,9 @@ export default function OwnerSidebarNav({
     collapsed = false,
     onNavClick,
 }: Props) {
+    // Inactive nav text is emerald-200/90, not brand-bright: #34d399 is 4.13:1
+    // on the #005D42 sidebar, under the 4.5:1 AA floor. emerald-200/90 is
+    // 5.36:1 here and 6.05:1 on the darker #185338 flyout.
     const { url } = usePage();
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
         new Set(),
@@ -128,7 +131,7 @@ export default function OwnerSidebarNav({
                                     className={`mt-0.5 flex h-9 w-full items-center justify-center rounded-lg transition-colors duration-150 ${
                                         isItemActive(group.items[0], url)
                                             ? 'bg-primary-hover/80 text-white shadow-xs'
-                                            : 'text-brand-bright hover:bg-primary-hover/40 hover:text-white'
+                                            : 'text-emerald-200/90 hover:bg-primary-hover/40 hover:text-white'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -153,7 +156,7 @@ export default function OwnerSidebarNav({
                                     className={`flex h-9 w-full items-center justify-center rounded-lg transition-colors duration-150 ${
                                         hasActive
                                             ? 'bg-primary-hover/80 text-white shadow-xs'
-                                            : 'text-brand-bright hover:bg-primary-hover/40 hover:text-white'
+                                            : 'text-emerald-200/90 hover:bg-primary-hover/40 hover:text-white'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -175,7 +178,7 @@ export default function OwnerSidebarNav({
                             top: `${flyoutPosition}px`,
                         }}
                     >
-                        <div className="px-3 py-1.5 text-[10px] font-semibold tracking-widest text-brand-bright uppercase">
+                        <div className="px-3 py-1.5 text-[10px] font-semibold tracking-widest text-emerald-200/90 uppercase">
                             {activeFlyoutGroup.label}
                         </div>
                         {activeFlyoutGroup.items.map((item) => {
@@ -195,7 +198,7 @@ export default function OwnerSidebarNav({
                                     className={`flex items-center justify-between px-3 py-2.5 text-sm transition-colors duration-150 ${
                                         active
                                             ? 'bg-primary-hover/80 font-semibold text-white'
-                                            : 'text-brand-bright hover:bg-primary-hover/40 hover:text-white'
+                                            : 'text-emerald-200/90 hover:bg-primary-hover/40 hover:text-white'
                                     }`}
                                 >
                                     <span>{item.label}</span>
@@ -233,7 +236,7 @@ export default function OwnerSidebarNav({
                                 className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                     isItemActive(group.items[0], url)
                                         ? 'bg-primary-hover/80 font-semibold text-white shadow-xs'
-                                        : 'font-medium text-brand-bright hover:bg-primary-hover/40 hover:text-white'
+                                        : 'font-medium text-emerald-200/90 hover:bg-primary-hover/40 hover:text-white'
                                 }`}
                             >
                                 <span className="h-4 w-4 shrink-0">
@@ -249,7 +252,7 @@ export default function OwnerSidebarNav({
                                     className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-colors duration-150 ${
                                         hasActive
                                             ? 'font-semibold text-white'
-                                            : 'font-medium text-brand-bright hover:bg-primary-hover/40 hover:text-white'
+                                            : 'font-medium text-emerald-200/90 hover:bg-primary-hover/40 hover:text-white'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -283,7 +286,7 @@ export default function OwnerSidebarNav({
                                                     className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                                         active
                                                             ? 'bg-primary-hover/80 font-semibold text-white'
-                                                            : 'font-medium text-brand-bright hover:bg-primary-hover/40 hover:text-white'
+                                                            : 'font-medium text-emerald-200/90 hover:bg-primary-hover/40 hover:text-white'
                                                     }`}
                                                 >
                                                     <span>{item.label}</span>
