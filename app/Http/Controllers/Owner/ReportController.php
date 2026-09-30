@@ -10,6 +10,7 @@ use App\Models\Outlet;
 use App\Models\RestockRequest;
 use App\Models\Settlement;
 use App\Models\StockMovement;
+use App\Support\QueryDate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,8 +20,8 @@ class ReportController extends Controller
 {
     public function index(Request $request): Response
     {
-        $dateFrom = $request->date('date_from') ?? today()->subDays(7);
-        $dateTo = $request->date('date_to') ?? today();
+        $dateFrom = QueryDate::parseOr($request->query('date_from'), fn () => today()->subDays(7));
+        $dateTo = QueryDate::parseOr($request->query('date_to'), fn () => today());
         $outletId = $request->integer('outlet_id') ?: null;
 
         $ordersQuery = Order::query()
@@ -89,8 +90,8 @@ class ReportController extends Controller
 
     public function exportCsv(Request $request): StreamedResponse
     {
-        $dateFrom = $request->date('date_from') ?? today()->subDays(7);
-        $dateTo = $request->date('date_to') ?? today();
+        $dateFrom = QueryDate::parseOr($request->query('date_from'), fn () => today()->subDays(7));
+        $dateTo = QueryDate::parseOr($request->query('date_to'), fn () => today());
         $outletId = $request->integer('outlet_id') ?: null;
 
         $filename = 'orders-report-'.$dateFrom->format('Ymd').'-'.$dateTo->format('Ymd').'.csv';

@@ -7,6 +7,7 @@ use App\Models\ExchangeRequest;
 use App\Models\Outlet;
 use App\Models\ReturnRequest;
 use App\Services\ExchangeService;
+use App\Support\QueryDate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -36,15 +37,15 @@ class ExchangeController extends Controller
         }
 
         if ($request->filled('date')) {
-            $query->whereOnDay('created_at', $request->date('date'));
+            $query->whereOnDay('created_at', QueryDate::parse($request->query('date')));
         }
 
         if ($request->filled('date_from')) {
-            $query->whereFromDay('created_at', $request->date_from);
+            $query->whereFromDay('created_at', QueryDate::parse($request->query('date_from')));
         }
 
         if ($request->filled('date_to')) {
-            $query->whereUntilDay('created_at', $request->date_to);
+            $query->whereUntilDay('created_at', QueryDate::parse($request->query('date_to')));
         }
 
         if ($request->filled('reason')) {

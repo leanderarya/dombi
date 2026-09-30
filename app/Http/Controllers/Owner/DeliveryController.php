@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\User;
 use App\Services\DeliveryService;
+use App\Support\QueryDate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -25,7 +26,7 @@ class DeliveryController extends Controller
             ->when($request->filled('courier_id'), fn ($query) => $query->where('courier_id', $request->integer('courier_id')))
             ->when($request->filled('outlet_id'), fn ($query) => $query->whereHas('order', fn ($orderQuery) => $orderQuery->where('outlet_id', $request->integer('outlet_id'))))
             ->when($request->filled('search'), fn ($query) => $query->whereHas('order', fn ($orderQuery) => $orderQuery->where('order_code', 'like', '%'.$request->string('search')->toString().'%')))
-            ->when($request->filled('date'), fn ($query) => $query->whereOnDay('created_at', $request->date('date')))
+            ->when($request->filled('date'), fn ($query) => $query->whereOnDay('created_at', QueryDate::parse($request->query('date'))))
             ->latest()
             ->paginate(20)
             ->withQueryString();

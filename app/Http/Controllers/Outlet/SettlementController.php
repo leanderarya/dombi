@@ -9,7 +9,7 @@ use App\Models\OrderItem;
 use App\Models\PaymentAccount;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
-use Carbon\Carbon;
+use App\Support\QueryDate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -287,8 +287,8 @@ class SettlementController extends Controller
             'month' => [now()->startOfMonth(), now()->endOfMonth()],
             'week' => [now()->startOfWeek(), now()->endOfWeek()],
             'custom' => [
-                Carbon::parse($request->string('from', now()->startOfMonth()->toDateString())),
-                Carbon::parse($request->string('to', now()->toDateString()))->endOfDay(),
+                QueryDate::parseOr($request->query('from'), fn () => now()->startOfMonth()),
+                QueryDate::parseOr($request->query('to'), fn () => now())->endOfDay(),
             ],
             default => [null, null],
         };

@@ -10,6 +10,7 @@ use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\RestockRequest;
 use App\Services\RestockService;
+use App\Support\QueryDate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -30,7 +31,7 @@ class RestockController extends Controller
                         ->whereHas('outlet', fn ($outletQuery) => $outletQuery->where('name', 'like', "%{$search}%"))
                         ->orWhere('id', $search);
                 }))
-                ->when($request->filled('date'), fn ($query) => $query->whereOnDay('created_at', $request->date('date')))
+                ->when($request->filled('date'), fn ($query) => $query->whereOnDay('created_at', QueryDate::parse($request->query('date'))))
                 ->latest()
                 ->paginate(20)
                 ->withQueryString(),

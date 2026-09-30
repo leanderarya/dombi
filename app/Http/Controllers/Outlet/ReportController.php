@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Outlet;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Support\QueryDate;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -131,8 +132,8 @@ class ReportController extends Controller
 
     private function resolveCustomRange(Request $request): array
     {
-        $from = $request->date('date_from') ?? now()->startOfDay();
-        $to = $request->date('date_to') ?? $from->copy()->endOfDay();
+        $from = QueryDate::parseOr($request->query('date_from'), fn () => now()->startOfDay());
+        $to = QueryDate::parseOr($request->query('date_to'), fn () => $from->copy()->endOfDay());
 
         return [$from->startOfDay(), $to->endOfDay()];
     }

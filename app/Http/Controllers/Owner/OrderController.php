@@ -10,6 +10,7 @@ use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\User;
 use App\Services\OrderStatusService;
+use App\Support\QueryDate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -33,7 +34,7 @@ class OrderController extends Controller
                 'product' => fn ($q) => $q->with('category:id,name'),
             ])
                 ->when($request->filled('outlet_id'), fn ($q) => $q->where('outlet_id', $request->integer('outlet_id')))
-                ->when($request->filled('date'), fn ($q) => $q->whereOnDay('created_at', $request->date('date')))
+                ->when($request->filled('date'), fn ($q) => $q->whereOnDay('created_at', QueryDate::parse($request->query('date'))))
                 ->latest()
                 ->paginate(20)
                 ->withQueryString();
@@ -64,7 +65,7 @@ class OrderController extends Controller
             })
             ->when($request->filled('outlet_id'), fn ($query) => $query->where('outlet_id', $request->integer('outlet_id')))
             ->when($request->filled('courier_id'), fn ($query) => $query->whereHas('delivery', fn ($deliveryQuery) => $deliveryQuery->where('courier_id', $request->integer('courier_id'))))
-            ->when($request->filled('date'), fn ($query) => $query->whereOnDay('created_at', $request->date('date')))
+            ->when($request->filled('date'), fn ($query) => $query->whereOnDay('created_at', QueryDate::parse($request->query('date'))))
             ->when($request->filled('search'), fn ($query) => $query->where('order_code', 'like', '%'.$request->string('search')->toString().'%'))
             ->latest()
             ->paginate(20)

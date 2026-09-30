@@ -10,6 +10,7 @@ use App\Models\OrderReport;
 use App\Models\Outlet;
 use App\Models\Product;
 use App\Models\StockMovement;
+use App\Support\QueryDate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -104,8 +105,8 @@ class AnalyticsController extends Controller
 
     private function laporan(Request $request): Response
     {
-        $dateFrom = $request->date('date_from') ?? today()->subDays(7);
-        $dateTo = $request->date('date_to') ?? today();
+        $dateFrom = QueryDate::parseOr($request->query('date_from'), fn () => today()->subDays(7));
+        $dateTo = QueryDate::parseOr($request->query('date_to'), fn () => today());
         $outletId = $request->integer('outlet_id') ?: null;
 
         $ordersQuery = Order::query()
@@ -193,8 +194,8 @@ class AnalyticsController extends Controller
 
     private function resolveCustomRange(Request $request): array
     {
-        $from = $request->date('date_from') ?? now()->startOfDay();
-        $to = $request->date('date_to') ?? $from->copy()->endOfDay();
+        $from = QueryDate::parseOr($request->query('date_from'), fn () => now()->startOfDay());
+        $to = QueryDate::parseOr($request->query('date_to'), fn () => $from->copy()->endOfDay());
 
         return [$from->startOfDay(), $to->endOfDay()];
     }
