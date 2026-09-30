@@ -56,14 +56,6 @@ class ProductPolicy
     }
 
     /**
-     * Determine whether the user can restore the product.
-     */
-    public function restore(?User $user, Product $product): bool
-    {
-        return true;
-    }
-
-    /**
      * Determine whether the user can permanently delete the product.
      */
     public function forceDelete(?User $user, Product $product): bool

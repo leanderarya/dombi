@@ -58,14 +58,6 @@ class ProductCategoryPolicy
     }
 
     /**
-     * Determine whether the user can restore the category.
-     */
-    public function restore(?User $user, ProductCategory $category): bool
-    {
-        return true;
-    }
-
-    /**
      * Determine whether the user can permanently delete the category.
      *
      * Stricter than the soft-delete rule on purpose: products.product_category_id
