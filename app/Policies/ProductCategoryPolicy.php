@@ -69,8 +69,9 @@ class ProductCategoryPolicy
      * Determine whether the user can permanently delete the category.
      *
      * Stricter than the soft-delete rule on purpose: products.product_category_id
-     * nulls on delete, so erasing a category would silently uncategorise whatever
-     * is still attached to it, including trashed products.
+     * cascades on delete, so erasing a category would take its products with it.
+     * The check includes trashed products for the same reason — the FK does not
+     * care that they were soft deleted.
      */
     public function forceDelete(?User $user, ProductCategory $category): bool
     {

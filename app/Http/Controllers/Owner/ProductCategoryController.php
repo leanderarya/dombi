@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\StoreProductCategoryRequest;
 use App\Http\Requests\Owner\UpdateProductCategoryRequest;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -30,7 +31,20 @@ class ProductCategoryController extends Controller
             'flavorGroups',
         ]);
 
-        return Inertia::render('owner/product-categories/show', ['category' => $category]);
+        // The dialogs offer a destructive button per policy, so both policies have
+        // to travel with the page. Without them the UI drew every button enabled
+        // and let the server refuse after the fact; the category's two rules also
+        // differ (soft delete also refuses active products), so one boolean cannot
+        // stand in for both.
+        return Inertia::render('owner/product-categories/show', [
+            'category' => $category,
+            'canDelete' => Gate::allows('delete', $category),
+            'canForceDelete' => Gate::allows('forceDelete', $category),
+            'deletableProductIds' => $category->products
+                ->filter(fn (Product $product) => Gate::allows('delete', $product))
+                ->pluck('id')
+                ->values(),
+        ]);
     }
 
     public function store(StoreProductCategoryRequest $req): RedirectResponse

@@ -42,9 +42,19 @@ import type {
 
 interface Props {
     category: ProductCategory;
+    /** Both delete policies for THIS category — they differ, so they travel separately. */
+    canDelete: boolean;
+    canForceDelete: boolean;
+    /** Ids of products whose `delete` policy passes. A product missing here is soft-delete guarded. */
+    deletableProductIds: number[];
 }
 
-export default function ProductCategoryShow({ category }: Props) {
+export default function ProductCategoryShow({
+    category,
+    canDelete = false,
+    canForceDelete = false,
+    deletableProductIds = [],
+}: Props) {
     const [search, setSearch] = useState('');
     const [productFilter, setProductFilter] = useState<string>('all');
 
@@ -432,6 +442,17 @@ export default function ProductCategoryShow({ category }: Props) {
             return;
         }
 
+        // The row is drawn disabled when the policy refuses, so reaching here
+        // anyway means the data moved under us; the deactivate dialog is the
+        // useful answer, and the server refusal stays as the real guard.
+        if (!deletableProductIds.includes(deleteId)) {
+            setDeleteId(null);
+            setSoftDeleteId(deleteId);
+            setSoftDeleteDialog(true);
+
+            return;
+        }
+
         router.delete(`/owner/products/${deleteId}`, {
             preserveScroll: true,
             onSuccess: () => {
@@ -551,6 +572,15 @@ export default function ProductCategoryShow({ category }: Props) {
             </OwnerPageShell>
         );
     }
+
+    // A category can be soft-deletable but not force-deletable (it refuses when
+    // any product is attached, trashed ones included). Lying about the button
+    // that will fail is what made the old dialog read as broken.
+    const categoryDeleteHint = canForceDelete
+        ? 'Kategori ini tidak punya produk, jadi bisa langsung dihapus permanen.'
+        : canDelete
+          ? 'Kategori masih punya produk, jadi hanya bisa dinonaktifkan atau dihapus sementara.'
+          : 'Kategori masih punya produk aktif, jadi belum bisa dihapus.';
 
     return (
         <OwnerPageShell
@@ -1327,6 +1357,16 @@ export default function ProductCategoryShow({ category }: Props) {
                         <Button
                             variant="destructive"
                             className="min-h-11"
+                            disabled={
+                                !deleteId ||
+                                !deletableProductIds.includes(deleteId)
+                            }
+                            title={
+                                deleteId &&
+                                !deletableProductIds.includes(deleteId)
+                                    ? 'Produk punya riwayat transaksi atau stok'
+                                    : undefined
+                            }
                             onClick={handleDeleteProduct}
                         >
                             Hapus
@@ -1388,8 +1428,8 @@ export default function ProductCategoryShow({ category }: Props) {
                     <DialogHeader>
                         <DialogTitle>Hapus Kategori</DialogTitle>
                         <DialogDescription>
-                            Semua produk harus dihapus terlebih dahulu. Yakin
-                            hapus kategori {category.name}?
+                            {categoryDeleteHint} Yakin hapus kategori{' '}
+                            {category.name}?
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
@@ -1403,6 +1443,12 @@ export default function ProductCategoryShow({ category }: Props) {
                         <Button
                             variant="destructive"
                             className="min-h-11"
+                            disabled={!canDelete}
+                            title={
+                                canDelete
+                                    ? undefined
+                                    : 'Kategori masih punya produk aktif'
+                            }
                             onClick={handleDeleteCategory}
                         >
                             Hapus
@@ -1410,6 +1456,12 @@ export default function ProductCategoryShow({ category }: Props) {
                         <Button
                             variant="destructive"
                             className="min-h-11"
+                            disabled={!canForceDelete}
+                            title={
+                                canForceDelete
+                                    ? undefined
+                                    : 'Kategori masih punya produk, termasuk yang nonaktif atau terhapus'
+                            }
                             onClick={handleForceDeleteCategory}
                         >
                             Hapus Permanen

@@ -182,7 +182,7 @@ class PermanentDeleteTest extends TestCase
 
         $this->assertNotNull(
             ProductCategory::withTrashed()->find($category->id),
-            'Deleting the category would null the category on its trashed products.',
+            'Cascading the category would take its trashed products with it.',
         );
     }
 
