@@ -646,7 +646,7 @@ export default function Dashboard({
                             </p>
                         </div>
                         <Link
-                            href="/owner/inventories?filter=critical"
+                            href="/owner/inventories?tab=pusat&filter=critical"
                             className="-m-1 inline-flex min-h-6 items-center p-1 text-xs font-semibold text-primary hover:underline"
                         >
                             Kelola

@@ -104,7 +104,7 @@ class DashboardController extends Controller
             ->whereNotNull('product_category_id')
             ->get()
             ->map(function (Product $product): array {
-                $threshold = $this->centerStockThreshold($product);
+                $threshold = $product->centerStockThreshold();
 
                 return [
                     'variant' => [
@@ -122,25 +122,6 @@ class DashboardController extends Controller
             ->filter(fn (array $item) => $item['centerStock'] < $item['threshold'])
             ->sortByDesc('shortage')
             ->values();
-    }
-
-    private function centerStockThreshold(Product $product): int
-    {
-        $size = strtolower((string) $product->size);
-
-        if (str_contains($size, '1l')) {
-            return 20;
-        }
-
-        if (str_contains($size, '500')) {
-            return 15;
-        }
-
-        if (str_contains($size, '250')) {
-            return 10;
-        }
-
-        return 15;
     }
 
     /**

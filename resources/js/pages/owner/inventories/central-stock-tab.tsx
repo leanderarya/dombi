@@ -24,6 +24,7 @@ import {
     TableRow,
     TableCell,
 } from '@/components/ui/table';
+import { pcsStatus } from '@/lib/central-stock-status';
 import { displayProductName } from '@/lib/display';
 import { formatCurrency } from '@/lib/format';
 
@@ -36,10 +37,11 @@ const reasonOptions = [
 ];
 
 type SortKey = 'name' | 'center_stock' | 'center_price';
-type StockFilter = 'all' | 'empty' | 'low' | 'healthy';
+type StockFilter = 'all' | 'critical' | 'empty' | 'low' | 'healthy';
 
 const STOCK_FILTERS: { key: StockFilter; label: string }[] = [
     { key: 'all', label: 'Semua' },
+    { key: 'critical', label: 'Kritis' },
     { key: 'empty', label: 'Habis' },
     { key: 'low', label: 'Rendah' },
     { key: 'healthy', label: 'Aman' },
@@ -49,10 +51,13 @@ export default function CentralStockTab({
     variants,
     products,
     stats,
+    initialFilter,
 }: {
     variants?: any[]; // backward compat
     products?: any[];
     stats?: any;
+    /** Seeds the pill row, so `?filter=critical` can land on "Habis". */
+    initialFilter?: StockFilter;
 }) {
     const [search, setSearch] = useState('');
     const [editModal, setEditModal] = useState<any>(null);
@@ -61,7 +66,9 @@ export default function CentralStockTab({
     const [saving, setSaving] = useState(false);
     const [sortKey, setSortKey] = useState<SortKey>('name');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-    const [stockFilter, setStockFilter] = useState<StockFilter>('all');
+    const [stockFilter, setStockFilter] = useState<StockFilter>(
+        initialFilter ?? 'all',
+    );
 
     const productList = useMemo(
         () => products ?? variants ?? [],
@@ -100,16 +107,19 @@ export default function CentralStockTab({
         }
 
         switch (stockFilter) {
+            case 'critical':
+                // Matches the dashboard's "Stok Kritis Pusat" card exactly: empty
+                // plus low.
+                list = list.filter((v: any) => pcsStatus(v) !== 'healthy');
+                break;
             case 'empty':
-                list = list.filter((v: any) => v.center_stock <= 0);
+                list = list.filter((v: any) => pcsStatus(v) === 'empty');
                 break;
             case 'low':
-                list = list.filter(
-                    (v: any) => v.center_stock > 0 && v.center_stock <= 10,
-                );
+                list = list.filter((v: any) => pcsStatus(v) === 'low');
                 break;
             case 'healthy':
-                list = list.filter((v: any) => v.center_stock > 10);
+                list = list.filter((v: any) => pcsStatus(v) === 'healthy');
                 break;
         }
 
@@ -256,9 +266,9 @@ export default function CentralStockTab({
                         </TableHeader>
                         <TableBody>
                             {sorted.map((v: any) => {
-                                const isZero = v.center_stock <= 0;
-                                const isLow =
-                                    v.center_stock > 0 && v.center_stock <= 10;
+                                const status = pcsStatus(v);
+                                const isZero = status === 'empty';
+                                const isLow = status === 'low';
 
                                 return (
                                     <TableRow

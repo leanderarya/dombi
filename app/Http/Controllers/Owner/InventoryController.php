@@ -22,9 +22,17 @@ class InventoryController extends Controller
 {
     public function index(Request $request): Response
     {
-        $tab = $request->string('tab', 'outlet')->toString();
+        $filter = $request->string('filter')->toString();
 
-        $data = ['tab' => $tab];
+        // The dashboard's "Stok Kritis Pusat" card links here with
+        // ?filter=critical&tab=pusat, promising the products that produced the
+        // number. Without this the owner arrived at the full list and had to
+        // hunt for them by hand.
+        $tab = $filter === 'critical'
+            ? 'pusat'
+            : $request->string('tab', 'outlet')->toString();
+
+        $data = ['tab' => $tab, 'filter' => $filter];
 
         // Outlet inventory (always loaded)
         $outlets = Outlet::where('status', 'active')
@@ -90,6 +98,12 @@ class InventoryController extends Controller
                     'sku' => $p->sku,
                     'center_stock' => $p->center_stock,
                     'center_price' => (float) $p->center_price,
+                    // The per-size floor travels with the row so the pills below
+                    // can judge it without repeating the rule. `<= 10` used to be
+                    // hardcoded here and in the tab, which flagged a 250ml product
+                    // at 12 as safe and a 1L product at 12 as safe too, though the
+                    // dashboard counted the second one as critical.
+                    'center_threshold' => $p->centerStockThreshold(),
                 ]);
 
             $data['centralStock'] = $products;
@@ -98,7 +112,9 @@ class InventoryController extends Controller
                 'total_products' => $products->count(),
                 'total_stock' => $products->sum('center_stock'),
                 'zero_stock' => $products->filter(fn ($v) => $v['center_stock'] <= 0)->count(),
-                'low_stock' => $products->filter(fn ($v) => $v['center_stock'] > 0 && $v['center_stock'] <= 10)->count(),
+                // Same rule as the dashboard's criticalStock, minus the zero rows
+                // it also counts: dashboard = zero_stock + low_stock.
+                'low_stock' => $products->filter(fn ($v) => $v['center_stock'] > 0 && $v['center_stock'] < $v['center_threshold'])->count(),
             ];
         }
 

@@ -121,6 +121,38 @@ class Product extends Model
         return 'available';
     }
 
+    /**
+     * Center-stock floor for this product's size, used by every owner surface that
+     * asks "is this product running out?".
+     *
+     * The threshold is per size because a 1L bottle and a 250ml bottle do not run
+     * out at the same count. It lives here rather than in a controller so the
+     * dashboard KPI and the inventories page cannot drift apart again — they used
+     * to, the dashboard comparing against this rule while the inventories tab
+     * hardcoded `<= 10` for every size.
+     *
+     * Note this is not the same question as getStockStatusAttribute(), which asks
+     * whether a customer can buy the product right now.
+     */
+    public function centerStockThreshold(): int
+    {
+        $size = strtolower((string) $this->size);
+
+        if (str_contains($size, '1l')) {
+            return 20;
+        }
+
+        if (str_contains($size, '500')) {
+            return 15;
+        }
+
+        if (str_contains($size, '250')) {
+            return 10;
+        }
+
+        return 15;
+    }
+
     public function priceForOutlet(int $outletId): float
     {
         $override = $this->relationLoaded('outletPrices')

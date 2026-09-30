@@ -159,6 +159,7 @@ function buildProductGroups(outletSections: any[], centralStock: any[]) {
 
 export default function InventoriesIndex({
     tab: initialTab,
+    filter: initialFilter,
     outletSections,
     stats,
     centralStock,
@@ -385,7 +386,11 @@ export default function InventoriesIndex({
             />
 
             {activeTab === 'pusat' && (
-                <CentralStockTab variants={centralStock} stats={centralStats} />
+                <CentralStockTab
+                    variants={centralStock}
+                    stats={centralStats}
+                    initialFilter={initialFilter}
+                />
             )}
 
             {activeTab === 'outlet' && (
