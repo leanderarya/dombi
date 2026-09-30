@@ -212,7 +212,7 @@ export default function DeliveryTiersIndex({
                                                 onClick={() =>
                                                     handleToggle(tier.id)
                                                 }
-                                                className="group inline-flex items-center"
+                                                className="group -m-2 inline-flex min-h-11 items-center p-2"
                                                 title={
                                                     tier.is_active
                                                         ? 'Nonaktifkan'

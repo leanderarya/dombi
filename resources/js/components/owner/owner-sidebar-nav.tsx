@@ -128,7 +128,7 @@ export default function OwnerSidebarNav({
                                     className={`mt-0.5 flex h-9 w-full items-center justify-center rounded-lg transition-colors duration-150 ${
                                         isItemActive(group.items[0], url)
                                             ? 'bg-primary-hover/80 text-white shadow-xs'
-                                            : 'text-brand-bright/80 hover:bg-primary-hover/40 hover:text-white'
+                                            : 'text-brand-bright hover:bg-primary-hover/40 hover:text-white'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -153,7 +153,7 @@ export default function OwnerSidebarNav({
                                     className={`flex h-9 w-full items-center justify-center rounded-lg transition-colors duration-150 ${
                                         hasActive
                                             ? 'bg-primary-hover/80 text-white shadow-xs'
-                                            : 'text-brand-bright/80 hover:bg-primary-hover/40 hover:text-white'
+                                            : 'text-brand-bright hover:bg-primary-hover/40 hover:text-white'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -175,7 +175,7 @@ export default function OwnerSidebarNav({
                             top: `${flyoutPosition}px`,
                         }}
                     >
-                        <div className="px-3 py-1.5 text-[10px] font-semibold tracking-widest text-brand-bright/70 uppercase">
+                        <div className="px-3 py-1.5 text-[10px] font-semibold tracking-widest text-brand-bright uppercase">
                             {activeFlyoutGroup.label}
                         </div>
                         {activeFlyoutGroup.items.map((item) => {
@@ -195,7 +195,7 @@ export default function OwnerSidebarNav({
                                     className={`flex items-center justify-between px-3 py-2.5 text-sm transition-colors duration-150 ${
                                         active
                                             ? 'bg-primary-hover/80 font-semibold text-white'
-                                            : 'text-brand-bright/80 hover:bg-primary-hover/40 hover:text-white'
+                                            : 'text-brand-bright hover:bg-primary-hover/40 hover:text-white'
                                     }`}
                                 >
                                     <span>{item.label}</span>
@@ -233,7 +233,7 @@ export default function OwnerSidebarNav({
                                 className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                     isItemActive(group.items[0], url)
                                         ? 'bg-primary-hover/80 font-semibold text-white shadow-xs'
-                                        : 'font-medium text-brand-bright/80 hover:bg-primary-hover/40 hover:text-white'
+                                        : 'font-medium text-brand-bright hover:bg-primary-hover/40 hover:text-white'
                                 }`}
                             >
                                 <span className="h-4 w-4 shrink-0">
@@ -249,7 +249,7 @@ export default function OwnerSidebarNav({
                                     className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-colors duration-150 ${
                                         hasActive
                                             ? 'font-semibold text-white'
-                                            : 'font-medium text-brand-bright/80 hover:bg-primary-hover/40 hover:text-white'
+                                            : 'font-medium text-brand-bright hover:bg-primary-hover/40 hover:text-white'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -283,7 +283,7 @@ export default function OwnerSidebarNav({
                                                     className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                                         active
                                                             ? 'bg-primary-hover/80 font-semibold text-white'
-                                                            : 'font-medium text-brand-bright/80 hover:bg-primary-hover/40 hover:text-white'
+                                                            : 'font-medium text-brand-bright hover:bg-primary-hover/40 hover:text-white'
                                                     }`}
                                                 >
                                                     <span>{item.label}</span>
@@ -309,7 +309,7 @@ export default function OwnerSidebarNav({
 function ChevronIcon({ expanded }: { expanded: boolean }) {
     return (
         <svg
-            className={`h-3.5 w-3.5 shrink-0 text-text-subtle transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
+            className={`h-3.5 w-3.5 shrink-0 text-emerald-200/90 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

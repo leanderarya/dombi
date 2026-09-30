@@ -7,6 +7,12 @@ interface Props {
     unreadCount?: number;
     onClick?: () => void;
     className?: string;
+    /**
+     * Colour for the "Aktifkan Notifikasi" hint. The bell lives on white headers
+     * and on the dark owner sidebar, so the hint carries no colour of its own —
+     * `text-primary` on `#005D42` is 1.45:1 and effectively invisible.
+     */
+    labelClassName?: string;
 }
 
 interface LatestNotif {
@@ -21,6 +27,7 @@ export default function NotificationBell({
     unreadCount: initialCount,
     onClick,
     className = 'text-text-muted active:bg-surface-muted',
+    labelClassName = 'text-primary',
 }: Props) {
     const [polledUnreadCount, setPolledUnreadCount] = useState(0);
     const unreadCount = initialCount ?? polledUnreadCount;
@@ -109,7 +116,7 @@ export default function NotificationBell({
             {pushState === 'loading' && (
                 <button
                     onClick={requestEnable}
-                    className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] font-medium whitespace-nowrap text-primary"
+                    className={`absolute -bottom-7 left-1/2 min-h-6 -translate-x-1/2 rounded px-1.5 text-[10px] font-medium whitespace-nowrap ${labelClassName}`}
                 >
                     Aktifkan Notifikasi
                 </button>

@@ -214,13 +214,13 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                         {collapsed ? (
                             <BrandMark className="h-9 w-9 rounded-full" />
                         ) : (
-                            <div className="flex items-center gap-3 border-b border-emerald-800/60 pb-4">
+                            <div className="flex items-center gap-3 border-b border-emerald-700/60 pb-4">
                                 <BrandMark className="h-9 w-9 rounded-full" />
                                 <div>
                                     <div className="font-heading text-sm font-bold tracking-wide">
                                         DOMBI
                                     </div>
-                                    <div className="text-[11px] font-medium text-emerald-200/70">
+                                    <div className="text-[11px] font-medium text-emerald-200/90">
                                         Susu Kambing Direct
                                     </div>
                                 </div>
@@ -238,7 +238,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
 
                     {/* Footer */}
                     <div
-                        className={`${collapsed ? 'px-2 py-3' : 'px-3 py-4'} space-y-3 border-t border-emerald-800/60 pt-4`}
+                        className={`${collapsed ? 'px-2 py-3' : 'px-3 py-4'} space-y-3 border-t border-emerald-700/60 pt-4`}
                     >
                         {collapsed ? (
                             <div className="flex flex-col items-center gap-1">
@@ -247,11 +247,13 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                                         onClick={() =>
                                             setNotificationOpen(true)
                                         }
+                                        className="text-emerald-200/90 active:bg-primary-hover/40"
+                                        labelClassName="text-emerald-200/90"
                                     />
                                 </div>
                                 <button
                                     onClick={() => router.post('/logout')}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-200/70 transition-colors hover:bg-primary-hover/40 hover:text-white"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-200/90 transition-colors hover:bg-primary-hover/40 hover:text-white"
                                     title="Logout"
                                 >
                                     <LogoutIcon />
@@ -264,12 +266,14 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                                         onClick={() =>
                                             setNotificationOpen(true)
                                         }
+                                        className="text-emerald-200/90 active:bg-primary-hover/40"
+                                        labelClassName="text-emerald-200/90"
                                     />
                                 </div>
 
                                 <a
                                     href="/owner/profile"
-                                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium text-emerald-200/70 transition-all hover:bg-primary-hover/40 hover:text-white"
+                                    className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium text-emerald-200/90 transition-all hover:bg-primary-hover/40 hover:text-white"
                                 >
                                     <Settings className="h-4 w-4" />
                                     <span>Pengaturan Sistem</span>
@@ -277,7 +281,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
 
                                 <button
                                     onClick={() => router.post('/logout')}
-                                    className="w-full rounded-xl px-3 py-2 text-sm font-medium text-emerald-200/70 transition-colors hover:bg-primary-hover/40 hover:text-white"
+                                    className="w-full rounded-xl px-3 py-2 text-sm font-medium text-emerald-200/90 transition-colors hover:bg-primary-hover/40 hover:text-white"
                                 >
                                     Logout
                                 </button>

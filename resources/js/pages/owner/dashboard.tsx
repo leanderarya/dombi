@@ -647,7 +647,7 @@ export default function Dashboard({
                         </div>
                         <Link
                             href="/owner/inventories?filter=critical"
-                            className="text-xs font-semibold text-primary hover:underline"
+                            className="-m-1 inline-flex min-h-6 items-center p-1 text-xs font-semibold text-primary hover:underline"
                         >
                             Kelola
                         </Link>
@@ -738,7 +738,7 @@ export default function Dashboard({
                             </div>
                             <Link
                                 href="/owner/finance"
-                                className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                                className="-m-1 flex min-h-6 items-center gap-1 p-1 text-xs font-semibold text-primary hover:underline"
                             >
                                 Lihat Semua{' '}
                                 <ArrowRight className="h-3.5 w-3.5" />
@@ -797,6 +797,7 @@ export default function Dashboard({
                                                             alert.outlet.name,
                                                         );
                                                     }}
+                                                    aria-label={`Tutup peringatan ${alert.outlet.name}`}
                                                     className="rounded p-1 text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
                                                 >
                                                     <MoreHorizontal className="h-4 w-4" />

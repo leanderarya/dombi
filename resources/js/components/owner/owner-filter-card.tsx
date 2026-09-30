@@ -81,7 +81,7 @@ export default function OwnerFilterCard({
                 <button
                     type="button"
                     onClick={() => setExpanded(true)}
-                    className="flex items-center gap-2 text-sm text-text-muted hover:text-text"
+                    className="-m-1 flex min-h-6 items-center gap-2 p-1 text-sm text-text-muted hover:text-text"
                 >
                     <Filter className="h-4 w-4" />
                     Filter
@@ -97,7 +97,7 @@ export default function OwnerFilterCard({
                 <button
                     type="button"
                     onClick={() => setExpanded(false)}
-                    className="mb-2 flex items-center gap-2 text-sm text-text-muted hover:text-text"
+                    className="-m-1 mb-1 flex min-h-6 items-center gap-2 p-1 text-sm text-text-muted hover:text-text"
                 >
                     <Filter className="h-4 w-4" />
                     Filter
