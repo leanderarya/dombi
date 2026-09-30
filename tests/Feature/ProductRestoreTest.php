@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductFlavorGroup;
 use App\Models\User;
+use App\Services\ProductSkuGenerator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
@@ -173,7 +174,7 @@ class ProductRestoreTest extends TestCase
         ]);
         $trashed->delete();
 
-        $proposed = app(\App\Services\ProductSkuGenerator::class)
+        $proposed = app(ProductSkuGenerator::class)
             ->uniqueForCategory($category->id, 'Tak En', 'Tak En', '1L');
 
         // Without the fix the generator cannot see the trashed row, proposes the
