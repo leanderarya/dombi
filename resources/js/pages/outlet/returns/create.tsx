@@ -128,7 +128,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                     <select
                         value={form.data.reason}
                         onChange={(e) => form.setData('reason', e.target.value)}
-                        className="mt-2 w-full rounded-xl border border-border p-3 text-sm"
+                        className="mt-2 w-full rounded-xl border border-border bg-surface p-3 text-sm"
                     >
                         <option value="">Pilih alasan...</option>
                         {Object.entries(reasons).map(([key, label]) => (

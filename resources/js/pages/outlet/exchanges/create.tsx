@@ -159,7 +159,7 @@ export default function OutletExchangesCreate({
                     <select
                         value={selectedReturnId ?? ''}
                         onChange={handleReturnSelect}
-                        className="mt-1 w-full rounded-lg border border-border px-3 py-2.5 text-sm"
+                        className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm"
                     >
                         <option value="">Pilih return...</option>
                         {eligibleReturns.map((r: any) => (
@@ -228,7 +228,7 @@ export default function OutletExchangesCreate({
                                             Number(e.target.value),
                                         )
                                     }
-                                    className="w-full rounded-lg border border-border px-3 py-2.5 text-sm"
+                                    className="w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm"
                                 >
                                     <option value="">
                                         Pilih produk pengganti...

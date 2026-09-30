@@ -608,7 +608,7 @@ export default function OutletOrderShow({
                             onChange={(e) =>
                                 assignForm.setData('courier_id', e.target.value)
                             }
-                            className="min-h-11 w-full rounded-xl border border-border px-4 text-sm"
+                            className="min-h-11 w-full rounded-xl border border-border bg-surface px-4 text-sm"
                         >
                             {couriers.map((courier: any) => (
                                 <option

@@ -57,7 +57,7 @@ export default function PageHeader({ title, titleClassName, subtitle, backHref, 
 
                 {title ? (
                     <div className="text-center">
-                        <div className={`${isCustomer ? 'text-base font-bold' : 'text-sm font-semibold'} text-text ${titleClassName ?? ''}`}>{title}</div>
+                        <h1 className={`${isCustomer ? 'text-base font-bold' : 'text-sm font-semibold'} text-text ${titleClassName ?? ''}`}>{title}</h1>
                         {subtitle && <div className="text-xs text-text-muted">{subtitle}</div>}
                     </div>
                 ) : (

@@ -116,7 +116,7 @@ export default function CreateRestock({ families, inventories }: any) {
                                             e.target.value,
                                         )
                                     }
-                                    className="mt-1 min-h-11 w-full rounded-lg border border-border px-3 text-sm"
+                                    className="mt-1 min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm"
                                 >
                                     {families?.map((family: any) => (
                                         <optgroup
