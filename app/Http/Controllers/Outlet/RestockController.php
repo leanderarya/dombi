@@ -39,7 +39,6 @@ class RestockController extends Controller
                 ->withQueryString(),
             'filters' => $request->only('status'),
             'families' => $categories,
-            'categories' => $categories,
             'inventories' => $inventories,
         ]);
     }
