@@ -115,6 +115,16 @@ const OWNER_STOCK_STATUSES: Record<string, StatusConfig> = {
 
 // ─── HELPERS ───────────────────────────────────────────────────
 
+// ─── ORDER REPORT STATUSES ─────────────────────────────────────
+// The customer's complaint reports (order_reports.status). Only two of the four
+// are report-only: 'rejected' is shared with the restock/return/exchange maps,
+// and all three give it the same meaning.
+
+const REPORT_STATUSES: Record<string, StatusConfig> = {
+    investigating: { label: 'Sedang Ditinjau', variant: 'info' },
+    resolved: { label: 'Telah Diselesaikan', variant: 'success' },
+};
+
 /**
  * Merged status map for auto-detection (order takes precedence for shared keys like 'preparing').
  * Used by StatusBadge component.
@@ -125,6 +135,7 @@ export const ALL_STATUSES: Record<string, StatusConfig> = {
     ...DISTRIBUTION_STATUSES,
     ...RESTOCK_STATUSES,
     ...DELIVERY_STATUSES,
+    ...REPORT_STATUSES,
     ...ORDER_STATUSES,
 };
 

@@ -92,9 +92,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
                                 status={
                                     report.status === 'pending'
                                         ? 'pending_confirmation'
-                                        : report.status === 'investigating'
-                                          ? 'preparing'
-                                          : report.status
+                                        : report.status
                                 }
                             />
                         </div>

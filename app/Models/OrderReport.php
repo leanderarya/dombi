@@ -49,6 +49,14 @@ class OrderReport extends Model
         'type',
         'notes',
         'status',
+        // The resolution columns. They were filterable in neither direction:
+        // both resolvers built an update array holding resolved_by and
+        // resolved_at, passed it to update(), and watched Eloquent drop the
+        // whole lot. A report could therefore be marked resolved with nobody
+        // recorded as having resolved it and no note explaining why.
+        'resolution_notes',
+        'resolved_by',
+        'resolved_at',
     ];
 
     protected function casts(): array
