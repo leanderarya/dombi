@@ -275,7 +275,7 @@ export default function OwnerRestocksIndex({
                                     dir={sortDir}
                                     onClick={() => toggleSort('outlet')}
                                 />
-                                <TableHead className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="px-3 py-2.5 text-left">
                                     Status
                                 </TableHead>
                                 <SortableTh
@@ -290,7 +290,7 @@ export default function OwnerRestocksIndex({
                                     dir={sortDir}
                                     onClick={() => toggleSort('date')}
                                 />
-                                <TableHead className="w-28 px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="w-28 px-3 py-2.5 text-right">
                                     Aksi
                                 </TableHead>
                             </TableRow>

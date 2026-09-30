@@ -246,10 +246,10 @@ export default function CentralStockTab({
                                     align="right"
                                     onClick={() => toggleSort('center_price')}
                                 />
-                                <TableHead className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="px-3 py-2.5 text-left">
                                     Status
                                 </TableHead>
-                                <TableHead className="w-20 px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="w-20 px-3 py-2.5 text-right">
                                     Aksi
                                 </TableHead>
                             </tr>

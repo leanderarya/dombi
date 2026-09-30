@@ -151,19 +151,19 @@ export default function CustomerShow({ customer, orders, stats }: any) {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="px-4 py-3 text-xs font-semibold text-text-muted">
+                                        <TableHead className="px-4 py-3 text-left">
                                             Kode
                                         </TableHead>
-                                        <TableHead className="px-4 py-3 text-xs font-semibold text-text-muted">
+                                        <TableHead className="px-4 py-3 text-left">
                                             Status
                                         </TableHead>
-                                        <TableHead className="px-4 py-3 text-xs font-semibold text-text-muted">
+                                        <TableHead className="px-4 py-3 text-left">
                                             Outlet
                                         </TableHead>
-                                        <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
+                                        <TableHead className="px-4 py-3 text-left text-right">
                                             Total
                                         </TableHead>
-                                        <TableHead className="px-4 py-3 text-xs font-semibold text-text-muted">
+                                        <TableHead className="px-4 py-3 text-left">
                                             Tanggal
                                         </TableHead>
                                     </TableRow>

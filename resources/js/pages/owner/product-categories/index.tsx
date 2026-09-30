@@ -217,16 +217,16 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                         <Table>
                             <TableHeader>
                                 <TableRow className="border-b border-border/30 bg-surface-muted/50">
-                                    <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                    <TableHead className="px-6 py-4 text-left">
                                         Kategori
                                     </TableHead>
-                                    <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                    <TableHead className="px-6 py-4 text-left">
                                         Produk
                                     </TableHead>
-                                    <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                    <TableHead className="px-6 py-4 text-left">
                                         Status
                                     </TableHead>
-                                    <TableHead className="px-6 py-4 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                    <TableHead className="px-6 py-4 text-right">
                                         Aksi
                                     </TableHead>
                                 </TableRow>

@@ -70,7 +70,10 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        // Canonical header typography, so a caller that only sets padding still
+        // matches a caller that spells the whole thing out. Callers that want a
+        // lighter variant (a status column, say) pass their own text-* classes.
+        "h-10 px-2 text-left align-middle text-xs font-semibold tracking-wide whitespace-nowrap text-text-muted uppercase [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props}

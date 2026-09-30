@@ -190,10 +190,10 @@ export default function OwnerExchangesIndex({
                                 <TableHead className="px-3 py-2.5 text-left">
                                     Status
                                 </TableHead>
-                                <TableHead className="px-3 py-2.5 text-right">
+                                <TableHead className="px-3 py-2.5 text-left text-right">
                                     Nilai
                                 </TableHead>
-                                <TableHead className="px-3 py-2.5 text-right">
+                                <TableHead className="px-3 py-2.5 text-left text-right">
                                     Aksi
                                 </TableHead>
                             </TableRow>

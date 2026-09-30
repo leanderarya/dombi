@@ -76,22 +76,22 @@ export default function CustomersIndex({ customers, filters }: any) {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="px-4 py-3 text-xs font-semibold text-text-muted">
+                                    <TableHead className="px-4 py-3 text-left">
                                         Nama
                                     </TableHead>
-                                    <TableHead className="px-4 py-3 text-xs font-semibold text-text-muted">
+                                    <TableHead className="px-4 py-3 text-left">
                                         No. HP
                                     </TableHead>
-                                    <TableHead className="px-4 py-3 text-xs font-semibold text-text-muted">
+                                    <TableHead className="px-4 py-3 text-left">
                                         Status
                                     </TableHead>
-                                    <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
+                                    <TableHead className="px-4 py-3 text-left text-right">
                                         Total Order
                                     </TableHead>
-                                    <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
+                                    <TableHead className="px-4 py-3 text-left text-right">
                                         Total Belanja
                                     </TableHead>
-                                    <TableHead className="px-4 py-3 text-xs font-semibold text-text-muted">
+                                    <TableHead className="px-4 py-3 text-left">
                                         Terakhir Belanja
                                     </TableHead>
                                 </TableRow>

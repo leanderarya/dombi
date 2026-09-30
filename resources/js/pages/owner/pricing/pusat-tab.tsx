@@ -264,7 +264,7 @@ export function PusatTab({
                                     align="right"
                                     onClick={() => toggleSort('margin')}
                                 />
-                                <TableHead className="w-24 px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="w-24 px-3 py-2.5 text-center">
                                     Aksi
                                 </TableHead>
                             </tr>

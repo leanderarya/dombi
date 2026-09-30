@@ -433,7 +433,7 @@ export default function OutletDetail({
                                     onClick={() => toggleSort('margin')}
                                     className="px-6 py-3.5"
                                 />
-                                <TableHead className="px-6 py-3.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="px-6 py-3.5 text-center text-left">
                                     Aksi
                                 </TableHead>
                             </tr>

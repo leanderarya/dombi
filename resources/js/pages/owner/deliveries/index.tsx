@@ -185,22 +185,22 @@ export default function OwnerDeliveriesIndex({
                     >
                         <TableHeader>
                             <tr className="bg-surface-muted/50">
-                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                <TableHead className="px-4 py-3 text-left">
                                     Kode
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                <TableHead className="px-4 py-3 text-left">
                                     Outlet
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                <TableHead className="px-4 py-3 text-left">
                                     Kurir
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                <TableHead className="px-4 py-3 text-left">
                                     Status
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                <TableHead className="px-4 py-3 text-left">
                                     Tanggal
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-right">
                                     Aksi
                                 </TableHead>
                             </tr>

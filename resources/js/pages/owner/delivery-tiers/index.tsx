@@ -183,7 +183,7 @@ export default function DeliveryTiersIndex({
                                     <TableHead className="px-4 py-3 text-left">
                                         Status
                                     </TableHead>
-                                    <TableHead className="px-4 py-3 text-right">
+                                    <TableHead className="px-4 py-3 text-left text-right">
                                         Aksi
                                     </TableHead>
                                 </TableRow>

@@ -129,13 +129,13 @@ class OutletController extends Controller
 
     /**
      * The resource route's delete. Archiving is what the UI means by deleting, so it
-     * delegates to archive() rather than pretending to remove anything.
+     * delegates to archive() rather than pretending to remove anything — and, more
+     * to the point, rather than duplicating the status update and dropping the audit
+     * call that goes with it.
      */
-    public function destroy(Outlet $outlet): RedirectResponse
+    public function destroy(Request $request, Outlet $outlet, OutletAuditService $auditService): RedirectResponse
     {
-        $outlet->update(['status' => 'archived']);
-
-        return redirect()->route('owner.outlets.index')->with('success', 'Outlet berhasil diarsipkan.');
+        return $this->archive($request, $outlet, $auditService);
     }
 
     /**

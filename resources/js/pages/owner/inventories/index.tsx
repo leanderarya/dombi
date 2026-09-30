@@ -490,7 +490,7 @@ export default function InventoriesIndex({
                                             dir={sortDir}
                                             onClick={() => toggleSort('name')}
                                         />
-                                        <TableHead className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                        <TableHead className="px-3 py-2.5 text-left">
                                             Status Outlet
                                         </TableHead>
                                         <SortableTh
