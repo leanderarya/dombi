@@ -432,8 +432,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                         {},
                                         {
                                             preserveScroll: true,
-                                            onSuccess: () =>
-                                                toast.success('Dikirim'),
+
                                             onError: (errors) =>
                                                 toast.error(
                                                     Object.values(errors)
@@ -570,7 +569,6 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                         preserveScroll: true,
                                         onSuccess: () => {
                                             setShowApprove(false);
-                                            toast.success('Restock disetujui');
                                         },
                                         onError: (errors) =>
                                             toast.error(
@@ -635,7 +633,6 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                         onSuccess: () => {
                                             setShowReject(false);
                                             rejectForm.reset();
-                                            toast.success('Restock ditolak');
                                         },
                                         onError: (errors) =>
                                             toast.error(

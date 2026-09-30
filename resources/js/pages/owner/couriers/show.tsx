@@ -76,7 +76,7 @@ export default function CourierShow({
     const handleToggleActive = () => {
         toggleForm.put(`/owner/couriers/${courier.id}`, {
             preserveScroll: true,
-            onSuccess: () => toast.success('Status kurir diperbarui'),
+
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
         });
@@ -87,7 +87,6 @@ export default function CourierShow({
             preserveScroll: true,
             onSuccess: () => {
                 setShowDeleteConfirm(false);
-                toast.success('Kurir dihapus');
             },
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
@@ -109,7 +108,7 @@ export default function CourierShow({
     const handleSaveAssignments = () => {
         assignmentForm.put(buildCourierOutletAssignmentUrl(courier), {
             preserveScroll: true,
-            onSuccess: () => toast.success('Plot outlet diperbarui'),
+
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
         });
@@ -120,7 +119,7 @@ export default function CourierShow({
             `/owner/couriers/${courier.courier_profile?.id}/classify`,
             {
                 preserveScroll: true,
-                onSuccess: () => toast.success('Klasifikasi kurir diperbarui'),
+
                 onError: (errors) =>
                     toast.error(Object.values(errors).flat().join(', ')),
             },

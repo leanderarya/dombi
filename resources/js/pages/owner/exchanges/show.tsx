@@ -80,7 +80,6 @@ export default function OwnerExchangesShow({ exchange }: any) {
             onSuccess: () => {
                 setShowApprove(false);
                 approveForm.reset();
-                toast.success('Disetujui');
             },
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
@@ -92,7 +91,6 @@ export default function OwnerExchangesShow({ exchange }: any) {
             onSuccess: () => {
                 setShowReject(false);
                 rejectForm.reset();
-                toast.success('Ditolak');
             },
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
@@ -105,7 +103,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
             {},
             {
                 preserveScroll: true,
-                onSuccess: () => toast.success('Dikirim'),
+
                 onError: (errors) =>
                     toast.error(Object.values(errors).flat().join(', ')),
             },
@@ -541,7 +539,6 @@ export default function OwnerExchangesShow({ exchange }: any) {
                                         preserveScroll: true,
                                         onSuccess: () => {
                                             setShowComplete(false);
-                                            toast.success('Selesai');
                                         },
                                         onError: (errors) =>
                                             toast.error(

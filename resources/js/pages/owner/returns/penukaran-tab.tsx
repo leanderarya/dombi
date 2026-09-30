@@ -76,7 +76,6 @@ export default function PenukaranTab({
                 onSuccess: () => {
                     setApproveId(null);
                     setApproving(false);
-                    toast.success('Disetujui');
                 },
                 onError: (errors) => {
                     setApproving(false);

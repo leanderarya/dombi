@@ -77,7 +77,6 @@ export default function OwnerReturnsShow({ return: ret }: any) {
             onSuccess: () => {
                 setShowApprove(false);
                 approveForm.reset();
-                toast.success('Disetujui');
             },
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
@@ -89,7 +88,6 @@ export default function OwnerReturnsShow({ return: ret }: any) {
             onSuccess: () => {
                 setShowReject(false);
                 rejectForm.reset();
-                toast.success('Ditolak');
             },
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
@@ -102,7 +100,6 @@ export default function OwnerReturnsShow({ return: ret }: any) {
             {},
             {
                 preserveScroll: true,
-                onSuccess: () => toast.success('Diterima'),
                 onError: (errors) =>
                     toast.error(Object.values(errors).flat().join(', ')),
             },
@@ -320,13 +317,6 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                                     {},
                                                                     {
                                                                         preserveScroll: true,
-                                                                        onSuccess:
-                                                                            () =>
-                                                                                toast.success(
-                                                                                    isStored
-                                                                                        ? 'Diubah menjadi dibuang'
-                                                                                        : 'Diubah menjadi disimpan',
-                                                                                ),
                                                                         onError:
                                                                             (
                                                                                 errors,
@@ -358,11 +348,6 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                                     {},
                                                                     {
                                                                         preserveScroll: true,
-                                                                        onSuccess:
-                                                                            () =>
-                                                                                toast.success(
-                                                                                    'Item disimpan',
-                                                                                ),
                                                                         onError:
                                                                             (
                                                                                 errors,
@@ -391,11 +376,6 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                                     {},
                                                                     {
                                                                         preserveScroll: true,
-                                                                        onSuccess:
-                                                                            () =>
-                                                                                toast.success(
-                                                                                    'Item dibuang',
-                                                                                ),
                                                                         onError:
                                                                             (
                                                                                 errors,
@@ -453,10 +433,6 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                         {},
                                                         {
                                                             preserveScroll: true,
-                                                            onSuccess: () =>
-                                                                toast.success(
-                                                                    'Return selesai',
-                                                                ),
                                                             onError: (errors) =>
                                                                 toast.error(
                                                                     Object.values(

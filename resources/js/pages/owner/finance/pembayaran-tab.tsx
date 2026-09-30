@@ -60,9 +60,6 @@ export default function PembayaranTab({
             `/owner/finance/settlement-payments/${verifyTargetId}/verify`,
             {},
             {
-                onSuccess: () => {
-                    toast.success('Pembayaran diverifikasi');
-                },
                 onError: (errors) =>
                     toast.error(Object.values(errors).flat().join(', ')),
                 onFinish: () => {
@@ -87,7 +84,6 @@ export default function PembayaranTab({
                 },
                 {
                     onSuccess: () => {
-                        toast.success('Pembayaran ditolak');
                         setRejectingId(null);
                         setRejectReason('');
                     },
@@ -113,7 +109,6 @@ export default function PembayaranTab({
             '/owner/finance/settlement-payments/bulk-verify',
             {},
             {
-                onSuccess: () => toast.success('Berhasil'),
                 onError: (errors) =>
                     toast.error(Object.values(errors).flat().join(', ')),
                 onFinish: () => setBatchVerifying(false),

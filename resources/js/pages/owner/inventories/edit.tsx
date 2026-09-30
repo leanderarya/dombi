@@ -50,7 +50,7 @@ export default function EditInventory({ inventory }: any) {
                         e.preventDefault();
                         form.put(`/owner/inventories/${inventory.id}`, {
                             preserveScroll: true,
-                            onSuccess: () => toast.success('Stok diperbarui'),
+
                             onError: (errors) =>
                                 toast.error(
                                     Object.values(errors).flat().join(', '),

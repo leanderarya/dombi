@@ -45,6 +45,7 @@ class DeliveryTierController extends Controller
     {
         $tier->update(['is_active' => ! $tier->is_active]);
 
-        return redirect()->route('owner.delivery-tiers.index');
+        return redirect()->route('owner.delivery-tiers.index')
+            ->with('success', $tier->is_active ? 'Tier ongkir diaktifkan.' : 'Tier ongkir dinonaktifkan.');
     }
 }

@@ -228,7 +228,6 @@ export default function ProductCategoryShow({
                 forceFormData: true,
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Gambar grup rasa diperbarui');
                     setEditingFlavorGroup(null);
                     setFgImageFile(null);
                 },
@@ -275,7 +274,6 @@ export default function ProductCategoryShow({
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Kategori berhasil diperbarui');
                 setShowCatEdit(false);
             },
             onError: (errors) =>
@@ -288,7 +286,6 @@ export default function ProductCategoryShow({
         router.delete(`/owner/product-categories/${category.id}`, {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Kategori berhasil dihapus');
                 setDeleteCatDialog(false);
             },
             onError: () =>
@@ -367,7 +364,6 @@ export default function ProductCategoryShow({
                 forceFormData: true,
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Produk berhasil diperbarui');
                     setShowProductForm(false);
                     setEditingProduct(null);
                 },
@@ -383,7 +379,6 @@ export default function ProductCategoryShow({
                     forceFormData: true,
                     preserveScroll: true,
                     onSuccess: () => {
-                        toast.success('Produk berhasil dibuat');
                         setShowProductForm(false);
                     },
                     onError: (err) =>
@@ -420,7 +415,6 @@ export default function ProductCategoryShow({
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success(`${flavors.length} produk berhasil dibuat`);
                     setShowBulkForm(false);
                     setBulkForm({
                         flavorsText: '',
@@ -456,7 +450,6 @@ export default function ProductCategoryShow({
         router.delete(`/owner/products/${deleteId}`, {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Produk berhasil dihapus');
                 setDeleteId(null);
             },
             onError: (errors) => {
@@ -488,7 +481,6 @@ export default function ProductCategoryShow({
         router.delete(`/owner/products/${deleteId}/force`, {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Produk berhasil dihapus permanen');
                 setDeleteId(null);
             },
             onError: (errors) => {
@@ -502,7 +494,6 @@ export default function ProductCategoryShow({
     const handleForceDeleteCategory = () => {
         router.delete(`/owner/product-categories/${category.id}/force`, {
             onSuccess: () => {
-                toast.success('Kategori berhasil dihapus permanen');
                 setDeleteCatDialog(false);
             },
             onError: (errors) =>
@@ -524,7 +515,6 @@ export default function ProductCategoryShow({
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Produk dinonaktifkan');
                     setSoftDeleteDialog(false);
                     setSoftDeleteId(null);
                 },
@@ -540,7 +530,6 @@ export default function ProductCategoryShow({
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Produk berhasil duplikasi, setup stok');
                     // flash will trigger modal via useEffect
                 },
                 onError: () => toast.error('Gagal menduplikasi produk'),
@@ -554,12 +543,7 @@ export default function ProductCategoryShow({
             {},
             {
                 preserveScroll: true,
-                onSuccess: () =>
-                    toast.success(
-                        p.is_active
-                            ? 'Produk dinonaktifkan'
-                            : 'Produk diaktifkan',
-                    ),
+
                 onError: () => toast.error('Gagal mengubah status'),
             },
         );

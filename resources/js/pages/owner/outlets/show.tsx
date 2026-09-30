@@ -102,7 +102,6 @@ export default function OutletShow({
                 preserveScroll: true,
                 onSuccess: () => {
                     setShowArchiveConfirm(false);
-                    toast.success('Outlet diarsipkan');
                 },
                 onError: (errors) =>
                     toast.error(Object.values(errors).flat().join(', ')),
@@ -114,7 +113,6 @@ export default function OutletShow({
         router.delete(`/owner/outlets/${outlet.id}/force`, {
             onSuccess: () => {
                 setShowForceDeleteConfirm(false);
-                toast.success('Outlet dihapus permanen');
             },
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),

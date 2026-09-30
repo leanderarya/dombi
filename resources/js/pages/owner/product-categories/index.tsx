@@ -126,11 +126,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {
-                toast.success(
-                    editingId
-                        ? 'Kategori berhasil diperbarui'
-                        : 'Kategori berhasil ditambahkan',
-                );
                 setShowForm(false);
                 resetForm();
             },
@@ -150,7 +145,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
         router.delete(`/owner/product-categories/${deleteId}`, {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Kategori berhasil dihapus');
                 setDeleteId(null);
             },
             onError: () =>

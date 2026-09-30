@@ -210,7 +210,6 @@ export default function InventoriesIndex({
             onSuccess: () => {
                 setEditItem(null);
                 editForm.reset();
-                toast.success('Stok diperbarui');
             },
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
@@ -354,6 +353,8 @@ export default function InventoriesIndex({
             .then(() => {
                 const remindKey = `${row.outlet_id}-${variantId}`;
                 setRemindedIds((prev) => new Set(prev).add(remindKey));
+                // This one is a JSON endpoint, not an Inertia visit, so nothing
+                // flashes — the toast is the only confirmation the owner gets.
                 toast.success(
                     `Outlet ${outlet?.name ?? row.outlet_name} diingatkan`,
                     {

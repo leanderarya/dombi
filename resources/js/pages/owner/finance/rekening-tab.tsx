@@ -54,7 +54,6 @@ export default function RekeningTab({
         if (editingId) {
             put(`/owner/finance/payment-accounts/${editingId}`, {
                 onSuccess: () => {
-                    toast.success('Rekening diperbarui');
                     reset();
                     setShowForm(false);
                     setEditingId(null);
@@ -65,7 +64,6 @@ export default function RekeningTab({
         } else {
             post('/owner/finance/payment-accounts', {
                 onSuccess: () => {
-                    toast.success('Rekening ditambahkan');
                     reset();
                     setShowForm(false);
                 },
@@ -98,7 +96,6 @@ export default function RekeningTab({
 
         setDeleteDialogOpen(false);
         router.delete(`/owner/finance/payment-accounts/${deleteTargetId}`, {
-            onSuccess: () => toast.success('Rekening dihapus'),
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
             onFinish: () => setDeleteTargetId(null),

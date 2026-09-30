@@ -352,10 +352,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                         `/owner/orders/${order.id}/assign-courier`,
                                         {
                                             preserveScroll: true,
-                                            onSuccess: () =>
-                                                toast.success(
-                                                    'Kurir ditugaskan',
-                                                ),
+
                                             onError: (errors) =>
                                                 toast.error(
                                                     Object.values(errors)
@@ -544,7 +541,6 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                         onSuccess: () => {
                                             setCancelOpen(false);
                                             cancelForm.reset();
-                                            toast.success('Pesanan dibatalkan');
                                         },
                                         onError: (errors) =>
                                             toast.error(

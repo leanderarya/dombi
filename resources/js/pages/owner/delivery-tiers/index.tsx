@@ -90,13 +90,15 @@ export default function DeliveryTiersIndex({
         );
     }
 
+    // The controller flashes its own success message per action, and
+    // useFlashToast renders it. Local success toasts here would double every one
+    // and — as the delete handler proved — drift from what actually happened.
     const handleAddSubmit = () => {
         addForm.post('/owner/delivery-tiers', {
             preserveScroll: true,
             onSuccess: () => {
                 setAddDialogOpen(false);
                 addForm.reset();
-                toast.success('Tier ongkir disimpan');
             },
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
@@ -110,10 +112,7 @@ export default function DeliveryTiersIndex({
 
         editForm.put(`/owner/delivery-tiers/${editingTier.id}`, {
             preserveScroll: true,
-            onSuccess: () => {
-                setEditingTier(null);
-                toast.success('Tier ongkir disimpan');
-            },
+            onSuccess: () => setEditingTier(null),
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
         });
@@ -123,10 +122,7 @@ export default function DeliveryTiersIndex({
         if (deleteId) {
             router.delete(`/owner/delivery-tiers/${deleteId}`, {
                 preserveScroll: true,
-                onSuccess: () => {
-                    setDeleteId(null);
-                    toast.success('Tier ongkir disimpan');
-                },
+                onSuccess: () => setDeleteId(null),
                 onError: (errors) =>
                     toast.error(Object.values(errors).flat().join(', ')),
             });
@@ -139,7 +135,6 @@ export default function DeliveryTiersIndex({
             {},
             {
                 preserveScroll: true,
-                onSuccess: () => toast.success('Tier ongkir disimpan'),
                 onError: (errors) =>
                     toast.error(Object.values(errors).flat().join(', ')),
             },
