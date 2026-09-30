@@ -1,4 +1,4 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     CheckCircle2,
@@ -38,6 +38,7 @@ interface DeliveryData {
     order: {
         id: number;
         order_code: string;
+        status: string;
         customer_name: string;
         customer_phone: string | null;
         recipient_name: string | null;
@@ -110,13 +111,27 @@ export default function CourierDeliveryShow({ delivery }: Props) {
     const [showCompleteSheet, setShowCompleteSheet] = useState(false);
     const [showRejectSheet, setShowRejectSheet] = useState(false);
     const [showReturnSheet, setShowReturnSheet] = useState(false);
+    const { errors } = usePage<{ errors: Record<string, string> }>().props;
 
-    const canConfirmPickup = delivery.status === 'waiting_pickup';
-    const canStartDelivery = delivery.status === 'picked_up';
-    const canComplete = delivery.status === 'delivering';
-    const canFail = delivery.status === 'delivering';
-    const canReject = delivery.status === 'waiting_pickup';
+    // Each courier action is the first half of an order transition, so the order
+    // has to be in the status that transition leaves. A delivery row can lag
+    // behind its order — the outlet cancels, the release lands a moment later —
+    // and offering an action the order would reject ends in a failed request.
+    const orderStatus = order.status;
+    const canConfirmPickup =
+        delivery.status === 'waiting_pickup' && orderStatus === 'ready_for_pickup';
+    const canStartDelivery =
+        delivery.status === 'picked_up' && orderStatus === 'picked_up';
+    const canComplete =
+        delivery.status === 'delivering' && orderStatus === 'delivering';
+    const canFail = canComplete;
+    const canReject = canConfirmPickup;
     const canReturn = delivery.status === 'failed';
+    const orderIsDead =
+        orderStatus === 'cancelled_by_outlet' ||
+        orderStatus === 'cancelled_by_customer' ||
+        orderStatus === 'rejected_by_outlet' ||
+        orderStatus === 'expired';
     const hasActions =
         canConfirmPickup ||
         canStartDelivery ||
@@ -253,6 +268,31 @@ export default function CourierDeliveryShow({ delivery }: Props) {
             }
         >
             <Head title={`Delivery ${order.order_code}`} />
+
+            {/* Order is terminal while the delivery row still looks open: say so
+                instead of showing buttons whose requests are guaranteed to fail. */}
+            {orderIsDead && (
+                <div className="mt-4 flex items-center gap-3 rounded-xl border border-danger-border bg-danger-bg p-4">
+                    <AlertTriangle className="h-5 w-5 shrink-0 text-danger" />
+                    <div className="text-sm text-danger-text">
+                        Pesanan ini sudah tidak aktif (
+                        {orderStatus.replaceAll('_', ' ')}) dan tidak perlu
+                        diantar lagi. Tidak ada tindakan yang diperlukan.
+                    </div>
+                </div>
+            )}
+
+            {/* A race can still land a request between render and tap; the
+                server answers with a validation error the page has to show or
+                the failure is silent. */}
+            {errors.status && (
+                <div className="mt-3 flex items-center gap-3 rounded-xl border border-danger-border bg-danger-bg p-4">
+                    <AlertTriangle className="h-5 w-5 shrink-0 text-danger" />
+                    <div className="text-sm text-danger-text">
+                        {errors.status}
+                    </div>
+                </div>
+            )}
 
             {/* Status Badge */}
             <div className="mt-4 mb-3 flex justify-center">

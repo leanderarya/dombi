@@ -60,6 +60,10 @@ class DeliveryController extends Controller
                 'order' => [
                     'id' => $delivery->order->id,
                     'order_code' => $delivery->order->order_code,
+                    // The page needs to know the order is dead before it renders
+                    // an action: a delivery can lag behind its order between the
+                    // outlet cancelling and the row being released.
+                    'status' => $delivery->order->status,
                     'customer_name' => $delivery->order->customer_name,
                     'customer_phone' => $delivery->order->customer_phone,
                     'recipient_name' => $delivery->order->recipient_name,

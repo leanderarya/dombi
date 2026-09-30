@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\DeliveryException;
+use App\Exceptions\InvalidOrderTransitionException;
 use App\Models\CourierProfile;
 use App\Models\Delivery;
 use App\Models\DeliveryResolutionLog;
@@ -227,6 +228,16 @@ class DeliveryService
             if ($delivery->status !== 'waiting_pickup') {
                 throw ValidationException::withMessages([
                     'status' => 'Hanya delivery yang menunggu pickup yang bisa ditolak.',
+                ]);
+            }
+
+            // The order is put back to ready_for_pickup below, and that write
+            // goes straight to the row, not through the transition guard. On an
+            // order that already died that would resurrect it — a cancelled
+            // order would come back as waiting for a courier. Refuse instead.
+            if ($delivery->order->isFinalized()) {
+                throw ValidationException::withMessages([
+                    'status' => "Pesanan {$delivery->order->order_code} sudah tidak aktif, tugas pengiriman ini tidak bisa ditolak lagi.",
                 ]);
             }
 
@@ -688,7 +699,19 @@ class DeliveryService
                 'status' => $toDeliveryStatus,
             ]);
 
-            $this->orderStatusService->updateStatus($delivery->order, $toOrderStatus, $courier);
+            // The order may already be terminal — cancelled outlet-side between
+            // the courier opening the page and tapping, or by the scheduler. The
+            // order service throws InvalidOrderTransitionException, which nothing
+            // catches and which renders as a 500. The courier needs a sentence
+            // they can act on, not a debug page, so the failure is translated
+            // into a validation error on the field the courier page reads.
+            try {
+                $this->orderStatusService->updateStatus($delivery->order, $toOrderStatus, $courier);
+            } catch (InvalidOrderTransitionException) {
+                throw ValidationException::withMessages([
+                    'status' => "Pesanan {$delivery->order->order_code} sudah tidak aktif ({$delivery->order->status}), jadi pengiriman ini tidak bisa dilanjutkan.",
+                ]);
+            }
 
             return $delivery->fresh(['order.outlet', 'order.items.product', 'order.statusHistories.actor', 'courier']);
         });

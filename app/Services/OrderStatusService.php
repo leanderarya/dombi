@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\PaymentStatus;
 use App\Exceptions\InvalidOrderTransitionException;
+use App\Models\DeliveryStatusHistory;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\User;
@@ -372,6 +373,14 @@ class OrderStatusService
             $this->inventoryService->releaseReservedStock($order);
         }
 
+        // Release the delivery row when the order is cancelled. Without this a
+        // courier keeps seeing "Ambil Pesanan" on a dead order, and tapping it
+        // walks into the transition guard — a 500, because
+        // InvalidOrderTransitionException is caught nowhere.
+        if (in_array($to, ['cancelled_by_outlet', 'cancelled_by_customer', 'rejected_by_outlet', 'expired'], true)) {
+            $this->releaseDelivery($order, $to);
+        }
+
         // Refund on cancellation/expiration/rejection (if paid/settled via DOKU)
         if (in_array($to, ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'], true)) {
             if (in_array($order->payment_status, [PaymentStatus::Paid->value, PaymentStatus::Settled->value], true)) {
@@ -406,6 +415,49 @@ class OrderStatusService
                 }
             }
         }
+    }
+
+    /**
+     * Close the delivery row that belonged to an order which just died.
+     *
+     * A delivery is not deleted: the courier's history and the outlet's delivery
+     * list still have to describe what happened, and a deleted row would leave
+     * both reading as if nothing had ever been assigned. It is closed instead,
+     * so the courier's "Ambil Pesanan" button stops existing rather than leading
+     * into a transition the order can no longer accept.
+     */
+    private function releaseDelivery(Order $order, string $to): void
+    {
+        $delivery = $order->delivery()->first();
+
+        if (! $delivery || ! in_array($delivery->status, ['waiting_assignment', 'waiting_pickup', 'picked_up', 'delivering'], true)) {
+            return;
+        }
+
+        $from = $delivery->status;
+
+        $delivery->update(['status' => 'cancelled_and_released']);
+
+        DeliveryStatusHistory::create([
+            'delivery_id' => $delivery->id,
+            'from_status' => $from,
+            'to_status' => 'cancelled_and_released',
+            'changed_by_type' => 'system',
+            'reason' => $to,
+            'notes' => $this->releaseNote($to),
+            'created_at' => now(),
+        ]);
+    }
+
+    private function releaseNote(string $orderStatus): string
+    {
+        return match ($orderStatus) {
+            'cancelled_by_outlet' => 'Pesanan dibatalkan outlet, tugas pengiriman dilepas.',
+            'cancelled_by_customer' => 'Pesanan dibatalkan customer, tugas pengiriman dilepas.',
+            'rejected_by_outlet' => 'Pesanan ditolak outlet, tugas pengiriman dilepas.',
+            'expired' => 'Pesanan kadaluarsa, tugas pengiriman dilepas.',
+            default => 'Pesanan tidak lagi aktif, tugas pengiriman dilepas.',
+        };
     }
 
     public static function validStatuses(): array
