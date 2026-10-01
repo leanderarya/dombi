@@ -73,6 +73,7 @@ use App\Http\Controllers\RefundProofController;
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\TrackController;
 use App\Models\Outlet;
+use App\Models\RefundObligation;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -251,6 +252,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('finance/payments', [PaymentRecoveryController::class, 'index'])->name('finance.payments.index');
         Route::post('finance/payments/{attempt}/check-status', [PaymentRecoveryController::class, 'checkStatus'])->name('finance.payments.check-status');
         Route::post('finance/refund-obligations/{obligation}/needs-review', [PaymentRecoveryController::class, 'needsReview'])->name('finance.refund-obligations.needs-review');
+        Route::post('finance/refund-obligations/{obligation}/recover', [PaymentRecoveryController::class, 'recover'])->name('finance.refund-obligations.recover');
+        Route::get('finance/refund-obligations/{obligation}', fn (RefundObligation $obligation) => redirect()->route('owner.finance.dashboard', ['tab' => 'refund', 'filter' => 'needs_review']))->name('finance.refund-obligations.show');
         Route::get('/analytics', [OwnerAnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('/profile', OwnerProfileController::class)->name('profile');
         // No create route: Tambah Outlet is a dialog on the index now.
@@ -353,7 +356,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('refunds/{order}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
         Route::post('refunds/{order}/rollback', [RefundController::class, 'rollback'])->name('refunds.rollback');
         Route::post('refunds/{order}/complete', [RefundController::class, 'complete'])->name('refunds.complete');
-        Route::post('refunds/{order}/complete-direct', [RefundController::class, 'completeDirect'])->name('refunds.complete-direct');
         Route::get('returns', [OwnerReturnController::class, 'index'])->name('returns.index');
         Route::get('returns/{returnRequest}', [OwnerReturnController::class, 'show'])->name('returns.show');
         Route::post('returns/{returnRequest}/approve', [OwnerReturnController::class, 'approve'])->name('returns.approve');

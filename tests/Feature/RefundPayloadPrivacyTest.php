@@ -197,10 +197,10 @@ class RefundPayloadPrivacyTest extends TestCase
         $this->assertSame('awaiting_guest', app(RefundPayloadService::class)->queueState($order));
     }
 
-    public function test_all_seven_queues_exist(): void
+    public function test_all_eight_queues_exist(): void
     {
         $service = app(RefundPayloadService::class);
-        $this->assertCount(7, $service::QUEUES);
+        $this->assertCount(8, $service::QUEUES);
     }
 
     public function test_timeline_excludes_forbidden_metadata_keys(): void

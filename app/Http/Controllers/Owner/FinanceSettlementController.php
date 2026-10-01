@@ -252,6 +252,10 @@ class FinanceSettlementController extends Controller
             'action_required' => $query->withCanonicalRefund(null, null, true),
             'completed' => $query->withCanonicalRefund([RefundObligationStatus::Completed->value]),
             'rejected' => $query->withCanonicalRefund([RefundObligationStatus::Rejected->value]),
+            // NeedsReview has no payment_status counterpart (`refund_failed` is
+            // its own status), so without this arm the filter would fall
+            // through to the unfiltered query above and list every refund.
+            'needs_review' => $query->withCanonicalRefund([RefundObligationStatus::NeedsReview->value]),
             default => $query,
         };
 

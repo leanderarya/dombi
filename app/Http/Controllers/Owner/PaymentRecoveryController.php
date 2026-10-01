@@ -111,4 +111,18 @@ class PaymentRecoveryController extends Controller
 
         return redirect()->back()->with('success', 'Refund obligation marked for review.');
     }
+
+    public function recover(RefundObligation $obligation): RedirectResponse
+    {
+        try {
+            $changed = $this->refunds->transition($obligation, RefundObligationStatus::Pending);
+        } catch (\Throwable) {
+            return redirect()->back()->with('error', 'Refund recovery failed.');
+        }
+        if (! $changed) {
+            return redirect()->back()->with('error', 'Refund recovery unavailable.');
+        }
+
+        return redirect()->back()->with('success', 'Refund obligation returned to the queue.');
+    }
 }

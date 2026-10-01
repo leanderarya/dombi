@@ -19,7 +19,7 @@ class RefundController extends Controller
     {
         $filter = request()->query('filter', 'ready');
 
-        $validFilters = ['awaiting_customer', 'awaiting_guest', 'ready', 'in_progress', 'action_required', 'completed', 'rejected'];
+        $validFilters = ['awaiting_customer', 'awaiting_guest', 'ready', 'in_progress', 'action_required', 'completed', 'rejected', 'needs_review'];
         if (! in_array($filter, $validFilters, true)) {
             $filter = 'ready';
         }
@@ -72,7 +72,6 @@ class RefundController extends Controller
                 $validated['note'] ?? null,
                 'owner',
                 $request->user()->id,
-                $validated['legacy_repair'] ?? false,
             );
 
             return back()->with('success', 'Refund ditolak.');
@@ -105,32 +104,6 @@ class RefundController extends Controller
             $persisted = "private:{$relative}";
 
             $refunds->complete(
-                $order,
-                $request->user()->id,
-                $persisted,
-                $request->input('transfer_reference'),
-                $request->input('transfer_note'),
-            );
-
-            return back()->with('success', 'Refund ditandai selesai.');
-        } catch (DomainException $e) {
-            Storage::disk('local')->delete($relative ?? '');
-
-            return back()->with('error', $e->getMessage());
-        }
-    }
-
-    public function completeDirect(Order $order, CompleteManualRefundRequest $request, RefundService $refunds): RedirectResponse
-    {
-        try {
-            $relative = $request->file('proof')->store("refund-proofs/{$order->id}", 'local');
-            if ($relative === false) {
-                return back()->with('error', 'Gagal menyimpan bukti refund.');
-            }
-
-            $persisted = "private:{$relative}";
-
-            $refunds->startAndComplete(
                 $order,
                 $request->user()->id,
                 $persisted,

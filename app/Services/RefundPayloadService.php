@@ -7,7 +7,6 @@ use App\Enums\RefundObligationStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Order;
 use App\Models\RefundStatusHistory;
-use Carbon\Carbon;
 
 class RefundPayloadService
 {
@@ -19,6 +18,7 @@ class RefundPayloadService
         'action_required',
         'completed',
         'rejected',
+        'needs_review',
     ];
 
     private const QUEUE_LABELS = [
@@ -29,6 +29,7 @@ class RefundPayloadService
         'action_required' => 'Perlu Tindakan',
         'completed' => 'Selesai',
         'rejected' => 'Ditolak',
+        'needs_review' => 'Perlu Ditinjau',
     ];
 
     private const STATUS_LABELS = [
@@ -37,6 +38,7 @@ class RefundPayloadService
         'refunded' => 'Refund Selesai',
         'refund_rejected' => 'Refund Ditolak',
         'refund_failed' => 'Refund Gagal',
+        'needs_review' => 'Perlu Ditinjau',
     ];
 
     private const ALLOWED_METADATA_KEYS = [
@@ -66,6 +68,7 @@ class RefundPayloadService
             RefundObligationStatus::Completed->value => 'refunded',
             RefundObligationStatus::Rejected->value => 'refund_rejected',
             RefundObligationStatus::Failed->value => 'refund_failed',
+            RefundObligationStatus::NeedsReview->value => 'needs_review',
             default => $status,
         };
     }
@@ -92,6 +95,7 @@ class RefundPayloadService
             $status === 'refund_in_progress', $status === 'refund_failed' => 'action_required',
             $status === 'refunded' => 'completed',
             $status === 'refund_rejected' => 'rejected',
+            $status === 'needs_review' => 'needs_review',
             default => null,
         };
     }
@@ -105,6 +109,7 @@ class RefundPayloadService
             RefundObligationStatus::Completed->value => 'refunded',
             RefundObligationStatus::Rejected->value => 'refund_rejected',
             RefundObligationStatus::Failed->value => 'refund_failed',
+            RefundObligationStatus::NeedsReview->value => 'needs_review',
             default => $order->payment_status,
         };
 
@@ -151,10 +156,7 @@ class RefundPayloadService
             && $status === 'refund_pending'
             && $destinationStatus !== Order::REFUND_DESTINATION_VALID;
 
-        $base['can_legacy_repair'] = $status === 'refund_pending'
-            && $destinationStatus !== Order::REFUND_DESTINATION_VALID
-            && $order->refund_requested_at !== null
-            && $order->refund_requested_at->lt(Carbon::create(2026, 7, 24, 1, 0, 0, config('app.timezone')));
+        $base['can_recover'] = $status === 'needs_review';
 
         $base['can_start'] = $status === 'refund_pending'
             && $destinationStatus === Order::REFUND_DESTINATION_VALID;
