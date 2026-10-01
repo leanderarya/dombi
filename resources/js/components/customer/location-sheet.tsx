@@ -738,7 +738,10 @@ function LocationSheetContent({
                             {canAdd ? (
                                 <>
                                     <div>
-                                        <label className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
+                                        <label
+                                            htmlFor="saved-address-label"
+                                            className="text-[11px] font-bold tracking-wider text-text-muted uppercase"
+                                        >
                                             Label Alamat (opsional)
                                         </label>
                                         <div className="mt-2 flex gap-2">
@@ -772,6 +775,8 @@ function LocationSheetContent({
                                             )}
                                         </div>
                                         <input
+                                            id="saved-address-label"
+                                            name="label"
                                             type="text"
                                             value={saveLabel}
                                             onChange={(e) =>

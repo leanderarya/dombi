@@ -522,10 +522,15 @@ export default function CourierShow({
                                 {classificationForm.data.courier_source ===
                                     'outlet' && (
                                     <div>
-                                        <label className="mb-1 block text-xs font-medium text-text-muted">
+                                        <label
+                                            htmlFor="courier-owner-outlet"
+                                            className="mb-1 block text-xs font-medium text-text-muted"
+                                        >
                                             Outlet pemilik
                                         </label>
                                         <select
+                                            id="courier-owner-outlet"
+                                            name="outlet_id"
                                             value={
                                                 classificationForm.data
                                                     .outlet_id

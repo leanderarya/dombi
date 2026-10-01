@@ -290,12 +290,19 @@ export default function LocationSearchPanel({
 
             {/* Search */}
             <div className="relative">
-                <label className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
+                {/* Heads a search box styled as a bordered row; the input
+                    inside carries the id. */}
+                <label
+                    htmlFor="location-search-query"
+                    className="text-[11px] font-bold tracking-wider text-text-muted uppercase"
+                >
                     Cari alamat
                 </label>
                 <div className="mt-2 flex items-center gap-2.5 rounded-chip border border-border bg-surface px-3 focus-within:ring-1 focus-within:ring-ring">
                     <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                     <input
+                        id="location-search-query"
+                        name="query"
                         value={query}
                         onChange={(event) => {
                             setDraftQuery(event.target.value);

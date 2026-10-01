@@ -1,5 +1,5 @@
 import { ChevronDown, Search, X } from 'lucide-react';
-import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import { useMemo, useRef, useState, useEffect, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +25,10 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
     const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
     const triggerRef = useRef<HTMLButtonElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    // The trigger is a <button>, not a form control, so a <label for> cannot
+    // associate with it. The visible text labels the button by id instead.
+    const labelId = useId();
+    const listboxId = useId();
 
     const selected = options.find((o) => o.value === value);
 
@@ -98,8 +102,10 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
             {/* Dropdown portal */}
             <div
                 ref={dropdownRef}
+                id={listboxId}
                 style={{ top: pos.top, left: pos.left, width: pos.width }}
                 role="listbox"
+                aria-labelledby={label ? labelId : undefined}
                 className="fixed z-[9999] overflow-hidden rounded-xl border border-border bg-surface shadow-xl"
             >
                 {/* Search */}
@@ -151,7 +157,14 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
 
     return (
         <div className={cn('relative', className)}>
-            {label && <label className="mb-1.5 block text-xs font-medium text-text-muted">{label}</label>}
+            {label && (
+                <span
+                    id={labelId}
+                    className="mb-1.5 block text-xs font-medium text-text-muted"
+                >
+                    {label}
+                </span>
+            )}
 
             {/* Trigger */}
             <button
@@ -160,6 +173,8 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
                 onClick={() => setOpen(!open)}
                 aria-haspopup="listbox"
                 aria-expanded={open}
+                aria-labelledby={label ? labelId : undefined}
+                aria-controls={open ? listboxId : undefined}
                 className={cn(
                     'flex min-h-11 w-full items-center justify-between rounded-control border px-4 py-3 text-left transition-colors',
                     open ? 'border-primary ring-1 ring-primary/20' : 'border-border',

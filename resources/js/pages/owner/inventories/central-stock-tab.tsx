@@ -349,9 +349,11 @@ export default function CentralStockTab({
                     </DialogHeader>
                     <div className="space-y-3">
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-text-muted">
+                            {/* Prints the current value; the input below
+                                is what the form edits. */}
+                            <span className="mb-1 block text-xs font-medium text-text-muted">
                                 Stok Saat Ini
-                            </label>
+                            </span>
                             <div className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-text-muted">
                                 {editModal?.center_stock} pcs
                             </div>

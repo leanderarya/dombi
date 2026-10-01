@@ -298,10 +298,15 @@ export default function DeliveryTiersIndex({
                     </DialogHeader>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="mb-1 block text-xs text-text-muted">
+                            <label
+                                htmlFor="tier-min-km"
+                                className="mb-1 block text-xs text-text-muted"
+                            >
                                 Min KM
                             </label>
                             <Input
+                                id="tier-min-km"
+                                name="min_km"
                                 type="number"
                                 step="0.01"
                                 value={addForm.data.min_km}
@@ -312,10 +317,15 @@ export default function DeliveryTiersIndex({
                             />
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs text-text-muted">
+                            <label
+                                htmlFor="tier-max-km"
+                                className="mb-1 block text-xs text-text-muted"
+                            >
                                 Max KM
                             </label>
                             <Input
+                                id="tier-max-km"
+                                name="max_km"
                                 type="number"
                                 step="0.01"
                                 value={addForm.data.max_km}
@@ -326,10 +336,15 @@ export default function DeliveryTiersIndex({
                             />
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs text-text-muted">
+                            <label
+                                htmlFor="tier-fee"
+                                className="mb-1 block text-xs text-text-muted"
+                            >
                                 Tarif (Rp)
                             </label>
                             <Input
+                                id="tier-fee"
+                                name="fee"
                                 type="number"
                                 step="500"
                                 value={addForm.data.fee}
@@ -340,10 +355,15 @@ export default function DeliveryTiersIndex({
                             />
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs text-text-muted">
+                            <label
+                                htmlFor="tier-sort-order"
+                                className="mb-1 block text-xs text-text-muted"
+                            >
                                 Urutan
                             </label>
                             <Input
+                                id="tier-sort-order"
+                                name="sort_order"
                                 type="number"
                                 value={addForm.data.sort_order}
                                 onChange={(e) =>
@@ -399,10 +419,15 @@ export default function DeliveryTiersIndex({
                     </DialogHeader>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="mb-1 block text-xs text-text-muted">
+                            <label
+                                htmlFor="edit-tier-min-km"
+                                className="mb-1 block text-xs text-text-muted"
+                            >
                                 Min KM
                             </label>
                             <Input
+                                id="edit-tier-min-km"
+                                name="min_km"
                                 type="number"
                                 step="0.01"
                                 value={editForm.data.min_km}
@@ -412,10 +437,15 @@ export default function DeliveryTiersIndex({
                             />
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs text-text-muted">
+                            <label
+                                htmlFor="edit-tier-max-km"
+                                className="mb-1 block text-xs text-text-muted"
+                            >
                                 Max KM
                             </label>
                             <Input
+                                id="edit-tier-max-km"
+                                name="max_km"
                                 type="number"
                                 step="0.01"
                                 value={editForm.data.max_km}
@@ -425,10 +455,15 @@ export default function DeliveryTiersIndex({
                             />
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs text-text-muted">
+                            <label
+                                htmlFor="edit-tier-fee"
+                                className="mb-1 block text-xs text-text-muted"
+                            >
                                 Tarif (Rp)
                             </label>
                             <Input
+                                id="edit-tier-fee"
+                                name="fee"
                                 type="number"
                                 step="500"
                                 value={editForm.data.fee}
@@ -438,10 +473,15 @@ export default function DeliveryTiersIndex({
                             />
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs text-text-muted">
+                            <label
+                                htmlFor="edit-tier-sort-order"
+                                className="mb-1 block text-xs text-text-muted"
+                            >
                                 Urutan
                             </label>
                             <Input
+                                id="edit-tier-sort-order"
+                                name="sort_order"
                                 type="number"
                                 value={editForm.data.sort_order}
                                 onChange={(e) =>

@@ -302,10 +302,15 @@ function AccountForm({
     return (
         <div className="space-y-3">
             <div>
-                <label className="mb-1 block text-xs font-medium text-text-muted">
+                <label
+                    htmlFor="bank-name"
+                    className="mb-1 block text-xs font-medium text-text-muted"
+                >
                     Nama Bank
                 </label>
                 <Input
+                    id="bank-name"
+                    name="bank_name"
                     type="text"
                     value={data.bank_name}
                     onChange={(e) => setData('bank_name', e.target.value)}
@@ -319,10 +324,15 @@ function AccountForm({
                 )}
             </div>
             <div>
-                <label className="mb-1 block text-xs font-medium text-text-muted">
+                <label
+                    htmlFor="bank-account-number"
+                    className="mb-1 block text-xs font-medium text-text-muted"
+                >
                     Nomor Rekening
                 </label>
                 <Input
+                    id="bank-account-number"
+                    name="account_number"
                     type="text"
                     value={data.account_number}
                     onChange={(e) => setData('account_number', e.target.value)}
@@ -336,10 +346,15 @@ function AccountForm({
                 )}
             </div>
             <div>
-                <label className="mb-1 block text-xs font-medium text-text-muted">
+                <label
+                    htmlFor="bank-account-holder"
+                    className="mb-1 block text-xs font-medium text-text-muted"
+                >
                     Nama Pemilik
                 </label>
                 <Input
+                    id="bank-account-holder"
+                    name="account_holder"
                     type="text"
                     value={data.account_holder}
                     onChange={(e) => setData('account_holder', e.target.value)}

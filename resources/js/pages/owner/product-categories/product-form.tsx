@@ -931,7 +931,10 @@ export default function ProductForm({
 
                     {/* Flavors input */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-text">
+                        <label
+                            htmlFor="flavor-input"
+                            className="text-sm font-medium text-text"
+                        >
                             Daftar Rasa <span className="text-danger">*</span>
                             <span className="ml-2 text-[11px] font-normal text-text-subtle">
                                 Ketik + Enter atau koma untuk tambah chip
@@ -940,6 +943,8 @@ export default function ProductForm({
                         <div className="flex gap-2">
                             <div className="relative flex-1">
                                 <Input
+                                    id="flavor-input"
+                                    name="flavor_input"
                                     value={flavorInput}
                                     onChange={(e) =>
                                         setFlavorInput(e.target.value)
@@ -984,11 +989,16 @@ export default function ProductForm({
 
                         {/* Alternative textarea for comma separated */}
                         <div className="space-y-1">
-                            <label className="text-[11px] font-medium text-text-muted">
+                            <label
+                                htmlFor="bulk-flavors"
+                                className="text-[11px] font-medium text-text-muted"
+                            >
                                 Atau paste daftar rasa dipisah koma / baris baru
                                 (auto dedup):
                             </label>
                             <Textarea
+                                id="bulk-flavors"
+                                name="bulk_flavors"
                                 value={bulkFlavorsText}
                                 onChange={(e) =>
                                     setBulkFlavorsText(e.target.value)

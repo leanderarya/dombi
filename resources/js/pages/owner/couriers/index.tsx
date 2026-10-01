@@ -290,9 +290,11 @@ export default function CouriersIndex({
                             required
                         />
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-text-subtle">
+                            {/* Heads a row of toggle buttons, not a
+                                form control. */}
+                            <span className="mb-1 block text-xs font-medium text-text-subtle">
                                 Tipe Kendaraan
-                            </label>
+                            </span>
                             <div className="flex gap-2">
                                 {vehicleTypes.map((vt) => {
                                     const Icon = vt.icon;

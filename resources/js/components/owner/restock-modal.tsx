@@ -101,7 +101,10 @@ export default function RestockModal({
                 </div>
 
                 <div className="mt-3">
-                    <label className="text-xs font-bold tracking-wider text-text-muted uppercase">
+                    <label
+                        htmlFor="restock-quantity"
+                        className="text-xs font-bold tracking-wider text-text-muted uppercase"
+                    >
                         Tambah Stok
                     </label>
                     <div className="mt-1 flex gap-2">
@@ -122,6 +125,8 @@ export default function RestockModal({
                     </div>
                     <div className="relative mt-2">
                         <input
+                            id="restock-quantity"
+                            name="quantity"
                             type="number"
                             value={quantity}
                             onChange={(e) => setQuantity(e.target.value)}
@@ -137,10 +142,15 @@ export default function RestockModal({
                 </div>
 
                 <div className="mt-3">
-                    <label className="text-xs font-bold tracking-wider text-text-muted uppercase">
+                    <label
+                        htmlFor="restock-notes"
+                        className="text-xs font-bold tracking-wider text-text-muted uppercase"
+                    >
                         Catatan
                     </label>
                     <textarea
+                        id="restock-notes"
+                        name="notes"
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Catatan restock (opsional)"

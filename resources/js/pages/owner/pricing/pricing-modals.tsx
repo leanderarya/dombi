@@ -73,10 +73,15 @@ export function GlobalPriceModal({
                 </DialogHeader>
                 <div className="space-y-3">
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-text-muted">
+                        <label
+                            htmlFor="pricing-center-price"
+                            className="mb-1 block text-xs font-medium text-text-muted"
+                        >
                             HPP (Harga Pusat)
                         </label>
                         <Input
+                            id="pricing-center-price"
+                            name="center_price"
                             type="number"
                             value={centerPrice}
                             onChange={(e) => setCenterPrice(e.target.value)}
@@ -84,10 +89,15 @@ export function GlobalPriceModal({
                         />
                     </div>
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-text-muted">
+                        <label
+                            htmlFor="pricing-selling-price"
+                            className="mb-1 block text-xs font-medium text-text-muted"
+                        >
                             Harga Jual
                         </label>
                         <Input
+                            id="pricing-selling-price"
+                            name="selling_price"
                             type="number"
                             value={sellingPrice}
                             onChange={(e) => setSellingPrice(e.target.value)}
@@ -174,18 +184,23 @@ export function OutletPriceModal({
                 </DialogHeader>
                 <div className="space-y-3">
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-text-muted">
+                        <span className="mb-1 block text-xs font-medium text-text-muted">
                             Harga Pusat (Global)
-                        </label>
+                        </span>
                         <div className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-text-muted">
                             {formatCurrency(row.center_price)}
                         </div>
                     </div>
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-text-muted">
+                        <label
+                            htmlFor="pricing-outlet-price"
+                            className="mb-1 block text-xs font-medium text-text-muted"
+                        >
                             Harga Jual (Outlet)
                         </label>
                         <Input
+                            id="pricing-outlet-price"
+                            name="price"
                             type="number"
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}

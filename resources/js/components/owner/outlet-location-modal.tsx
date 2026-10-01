@@ -140,10 +140,15 @@ export default function OutletLocationModal({
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-semibold tracking-wide text-text-muted uppercase">
+                        <label
+                            htmlFor="outlet-address-detail"
+                            className="text-xs font-semibold tracking-wide text-text-muted uppercase"
+                        >
                             Alamat Detail
                         </label>
                         <textarea
+                            id="outlet-address-detail"
+                            name="address"
                             value={data.address}
                             onChange={(e) => setData('address', e.target.value)}
                             rows={2}

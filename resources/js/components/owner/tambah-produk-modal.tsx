@@ -219,10 +219,15 @@ function TambahProdukModalContent({
             {/* Footer */}
             <div className="border-t border-border pt-3">
                 <div className="mb-3 flex items-center gap-3">
-                    <label className="text-xs font-semibold text-text-muted">
+                    <label
+                        htmlFor="product-initial-stock"
+                        className="text-xs font-semibold text-text-muted"
+                    >
                         Stok Awal
                     </label>
                     <input
+                        id="product-initial-stock"
+                        name="initial_stock"
                         type="number"
                         value={initialStock}
                         onChange={(e) => setInitialStock(e.target.value)}
