@@ -202,6 +202,7 @@ class OrderController extends Controller
                     'subtotal' => $item->subtotal,
                 ]),
                 'total' => $order->total,
+                'status' => $order->status,
                 'fulfillment_type' => $order->fulfillment_type,
                 'confirmation_expires_at' => $order->confirmation_expires_at?->toISOString(),
                 'payment_method' => $order->payment_method,

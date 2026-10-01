@@ -157,6 +157,30 @@ async function flushAsync() {
     });
 }
 
+describe('ConfirmPage for a finished order', () => {
+    it('shows payment success, not a pay button, when a completed order has no payment_status', () => {
+        // Orders created before the payment guard are completed with a null
+        // payment_status. Reading only that column showed a finished order as
+        // awaiting payment, with a button that the server rejects.
+        unmount();
+        renderPage({
+            ...baseOrder,
+            status: 'completed',
+            payment_status: null,
+        });
+
+        expect(document.body.textContent).toContain('Pembayaran Berhasil');
+        expect(document.body.textContent).not.toContain('Lanjutkan Pembayaran');
+    });
+
+    it('still shows the pay button while the order is genuinely unpaid', () => {
+        unmount();
+        renderPage({ ...baseOrder, status: 'pending_confirmation' });
+
+        expect(document.body.textContent).toContain('Lanjutkan Pembayaran');
+    });
+});
+
 describe('ConfirmPage without an order', () => {
     it('renders the server error message and a way back instead of crashing', () => {
         unmount();

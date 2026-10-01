@@ -21,6 +21,20 @@ type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max polling
 
+// Orders that are past the payment step. Orders created before the payment
+// guard can reach `completed` with `payment_status` still null, and reading
+// only that column then shows a finished order as "awaiting payment" with a
+// pay button. The order's own status is the more reliable signal.
+const PAST_PAYMENT_STATUSES = [
+    'awaiting_preparation',
+    'confirmed',
+    'preparing',
+    'ready_for_pickup',
+    'picked_up',
+    'delivering',
+    'completed',
+];
+
 export default function ConfirmPage({ order, isLoggedIn, error }: any) {
     // The order-less state is decided here, before any hook runs. The pages
     // that send `order: null` (a cancelled, expired or rejected order) rely on
@@ -56,6 +70,10 @@ function ConfirmView({ order, isLoggedIn }: any) {
 
         if (s === 'paid' || s === 'failed' || s === 'expired') {
             return s;
+        }
+
+        if (PAST_PAYMENT_STATUSES.includes(order?.status)) {
+            return 'paid';
         }
 
         return 'pending';

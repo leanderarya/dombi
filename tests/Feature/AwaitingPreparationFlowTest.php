@@ -108,7 +108,23 @@ class AwaitingPreparationFlowTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->component('customer/orders/confirm')
-                ->where('order.id', $order->id));
+                ->where('order.id', $order->id)
+                ->where('order.status', Order::STATUS_COMPLETED));
+    }
+
+    public function test_confirm_page_sends_the_order_status_for_legacy_rows(): void
+    {
+        // Orders created before the payment guard never got a payment_status,
+        // so the page cannot tell "paid" from the payment column alone. It
+        // needs the order status to know the payment step is behind it.
+        [$order] = $this->paidOrder(status: Order::STATUS_COMPLETED);
+        $order->forceFill(['payment_status' => null])->save();
+
+        $this->get("/customer/orders/confirm/{$order->order_code}")
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('order.payment_status', null)
+                ->where('order.status', Order::STATUS_COMPLETED));
     }
 
     public function test_confirm_page_reports_a_cancelled_order_instead_of_serving_it(): void
