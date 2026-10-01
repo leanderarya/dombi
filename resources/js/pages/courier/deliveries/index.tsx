@@ -1,6 +1,13 @@
 import { Link, router } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
-import { Truck, Route, Clock, MapPin, Loader2 } from 'lucide-react';
+import {
+    Truck,
+    Route,
+    Clock,
+    MapPin,
+    Loader2,
+    AlertTriangle,
+} from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
@@ -18,11 +25,16 @@ const filterOptions = [
     { key: 'failed', label: 'Gagal' },
 ];
 
-export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
+export default function CourierDeliveriesIndex({
+    deliveries,
+    filters,
+    hasActiveDeliveries,
+}: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
     const [optimizedRoute, setOptimizedRoute] = useState<any[]>([]);
     const [routeSummary, setRouteSummary] = useState<any>(null);
     const [loadingRoute, setLoadingRoute] = useState(false);
+    const [routeError, setRouteError] = useState<string | null>(null);
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
@@ -35,22 +47,32 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
 
     const fetchOptimizedRoute = async () => {
         setLoadingRoute(true);
+        setRouteError(null);
 
         try {
             const response = await fetch('/courier/deliveries/optimized-route');
+
+            if (!response.ok) {
+                throw new Error(`Rute gagal dihitung (${response.status})`);
+            }
+
             const data = await response.json();
-            setOptimizedRoute(data.route);
-            setRouteSummary(data.summary);
+
+            // Guard the array: the render reads .length, so an undefined route
+            // (empty body, unexpected shape) would throw instead of degrading.
+            setOptimizedRoute(Array.isArray(data.route) ? data.route : []);
+            setRouteSummary(data.summary ?? null);
         } catch (error) {
             console.error('Failed to fetch optimized route:', error);
+            setOptimizedRoute([]);
+            setRouteSummary(null);
+            setRouteError(
+                'Rute gagal dihitung. Periksa koneksi lalu coba lagi.',
+            );
         } finally {
             setLoadingRoute(false);
         }
     };
-
-    const hasActiveDeliveries = deliveries.data.some((d: any) =>
-        ['waiting_pickup', 'picked_up', 'delivering'].includes(d.status),
-    );
 
     return (
         <CourierLayout
@@ -81,6 +103,14 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
                         )}
                         {loadingRoute ? 'Menghitung Rute...' : 'Optimasi Rute'}
                     </Button>
+                    {routeError && (
+                        <div className="mt-2 flex items-start gap-2 rounded-lg border border-danger-border bg-danger-bg p-3">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
+                            <div className="text-sm text-danger-text">
+                                {routeError}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 

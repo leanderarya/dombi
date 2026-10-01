@@ -30,6 +30,10 @@ class DeliveryController extends Controller
         return Inertia::render('courier/deliveries/index', [
             'deliveries' => $deliveries,
             'filters' => $request->only(['status']),
+            // Counted across every delivery, not the page slice: paginate(20)
+            // plus a status filter can hide an active delivery from the client,
+            // and the route button keys off exactly this question.
+            'hasActiveDeliveries' => $request->user()->hasActiveDeliveries(),
         ]);
     }
 
