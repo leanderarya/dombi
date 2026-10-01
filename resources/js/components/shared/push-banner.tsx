@@ -62,7 +62,7 @@ export default function PushBanner({ variant, onDismiss }: Props) {
                 {pushState !== 'denied' && (
                     <button
                         onClick={handleEnable}
-                        className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
+                        className="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80"
                     >
                         Aktifkan
                     </button>
@@ -111,7 +111,7 @@ export default function PushBanner({ variant, onDismiss }: Props) {
                                 </p>
                                 <button
                                     onClick={handleEnable}
-                                    className="mt-2 inline-flex min-h-10 items-center rounded-xl bg-white px-5 text-xs font-bold text-primary shadow-sm active:opacity-80"
+                                    className="mt-2 inline-flex min-h-11 items-center rounded-xl bg-white px-5 text-xs font-bold text-primary shadow-sm active:opacity-80"
                                 >
                                     Aktifkan Notifikasi
                                 </button>

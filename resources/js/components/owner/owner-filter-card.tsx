@@ -108,6 +108,11 @@ export default function OwnerFilterCard({
                 {searchPlaceholder && (
                     <Input
                         type="text"
+                        // The placeholder was carrying the label. aria-label
+                        // rather than `label`: this component already names
+                        // its four sibling Selects that way, and a visible
+                        // label would add a line to a compact filter bar.
+                        aria-label={searchPlaceholder}
                         placeholder={searchPlaceholder}
                         value={searchValue ?? ''}
                         onChange={(e) => onSearch?.(e.target.value)}

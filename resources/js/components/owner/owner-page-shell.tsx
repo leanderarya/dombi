@@ -53,7 +53,7 @@ function PageHeader({
             <div className="flex items-center gap-3">
                 <button
                     onClick={toggle}
-                    className="hidden h-8 w-8 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted hover:text-text md:flex"
+                    className="hidden h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted hover:text-text md:flex"
                     aria-label={
                         collapsed ? 'Expand sidebar' : 'Collapse sidebar'
                     }
@@ -68,7 +68,8 @@ function PageHeader({
                 {backHref && (
                     <Link
                         href={backHref}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-border p-1.5 text-text-muted hover:bg-surface-muted"
+                        aria-label="Kembali"
+                        className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted"
                     >
                         <ArrowLeft className="h-4 w-4" />
                     </Link>

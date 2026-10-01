@@ -169,7 +169,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
             <div className="fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-surface px-4 md:hidden">
                 <button
                     onClick={() => setMobileMenuOpen(true)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted"
+                    className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted"
                     aria-label="Buka menu"
                 >
                     <svg
@@ -253,7 +253,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                                 </div>
                                 <button
                                     onClick={() => router.post('/logout')}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-200/90 transition-colors hover:bg-primary-hover/40 hover:text-white"
+                                    className="flex h-11 w-11 items-center justify-center rounded-lg text-emerald-200/90 transition-colors hover:bg-primary-hover/40 hover:text-white"
                                     title="Logout"
                                 >
                                     <LogoutIcon />
