@@ -364,6 +364,16 @@ class DeliveryService
                 ]);
             }
 
+            // Only return_status changes below, so the status guard above still
+            // passes on a second call: the courier could tap "Kembali ke Outlet"
+            // again and again, and each pass re-fires both outlet notifications.
+            // A return is a single event.
+            if ($delivery->return_status !== null) {
+                throw ValidationException::withMessages([
+                    'status' => 'Pesanan ini sudah dikembalikan ke outlet.',
+                ]);
+            }
+
             $delivery->update([
                 'return_status' => 'returning_to_outlet',
                 'return_notes' => $note,
