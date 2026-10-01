@@ -69,7 +69,11 @@ export default function PushBanner({ variant, onDismiss }: Props) {
                 )}
                 <button
                     onClick={handleDismiss}
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-text-subtle active:bg-surface-muted"
+                    // Was h-6 w-6 (24px). DESIGN.md line 83 wants 44x44 on
+                    // touch, and this is the dismiss for a banner above the
+                    // fold. Guarded by pointer-coarse so the desktop banner
+                    // keeps its height (spec D6).
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-text-subtle active:bg-surface-muted pointer-coarse:h-11 pointer-coarse:w-11"
                     aria-label="Tutup"
                 >
                     <X className="h-3.5 w-3.5" />

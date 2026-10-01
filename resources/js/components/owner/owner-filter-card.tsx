@@ -81,7 +81,10 @@ export default function OwnerFilterCard({
                 <button
                     type="button"
                     onClick={() => setExpanded(true)}
-                    className="-m-1 flex min-h-6 items-center gap-2 p-1 text-sm text-text-muted hover:text-text"
+                    // pointer-coarse:min-h-11 — 24px on padding alone, under
+                    // DESIGN.md line 83 on touch; the desktop disclosure stays
+                    // as compact as it was (spec D6).
+                    className="-m-2 flex items-center gap-2 p-2 text-sm text-text-muted hover:text-text pointer-coarse:min-h-11"
                 >
                     <Filter className="h-4 w-4" />
                     Filter
@@ -97,7 +100,7 @@ export default function OwnerFilterCard({
                 <button
                     type="button"
                     onClick={() => setExpanded(false)}
-                    className="-m-1 mb-1 flex min-h-6 items-center gap-2 p-1 text-sm text-text-muted hover:text-text"
+                    className="-m-2 mb-1 flex items-center gap-2 p-2 text-sm text-text-muted hover:text-text pointer-coarse:min-h-11"
                 >
                     <Filter className="h-4 w-4" />
                     Filter

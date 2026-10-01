@@ -32,7 +32,15 @@ export const FILTER_CHIP_BASE =
 
 
 const sizeStyles = {
-    sm: 'px-3.5 py-1.5 text-xs',
+    /* `sm` is the owner and outlet filter row, reached by thumb on a phone:
+       12px padding made the pill 28px tall, well under the 44px DESIGN.md line
+       83 requires. `pointer-coarse:` rather than a bare min-height so the
+       desktop density is untouched — spec D6 exempts the owner panel from the
+       44px guarantee on precise-pointer devices only, and this reaches the
+       touch case that exemption does not cover. `caption` is left
+       byte-identical: it is pinned to the customer kanvas frame and D8 keeps
+       that surface consistency-only. */
+    sm: 'pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center px-3.5 py-1.5 text-xs',
     md: 'px-4 py-2 text-xs',
     /* `leading-tight` keeps the pill at the kanvas height (8/8 padding + 11px
        label) — the inherited 1.5 line-height made it several px taller. */

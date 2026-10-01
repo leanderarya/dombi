@@ -67,4 +67,16 @@ describe('OwnerFilterCard', () => {
             'Filter outlet',
         );
     });
+
+    it('sizes the collapsed Filter disclosure for touch, not for the desktop rail', () => {
+        const card = render(
+            <OwnerFilterCard collapsible defaultExpanded={false} />,
+        );
+        const toggle = card.querySelector('button');
+
+        // The disclosure measured 24px on padding alone. Guarded by
+        // `pointer-coarse:` so the compact desktop filter row is unchanged —
+        // spec D6 exempts the owner panel on precise pointers only.
+        expect(toggle?.className).toContain('pointer-coarse:min-h-11');
+    });
 });

@@ -72,6 +72,26 @@ describe('OwnerSegmentedTabs', () => {
         }
     });
 
+    it('reaches 44px on touch without changing desktop density', () => {
+        const tablist = render(
+            <OwnerSegmentedTabs
+                tabs={TABS}
+                activeTab="a"
+                onChange={() => {}}
+            />,
+        );
+
+        // Padding alone measured 34px. The guard is `pointer-coarse:` rather
+        // than a bare min-height because spec D6 exempts the owner panel from
+        // the 44px guarantee on precise-pointer devices, and DESIGN.md line 83
+        // requires it everywhere else. jsdom has no layout engine, so the
+        // class list is the only thing assertable here — the geometry was
+        // measured in the browser (touch emulation: 0 controls under 44px).
+        for (const tab of tablist.querySelectorAll('[role="tab"]')) {
+            expect(tab.className).toContain('pointer-coarse:min-h-11');
+        }
+    });
+
     it('marks the active tab for assistive tech', () => {
         const tablist = render(
             <OwnerSegmentedTabs

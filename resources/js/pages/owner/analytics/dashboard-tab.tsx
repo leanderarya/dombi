@@ -92,7 +92,7 @@ export function DashboardTab({
                         key={p.key}
                         type="button"
                         onClick={() => handlePeriodChange(p.key)}
-                        className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
+                        className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center ${
                             period === p.key
                                 ? 'bg-primary/10 text-primary ring-primary/20'
                                 : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'

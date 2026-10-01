@@ -79,7 +79,10 @@ export default function AnalyticsIndex(props: Props) {
                         role="tab"
                         aria-selected={activeTab === tab.key}
                         onClick={() => handleTabChange(tab.key)}
-                        className={`relative shrink-0 rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 sm:px-5 ${
+                        // pointer-coarse:min-h-11 matches the shared
+                        // OwnerSegmentedTabs — 36px on padding alone, under
+                        // DESIGN.md line 83 on touch only (spec D6).
+                        className={`relative shrink-0 rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 sm:px-5 pointer-coarse:min-h-11 ${
                             activeTab === tab.key
                                 ? 'bg-white text-text shadow-sm'
                                 : 'text-text-muted hover:text-text'

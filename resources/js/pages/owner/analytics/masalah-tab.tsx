@@ -136,7 +136,7 @@ function ColorFilterChips({
                     key={option.key}
                     type="button"
                     onClick={() => onChange(option.key)}
-                    className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
+                    className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center ${
                         activeFilter === option.key
                             ? (colorMap[option.key] ??
                               'bg-primary/10 text-primary ring-primary/20')
