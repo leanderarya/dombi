@@ -211,16 +211,21 @@ function HeroCarousel({
 }
 
 function HeroSlideCard({ slide }: { slide: HeroSlide }) {
+    // The card sits on the hero gradient, so its own fill sets the backdrop for
+    // everything on it. At bg-white/10 the tint was too pale: the eyebrow ran
+    // 3.51:1 against it and the CTA 3.35:1, both under the 4.5:1 AA floor.
+    // Deepening the fill to brand-deep/45 puts the eyebrow at 8.25:1 and the
+    // CTA at 6.5:1, measured from the rendered pixels on staging.
     return (
-        <div className="flex min-w-full items-center justify-between gap-3 rounded-card border border-white/20 bg-white/10 p-4 backdrop-blur-md">
+        <div className="flex min-w-full items-center justify-between gap-3 rounded-card border border-white/20 bg-brand-deep/45 p-4 backdrop-blur-md">
             <div className="max-w-[60%] space-y-1">
-                <span className="inline-block rounded-md bg-brand-deep/40 px-2 py-0.5 text-[10px] font-bold tracking-wider text-brand-bright uppercase">
+                <span className="inline-block rounded-md bg-brand-deep/40 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase">
                     {slide.title}
                 </span>
                 <h2 className="text-xl leading-tight font-extrabold text-white">
                     {slide.subtitle}
                 </h2>
-                <p className="text-[9px] font-medium text-primary-light/80">
+                <p className="text-[9px] font-medium text-primary-light">
                     {slide.cta}
                 </p>
             </div>
