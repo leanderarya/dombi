@@ -61,7 +61,11 @@ export default function PricingIndex(props: Props) {
     return (
         <OwnerPageShell title="Harga" subtitle="Kelola harga jual produk">
             <div
-                className="mb-5 inline-flex rounded-lg bg-surface-muted p-1"
+                // Same 320px overflow as OwnerSegmentedTabs, but this tablist
+                // is an inline copy that carries its own text size (text-sm,
+                // not the shared 12px), so it is fixed here rather than folded
+                // into the component.
+                className="mb-5 inline-flex max-w-full overflow-x-auto rounded-lg bg-surface-muted p-1"
                 role="tablist"
                 aria-label="Tab navigasi harga"
             >
@@ -72,7 +76,7 @@ export default function PricingIndex(props: Props) {
                         role="tab"
                         aria-selected={activeTab === tab.key}
                         onClick={() => handleTabChange(tab.key)}
-                        className={`rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 sm:px-5 ${
+                        className={`shrink-0 rounded-lg px-3 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 sm:px-5 ${
                             activeTab === tab.key
                                 ? 'bg-surface text-text shadow-sm'
                                 : 'text-text-muted hover:text-text'
