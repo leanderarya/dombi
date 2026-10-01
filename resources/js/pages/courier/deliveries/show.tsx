@@ -802,10 +802,15 @@ function CompleteSheetContent({
         <form onSubmit={handleSubmit}>
             <div className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-text">
+                    <label
+                        htmlFor="delivered_to"
+                        className="block text-sm font-medium text-text"
+                    >
                         Diterima oleh
                     </label>
                     <input
+                        id="delivered_to"
+                        name="delivered_to"
                         type="text"
                         value={form.data.delivered_to}
                         onChange={(e) =>
@@ -817,10 +822,15 @@ function CompleteSheetContent({
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-text">
+                    <label
+                        htmlFor="delivery_note"
+                        className="block text-sm font-medium text-text"
+                    >
                         Catatan (opsional)
                     </label>
                     <textarea
+                        id="delivery_note"
+                        name="delivery_note"
                         value={form.data.delivery_note}
                         onChange={(e) =>
                             form.setData('delivery_note', e.target.value)
@@ -832,10 +842,15 @@ function CompleteSheetContent({
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-text">
+                    <label
+                        htmlFor="proof_image"
+                        className="block text-sm font-medium text-text"
+                    >
                         Foto Bukti Pengiriman
                     </label>
                     <input
+                        id="proof_image"
+                        name="proof_image"
                         type="file"
                         accept="image/*"
                         capture="environment"
@@ -920,7 +935,12 @@ function FailSheetContent({
 
             {form.data.failed_reason === 'Lainnya' && (
                 <div className="mt-3">
+                    <label htmlFor="failure_note" className="sr-only">
+                        Alasan kegagalan
+                    </label>
                     <textarea
+                        id="failure_note"
+                        name="failure_note"
                         value={form.data.failure_note}
                         onChange={(e) =>
                             form.setData('failure_note', e.target.value)
@@ -1006,7 +1026,12 @@ function RejectSheetContent({
 
             {form.data.rejection_reason === 'Lainnya' && (
                 <div className="mt-3">
+                    <label htmlFor="rejection_note" className="sr-only">
+                        Alasan penolakan
+                    </label>
                     <textarea
+                        id="rejection_note"
+                        name="rejection_note"
                         value={form.data.rejection_note}
                         onChange={(e) =>
                             form.setData('rejection_note', e.target.value)

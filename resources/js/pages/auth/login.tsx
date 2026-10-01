@@ -123,8 +123,17 @@ export default function Login({ auth }: Props) {
 
                 {data.usePhone ? (
                     <>
-                        <label className="mt-4 block text-sm">No. HP</label>
+                        <label
+                            htmlFor="login-phone"
+                            className="mt-4 block text-sm"
+                        >
+                            No. HP
+                        </label>
                         <input
+                            id="login-phone"
+                            name="phone"
+                            type="tel"
+                            autoComplete="tel"
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}
                             placeholder="628xxxxxxxxxx"
@@ -133,8 +142,17 @@ export default function Login({ auth }: Props) {
                     </>
                 ) : (
                     <>
-                        <label className="mt-4 block text-sm">Email</label>
+                        <label
+                            htmlFor="login-email"
+                            className="mt-4 block text-sm"
+                        >
+                            Email
+                        </label>
                         <input
+                            id="login-email"
+                            name="email"
+                            type="email"
+                            autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"
@@ -146,9 +164,14 @@ export default function Login({ auth }: Props) {
                         {errors.email}
                     </div>
                 )}
-                <label className="mt-4 block text-sm">Password</label>
+                <label htmlFor="login-password" className="mt-4 block text-sm">
+                    Password
+                </label>
                 <input
+                    id="login-password"
+                    name="password"
                     type="password"
+                    autoComplete="current-password"
                     value={data.password}
                     onChange={(e) => setData('password', e.target.value)}
                     className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"

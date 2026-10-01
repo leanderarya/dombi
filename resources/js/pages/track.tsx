@@ -518,10 +518,15 @@ function CancelDialog({
             </p>
             {isPickup && (
                 <div>
-                    <label className="text-xs font-medium text-text-subtle">
+                    <label
+                        htmlFor="cancel-last4-hp"
+                        className="text-xs font-medium text-text-subtle"
+                    >
                         4 digit terakhir nomor HP
                     </label>
                     <input
+                        id="cancel-last4-hp"
+                        name="last4_hp"
                         type="text"
                         inputMode="numeric"
                         pattern="\d{4}"
@@ -692,18 +697,25 @@ function AccountPromotionBanner({
             ) : (
                 <form onSubmit={handleSubmit} className="mt-3 space-y-3">
                     <div>
-                        <label className="text-xs font-medium text-primary">
+                        {/* Read-only value, not a form control: a label element
+                            pointing at it would reference nothing. */}
+                        <span className="text-xs font-medium text-primary">
                             Nomor HP (terverifikasi)
-                        </label>
+                        </span>
                         <div className="mt-1 rounded-chip border border-primary/20 bg-surface px-3 py-2 text-sm text-text">
                             {maskedPhone}
                         </div>
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-primary">
+                        <label
+                            htmlFor="track-name"
+                            className="text-xs font-medium text-primary"
+                        >
                             Nama
                         </label>
                         <input
+                            id="track-name"
+                            name="name"
                             type="text"
                             value={formName}
                             onChange={(e) => setFormName(e.target.value)}
@@ -713,11 +725,17 @@ function AccountPromotionBanner({
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-primary">
+                        <label
+                            htmlFor="track-password"
+                            className="text-xs font-medium text-primary"
+                        >
                             Password
                         </label>
                         <input
+                            id="track-password"
+                            name="password"
                             type="password"
+                            autoComplete="new-password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -726,11 +744,17 @@ function AccountPromotionBanner({
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-primary">
+                        <label
+                            htmlFor="track-password-confirmation"
+                            className="text-xs font-medium text-primary"
+                        >
                             Konfirmasi Password
                         </label>
                         <input
+                            id="track-password-confirmation"
+                            name="password_confirmation"
                             type="password"
+                            autoComplete="new-password"
                             value={passwordConfirmation}
                             onChange={(e) =>
                                 setPasswordConfirmation(e.target.value)

@@ -126,31 +126,46 @@ export default function GuestCancelPage() {
                 )}
 
                 <div className="mb-6 space-y-3">
-                    <label className="font-semibold">Alasan Pembatalan</label>
-                    {reasons.map((r) => (
-                        <label
-                            key={r}
-                            className="flex items-center gap-2 text-sm"
-                        >
-                            <input
-                                type="radio"
-                                name="reason"
-                                value={r}
-                                checked={reason === r}
-                                onChange={(e) => setReason(e.target.value)}
-                                className="accent-danger"
-                            />
-                            {r}
-                        </label>
-                    ))}
+                    <span id="cancel-reason-label" className="font-semibold">
+                        Alasan Pembatalan
+                    </span>
+                    <div
+                        role="radiogroup"
+                        aria-labelledby="cancel-reason-label"
+                        className="space-y-3"
+                    >
+                        {reasons.map((r) => (
+                            <label
+                                key={r}
+                                className="flex items-center gap-2 text-sm"
+                            >
+                                <input
+                                    type="radio"
+                                    name="reason"
+                                    value={r}
+                                    checked={reason === r}
+                                    onChange={(e) => setReason(e.target.value)}
+                                    className="accent-danger"
+                                />
+                                {r}
+                            </label>
+                        ))}
+                    </div>
                     {reason === 'Lainnya' && (
-                        <textarea
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            placeholder="Tulis alasan..."
-                            className="w-full rounded border p-2 text-sm"
-                            rows={3}
-                        />
+                        <>
+                            <label htmlFor="cancel-note" className="sr-only">
+                                Alasan pembatalan lainnya
+                            </label>
+                            <textarea
+                                id="cancel-note"
+                                name="note"
+                                value={note}
+                                onChange={(e) => setNote(e.target.value)}
+                                placeholder="Tulis alasan..."
+                                className="w-full rounded border p-2 text-sm"
+                                rows={3}
+                            />
+                        </>
                     )}
                 </div>
 

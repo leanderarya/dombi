@@ -444,10 +444,15 @@ function CancelDialog({
             </p>
             {isPickup && isConfirmation && (
                 <div>
-                    <label className="text-xs font-medium text-text-subtle">
+                    <label
+                        htmlFor="cancel-last4-hp"
+                        className="text-xs font-medium text-text-subtle"
+                    >
                         4 digit terakhir nomor HP
                     </label>
                     <input
+                        id="cancel-last4-hp"
+                        name="last4_hp"
                         type="text"
                         inputMode="numeric"
                         pattern="\d{4}"
