@@ -225,7 +225,7 @@ export default function PickupOutletSelector({
                                     </div>
                                 )}
                             <div
-                                className={`mt-0.5 text-[10px] font-semibold ${selectedOutlet.stock_available ? 'text-primary' : 'text-warning'}`}
+                                className={`mt-0.5 text-caption font-semibold ${selectedOutlet.stock_available ? 'text-primary' : 'text-warning'}`}
                             >
                                 {selectedOutlet.stock_available
                                     ? 'Stok tersedia'
@@ -277,11 +277,11 @@ export default function PickupOutletSelector({
                                                 <div className="truncate text-xs font-medium text-text">
                                                     {outlet.name}
                                                 </div>
-                                                <div className="truncate text-[10px] text-text-muted">
+                                                <div className="truncate text-caption text-text-muted">
                                                     {outlet.address}
                                                 </div>
                                                 {outlet.is_open === false && (
-                                                    <span className="mt-0.5 inline-flex items-center rounded bg-danger-bg px-1.5 py-0.5 text-[10px] font-medium text-danger-text">
+                                                    <span className="mt-0.5 inline-flex items-center rounded bg-danger-bg px-1.5 py-0.5 text-caption font-medium text-danger-text">
                                                         Sedang Tutup
                                                         {outlet.next_open
                                                             ? ` • Buka ${outlet.next_open}`
@@ -303,7 +303,7 @@ export default function PickupOutletSelector({
                                                             </div>
                                                         )}
                                                     <div
-                                                        className={`text-[10px] font-semibold ${outlet.stock_available ? 'text-primary' : 'text-warning'}`}
+                                                        className={`text-caption font-semibold ${outlet.stock_available ? 'text-primary' : 'text-warning'}`}
                                                     >
                                                         {outlet.stock_available
                                                             ? 'Tersedia'

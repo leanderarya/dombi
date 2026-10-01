@@ -34,7 +34,7 @@ export default function CustomerBottomNav() {
                                 key={item.href}
                                 href={item.href}
                                 replace
-                                className={`flex flex-col items-center justify-center gap-[3px] text-[10px] transition-transform active:scale-95 ${
+                                className={`flex flex-col items-center justify-center gap-[3px] text-caption transition-transform active:scale-95 ${
                                     active
                                         ? 'font-bold text-primary'
                                         : 'font-medium text-text-subtle'

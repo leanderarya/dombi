@@ -72,7 +72,7 @@ export default function OfflineSaleShow({ sale, outlet, week }: any) {
                                     }`}
                                 >
                                     {formatCurrency(Math.abs(week.net_amount))}
-                                    <span className="ml-1 text-[10px] font-medium text-text-subtle">
+                                    <span className="ml-1 text-caption font-medium text-text-subtle">
                                         {week.direction === 'owner_pays_outlet'
                                             ? 'Owner bayar'
                                             : 'Outlet bayar'}

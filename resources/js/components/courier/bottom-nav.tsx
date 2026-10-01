@@ -48,7 +48,7 @@ export default function CourierBottomNav({ visible = true }: Props) {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`relative flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold ${
+                            className={`relative flex flex-col items-center justify-center gap-0.5 text-caption font-semibold ${
                                 active ? 'text-primary' : 'text-text-subtle'
                             }`}
                         >

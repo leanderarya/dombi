@@ -39,7 +39,7 @@ export default function SortableTh({
         >
             {label}
             {active && (
-                <span className="ml-0.5 text-[10px] text-primary">
+                <span className="ml-0.5 text-caption text-primary">
                     {dir === 'asc' ? '▲' : '▼'}
                 </span>
             )}

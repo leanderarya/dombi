@@ -773,7 +773,7 @@ export default function Dashboard({
                                                         .substring(0, 2)
                                                         .toUpperCase()}
                                                 </div>
-                                                <div className="text-[10px] text-text-muted">
+                                                <div className="text-caption text-text-muted">
                                                     {alert.outlet.name}
                                                 </div>
                                             </td>
@@ -844,7 +844,7 @@ export default function Dashboard({
                                     <span className="text-xs font-semibold text-text">
                                         Restock Stok Kritis
                                     </span>
-                                    <span className="rounded-md bg-danger-bg px-2 py-1 text-[10px] font-bold text-danger-text">
+                                    <span className="rounded-md bg-danger-bg px-2 py-1 text-caption font-bold text-danger-text">
                                         {actionRequired.restocks}
                                     </span>
                                 </div>
@@ -862,7 +862,7 @@ export default function Dashboard({
                                     <span className="text-xs font-semibold text-text">
                                         Return Menunggu
                                     </span>
-                                    <span className="rounded-md bg-warning-bg px-2 py-1 text-[10px] font-bold text-warning-text">
+                                    <span className="rounded-md bg-warning-bg px-2 py-1 text-caption font-bold text-warning-text">
                                         {actionRequired.returns}
                                     </span>
                                 </div>
@@ -880,7 +880,7 @@ export default function Dashboard({
                                     <span className="text-xs font-semibold text-text">
                                         Tukar Produk
                                     </span>
-                                    <span className="rounded-md bg-info-bg px-2 py-1 text-[10px] font-bold text-info-text">
+                                    <span className="rounded-md bg-info-bg px-2 py-1 text-caption font-bold text-info-text">
                                         {actionRequired.exchanges}
                                     </span>
                                 </div>
@@ -898,7 +898,7 @@ export default function Dashboard({
                                     <span className="text-xs font-semibold text-text">
                                         Verifikasi Pembayaran
                                     </span>
-                                    <span className="rounded-md bg-status-active-bg px-2 py-1 text-[10px] font-bold text-status-active">
+                                    <span className="rounded-md bg-status-active-bg px-2 py-1 text-caption font-bold text-status-active">
                                         {
                                             actionRequired.pendingSettlementVerifications
                                         }

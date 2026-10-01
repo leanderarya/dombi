@@ -382,7 +382,7 @@ function CancelButton({ onClick }: { onClick: () => void }) {
             >
                 Batalkan Pesanan
             </Button>
-            <p className="mt-1.5 text-center text-[10px] text-text-subtle">
+            <p className="mt-1.5 text-center text-caption text-text-subtle">
                 Hanya jika pesanan belum diproses
             </p>
         </>

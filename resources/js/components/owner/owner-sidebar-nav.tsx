@@ -178,7 +178,7 @@ export default function OwnerSidebarNav({
                             top: `${flyoutPosition}px`,
                         }}
                     >
-                        <div className="px-3 py-1.5 text-[10px] font-semibold tracking-widest text-emerald-200/90 uppercase">
+                        <div className="px-3 py-1.5 text-caption font-semibold tracking-widest text-emerald-200/90 uppercase">
                             {activeFlyoutGroup.label}
                         </div>
                         {activeFlyoutGroup.items.map((item) => {
@@ -203,7 +203,7 @@ export default function OwnerSidebarNav({
                                 >
                                     <span>{item.label}</span>
                                     {badgeCount > 0 && (
-                                        <span className="min-w-[18px] rounded-full bg-accent-orange px-1.5 py-px text-center text-[10px] font-bold text-white">
+                                        <span className="min-w-[18px] rounded-full bg-accent-orange px-1.5 py-px text-center text-caption font-bold text-white">
                                             {badgeCount}
                                         </span>
                                     )}
@@ -291,7 +291,7 @@ export default function OwnerSidebarNav({
                                                 >
                                                     <span>{item.label}</span>
                                                     {badgeCount > 0 && (
-                                                        <span className="min-w-[18px] rounded-full bg-accent-orange px-1.5 py-px text-center text-[10px] font-bold text-white">
+                                                        <span className="min-w-[18px] rounded-full bg-accent-orange px-1.5 py-px text-center text-caption font-bold text-white">
                                                             {badgeCount}
                                                         </span>
                                                     )}

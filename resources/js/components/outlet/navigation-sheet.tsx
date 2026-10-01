@@ -209,7 +209,7 @@ export default function OutletNavigationSheet({
                                             {item.label}
                                         </span>
                                         {badgeCount > 0 && (
-                                            <span className="min-w-5 rounded-full bg-danger px-1.5 py-0.5 text-center text-[10px] font-bold text-white">
+                                            <span className="min-w-5 rounded-full bg-danger px-1.5 py-0.5 text-center text-caption font-bold text-white">
                                                 {badgeCount > 99
                                                     ? '99+'
                                                     : badgeCount}

@@ -424,19 +424,19 @@ function VariantDetailSheet({
                         <div className="text-lg font-bold">
                             {item.current_stock}
                         </div>
-                        <div className="text-[10px] text-text-subtle">
+                        <div className="text-caption text-text-subtle">
                             Current
                         </div>
                     </div>
                     <div className="rounded-lg bg-surface-muted p-3 text-center">
                         <div className="text-lg font-bold">{available}</div>
-                        <div className="text-[10px] text-text-subtle">
+                        <div className="text-caption text-text-subtle">
                             Tersedia
                         </div>
                     </div>
                     <div className="rounded-lg bg-surface-muted p-3 text-center">
                         <div className="text-lg font-bold">{center}</div>
-                        <div className="text-[10px] text-text-subtle">
+                        <div className="text-caption text-text-subtle">
                             Pusat
                         </div>
                     </div>
@@ -605,7 +605,7 @@ function InventoryRow({
                         </span>
                         {centerStocks[item.product_id] !== undefined && (
                             <span
-                                className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                                className={`rounded px-1.5 py-0.5 text-caption font-bold ${
                                     (centerStocks[item.product_id] ?? 0) <= 0
                                         ? 'bg-danger-bg text-danger-text'
                                         : 'bg-surface-muted text-text-muted'
@@ -619,7 +619,7 @@ function InventoryRow({
                                 <RestockStatusBadge
                                     status={activeRestock.status}
                                 />
-                                <span className="text-[10px] text-text-subtle">
+                                <span className="text-caption text-text-subtle">
                                     · {activeRestock.requested_qty} pcs
                                 </span>
                             </span>

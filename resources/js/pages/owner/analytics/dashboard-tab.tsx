@@ -262,7 +262,7 @@ export function DashboardTab({
                                                 }
                                             />
                                         </div>
-                                        <div className="mt-1 text-[10px] text-text-muted">
+                                        <div className="mt-1 text-caption text-text-muted">
                                             {item.orders} pesanan
                                         </div>
                                     </div>

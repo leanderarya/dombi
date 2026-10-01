@@ -66,11 +66,11 @@ export default function CollapsedOutletBar({
                         </span>
                     )}
                     {/* Fulfillment badge */}
-                    <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
+                    <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-caption font-bold text-white">
                         {fulfillmentType === 'pickup' ? 'P' : 'D'}
                     </span>
                     {outlet.is_open === false && (
-                        <span className="shrink-0 rounded-full bg-danger-bg px-1.5 py-0.5 text-[10px] font-bold text-danger-text">
+                        <span className="shrink-0 rounded-full bg-danger-bg px-1.5 py-0.5 text-caption font-bold text-danger-text">
                             Tutup
                         </span>
                     )}

@@ -630,7 +630,7 @@ export default function CheckoutCustomer({
                                                 <div className="text-[11px] text-text-muted">
                                                     {deliveryQuote.outlet?.name}
                                                 </div>
-                                                <div className="mt-0.5 text-[10px] text-text-subtle">
+                                                <div className="mt-0.5 text-caption text-text-subtle">
                                                     {formatDistance(
                                                         Number(
                                                             deliveryQuote.distance_km ??
@@ -640,7 +640,7 @@ export default function CheckoutCustomer({
                                                 </div>
                                             </div>
                                             <div className="shrink-0 text-right">
-                                                <div className="text-[10px] text-text-subtle">
+                                                <div className="text-caption text-text-subtle">
                                                     Ongkir
                                                 </div>
                                                 <div className="text-sm font-bold text-text tabular-nums">
@@ -664,7 +664,7 @@ export default function CheckoutCustomer({
                                                     </p>
                                                     {deliveryQuote?.outlet
                                                         ?.name && (
-                                                        <p className="mt-0.5 text-[10px] text-text-subtle">
+                                                        <p className="mt-0.5 text-caption text-text-subtle">
                                                             Outlet terdekat:{' '}
                                                             {
                                                                 deliveryQuote
@@ -789,7 +789,7 @@ function CompactField({
                 placeholder={placeholder}
             />
             {hint && !error && (
-                <p className="mt-0.5 text-[10px] text-text-subtle">{hint}</p>
+                <p className="mt-0.5 text-caption text-text-subtle">{hint}</p>
             )}
             {error && <p className="mt-0.5 text-[11px] text-danger">{error}</p>}
         </label>

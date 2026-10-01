@@ -274,7 +274,7 @@ export default function OutletSettlement({
                                                 <span className="text-[11px] text-danger-text">
                                                     {account.account_number}
                                                 </span>
-                                                <span className="text-[10px] text-danger">
+                                                <span className="text-caption text-danger">
                                                     a.n.{' '}
                                                     {account.account_holder}
                                                 </span>
@@ -352,7 +352,7 @@ export default function OutletSettlement({
                                             <span className="text-[11px] text-text-muted">
                                                 {account.account_number}
                                             </span>
-                                            <span className="text-[10px] text-text-subtle">
+                                            <span className="text-caption text-text-subtle">
                                                 a.n. {account.account_holder}
                                             </span>
                                         </div>
@@ -728,7 +728,7 @@ function TimelineItem({
                         </div>
                         <div className="mt-0.5 flex items-center gap-2">
                             <span
-                                className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                className={`rounded-full px-2 py-0.5 text-caption font-bold ${
                                     isPaid
                                         ? 'bg-primary text-success-border'
                                         : isOverdue

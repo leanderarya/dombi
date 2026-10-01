@@ -124,7 +124,7 @@ export default function OutletReports({ outlet, preview }: Props) {
                                 <div className="text-lg font-bold text-text tabular-nums">
                                     {preview.total_orders}
                                 </div>
-                                <div className="text-[10px] text-text-subtle">
+                                <div className="text-caption text-text-subtle">
                                     Pesanan
                                 </div>
                             </div>
@@ -132,7 +132,7 @@ export default function OutletReports({ outlet, preview }: Props) {
                                 <div className="text-lg font-bold text-text tabular-nums">
                                     {preview.total_items}
                                 </div>
-                                <div className="text-[10px] text-text-subtle">
+                                <div className="text-caption text-text-subtle">
                                     Item
                                 </div>
                             </div>
@@ -140,7 +140,7 @@ export default function OutletReports({ outlet, preview }: Props) {
                                 <div className="text-lg font-bold text-success-border tabular-nums">
                                     {formatCurrency(preview.total_revenue)}
                                 </div>
-                                <div className="text-[10px] text-success-text">
+                                <div className="text-caption text-success-text">
                                     Total Penjualan
                                 </div>
                             </div>
@@ -148,7 +148,7 @@ export default function OutletReports({ outlet, preview }: Props) {
                                 <div className="text-lg font-bold text-warning-text tabular-nums">
                                     {formatCurrency(preview.total_margin)}
                                 </div>
-                                <div className="text-[10px] text-warning-text">
+                                <div className="text-caption text-warning-text">
                                     Total Margin
                                 </div>
                             </div>

@@ -261,7 +261,7 @@ export default function OutletOrderShow({
                                     className="inline-flex items-center gap-1.5 text-text-muted active:text-primary"
                                 >
                                     <span>{order.customer_phone}</span>
-                                    <span className="text-[10px] font-bold text-primary">
+                                    <span className="text-caption font-bold text-primary">
                                         📞 Hubungi
                                     </span>
                                 </a>
@@ -269,7 +269,7 @@ export default function OutletOrderShow({
                                     href={waLink(order.customer_phone)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="rounded-md bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-primary"
+                                    className="rounded-md bg-surface-muted px-2 py-0.5 text-caption font-bold text-primary"
                                 >
                                     WA
                                 </a>
@@ -314,7 +314,7 @@ export default function OutletOrderShow({
                                             href={waLink(order.recipient_phone)}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="rounded-md bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-primary"
+                                            className="rounded-md bg-surface-muted px-2 py-0.5 text-caption font-bold text-primary"
                                         >
                                             WA
                                         </a>
@@ -362,7 +362,7 @@ export default function OutletOrderShow({
                                         href={waLink(deliveryCourierPhone)}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="rounded-md bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-primary"
+                                        className="rounded-md bg-surface-muted px-2 py-0.5 text-caption font-bold text-primary"
                                     >
                                         WA
                                     </a>

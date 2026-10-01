@@ -224,7 +224,7 @@ function ProductsInner() {
                                     {outletName}
                                 </h3>
                                 {selectedOutlet && (
-                                    <span className="shrink-0 rounded bg-primary-light px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                                    <span className="shrink-0 rounded bg-primary-light px-1.5 py-0.5 text-caption font-semibold text-primary">
                                         Terdekat
                                     </span>
                                 )}

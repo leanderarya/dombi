@@ -94,7 +94,7 @@ export default function ImageUploadField({
             <span className="text-[11px] font-medium text-text-subtle">
                 {label}
                 {info && (
-                    <span className="ml-1 text-[10px] text-text-muted">
+                    <span className="ml-1 text-caption text-text-muted">
                         — {info}
                     </span>
                 )}
@@ -180,7 +180,7 @@ export default function ImageUploadField({
                     </button>
                 )}
             </div>
-            <p className="text-[10px] text-text-subtle">
+            <p className="text-caption text-text-subtle">
                 Crop 1:1, max 800x800, WebP, max 4MB
             </p>
         </div>

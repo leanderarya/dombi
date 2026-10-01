@@ -282,7 +282,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                                 {/* /50 was 2.77:1 on the sidebar; /80 is the lowest
                                     step that clears 4.5:1 (4.61:1) and still reads
                                     as secondary next to the nav. */}
-                                <div className="mt-2 text-[10px] text-emerald-200/80">
+                                <div className="mt-2 text-caption text-emerald-200/80">
                                     v{page.props.appVersion ?? '1.0.0'}
                                 </div>
                             </>

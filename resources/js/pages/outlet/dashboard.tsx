@@ -76,7 +76,7 @@ export default function OutletDashboard({
                                     <div className="text-lg font-bold text-text tabular-nums">
                                         {todayOrders}
                                     </div>
-                                    <div className="text-[10px] text-text-subtle">
+                                    <div className="text-caption text-text-subtle">
                                         Pesanan
                                     </div>
                                 </div>
@@ -96,7 +96,7 @@ export default function OutletDashboard({
                                             {pendingTasks}
                                         </div>
                                     </div>
-                                    <div className="text-[10px] text-text-subtle">
+                                    <div className="text-caption text-text-subtle">
                                         {urgentTasks > 0
                                             ? `${urgentTasks} Mendesak`
                                             : 'Tugas'}
@@ -393,7 +393,7 @@ function StatCell({
                     {value}
                 </div>
             </div>
-            <div className="text-[10px] font-medium text-text-subtle">
+            <div className="text-caption font-medium text-text-subtle">
                 {label}
             </div>
         </div>

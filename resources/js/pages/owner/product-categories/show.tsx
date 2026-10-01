@@ -737,7 +737,7 @@ export default function ProductCategoryShow({
                                         <div className="flex shrink-0 items-center gap-2">
                                             {section.flavorGroup &&
                                                 !section.flavorGroup.image && (
-                                                    <span className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] text-warning-text ring-1 ring-warning-border">
+                                                    <span className="rounded bg-warning-bg px-1.5 py-0.5 text-caption text-warning-text ring-1 ring-warning-border">
                                                         Missing Image
                                                     </span>
                                                 )}
@@ -846,12 +846,12 @@ export default function ProductCategoryShow({
                                                                                 </div>
                                                                                 <div className="mt-0.5 flex items-center gap-1.5">
                                                                                     {!p.is_active && (
-                                                                                        <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[10px] font-bold text-text-muted">
+                                                                                        <span className="rounded bg-surface-muted px-1.5 py-0.5 text-caption font-bold text-text-muted">
                                                                                             NONAKTIF
                                                                                         </span>
                                                                                     )}
                                                                                     {!p.image && (
-                                                                                        <span className="rounded bg-warning-bg px-1.5 py-0.5 text-[10px] text-warning-text ring-1 ring-warning-border">
+                                                                                        <span className="rounded bg-warning-bg px-1.5 py-0.5 text-caption text-warning-text ring-1 ring-warning-border">
                                                                                             No
                                                                                             Image
                                                                                         </span>

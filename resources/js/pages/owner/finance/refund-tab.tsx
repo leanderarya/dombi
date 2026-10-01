@@ -115,7 +115,7 @@ export default function RefundTab({
                             >
                                 {QUEUE_LABELS[queue]}
                                 {refundCounts[queue] > 0 && (
-                                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[10px] font-bold text-primary">
+                                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-caption font-bold text-primary">
                                         {refundCounts[queue]}
                                     </span>
                                 )}
@@ -188,7 +188,7 @@ export default function RefundTab({
                                                 >
                                                     {order_code}
                                                 </Link>
-                                                <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
+                                                <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-caption font-medium text-text-muted">
                                                     {status_label}
                                                 </span>
                                             </div>

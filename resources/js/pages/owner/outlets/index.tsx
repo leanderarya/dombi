@@ -182,7 +182,7 @@ export default function OutletsIndex({ outlets, existingOutlets }: any) {
                                     {/* Stats Grid */}
                                     <div className="mb-4 grid grid-cols-2 gap-2">
                                         <div className="rounded-lg bg-surface-muted/50 px-3 py-2">
-                                            <div className="text-[10px] font-medium text-text-muted">
+                                            <div className="text-caption font-medium text-text-muted">
                                                 Pesanan
                                             </div>
                                             <div className="text-sm font-bold text-text tabular-nums">
@@ -190,7 +190,7 @@ export default function OutletsIndex({ outlets, existingOutlets }: any) {
                                             </div>
                                         </div>
                                         <div className="rounded-lg bg-surface-muted/50 px-3 py-2">
-                                            <div className="text-[10px] font-medium text-text-muted">
+                                            <div className="text-caption font-medium text-text-muted">
                                                 Stok Rendah
                                             </div>
                                             <div

@@ -146,7 +146,7 @@ export default function OutletSheet({
                                                     </span>
                                                 )}
                                             <span
-                                                className={`ml-auto shrink-0 text-[10px] font-semibold ${
+                                                className={`ml-auto shrink-0 text-caption font-semibold ${
                                                     outlet.is_open === false
                                                         ? 'text-danger'
                                                         : outlet.stock_available

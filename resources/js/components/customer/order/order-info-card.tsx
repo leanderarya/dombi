@@ -257,7 +257,7 @@ export default function OrderInfoCard({
                 </div>
 
                 <div className="flex items-center gap-2 text-xs">
-                    <div className="flex h-4 w-6 items-center justify-center rounded bg-primary-light text-[10px] font-bold text-primary">
+                    <div className="flex h-4 w-6 items-center justify-center rounded bg-primary-light text-caption font-bold text-primary">
                         <CreditCard className="h-3 w-3" />
                     </div>
                     <span className="font-medium text-text">
@@ -341,7 +341,7 @@ export default function OrderInfoCard({
                             <UserCheck className="h-3.5 w-3.5 text-text-muted" />
                         </div>
                         <div>
-                            <div className="text-[10px] text-text-subtle">
+                            <div className="text-caption text-text-subtle">
                                 Kurir
                             </div>
                             <div className="text-xs font-semibold text-text">
@@ -350,7 +350,7 @@ export default function OrderInfoCard({
                             </div>
                             {(delivery?.courier?.vehicle_plate ||
                                 delivery?.external_plate_number) && (
-                                <div className="text-[10px] text-text-muted">
+                                <div className="text-caption text-text-muted">
                                     Plat:{' '}
                                     {delivery?.courier?.vehicle_plate ??
                                         delivery?.external_plate_number}
@@ -465,11 +465,11 @@ function ReceiptDialog({
                             DOMBI COFFEE - {outletName?.toUpperCase()}
                         </h4>
                         {outletAddress && (
-                            <p className="mt-0.5 font-sans text-[10px] text-text-muted">
+                            <p className="mt-0.5 font-sans text-caption text-text-muted">
                                 {outletAddress}
                             </p>
                         )}
-                        <p className="mt-0.5 font-sans text-[10px] text-text-muted">
+                        <p className="mt-0.5 font-sans text-caption text-text-muted">
                             #{orderCode}
                         </p>
                     </div>
@@ -506,7 +506,7 @@ function ReceiptDialog({
                         </div>
                     </div>
 
-                    <div className="pt-2 text-center font-sans text-[10px] text-text-muted">
+                    <div className="pt-2 text-center font-sans text-caption text-text-muted">
                         <p>Terima kasih telah menikmati Dombi Coffee!</p>
                         <p className="mt-0.5 font-bold text-primary">
                             #GrindTheEssentials

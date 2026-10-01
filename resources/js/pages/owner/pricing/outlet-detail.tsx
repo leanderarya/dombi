@@ -452,11 +452,11 @@ export default function OutletDetail({
                                                     : row.name}
                                             </span>
                                             {row.has_override ? (
-                                                <span className="rounded-full bg-success-bg px-2 py-0.5 text-[10px] font-bold text-success-text">
+                                                <span className="rounded-full bg-success-bg px-2 py-0.5 text-caption font-bold text-success-text">
                                                     Custom
                                                 </span>
                                             ) : (
-                                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-medium text-text-muted">
+                                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-caption font-medium text-text-muted">
                                                     Standar
                                                 </span>
                                             )}

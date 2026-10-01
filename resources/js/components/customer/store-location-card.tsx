@@ -90,12 +90,12 @@ export default function StoreLocationCard() {
                             Dombi Store • {selectedOutlet.name}
                         </div>
                         {selectedOutlet.id === outlets[0]?.id && (
-                            <span className="shrink-0 rounded bg-primary-light px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                            <span className="shrink-0 rounded bg-primary-light px-1.5 py-0.5 text-caption font-semibold text-primary">
                                 Terdekat
                             </span>
                         )}
                         {selectedOutlet.is_open === false && (
-                            <span className="shrink-0 rounded bg-danger-bg px-1.5 py-0.5 text-[10px] font-medium text-danger-text">
+                            <span className="shrink-0 rounded bg-danger-bg px-1.5 py-0.5 text-caption font-medium text-danger-text">
                                 Tutup
                             </span>
                         )}

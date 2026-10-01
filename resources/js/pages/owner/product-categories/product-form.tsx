@@ -541,7 +541,7 @@ export default function ProductForm({
                     </div>
                 </div>
                 {isEditing && (
-                    <span className="rounded-full bg-warning-bg px-2.5 py-1 text-[10px] font-bold tracking-wide text-warning-text ring-1 ring-warning-border">
+                    <span className="rounded-full bg-warning-bg px-2.5 py-1 text-caption font-bold tracking-wide text-warning-text ring-1 ring-warning-border">
                         EDIT MODE
                     </span>
                 )}
@@ -600,7 +600,7 @@ export default function ProductForm({
                                 placeholder="AUTO"
                                 error={singleForm.errors.sku}
                             />
-                            <p className="flex items-center gap-1 text-[10px] text-text-subtle">
+                            <p className="flex items-center gap-1 text-caption text-text-subtle">
                                 <Sparkles className="h-3 w-3" />
                                 Kosongkan untuk auto-generate. Contoh:{' '}
                                 {generateSkuHint(
@@ -619,7 +619,7 @@ export default function ProductForm({
                                 placeholder="Coklat, Vanilla, Stroberi"
                                 error={singleForm.errors.flavor}
                             />
-                            <p className="text-[10px] text-text-subtle">
+                            <p className="text-caption text-text-subtle">
                                 Optional - untuk varian rasa
                             </p>
                         </div>
@@ -654,7 +654,7 @@ export default function ProductForm({
                                         ? `${singleMargin.pct.toFixed(1)}%`
                                         : '-'}
                                 </span>
-                                <span className="text-[10px] text-text-subtle">
+                                <span className="text-caption text-text-subtle">
                                     margin = jual - HPP, % = margin/HPP*100
                                 </span>
                             </div>
@@ -1006,7 +1006,7 @@ export default function ProductForm({
                                 placeholder="Coklat, Vanilla&#10;Stroberi&#10;Matcha, Taro"
                                 rows={2}
                             />
-                            <p className="text-[10px] text-text-subtle tabular-nums">
+                            <p className="text-caption text-text-subtle tabular-nums">
                                 Total unik: {parsedFlavors.length} rasa
                             </p>
                         </div>
@@ -1044,14 +1044,14 @@ export default function ProductForm({
                                         >
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-[10px] font-bold text-text-muted">
+                                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-caption font-bold text-text-muted">
                                                         {idx + 1}
                                                     </span>
                                                     <span className="truncate text-sm font-medium text-text tabular-nums">
                                                         {name}
                                                     </span>
                                                 </div>
-                                                <div className="mt-0.5 ml-7 flex items-center gap-2 text-[10px] text-text-subtle">
+                                                <div className="mt-0.5 ml-7 flex items-center gap-2 text-caption text-text-subtle">
                                                     <span>Rasa: {flavor}</span>
                                                     <span>•</span>
                                                     <span className="font-mono tabular-nums">
@@ -1066,7 +1066,7 @@ export default function ProductForm({
                                                             .selling_price || 0,
                                                     )}
                                                 </div>
-                                                <div className="text-[10px] text-text-subtle">
+                                                <div className="text-caption text-text-subtle">
                                                     HPP{' '}
                                                     {formatCurrency(
                                                         bulkForm.data
@@ -1310,7 +1310,7 @@ export default function ProductForm({
                                                         </div>
                                                         {!row.sku.trim() &&
                                                             skuHint && (
-                                                                <p className="text-[10px] text-text-subtle">
+                                                                <p className="text-caption text-text-subtle">
                                                                     {skuHint}
                                                                 </p>
                                                             )}
@@ -1390,14 +1390,14 @@ export default function ProductForm({
                                             >
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-[10px] font-bold text-text-muted tabular-nums">
+                                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-caption font-bold text-text-muted tabular-nums">
                                                             {idx + 1}
                                                         </span>
                                                         <span className="truncate text-sm font-medium text-text tabular-nums">
                                                             {`${bulkSizeFlavor.trim()} ${row.size}`}
                                                         </span>
                                                     </div>
-                                                    <div className="mt-0.5 ml-7 flex items-center gap-2 text-[10px] text-text-subtle">
+                                                    <div className="mt-0.5 ml-7 flex items-center gap-2 text-caption text-text-subtle">
                                                         <span>
                                                             Ukuran: {row.size}
                                                         </span>
@@ -1418,7 +1418,7 @@ export default function ProductForm({
                                                             ) || 0,
                                                         )}
                                                     </div>
-                                                    <div className="text-[10px] text-text-subtle">
+                                                    <div className="text-caption text-text-subtle">
                                                         HPP{' '}
                                                         {formatCurrency(
                                                             Number(

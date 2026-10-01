@@ -219,7 +219,7 @@ function HeroSlideCard({ slide }: { slide: HeroSlide }) {
     return (
         <div className="flex min-w-full items-center justify-between gap-3 rounded-card border border-white/20 bg-brand-deep/45 p-4 backdrop-blur-md">
             <div className="max-w-[60%] space-y-1">
-                <span className="inline-block rounded-md bg-brand-deep/40 px-2 py-0.5 text-[10px] font-bold tracking-wider text-white uppercase">
+                <span className="inline-block rounded-md bg-brand-deep/40 px-2 py-0.5 text-caption font-bold tracking-wider text-white uppercase">
                     {slide.title}
                 </span>
                 <h2 className="text-xl leading-tight font-extrabold text-white">
@@ -297,7 +297,7 @@ function GreetingCard({
                             className="flex flex-1 items-center justify-between rounded-thumb border border-primary/20 bg-primary-light px-3 py-2 text-left active:opacity-80"
                         >
                             <div className="flex items-center gap-2">
-                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-white">
+                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-caption text-white">
                                     <Leaf className="h-3 w-3" />
                                 </div>
                                 <span className="text-xs font-bold text-text">
@@ -314,7 +314,7 @@ function GreetingCard({
                             className="flex flex-1 items-center justify-between rounded-thumb border border-info-border bg-info-bg px-3 py-2 text-left active:opacity-80"
                         >
                             <div className="flex items-center gap-2">
-                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-info text-[10px] text-white">
+                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-info text-caption text-white">
                                     <Crown className="h-3 w-3" />
                                 </div>
                                 <span className="text-xs font-bold text-info-text">
@@ -469,7 +469,7 @@ function PromoBento() {
                                 {bento.subtitle}
                             </p>
                         </div>
-                        <div className="mt-3 flex items-center border-t border-border pt-2 text-[10px] font-bold text-primary">
+                        <div className="mt-3 flex items-center border-t border-border pt-2 text-caption font-bold text-primary">
                             <span>{bento.cta}</span>
                             <ArrowRight className="ml-1 h-3 w-3" />
                         </div>

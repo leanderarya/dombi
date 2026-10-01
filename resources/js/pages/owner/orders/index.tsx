@@ -249,7 +249,7 @@ export default function OwnerOrdersIndex({
                                         </TableCell>
                                         <TableCell className="px-4 py-3">
                                             {sale.payment_method ? (
-                                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-semibold text-text-muted uppercase">
+                                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-caption font-semibold text-text-muted uppercase">
                                                     {sale.payment_method}
                                                 </span>
                                             ) : (

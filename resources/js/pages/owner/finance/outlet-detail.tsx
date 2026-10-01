@@ -414,7 +414,7 @@ export default function OutletAccountStatement({
                                             </span>
                                             {(deliveryStats.eksternal_net ??
                                                 0) < 0 && (
-                                                <span className="ml-1 rounded-full bg-danger-bg px-1.5 py-0.5 text-[10px] font-bold text-danger-text">
+                                                <span className="ml-1 rounded-full bg-danger-bg px-1.5 py-0.5 text-caption font-bold text-danger-text">
                                                     Rugi
                                                 </span>
                                             )}

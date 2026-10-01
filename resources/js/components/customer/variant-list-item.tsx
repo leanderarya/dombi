@@ -150,7 +150,7 @@ const VariantListItem = memo(function VariantListItem({
                 <div className="mt-1 flex items-center justify-between">
                     <div>
                         {showMulaiDari && (
-                            <div className="text-[10px] text-text-muted">
+                            <div className="text-caption text-text-muted">
                                 Mulai dari
                             </div>
                         )}
