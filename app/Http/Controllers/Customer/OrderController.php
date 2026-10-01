@@ -162,7 +162,10 @@ class OrderController extends Controller
         $order = Order::where('order_code', $orderCode)->firstOrFail();
 
         // The post-payment landing page: serve any order that is still in play,
-        // including the paid ones waiting to be prepared.
+        // including the paid ones waiting to be prepared. Completed is in the
+        // list on purpose — it is where a successful order ends up, and it is
+        // the one case where the customer most expects this page to say
+        // something instead of bouncing them to a dead end.
         $visibleStatuses = [
             Order::STATUS_PENDING_CONFIRMATION,
             Order::STATUS_AWAITING_PREPARATION,
@@ -171,13 +174,14 @@ class OrderController extends Controller
             Order::STATUS_READY_FOR_PICKUP,
             Order::STATUS_PICKED_UP,
             Order::STATUS_DELIVERING,
+            Order::STATUS_COMPLETED,
         ];
 
         if (! in_array($order->status, $visibleStatuses, true)) {
             return Inertia::render('customer/orders/confirm', [
                 'order' => null,
                 'isLoggedIn' => $request->user() !== null,
-                'error' => 'Pesanan sudah tidak dapat dikonfirmasi.',
+                'error' => 'Pesanan ini sudah dibatalkan atau tidak dilanjutkan. Detailnya bisa dilihat di daftar pesanan.',
             ]);
         }
 

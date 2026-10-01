@@ -21,7 +21,35 @@ type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max polling
 
-export default function ConfirmPage({ order, isLoggedIn }: any) {
+export default function ConfirmPage({ order, isLoggedIn, error }: any) {
+    // The order-less state is decided here, before any hook runs. The pages
+    // that send `order: null` (a cancelled, expired or rejected order) rely on
+    // this branch; keeping it above the hooks is what stops React from
+    // evaluating the rest of the component against a null order.
+    if (!order) {
+        return (
+            <div className="flex min-h-screen items-center justify-center px-6 text-center">
+                <div className="max-w-sm space-y-2">
+                    <p className="text-sm font-semibold text-text">
+                        {error ?? 'Pesanan sudah tidak dapat dikonfirmasi.'}
+                    </p>
+                    <a
+                        href={
+                            isLoggedIn ? '/customer/orders' : '/customer/home'
+                        }
+                        className="inline-block text-xs font-semibold text-primary active:opacity-80"
+                    >
+                        Kembali
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
+    return <ConfirmView order={order} isLoggedIn={isLoggedIn} />;
+}
+
+function ConfirmView({ order, isLoggedIn }: any) {
     const nav = useNavigation();
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(() => {
         const s = order?.payment_status;
@@ -326,24 +354,6 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
     const StatusIcon = status.icon;
 
     const backHref = isLoggedIn ? '/customer/orders' : '/customer/home';
-
-    if (!order) {
-        return (
-            <div className="flex min-h-screen items-center justify-center px-6 text-center">
-                <div className="max-w-sm space-y-2">
-                    <p className="text-sm font-semibold text-text">
-                        Pesanan sudah tidak dapat dikonfirmasi.
-                    </p>
-                    <a
-                        href={backHref}
-                        className="inline-block text-xs font-semibold text-primary active:opacity-80"
-                    >
-                        Kembali
-                    </a>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <CustomerMobileLayout hideTopBar hideCartBar hideBottomNav>

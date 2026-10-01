@@ -96,6 +96,33 @@ class AwaitingPreparationFlowTest extends TestCase
                 ->where('order.id', $order->id));
     }
 
+    public function test_confirm_page_still_serves_a_completed_order(): void
+    {
+        // A paid order that ran its course is the one case where the customer
+        // most expects the post-payment page to say something. It used to be
+        // excluded from the visible set, so a completed order fell through to
+        // the "cannot be confirmed" dead end.
+        [$order] = $this->paidOrder(status: Order::STATUS_COMPLETED);
+
+        $this->get("/customer/orders/confirm/{$order->order_code}")
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('customer/orders/confirm')
+                ->where('order.id', $order->id));
+    }
+
+    public function test_confirm_page_reports_a_cancelled_order_instead_of_serving_it(): void
+    {
+        [$order] = $this->paidOrder(status: Order::STATUS_CANCELLED_BY_OUTLET);
+
+        $this->get("/customer/orders/confirm/{$order->order_code}")
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('customer/orders/confirm')
+                ->where('order', null)
+                ->where('error', 'Pesanan ini sudah dibatalkan atau tidak dilanjutkan. Detailnya bisa dilihat di daftar pesanan.'));
+    }
+
     public function test_backfill_moves_only_the_paid_orders(): void
     {
         [$paid] = $this->paidOrder(status: Order::STATUS_PENDING_CONFIRMATION);

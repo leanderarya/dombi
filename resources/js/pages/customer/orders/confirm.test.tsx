@@ -77,12 +77,15 @@ let payResponseStatus = 200;
 let root: Root | null = null;
 let container: HTMLDivElement | null = null;
 
-function renderPage(order: JsonShape = baseOrder) {
+function renderPage(
+    order: JsonShape | null = baseOrder,
+    error: string | null = null,
+) {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
     act(() => {
-        root!.render(<ConfirmPage order={order} isLoggedIn />);
+        root!.render(<ConfirmPage order={order} isLoggedIn error={error} />);
     });
 }
 
@@ -153,6 +156,47 @@ async function flushAsync() {
         }
     });
 }
+
+describe('ConfirmPage without an order', () => {
+    it('renders the server error message and a way back instead of crashing', () => {
+        unmount();
+        renderPage(null);
+
+        // The order is gone (cancelled, expired, rejected): the server sends
+        // order=null plus an error string. This used to throw during render
+        // because the poll effect read order.id before the null guard ran.
+        expect(document.body.textContent).toContain(
+            'Pesanan sudah tidak dapat dikonfirmasi.',
+        );
+    });
+
+    it('accepts an explicit error message from the server', () => {
+        unmount();
+        renderPage(null, 'Status pembayaran belum dapat diverifikasi.');
+
+        expect(document.body.textContent).toContain(
+            'Status pembayaran belum dapat diverifikasi.',
+        );
+    });
+
+    it('does not start polling when there is no order', async () => {
+        vi.useFakeTimers();
+        unmount();
+        renderPage(null);
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(15_000);
+        });
+
+        const statusFetches = (
+            global.fetch as unknown as ReturnType<typeof vi.fn>
+        ).mock.calls.filter(([input]) =>
+            String(input).includes('/payment-status'),
+        );
+
+        expect(statusFetches).toHaveLength(0);
+    });
+});
 
 describe('ConfirmPage handlePay', () => {
     it('submits a JSON POST to /pay and opens the DOKU modal in-app', async () => {
