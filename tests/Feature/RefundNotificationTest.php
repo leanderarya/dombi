@@ -130,6 +130,11 @@ class RefundNotificationTest extends TestCase
         $order = Order::factory()->paid()->create([
             'customer_id' => $customer->id,
             'payment_status' => 'refund_in_progress',
+            'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'BCA',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Arya',
             'refund_amount' => 50000,
             'refund_started_at' => now()->subHour(),
             'refund_started_by' => $owner->id,

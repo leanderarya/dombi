@@ -18,7 +18,6 @@ class RejectRefundRequest extends FormRequest
         return [
             'reason' => ['required', Rule::enum(RefundRejectionReason::class)],
             'note' => ['nullable', 'string', 'max:500', 'required_if:reason,other'],
-            'legacy_repair' => ['sometimes', 'boolean'],
         ];
     }
 

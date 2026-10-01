@@ -74,6 +74,11 @@ class OwnerManualRefundTest extends TestCase
         $order = Order::factory()->create([
             'customer_id' => $customer->id,
             'payment_status' => 'refund_in_progress',
+            'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'BCA',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Test',
             'refund_amount' => 50000,
             'refund_requested_at' => now(),
             'refund_started_at' => now(),

@@ -797,6 +797,10 @@ class RefundServiceTest extends TestCase
             'customer_id' => $customer->id,
             'payment_status' => 'refund_in_progress',
             'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'BCA',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Arya',
             'refund_amount' => 50000,
             'refund_started_at' => now()->subHour(),
             'refund_started_by' => $owner->id,
@@ -836,6 +840,44 @@ class RefundServiceTest extends TestCase
         app(RefundService::class)->complete($order, $owner->id, "private:refund-proofs/{$order->id}/p.jpg", null, null);
     }
 
+    public function test_complete_fails_when_destination_incomplete(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_in_progress',
+            'refund_destination_status' => 'valid',
+            'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
+        ]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Tujuan refund belum lengkap atau tidak valid.');
+
+        app(RefundService::class)->complete($order, $owner->id, "private:refund-proofs/{$order->id}/p.jpg", null, null);
+    }
+
+    public function test_complete_fails_when_destination_fields_are_whitespace_only(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_in_progress',
+            'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => '   ',
+            'refund_account_number' => '  ',
+            'refund_account_holder' => ' ',
+            'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
+        ]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Tujuan refund belum lengkap atau tidak valid.');
+
+        app(RefundService::class)->complete($order, $owner->id, "private:refund-proofs/{$order->id}/p.jpg", null, null);
+    }
+
     public function test_completion_keeps_refund_amount_after_order_total_changes(): void
     {
         $customer = $this->registeredCustomer();
@@ -844,6 +886,10 @@ class RefundServiceTest extends TestCase
             'customer_id' => $customer->id,
             'payment_status' => 'refund_in_progress',
             'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'BCA',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Arya',
             'refund_amount' => 50000,
             'total' => 75000,
             'refund_started_at' => now()->subHour(),
@@ -879,6 +925,10 @@ class RefundServiceTest extends TestCase
             'customer_id' => $customer->id,
             'payment_status' => 'refund_in_progress',
             'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'BCA',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Arya',
             'refund_amount' => 50000,
             'refund_started_at' => now()->subHour(),
             'refund_started_by' => $owner->id,
@@ -944,6 +994,11 @@ class RefundServiceTest extends TestCase
         $owner = User::factory()->create();
         $order = Order::factory()->paid()->create([
             'payment_status' => 'refund_in_progress',
+            'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'BCA',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Arya',
             'refund_amount' => 50000,
             'refund_started_at' => now()->subHour(),
             'refund_started_by' => $owner->id,

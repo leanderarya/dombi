@@ -466,6 +466,14 @@ class RefundService
             }
 
             if ($obligation) {
+                if (! $this->isObligationDestinationComplete($obligation)) {
+                    throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
+                }
+            } elseif (! $this->isDestinationComplete($locked)) {
+                throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
+            }
+
+            if ($obligation) {
                 if ((float) $obligation->amount <= 0) {
                     throw new DomainException('Jumlah refund tidak valid.');
                 }
@@ -565,11 +573,11 @@ class RefundService
     private function isObligationDestinationComplete(RefundObligation $obligation): bool
     {
         if ($obligation->destination_type === 'bank') {
-            return ! empty($obligation->bank_name) && ! empty($obligation->account_number) && ! empty($obligation->account_holder);
+            return $this->isFilled($obligation->bank_name) && $this->isFilled($obligation->account_number) && $this->isFilled($obligation->account_holder);
         }
 
         if ($obligation->destination_type === 'ewallet') {
-            return ! empty($obligation->ewallet_provider) && ! empty($obligation->ewallet_number) && ! empty($obligation->ewallet_holder);
+            return $this->isFilled($obligation->ewallet_provider) && $this->isFilled($obligation->ewallet_number) && $this->isFilled($obligation->ewallet_holder);
         }
 
         return false;
@@ -578,18 +586,26 @@ class RefundService
     private function isDestinationComplete(Order $order): bool
     {
         if ($order->refund_destination_type === 'bank') {
-            return ! empty($order->refund_bank_name)
-                && ! empty($order->refund_account_number)
-                && ! empty($order->refund_account_holder);
+            return $this->isFilled($order->refund_bank_name)
+                && $this->isFilled($order->refund_account_number)
+                && $this->isFilled($order->refund_account_holder);
         }
 
         if ($order->refund_destination_type === 'ewallet') {
-            return ! empty($order->refund_ewallet_provider)
-                && ! empty($order->refund_ewallet_number)
-                && ! empty($order->refund_ewallet_holder);
+            return $this->isFilled($order->refund_ewallet_provider)
+                && $this->isFilled($order->refund_ewallet_number)
+                && $this->isFilled($order->refund_ewallet_holder);
         }
 
         return false;
+    }
+
+    /**
+     * ponytail: hanya trim(); validasi format milik request layer (Slice C).
+     */
+    private function isFilled(?string $value): bool
+    {
+        return trim((string) $value) !== '';
     }
 
     private function computeTrustedPaidAmount(Order $order): float
