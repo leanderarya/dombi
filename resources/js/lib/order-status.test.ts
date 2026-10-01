@@ -29,8 +29,11 @@ describe('isTerminal', () => {
 });
 
 describe('isCancellable', () => {
-    it('only allows pending_confirmation', () => {
+    it('allows pending_confirmation and awaiting_preparation only', () => {
         expect(isCancellable('pending_confirmation')).toBe(true);
+        // A paid order goes straight here since 71961fe5; the backend
+        // TRANSITIONS map allows cancelled_by_customer from it.
+        expect(isCancellable('awaiting_preparation')).toBe(true);
         expect(isCancellable('confirmed')).toBe(false);
         expect(isCancellable('preparing')).toBe(false);
     });

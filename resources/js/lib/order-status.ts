@@ -1,5 +1,6 @@
 export type OrderStatus =
     | 'pending_confirmation'
+    | 'awaiting_preparation'
     | 'confirmed'
     | 'preparing'
     | 'ready_for_pickup'
@@ -94,8 +95,12 @@ export const TERMINAL_STATUSES: readonly OrderStatus[] = [
     'expired',
 ];
 
+// Kept deliberately in step with OrderStatusService::TRANSITIONS. Since
+// 71961fe5 a paid order lands in awaiting_preparation, and the backend allows
+// cancelled_by_customer from there. confirmed/preparing do NOT allow it.
 export const CANCELLABLE_STATUSES: readonly OrderStatus[] = [
     'pending_confirmation',
+    'awaiting_preparation',
 ];
 
 export function isTerminal(status: string): boolean {

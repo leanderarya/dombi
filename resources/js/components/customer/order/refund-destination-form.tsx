@@ -153,6 +153,8 @@ export default function RefundDestinationForm({
                                 }
                                 placeholder="Masukkan nomor rekening"
                                 inputMode="numeric"
+                                pattern="[0-9]*"
+                                maxLength={30}
                                 className="min-h-11"
                             />
                             {errors.account_number && (
@@ -230,6 +232,8 @@ export default function RefundDestinationForm({
                                 }
                                 placeholder="Masukkan nomor HP terdaftar"
                                 inputMode="numeric"
+                                pattern="[0-9]*"
+                                maxLength={30}
                                 className="min-h-11"
                             />
                             <p className="mt-1 text-[11px] text-text-subtle">

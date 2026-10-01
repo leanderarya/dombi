@@ -205,6 +205,9 @@ export function GuestRefundDestinationDialog({
                                         })
                                     }
                                     placeholder="1234567890"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={30}
                                     className="break-all"
                                 />
                             </div>
@@ -259,6 +262,9 @@ export function GuestRefundDestinationDialog({
                                         })
                                     }
                                     placeholder="081234567890"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={30}
                                     className="break-all"
                                 />
                             </div>
