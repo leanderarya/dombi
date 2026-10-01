@@ -34,6 +34,8 @@ interface DeliveryData {
     proof_image: string | null;
     delivered_to: string | null;
     delivery_note: string | null;
+    return_status: string | null;
+    return_notes: string | null;
     courier: { id: number; name: string } | null;
     order: {
         id: number;
@@ -111,6 +113,9 @@ export default function CourierDeliveryShow({ delivery }: Props) {
     const [showCompleteSheet, setShowCompleteSheet] = useState(false);
     const [showRejectSheet, setShowRejectSheet] = useState(false);
     const [showReturnSheet, setShowReturnSheet] = useState(false);
+    const [showPickupSheet, setShowPickupSheet] = useState(false);
+    const [showStartSheet, setShowStartSheet] = useState(false);
+    const [processing, setProcessing] = useState<string | null>(null);
     const { errors } = usePage<{ errors: Record<string, string> }>().props;
 
     // Each courier action is the first half of an order transition, so the order
@@ -127,7 +132,12 @@ export default function CourierDeliveryShow({ delivery }: Props) {
         delivery.status === 'delivering' && orderStatus === 'delivering';
     const canFail = canComplete;
     const canReject = canConfirmPickup;
-    const canReturn = delivery.status === 'failed';
+    // A return only flips return_status, so the row stays "failed" afterwards.
+    // Without this the button outlives its action and the courier can re-send
+    // the return, re-firing the outlet's notifications.
+    const canReturn =
+        delivery.status === 'failed' && delivery.return_status === null;
+    const hasReturned = delivery.return_status !== null;
     const orderIsDead =
         orderStatus === 'cancelled_by_outlet' ||
         orderStatus === 'cancelled_by_customer' ||
@@ -173,29 +183,26 @@ export default function CourierDeliveryShow({ delivery }: Props) {
         }
     };
 
-    const confirmPickup = () => {
+    // Pickup and start-delivery have no transition back, so they confirm first
+    // like complete/fail/reject/return. The processing key also disables the
+    // button: without it a double tap sends a second POST that the service
+    // refuses with a ValidationException the courier never sees.
+    const postAction = (key: string, path: string) => {
+        setProcessing(key);
         router.post(
-            `/courier/deliveries/${delivery.id}/confirm-pickup`,
-            {},
-            { preserveScroll: true },
-        );
-    };
-
-    const startDelivery = () => {
-        router.post(
-            `/courier/deliveries/${delivery.id}/start-delivery`,
-            {},
-            { preserveScroll: true },
-        );
-    };
-
-    const returnToOutlet = () => {
-        router.post(
-            `/courier/deliveries/${delivery.id}/return-to-outlet`,
+            `/courier/deliveries/${delivery.id}/${path}`,
             {},
             {
                 preserveScroll: true,
-                onSuccess: () => setShowReturnSheet(false),
+                // Close on finish, not just success: a refusal arrives as a
+                // session error the page renders behind the overlay, so a sheet
+                // left open would hide the reason it failed.
+                onFinish: () => {
+                    setProcessing(null);
+                    setShowPickupSheet(false);
+                    setShowStartSheet(false);
+                    setShowReturnSheet(false);
+                },
             },
         );
     };
@@ -207,7 +214,8 @@ export default function CourierDeliveryShow({ delivery }: Props) {
             actions.push({
                 label: 'Ambil Pesanan',
                 icon: <Package className="h-4 w-4" />,
-                onClick: confirmPickup,
+                onClick: () => setShowPickupSheet(true),
+                loading: processing === 'pickup',
             });
         }
 
@@ -224,7 +232,8 @@ export default function CourierDeliveryShow({ delivery }: Props) {
             actions.push({
                 label: 'Mulai Antar',
                 icon: <Truck className="h-4 w-4" />,
-                onClick: startDelivery,
+                onClick: () => setShowStartSheet(true),
+                loading: processing === 'start',
             });
         }
 
@@ -279,6 +288,19 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                         Pesanan ini sudah tidak aktif (
                         {orderStatus.replaceAll('_', ' ')}) dan tidak perlu
                         diantar lagi. Tidak ada tindakan yang diperlukan.
+                    </div>
+                </div>
+            )}
+
+            {/* A return only sets return_status — the delivery stays "failed".
+                Say the return already happened, or the missing button reads as
+                a bug. */}
+            {hasReturned && !orderIsDead && (
+                <div className="mt-4 flex items-center gap-3 rounded-xl border border-border bg-surface-muted p-4">
+                    <Package className="h-5 w-5 shrink-0 text-text-subtle" />
+                    <div className="text-sm text-text">
+                        Pesanan ini sudah dikembalikan ke outlet. Tidak ada
+                        tindakan yang diperlukan.
                     </div>
                 </div>
             )}
@@ -629,6 +651,72 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                 />
             </Dialog>
 
+            {/* Confirm Pickup Dialog — no way back once taken */}
+            <Dialog
+                open={showPickupSheet}
+                onClose={() => setShowPickupSheet(false)}
+                title="Ambil Pesanan"
+            >
+                <p className="text-sm text-text">
+                    Anda yakin sudah menerima pesanan{' '}
+                    <strong>{order.order_code}</strong> dari outlet? Setelah
+                    diambil, pesanan menjadi tanggung jawab Anda.
+                </p>
+                <div className="flex gap-3">
+                    <Button
+                        onClick={() => setShowPickupSheet(false)}
+                        variant="outline"
+                        size="lg"
+                        className="flex-1"
+                    >
+                        Batal
+                    </Button>
+                    <Button
+                        onClick={() => postAction('pickup', 'confirm-pickup')}
+                        size="lg"
+                        className="flex-1"
+                        disabled={processing !== null}
+                    >
+                        {processing === 'pickup'
+                            ? 'Memproses...'
+                            : 'Ya, Sudah Diambil'}
+                    </Button>
+                </div>
+            </Dialog>
+
+            {/* Start Delivery Dialog */}
+            <Dialog
+                open={showStartSheet}
+                onClose={() => setShowStartSheet(false)}
+                title="Mulai Antar"
+            >
+                <p className="text-sm text-text">
+                    Mulai antar pesanan <strong>{order.order_code}</strong> ke{' '}
+                    {order.customer_address}? Status pengiriman berubah menjadi
+                    "Diantar".
+                </p>
+                <div className="flex gap-3">
+                    <Button
+                        onClick={() => setShowStartSheet(false)}
+                        variant="outline"
+                        size="lg"
+                        className="flex-1"
+                    >
+                        Batal
+                    </Button>
+                    <Button
+                        onClick={() => postAction('start', 'start-delivery')}
+                        size="lg"
+                        className="flex-1"
+                        disabled={processing !== null}
+                    >
+                        {processing === 'start'
+                            ? 'Memproses...'
+                            : 'Ya, Mulai Antar'}
+                    </Button>
+                </div>
+            </Dialog>
+
             {/* Return to Outlet Dialog */}
             <Dialog
                 open={showReturnSheet}
@@ -653,12 +741,15 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                         Batal
                     </Button>
                     <Button
-                        onClick={returnToOutlet}
+                        onClick={() => postAction('return', 'return-to-outlet')}
                         variant="destructive"
                         size="lg"
                         className="flex-1"
+                        disabled={processing !== null}
                     >
-                        Ya, Kembalikan
+                        {processing === 'return'
+                            ? 'Memproses...'
+                            : 'Ya, Kembalikan'}
                     </Button>
                 </div>
             </Dialog>
