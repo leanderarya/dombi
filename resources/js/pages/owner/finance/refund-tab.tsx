@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     ArrowRight,
@@ -10,12 +10,15 @@ import {
     ChevronUp,
     Copy,
     ExternalLink,
+    Inbox,
+    Play,
     Smartphone,
     Undo2,
     User,
     UserCheck,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import RefundCompletionModal from '@/components/owner/finance/refund-completion-modal';
 import {
     GuestRefundDestinationDialog,
@@ -38,6 +41,7 @@ const QUEUE_LABELS: Record<RefundQueue, string> = {
     ready: 'Siap Diproses',
     in_progress: 'Sedang Diproses',
     action_required: 'Perlu Tindakan',
+    needs_review: 'Perlu Ditinjau',
     completed: 'Selesai',
     rejected: 'Ditolak',
 };
@@ -48,6 +52,7 @@ const QUEUE_ORDER: RefundQueue[] = [
     'ready',
     'in_progress',
     'action_required',
+    'needs_review',
     'completed',
     'rejected',
 ];
@@ -161,6 +166,7 @@ export default function RefundTab({
                                 can_reject,
                                 can_rollback,
                                 can_complete,
+                                can_recover,
                                 timeline,
                                 status_label,
                             } = refund;
@@ -226,7 +232,35 @@ export default function RefundTab({
                                                 Isi Tujuan
                                             </Button>
                                         )}
-                                        {(can_start || can_complete) && (
+                                        {can_start && (
+                                            <Button
+                                                variant="primary"
+                                                size="sm"
+                                                onClick={() =>
+                                                    router.post(
+                                                        `/owner/refunds/${order_id}/start`,
+                                                        {},
+                                                        {
+                                                            preserveScroll: true,
+                                                            onError: (errors) =>
+                                                                toast.error(
+                                                                    Object.values(
+                                                                        errors,
+                                                                    )
+                                                                        .flat()
+                                                                        .join(
+                                                                            ', ',
+                                                                        ),
+                                                                ),
+                                                        },
+                                                    )
+                                                }
+                                            >
+                                                <Play className="h-3.5 w-3.5" />{' '}
+                                                Mulai Proses
+                                            </Button>
+                                        )}
+                                        {can_complete && (
                                             <Button
                                                 variant="primary"
                                                 size="sm"
@@ -234,8 +268,36 @@ export default function RefundTab({
                                                     setCompletionOrder(refund)
                                                 }
                                             >
-                                                <Check className="h-3.5 w-3.5" />
+                                                <Check className="h-3.5 w-3.5" />{' '}
                                                 Selesai
+                                            </Button>
+                                        )}
+                                        {can_recover && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                    router.get(
+                                                        '/owner/finance?tab=refund&filter=needs_review',
+                                                        {},
+                                                        {
+                                                            preserveScroll: true,
+                                                            onError: (errors) =>
+                                                                toast.error(
+                                                                    Object.values(
+                                                                        errors,
+                                                                    )
+                                                                        .flat()
+                                                                        .join(
+                                                                            ', ',
+                                                                        ),
+                                                                ),
+                                                        },
+                                                    )
+                                                }
+                                            >
+                                                <Inbox className="h-3.5 w-3.5" />{' '}
+                                                Buka Antrean
                                             </Button>
                                         )}
                                         {can_reject && (
@@ -481,7 +543,6 @@ export default function RefundTab({
                     orderId={rejectionOrder.order_id}
                     orderCode={rejectionOrder.order_code}
                     open={!!rejectionOrder}
-                    canLegacyRepair={rejectionOrder.can_legacy_repair}
                     onClose={() => setRejectionOrder(null)}
                 />
             )}

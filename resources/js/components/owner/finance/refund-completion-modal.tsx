@@ -63,7 +63,7 @@ export default function RefundCompletionModal({
             fd.append('transfer_note', note);
         }
 
-        router.post(`/owner/refunds/${orderId}/complete-direct`, fd, {
+        router.post(`/owner/refunds/${orderId}/complete`, fd, {
             forceFormData: true,
             preserveScroll: true,
             onSuccess: () => {

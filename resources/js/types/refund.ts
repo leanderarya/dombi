@@ -11,6 +11,7 @@ export type RefundQueue =
     | 'ready'
     | 'in_progress'
     | 'action_required'
+    | 'needs_review'
     | 'completed'
     | 'rejected';
 export type RefundDestinationType = 'bank' | 'ewallet';
@@ -87,11 +88,11 @@ export interface OwnerRefundPayload extends RefundBase {
     transfer_reference: string | null;
     transfer_note: string | null;
     can_enter_destination: boolean;
-    can_legacy_repair: boolean;
     can_start: boolean;
     can_reject: boolean;
     can_rollback: boolean;
     can_complete: boolean;
+    can_recover: boolean;
 }
 export type RefundQueueCounts = Record<RefundQueue, number>;
 export interface RefundPagination {

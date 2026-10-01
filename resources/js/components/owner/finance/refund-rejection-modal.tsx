@@ -25,7 +25,6 @@ interface Props {
     orderId: number;
     orderCode: string;
     open: boolean;
-    canLegacyRepair: boolean;
     onClose: () => void;
 }
 
@@ -33,12 +32,10 @@ export default function RefundRejectionModal({
     orderId,
     orderCode,
     open,
-    canLegacyRepair,
     onClose,
 }: Props) {
     const [reason, setReason] = useState('');
     const [note, setNote] = useState('');
-    const [legacyRepair, setLegacyRepair] = useState(false);
     const [busy, setBusy] = useState(false);
 
     const submit: FormEventHandler = (e) => {
@@ -56,7 +53,6 @@ export default function RefundRejectionModal({
             {
                 reason,
                 note: note || undefined,
-                legacy_repair: legacyRepair || undefined,
             },
             {
                 onSuccess: () => {
@@ -117,22 +113,6 @@ export default function RefundRejectionModal({
                             rows={2}
                         />
                     </div>
-                    {canLegacyRepair && (
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                id="legacy_repair"
-                                checked={legacyRepair}
-                                onChange={(e) =>
-                                    setLegacyRepair(e.target.checked)
-                                }
-                                className="h-4 w-4 rounded border-border accent-primary"
-                            />
-                            <Label htmlFor="legacy_repair" className="text-xs">
-                                Perbaiki data lama (legacy)
-                            </Label>
-                        </div>
-                    )}
                     <div className="flex justify-end gap-2">
                         <Button
                             type="button"
