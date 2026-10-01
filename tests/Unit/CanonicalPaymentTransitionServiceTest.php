@@ -76,6 +76,49 @@ class CanonicalPaymentTransitionServiceTest extends TestCase
         $this->assertNull($attempt->fresh()->fulfilment_claimed_at);
     }
 
+    public function test_replayed_success_after_awaiting_preparation_does_not_complete_the_order(): void
+    {
+        // DOKU reports the same success twice: the webhook, then the status
+        // sync behind the customer's redirect. The first report moves the
+        // order into the preparation queue without claiming fulfilment, so
+        // the replay used to fall through to the claim and close an order the
+        // outlet had not prepared.
+        [$order, $attempt] = $this->attempt(['status' => Order::STATUS_PENDING_CONFIRMATION]);
+        $service = app(CanonicalPaymentTransitionService::class);
+        $service->apply($attempt, new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []));
+        $this->assertSame(Order::STATUS_AWAITING_PREPARATION, $order->fresh()->status);
+
+        $replay = $service->apply($attempt->fresh(), new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now()->addSeconds(2), []));
+
+        $this->assertFalse($replay->fulfilmentWinner);
+        $this->assertSame(Order::STATUS_AWAITING_PREPARATION, $order->fresh()->status);
+        $this->assertNull($order->fresh()->fulfilment_claimed_at);
+        $this->assertNull($order->fresh()->fulfilment_claimed_by);
+        $this->assertNull($attempt->fresh()->fulfilment_claimed_at);
+    }
+
+    public function test_second_paid_attempt_while_awaiting_preparation_is_refunded_not_fulfilled(): void
+    {
+        // Same order, two attempts that both reach paid. The order is still
+        // waiting for the outlet, so neither attempt fulfils it: the second
+        // one is money that has to come back.
+        [$order, $first] = $this->attempt(['status' => Order::STATUS_PENDING_CONFIRMATION]);
+        $second = PaymentAttempt::create([
+            'order_id' => $order->id, 'attempt_key' => 'second', 'invoice_number' => 'invoice-second',
+            'merchant_request_id' => 'request-second', 'amount_snapshot' => 50000, 'currency_snapshot' => 'IDR',
+            'settlement_status' => PaymentAttemptSettlementStatus::Pending,
+            'verification_status' => PaymentAttemptVerificationStatus::NeedsReview,
+        ]);
+        $service = app(CanonicalPaymentTransitionService::class);
+        $service->apply($first, new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-first', now(), []));
+
+        $result = $service->apply($second, new NormalizedPaymentEvent('doku', 'SUCCESS', 50000, 'IDR', 'invoice-second', now()->addSeconds(2), []));
+
+        $this->assertFalse($result->fulfilmentWinner);
+        $this->assertSame(Order::STATUS_AWAITING_PREPARATION, $order->fresh()->status);
+        $this->assertSame(1, RefundObligation::where('payment_attempt_id', $second->id)->where('reason', 'duplicate_paid_attempt')->count());
+    }
+
     public function test_expired_order_late_success_stays_terminal_and_creates_one_refund_obligation(): void
     {
         [$order, $attempt] = $this->attempt(['status' => Order::STATUS_EXPIRED, 'expired_at' => now()->subMinute()]);

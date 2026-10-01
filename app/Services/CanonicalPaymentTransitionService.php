@@ -97,7 +97,7 @@ class CanonicalPaymentTransitionService
             $winner = false;
             if ($lockedAttempt->settlement_status === PaymentAttemptSettlementStatus::Paid
                 && ($lockedAttempt->verification_status === PaymentAttemptVerificationStatus::Verified || $this->isTerminalOrder($order))) {
-                $winner = $this->claimOrRefund($lockedAttempt, $order);
+                $winner = $this->claimOrRefund($lockedAttempt, $order, $oldSettlement === PaymentAttemptSettlementStatus::Paid);
             }
             if ($status === 'success' && $changed && $order->paid_at === null) {
                 $order->paid_at = now();
@@ -214,13 +214,32 @@ class CanonicalPaymentTransitionService
         return ((int) $whole * 100) + (int) str_pad($fraction, 2, '0');
     }
 
-    private function claimOrRefund(PaymentAttempt $attempt, Order $order): bool
+    private function claimOrRefund(PaymentAttempt $attempt, Order $order, bool $alreadySettled): bool
     {
         if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
             app(OrderStatusService::class)->transition($order, Order::STATUS_AWAITING_PREPARATION, [
                 'actor_type' => 'system',
                 'notes' => 'Pembayaran berhasil, pesanan siap disiapkan.',
             ]);
+
+            return false;
+        }
+
+        // An order in the preparation queue is paid by definition — it only
+        // enters that queue once a payment succeeds — and the outlet, not the
+        // gateway, is what completes it. Completing here would close the order
+        // from under the outlet and settle stock that was never handed over.
+        //
+        // DOKU reports the same success more than once (the webhook, then the
+        // status sync behind the customer's redirect). Reaching this branch
+        // means the queue entry already happened, so the payment that produced
+        // it was settled by an earlier event: that is a replay, and it must
+        // stay a no-op. An attempt settling for the first time here is a
+        // second payment for a queued order, and has to come back.
+        if ($order->status === Order::STATUS_AWAITING_PREPARATION) {
+            if (! $alreadySettled) {
+                $this->createRefundObligation($attempt, 'duplicate_paid_attempt');
+            }
 
             return false;
         }
