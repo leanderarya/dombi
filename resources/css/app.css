@@ -25,7 +25,12 @@
     --color-border-strong: #d4d4d4;
     --color-text: #1e1e1e;
     --color-text-muted: #6b6b74;
-    --color-text-subtle: #a1a1aa;
+    /* 4.79:1 on --color-surface-muted, 5.36:1 on white. Was #a1a1aa, which
+       measured 2.33:1 and failed AA — 311 usages across 110 files inherited
+       it. It now carries the same value as --color-text-muted: the two were
+       a two-step scale, and no intermediate value clears 4.5:1 while staying
+       visually distinct from muted (#6f6f78 is 4.52:1, ~4% lighter). */
+    --color-text-subtle: #6b6b74;
 
     /* Card */
     --color-card: #ffffff;
@@ -788,15 +793,30 @@ select:focus {
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-    .sparkline-bar,
-    .bar-grow,
-    .chart-line {
-        animation: none;
-        opacity: 1;
-        transform: none;
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        /* Needed: .bar-grow gets --delay: 200ms from JSX, and a surviving
+           delay would leave the bar chart blank for 200ms — worse than the
+           animation it replaces. */
+        animation-delay: 0ms !important;
+        transition-duration: 0.01ms !important;
     }
 
-    .spring-transition {
-        transition: none;
+    /* Spinners are the one exception. They say "still working" on pages that
+       are otherwise empty, and WCAG 2.3.3 targets decorative motion, not
+       status. Slowed rather than stopped so the signal survives. */
+    .animate-spin {
+        animation-duration: 1.5s !important;
+        animation-iteration-count: infinite !important;
+    }
+
+    /* Belt-and-braces: pageEnter's 120ms duration already finishes on the
+       first frame, but this guarantees the page is never left at 0.6 opacity
+       if that frame is never painted. */
+    [data-page] {
+        opacity: 1;
     }
 }
