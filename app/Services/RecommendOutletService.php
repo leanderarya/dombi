@@ -88,27 +88,8 @@ class RecommendOutletService
             'phone' => $outlet->phone,
             'distance_km' => $distanceKm,
             'is_open' => $outlet->isOpen(),
-            'next_open' => $this->getNextOpenTime($outlet),
+            'next_open' => $outlet->nextOpenTime(),
             'stock_available' => true,
         ];
-    }
-
-    private function getNextOpenTime(Outlet $outlet): ?string
-    {
-        $today = (int) now()->format('w');
-        $hours = $outlet->operatingHoursForDay($today);
-        if ($hours && ! $hours->is_closed) {
-            return $hours->open_time;
-        }
-
-        for ($i = 1; $i <= 7; $i++) {
-            $day = ($today + $i) % 7;
-            $next = $outlet->operatingHoursForDay($day);
-            if ($next && ! $next->is_closed) {
-                return now()->addDays($i)->format('l').' '.$next->open_time;
-            }
-        }
-
-        return null;
     }
 }

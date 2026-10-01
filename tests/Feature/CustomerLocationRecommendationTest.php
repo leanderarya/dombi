@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\OutletOperatingHours;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 use Tests\WithTestOutlet;
 
@@ -66,6 +68,40 @@ class CustomerLocationRecommendationTest extends TestCase
     {
         $response = $this->get('/customer/checkout');
         $response->assertOk();
+    }
+
+    /**
+     * The recommendation reads the outlet's own timetable, so it has to agree
+     * with what the outlet sheet shows: minutes, not raw seconds, and the
+     * outlet's local weekday rather than the app's UTC one.
+     */
+    public function test_next_open_time_is_minutes_in_jakarta_time(): void
+    {
+        // 17:00 UTC on Thursday is 00:00 Friday in Jakarta. The UTC weekday is
+        // Thursday, whose row does not exist here, so a UTC lookup lands on the
+        // day-off branch and reports the open_time column's raw seconds.
+        Carbon::setTestNow('2026-10-01 17:00:00');
+
+        [$product, $variant] = $this->createProduct();
+
+        $outlet = $this->createOutlet('Outlet Buka Jumat', -7.053, 110.436, 10, $variant->id);
+        OutletOperatingHours::factory()->create([
+            'outlet_id' => $outlet->id,
+            'day_of_week' => 5,
+            'open_time' => '00:00',
+            'close_time' => '23:59',
+            'is_closed' => false,
+        ]);
+
+        $this->withSession([
+            'checkout.cart' => [
+                ['product_id' => $variant->id, 'quantity' => 1],
+            ],
+        ])->getJson('/customer/checkout/pickup-outlets?latitude=-7.0523&longitude=110.4345')
+            ->assertOk()
+            ->assertJsonPath('recommended.next_open', '00:00');
+
+        Carbon::setTestNow();
     }
 
     private function createProduct(): array
