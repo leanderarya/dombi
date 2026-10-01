@@ -15,6 +15,17 @@ class CourierAvailabilityController extends Controller
         $user = $request->user();
 
         if ($user->is_online) {
+            // A courier who still holds a task must not vanish from the
+            // outlet's available list: the outlet reads is_online to find
+            // someone for the next assignment, and location tracking stops
+            // the moment they go offline. Going offline is for the end of a
+            // shift, not for the middle of a delivery.
+            if ($user->hasActiveDeliveries()) {
+                return redirect()->route('courier.dashboard')->withErrors([
+                    'availability' => 'Masih ada pengiriman aktif. Selesaikan atau kembalikan dulu sebelum offline.',
+                ]);
+            }
+
             $user->goOffline();
         } else {
             $user->goOnline();

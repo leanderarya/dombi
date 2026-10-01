@@ -1,5 +1,11 @@
-import { Head, Link, router } from '@inertiajs/react';
-import { AlertCircle, ArrowRight, MapPin, Package } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import {
+    AlertCircle,
+    AlertTriangle,
+    ArrowRight,
+    MapPin,
+    Package,
+} from 'lucide-react';
 import { useState } from 'react';
 import PushBanner from '@/components/shared/push-banner';
 import { Button } from '@/components/ui/button';
@@ -50,6 +56,7 @@ interface Props {
 export default function CourierDashboard({ courier, stats, tasks }: Props) {
     usePolling(15000);
 
+    const { errors } = usePage<{ errors: Record<string, string> }>().props;
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
     const handleAvailabilityToggle = () => {
@@ -99,6 +106,14 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                               : 'Online'}
                     </Button>
                 </div>
+                {errors.availability && (
+                    <div className="mt-3 flex items-start gap-3 rounded-lg border border-danger-border bg-danger-bg p-3">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
+                        <div className="text-sm text-danger-text">
+                            {errors.availability}
+                        </div>
+                    </div>
+                )}
             </SectionCard>
 
             {/* Stats Summary — high contrast for outdoor */}
