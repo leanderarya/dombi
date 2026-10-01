@@ -242,15 +242,10 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                     >
                         {collapsed ? (
                             <div className="flex flex-col items-center gap-1">
-                                <div className="flex justify-center overflow-hidden">
-                                    <NotificationBell
-                                        onClick={() =>
-                                            setNotificationOpen(true)
-                                        }
-                                        className="text-emerald-200/90 active:bg-primary-hover/40"
-                                        labelClassName="text-emerald-200/90"
-                                    />
-                                </div>
+                                <NotificationBell
+                                    onClick={() => setNotificationOpen(true)}
+                                    className="text-emerald-200/90 active:bg-primary-hover/40"
+                                />
                                 <button
                                     onClick={() => router.post('/logout')}
                                     className="flex h-11 w-11 items-center justify-center rounded-lg text-emerald-200/90 transition-colors hover:bg-primary-hover/40 hover:text-white"
@@ -267,7 +262,6 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                                             setNotificationOpen(true)
                                         }
                                         className="text-emerald-200/90 active:bg-primary-hover/40"
-                                        labelClassName="text-emerald-200/90"
                                     />
                                 </div>
 

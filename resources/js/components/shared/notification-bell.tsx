@@ -7,12 +7,6 @@ interface Props {
     unreadCount?: number;
     onClick?: () => void;
     className?: string;
-    /**
-     * Colour for the "Aktifkan Notifikasi" hint. The bell lives on white headers
-     * and on the dark owner sidebar, so the hint carries no colour of its own —
-     * `text-primary` on `#005D42` is 1.45:1 and effectively invisible.
-     */
-    labelClassName?: string;
 }
 
 interface LatestNotif {
@@ -27,7 +21,6 @@ export default function NotificationBell({
     unreadCount: initialCount,
     onClick,
     className = 'text-text-muted active:bg-surface-muted',
-    labelClassName = 'text-primary',
 }: Props) {
     const [polledUnreadCount, setPolledUnreadCount] = useState(0);
     const unreadCount = initialCount ?? polledUnreadCount;
@@ -104,27 +97,25 @@ export default function NotificationBell({
             <button
                 onClick={handleClick}
                 className={`relative flex h-11 w-11 items-center justify-center rounded-lg transition-colors ${className}`}
-                aria-label="Notifikasi"
+                // While the push state is undetermined the bell does not open
+                // the sheet — handleClick turns the tap into the permission
+                // prompt. Say so, rather than naming an action it will not take.
+                aria-label={
+                    pushState === 'loading'
+                        ? 'Aktifkan Notifikasi'
+                        : 'Notifikasi'
+                }
+                title={
+                    pushState === 'loading' ? 'Aktifkan Notifikasi' : undefined
+                }
             >
                 <Bell className="h-5 w-5" strokeWidth={1.5} />
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+                    <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-caption font-bold text-white">
                         {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                 )}
             </button>
-            {pushState === 'loading' && (
-                <button
-                    onClick={requestEnable}
-                    // Anchored to the wrapper's right edge, not centred on the 44px
-                    // bell. The hint is 99px wide, so centring pushed ~28px past a
-                    // right-aligned bell and 12px outside a 390px viewport with no
-                    // scrollbar to reach it.
-                    className={`absolute right-0 -bottom-7 min-h-6 rounded px-1.5 text-[10px] font-medium whitespace-nowrap ${labelClassName}`}
-                >
-                    Aktifkan Notifikasi
-                </button>
-            )}
         </div>
     );
 }
