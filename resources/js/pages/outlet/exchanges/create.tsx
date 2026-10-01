@@ -153,10 +153,15 @@ export default function OutletExchangesCreate({
             <div className="mt-4 pb-40">
                 {/* Mandatory Return Selection */}
                 <div className="mb-4">
-                    <label className="text-xs font-semibold text-text-muted">
+                    <label
+                        htmlFor="exchange-return"
+                        className="text-xs font-semibold text-text-muted"
+                    >
                         Pilih Return
                     </label>
                     <select
+                        id="exchange-return"
+                        name="return_id"
                         value={selectedReturnId ?? ''}
                         onChange={handleReturnSelect}
                         className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm"
@@ -196,9 +201,10 @@ export default function OutletExchangesCreate({
 
                             {/* Return side - read-only */}
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-danger">
+                                {/* Read-only value: a label would point at nothing. */}
+                                <span className="mb-1 block text-xs font-medium text-danger">
                                     Dikembalikan (Produk Lama)
-                                </label>
+                                </span>
                                 <div className="flex items-center justify-between rounded-lg border border-danger-border bg-danger-bg/50 px-3 py-2.5 text-sm">
                                     <span className="font-medium text-danger-text">
                                         {getReturnItemName(pair.product_id)} x
@@ -216,10 +222,15 @@ export default function OutletExchangesCreate({
 
                             {/* Replacement side */}
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-success-text">
+                                <label
+                                    htmlFor={`exchange-replacement-${index}`}
+                                    className="mb-1 block text-xs font-medium text-success-text"
+                                >
                                     Diganti Dengan (Produk Baru)
                                 </label>
                                 <select
+                                    id={`exchange-replacement-${index}`}
+                                    name={`replacement_product_id_${index}`}
                                     value={pair.replacement_product_id || ''}
                                     onChange={(e) =>
                                         updatePair(
@@ -243,10 +254,15 @@ export default function OutletExchangesCreate({
                                     ))}
                                 </select>
                                 <div className="mt-2 flex items-center gap-2">
-                                    <label className="text-xs text-text-muted">
+                                    <label
+                                        htmlFor={`exchange-replacement-qty-${index}`}
+                                        className="text-xs text-text-muted"
+                                    >
                                         Jumlah:
                                     </label>
                                     <input
+                                        id={`exchange-replacement-qty-${index}`}
+                                        name={`replacement_quantity_${index}`}
                                         type="number"
                                         min="1"
                                         value={pair.replacement_quantity}
@@ -288,10 +304,15 @@ export default function OutletExchangesCreate({
 
                 {/* Notes */}
                 <div className="mt-4">
-                    <label className="mb-1 block text-xs font-medium text-text-muted">
+                    <label
+                        htmlFor="exchange-notes"
+                        className="mb-1 block text-xs font-medium text-text-muted"
+                    >
                         Catatan
                     </label>
                     <textarea
+                        id="exchange-notes"
+                        name="notes"
                         value={form.data.notes}
                         onChange={(e) => form.setData('notes', e.target.value)}
                         placeholder="Opsional"

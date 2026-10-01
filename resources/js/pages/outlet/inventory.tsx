@@ -712,10 +712,15 @@ function OpnameSheet({
                 </div>
 
                 <div>
-                    <label className="mb-1 block text-[11px] font-medium text-text-subtle">
+                    <label
+                        htmlFor="opname-actual-count"
+                        className="mb-1 block text-[11px] font-medium text-text-subtle"
+                    >
                         Jumlah Aktual
                     </label>
                     <input
+                        id="opname-actual-count"
+                        name="actual_count"
                         type="number"
                         min="0"
                         value={data.actual_count}
@@ -734,10 +739,15 @@ function OpnameSheet({
                 </div>
 
                 <div>
-                    <label className="mb-1 block text-[11px] font-medium text-text-subtle">
+                    <label
+                        htmlFor="opname-notes"
+                        className="mb-1 block text-[11px] font-medium text-text-subtle"
+                    >
                         Catatan (opsional)
                     </label>
                     <textarea
+                        id="opname-notes"
+                        name="notes"
                         value={data.notes}
                         onChange={(e) => setData('notes', e.target.value)}
                         rows={2}

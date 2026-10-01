@@ -115,7 +115,10 @@ export default function ExchangeCreateDialog({
                             {/* Quantity + Notes inline row */}
                             <div className="flex items-end gap-2">
                                 <div className="flex-1">
-                                    <label className="mb-1 block text-xs font-medium text-text-muted">
+                                    <label
+                                        htmlFor="exchange-return-quantity"
+                                        className="mb-1 block text-xs font-medium text-text-muted"
+                                    >
                                         Jumlah
                                     </label>
                                     <div className="flex items-center gap-1.5">
@@ -134,6 +137,8 @@ export default function ExchangeCreateDialog({
                                             <Minus className="h-3 w-3" />
                                         </button>
                                         <input
+                                            id="exchange-return-quantity"
+                                            name="return_quantity"
                                             type="number"
                                             min="1"
                                             value={form.data.return_quantity}
@@ -166,10 +171,15 @@ export default function ExchangeCreateDialog({
                                     </div>
                                 </div>
                                 <div className="flex-1">
-                                    <label className="mb-1 block text-xs font-medium text-text-muted">
+                                    <label
+                                        htmlFor="exchange-return-notes"
+                                        className="mb-1 block text-xs font-medium text-text-muted"
+                                    >
                                         Alasan
                                     </label>
                                     <input
+                                        id="exchange-return-notes"
+                                        name="return_notes"
                                         type="text"
                                         value={form.data.return_notes}
                                         onChange={(e) =>
@@ -207,7 +217,10 @@ export default function ExchangeCreateDialog({
                             {/* Quantity + Notes inline row */}
                             <div className="flex items-end gap-2">
                                 <div className="flex-1">
-                                    <label className="mb-1 block text-xs font-medium text-text-muted">
+                                    <label
+                                        htmlFor="exchange-replacement-quantity"
+                                        className="mb-1 block text-xs font-medium text-text-muted"
+                                    >
                                         Jumlah
                                     </label>
                                     <div className="flex items-center gap-1.5">
@@ -228,6 +241,8 @@ export default function ExchangeCreateDialog({
                                             <Minus className="h-3 w-3" />
                                         </button>
                                         <input
+                                            id="exchange-replacement-quantity"
+                                            name="replacement_quantity"
                                             type="number"
                                             min="1"
                                             value={
@@ -263,10 +278,15 @@ export default function ExchangeCreateDialog({
                                     </div>
                                 </div>
                                 <div className="flex-1">
-                                    <label className="mb-1 block text-xs font-medium text-text-muted">
+                                    <label
+                                        htmlFor="exchange-replacement-notes"
+                                        className="mb-1 block text-xs font-medium text-text-muted"
+                                    >
                                         Catatan
                                     </label>
                                     <input
+                                        id="exchange-replacement-notes"
+                                        name="replacement_notes"
                                         type="text"
                                         value={form.data.replacement_notes}
                                         onChange={(e) =>

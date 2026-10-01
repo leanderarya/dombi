@@ -171,10 +171,15 @@ export default function OutletSettlementPayments({ payments }: Props) {
                             />
 
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-text">
+                                <label
+                                    htmlFor="payment-proof"
+                                    className="mb-1 block text-sm font-medium text-text"
+                                >
                                     Bukti Transfer (opsional)
                                 </label>
                                 <input
+                                    id="payment-proof"
+                                    name="proof_image"
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) =>

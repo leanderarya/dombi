@@ -132,10 +132,15 @@ export default function OfflineSaleDialog({
 
                         <div className="flex gap-2">
                             <div className="flex-1">
-                                <label className="mb-1 block text-xs font-medium text-text-muted">
+                                <label
+                                    htmlFor="offline-sale-quantity"
+                                    className="mb-1 block text-xs font-medium text-text-muted"
+                                >
                                     Jumlah
                                 </label>
                                 <input
+                                    id="offline-sale-quantity"
+                                    name="quantity"
                                     type="number"
                                     inputMode="numeric"
                                     min="1"
@@ -162,10 +167,15 @@ export default function OfflineSaleDialog({
                                 )}
                             </div>
                             <div className="flex-1">
-                                <label className="mb-1 block text-xs font-medium text-text-muted">
+                                <label
+                                    htmlFor="offline-sale-notes"
+                                    className="mb-1 block text-xs font-medium text-text-muted"
+                                >
                                     Catatan
                                 </label>
                                 <input
+                                    id="offline-sale-notes"
+                                    name="notes"
                                     type="text"
                                     value={form.data.notes}
                                     onChange={(e) =>

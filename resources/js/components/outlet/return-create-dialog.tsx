@@ -176,10 +176,15 @@ export default function ReturnCreateDialog({
 
                         {/* Notes */}
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-text-muted">
+                            <label
+                                htmlFor="return-notes"
+                                className="mb-1.5 block text-xs font-medium text-text-muted"
+                            >
                                 Catatan
                             </label>
                             <textarea
+                                id="return-notes"
+                                name="notes"
                                 value={form.data.notes}
                                 onChange={(e) =>
                                     form.setData('notes', e.target.value)
@@ -192,9 +197,12 @@ export default function ReturnCreateDialog({
 
                         {/* Evidence Photos */}
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-text-muted">
+                            {/* The visible heading labels a button-driven picker,
+                                not a control, so it stays a span; the hidden file
+                                input gets the name via aria-label below. */}
+                            <span className="mb-1.5 block text-xs font-medium text-text-muted">
                                 Foto Bukti (Opsional)
-                            </label>
+                            </span>
                             <div className="flex flex-wrap gap-2">
                                 {imagePreviews.map((preview, index) => (
                                     <div
@@ -229,9 +237,11 @@ export default function ReturnCreateDialog({
                             </div>
                             <input
                                 ref={fileInputRef}
+                                name="evidence_images"
                                 type="file"
                                 accept="image/*"
                                 multiple
+                                aria-label="Foto bukti pengembalian"
                                 onChange={handleImageUpload}
                                 className="hidden"
                             />
@@ -239,9 +249,11 @@ export default function ReturnCreateDialog({
 
                         {/* Variant Selection */}
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-text-muted">
+                            {/* The products below are toggle buttons, not form
+                                controls, so a label here would point at nothing. */}
+                            <span className="mb-1.5 block text-xs font-medium text-text-muted">
                                 Pilih Produk
-                            </label>
+                            </span>
                             <div className="space-y-2">
                                 {variants.map((v) => {
                                     const isSelected = selectedVariants.has(

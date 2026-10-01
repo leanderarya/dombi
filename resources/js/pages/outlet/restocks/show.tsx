@@ -161,10 +161,15 @@ export default function OutletRestockShow({ restock }: any) {
                 <SectionCard label="Catatan Penerimaan">
                     <div className="mt-2 space-y-3">
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-text">
+                            <label
+                                htmlFor="received-notes"
+                                className="mb-1 block text-sm font-medium text-text"
+                            >
                                 Catatan Penerimaan
                             </label>
                             <textarea
+                                id="received-notes"
+                                name="received_notes"
                                 value={receivedNotes}
                                 onChange={(e) =>
                                     setReceivedNotes(e.target.value)
@@ -176,10 +181,15 @@ export default function OutletRestockShow({ restock }: any) {
                             />
                         </div>
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-text">
+                            <label
+                                htmlFor="damage-notes"
+                                className="mb-1 block text-sm font-medium text-text"
+                            >
                                 Catatan Kerusakan
                             </label>
                             <textarea
+                                id="damage-notes"
+                                name="damage_notes"
                                 value={damageNotes}
                                 onChange={(e) => setDamageNotes(e.target.value)}
                                 placeholder="Opsional: catatan jika ada kerusakan"

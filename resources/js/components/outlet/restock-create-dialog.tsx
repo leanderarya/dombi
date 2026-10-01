@@ -124,7 +124,10 @@ export default function RestockCreateDialog({
 
                         {/* Quantity stepper */}
                         <div>
-                            <label className="mb-1.5 block text-xs font-medium text-text-muted">
+                            <label
+                                htmlFor="restock-quantity"
+                                className="mb-1.5 block text-xs font-medium text-text-muted"
+                            >
                                 Jumlah
                             </label>
                             <div className="flex items-center gap-2">
@@ -148,6 +151,8 @@ export default function RestockCreateDialog({
                                     <Minus className="h-3.5 w-3.5" />
                                 </button>
                                 <input
+                                    id="restock-quantity"
+                                    name="requested_quantity"
                                     type="number"
                                     min="1"
                                     value={

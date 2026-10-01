@@ -382,10 +382,15 @@ export default function AssignCourierSheet({
                     ) : (
                         <div className="mt-4 space-y-3">
                             <div>
-                                <label className="text-xs font-semibold text-text-muted">
+                                <label
+                                    htmlFor="external-courier-name"
+                                    className="text-xs font-semibold text-text-muted"
+                                >
                                     Nama Kurir
                                 </label>
                                 <input
+                                    id="external-courier-name"
+                                    name="external_courier_name"
                                     type="text"
                                     value={externalName}
                                     onChange={(e) =>
@@ -397,11 +402,16 @@ export default function AssignCourierSheet({
                             </div>
                             <div className="flex gap-2">
                                 <div className="flex-1">
-                                    <label className="text-xs font-semibold text-text-muted">
+                                    <label
+                                        htmlFor="external-courier-phone"
+                                        className="text-xs font-semibold text-text-muted"
+                                    >
                                         No. HP
                                     </label>
                                     <input
-                                        type="text"
+                                        id="external-courier-phone"
+                                        name="external_courier_phone"
+                                        type="tel"
                                         value={externalPhone}
                                         onChange={(e) =>
                                             setExternalPhone(e.target.value)
@@ -411,10 +421,15 @@ export default function AssignCourierSheet({
                                     />
                                 </div>
                                 <div className="flex-1">
-                                    <label className="text-xs font-semibold text-text-muted">
+                                    <label
+                                        htmlFor="external-courier-plate"
+                                        className="text-xs font-semibold text-text-muted"
+                                    >
                                         Plat
                                     </label>
                                     <input
+                                        id="external-courier-plate"
+                                        name="external_courier_plate"
                                         type="text"
                                         value={externalPlate}
                                         onChange={(e) =>
@@ -426,10 +441,15 @@ export default function AssignCourierSheet({
                                 </div>
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-text-muted">
+                                <label
+                                    htmlFor="external-courier-cost"
+                                    className="text-xs font-semibold text-text-muted"
+                                >
                                     Biaya Ongkir (Gojek)
                                 </label>
                                 <input
+                                    id="external-courier-cost"
+                                    name="external_courier_cost"
                                     type="number"
                                     value={courierCost}
                                     onChange={(e) =>

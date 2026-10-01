@@ -823,10 +823,15 @@ function PaymentSheet({
                 )}
 
                 <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-text">
+                    <label
+                        htmlFor="payment-amount"
+                        className="mb-1.5 block text-xs font-semibold text-text"
+                    >
                         Nominal (Rp)
                     </label>
                     <input
+                        id="payment-amount"
+                        name="amount"
                         type="number"
                         value={data.amount}
                         onChange={(e) => setData('amount', e.target.value)}
@@ -843,10 +848,15 @@ function PaymentSheet({
                 </div>
 
                 <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-text">
+                    <label
+                        htmlFor="payment-reference"
+                        className="mb-1.5 block text-xs font-semibold text-text"
+                    >
                         Referensi Transfer
                     </label>
                     <input
+                        id="payment-reference"
+                        name="reference_number"
                         type="text"
                         value={data.reference_number}
                         onChange={(e) =>
@@ -865,10 +875,15 @@ function PaymentSheet({
                 </div>
 
                 <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-text">
+                    <label
+                        htmlFor="payment-date"
+                        className="mb-1.5 block text-xs font-semibold text-text"
+                    >
                         Tanggal Transfer
                     </label>
                     <Input
+                        id="payment-date"
+                        name="payment_date"
                         type="date"
                         value={data.payment_date}
                         onChange={(e) =>
@@ -885,10 +900,15 @@ function PaymentSheet({
                 </div>
 
                 <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-text">
+                    <label
+                        htmlFor="payment-proof"
+                        className="mb-1.5 block text-xs font-semibold text-text"
+                    >
                         Bukti Transfer
                     </label>
                     <input
+                        id="payment-proof"
+                        name="proof_image"
                         type="file"
                         accept="image/*"
                         onChange={(e) => {
@@ -905,10 +925,15 @@ function PaymentSheet({
                 </div>
 
                 <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-text">
+                    <label
+                        htmlFor="payment-notes"
+                        className="mb-1.5 block text-xs font-semibold text-text"
+                    >
                         Catatan (opsional)
                     </label>
                     <textarea
+                        id="payment-notes"
+                        name="notes"
                         value={data.notes}
                         onChange={(e) => setData('notes', e.target.value)}
                         maxLength={500}

@@ -600,10 +600,15 @@ export default function OutletOrderShow({
                     className="space-y-4"
                 >
                     <div>
-                        <label className="mb-2 block text-[13px] text-text-subtle">
+                        <label
+                            htmlFor="assign-courier"
+                            className="mb-2 block text-[13px] text-text-subtle"
+                        >
                             Pilih Kurir
                         </label>
                         <select
+                            id="assign-courier"
+                            name="courier_id"
                             value={assignForm.data.courier_id}
                             onChange={(e) =>
                                 assignForm.setData('courier_id', e.target.value)
