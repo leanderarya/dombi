@@ -111,7 +111,7 @@ export default function OutletDashboard({
                                 {stats.pendingOrders > 0 && (
                                     <Link
                                         href="/outlet/orders?status=pending_confirmation"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text active:opacity-80 pointer-coarse:min-h-11"
                                     >
                                         <span className="h-1.5 w-1.5 rounded-full bg-warning" />
                                         {stats.pendingOrders} Baru
@@ -120,7 +120,7 @@ export default function OutletDashboard({
                                 {deliveryStats.needsDispatch > 0 && (
                                     <Link
                                         href="/outlet/deliveries"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text active:opacity-80 pointer-coarse:min-h-11"
                                     >
                                         <span className="h-1.5 w-1.5 rounded-full bg-info" />
                                         {deliveryStats.needsDispatch} Dikirim
@@ -129,7 +129,7 @@ export default function OutletDashboard({
                                 {deliveryStats.failed > 0 && (
                                     <Link
                                         href="/outlet/deliveries?status=failed"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text active:opacity-80 pointer-coarse:min-h-11"
                                     >
                                         <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                                         {deliveryStats.failed} Gagal
@@ -138,7 +138,7 @@ export default function OutletDashboard({
                                 {lowStockItems.length > 0 && (
                                     <Link
                                         href="/outlet/inventory"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text active:opacity-80 pointer-coarse:min-h-11"
                                     >
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent-orange" />
                                         {lowStockItems.length} Stok Rendah
@@ -147,7 +147,7 @@ export default function OutletDashboard({
                                 {(stats.expiredToday ?? 0) > 0 && (
                                     <Link
                                         href="/outlet/orders?tab=riwayat&status=expired"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-danger-bg/80 px-2.5 py-1.5 text-caption font-semibold text-danger-text pointer-coarse:min-h-11 active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-danger-bg/80 px-2.5 py-1.5 text-caption font-semibold text-danger-text active:opacity-80 pointer-coarse:min-h-11"
                                     >
                                         <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                                         {stats.expiredToday} Kadaluarsa

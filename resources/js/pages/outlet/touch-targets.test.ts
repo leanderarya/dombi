@@ -20,10 +20,7 @@ async function readSource(relative: string): Promise<string> {
  * fixes it, and that neither grows a third tab without one.
  */
 describe('outlet segmented control touch target', () => {
-    const screens = [
-        './deliveries/index.tsx',
-        './orders/index.tsx',
-    ] as const;
+    const screens = ['./deliveries/index.tsx', './orders/index.tsx'] as const;
 
     it.each(screens)('%s guards both tabs', async (screen) => {
         const source = await readSource(screen);

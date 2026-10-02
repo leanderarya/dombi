@@ -18,10 +18,13 @@ vi.mock('recharts', async () => {
     return {
         ...actual,
         ResponsiveContainer: ({ children }: { children: React.ReactElement }) =>
-            cloneElement(children as React.ReactElement<Record<string, unknown>>, {
-                width: 400,
-                height: 220,
-            }),
+            cloneElement(
+                children as React.ReactElement<Record<string, unknown>>,
+                {
+                    width: 400,
+                    height: 220,
+                },
+            ),
     };
 });
 
@@ -59,7 +62,11 @@ const revenue = [
 ];
 
 const products = [
-    { product_name: 'Domilk Premium Taste', total_qty: 9, total_revenue: 135_000 },
+    {
+        product_name: 'Domilk Premium Taste',
+        total_qty: 9,
+        total_revenue: 135_000,
+    },
 ];
 
 describe('outlet chart accessible names', () => {
