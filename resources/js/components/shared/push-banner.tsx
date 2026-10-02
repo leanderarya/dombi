@@ -48,7 +48,13 @@ export default function PushBanner({ variant, onDismiss }: Props) {
 
     if (variant === 'home') {
         return (
-            <div className="flex items-center gap-3 rounded-xl bg-white/80 px-3 py-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] backdrop-blur">
+            /*
+             * `flex-wrap`: at 200% text the icon, the copy, "Aktifkan" and
+             * the dismiss button together measure wider than the 326px row
+             * and pushed the document to 393px on a 390px viewport. The
+             * buttons drop to their own line instead.
+             */
+            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white/80 px-3 py-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] backdrop-blur">
                 <Bell className="h-4 w-4 shrink-0 text-primary" />
                 {pushState === 'denied' ? (
                     <p className="min-w-0 flex-1 text-xs text-text-muted">
