@@ -59,9 +59,12 @@ export default function TopProductsChart({ data }: TopProductsChartProps) {
 
     return (
         <ResponsiveContainer width="100%" height={220}>
+            {/* Names the SVG in the accessibility tree; same reasoning as
+                RevenueTrendChart — see the comment there. */}
             <BarChart
                 layout="vertical"
                 data={data}
+                title="Produk Terlaris"
                 margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
             >
                 <XAxis

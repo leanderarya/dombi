@@ -761,6 +761,28 @@ select:focus {
     animation: chartDraw 1.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* ─── Recharts focus ring ───────────────────────────────── */
+
+/*
+ * Recharts 3.9.2 makes every chart a tab stop by default (accessibilityLayer
+ * defaults to true, which sets tabIndex=0 and role=application on the root
+ * <svg class="recharts-surface">). Keyboard users land on it and, without
+ * this, see nothing at all: the SVG carries no UA focus ring of its own and
+ * the only rules in the sheet that could reach it were page-level
+ * `[&_*:focus]:outline-none` wrappers — which is how the outlet analytics
+ * screen managed to suppress focus on a control that was never given one.
+ *
+ * A sheet-level rule rather than a per-screen wrapper class, because
+ * accessibilityLayer is a library default: every chart added anywhere in the
+ * app inherits the tab stop whether or not its author knew, so the ring has
+ * to travel with the element, not with the page that happens to hold it.
+ */
+svg.recharts-surface:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-chip);
+}
+
 /* ─── GPU Acceleration & Performance ────────────────────── */
 
 /* GPU layer promotion — apply to cards, modals, sheets */

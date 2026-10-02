@@ -75,8 +75,18 @@ export default function RevenueTrendChart({ data }: RevenueTrendChartProps) {
 
     return (
         <ResponsiveContainer width="100%" height={220}>
+            {/*
+              `title` lands in the SVG's <title>, which is what names the
+              element in the accessibility tree. Recharts 3.9.2 turns the
+              chart into a tab stop by default (accessibilityLayer: true →
+              tabIndex=0, role=application) without giving it a name, so a
+              screen reader announced an unnamed application. The text
+              matches the heading the page renders above the chart, which is
+              the name WCAG 2.5.3 expects. The focus ring is in app.css.
+            */}
             <LineChart
                 data={data}
+                title="Trend Revenue"
                 margin={{ top: 8, right: 8, left: -8, bottom: 0 }}
             >
                 <defs>
