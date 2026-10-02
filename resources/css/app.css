@@ -292,6 +292,17 @@ main {
 /* ─── Native UI Components ─────────────────────────────── */
 
 /* All inputs — prevent iOS zoom (font-size >= 16px) */
+/*
+ * `input:not([type])` is not redundant with `input[type='text']`. An input
+ * with no type attribute *defaults* to text — but it does not *match* the
+ * attribute selector, so it escaped this rule entirely and kept its Tailwind
+ * size. Six fields across the customer surface rendered at 12-14px because of
+ * that gap, and iOS zooms the whole layout when a field under 16px takes
+ * focus, mid-form. The selector list is explicit rather than a bare `input`
+ * so a future checkbox, radio or file input does not inherit the 12px
+ * vertical padding this rule also sets.
+ */
+input:not([type]),
 input[type='text'],
 input[type='email'],
 input[type='tel'],

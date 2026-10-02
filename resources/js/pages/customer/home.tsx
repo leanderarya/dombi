@@ -294,7 +294,7 @@ function GreetingCard({
                     <div className="flex items-center gap-2 border-t border-border pt-3">
                         <Link
                             href="/customer/coming-soon/poin"
-                            className="flex flex-1 items-center justify-between rounded-thumb border border-primary/20 bg-primary-light px-3 py-2 text-left active:opacity-80"
+                            className="flex flex-1 items-center justify-between rounded-thumb border border-primary/20 bg-primary-light px-3 py-2 text-left active:opacity-80 pointer-coarse:min-h-11"
                         >
                             <div className="flex items-center gap-2">
                                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-caption text-white">
@@ -311,7 +311,7 @@ function GreetingCard({
                         </Link>
                         <Link
                             href="/customer/coming-soon/my-dombi-plan"
-                            className="flex flex-1 items-center justify-between rounded-thumb border border-info-border bg-info-bg px-3 py-2 text-left active:opacity-80"
+                            className="flex flex-1 items-center justify-between rounded-thumb border border-info-border bg-info-bg px-3 py-2 text-left active:opacity-80 pointer-coarse:min-h-11"
                         >
                             <div className="flex items-center gap-2">
                                 <div className="flex h-5 w-5 items-center justify-center rounded-full bg-info text-caption text-white">
@@ -438,7 +438,7 @@ function PromoBento() {
                 <Link
                     href="/customer/products"
                     prefetch="hover"
-                    className="text-xs font-semibold text-primary active:opacity-80"
+                    className="text-xs font-semibold text-primary active:opacity-80 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
                 >
                     Lihat Semua
                 </Link>
@@ -458,7 +458,16 @@ function PromoBento() {
                                 {bento.icon}
                             </div>
                             {bento.badge && (
-                                <span className="absolute top-2 right-2 rounded bg-warning px-1.5 py-0.5 text-[9px] font-bold text-white">
+                                /*
+                                 * `bg-warning` (#d97706) under white measured
+                                 * 3.19:1. Raising the size does not rescue it:
+                                 * the 3:1 bar only applies to large text
+                                 * (18.66px bold), and this badge is 9px/bold,
+                                 * so it still owes 4.5:1. `bg-warning-text`
+                                 * (#b45309) is the same amber family one step
+                                 * darker and measures 5.02:1 under white.
+                                 */
+                                <span className="absolute top-2 right-2 rounded bg-warning-text px-1.5 py-0.5 text-[9px] font-bold text-white">
                                     {bento.badge}
                                 </span>
                             )}
@@ -491,7 +500,7 @@ function PhoneBanner({ onDismiss }: { onDismiss: () => void }) {
             </p>
             <a
                 href="/customer/verify-phone"
-                className="shrink-0 rounded-chip bg-primary px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
+                className="shrink-0 rounded-chip bg-primary px-3 py-1.5 text-xs font-bold text-white active:opacity-80 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
             >
                 Tambah
             </a>

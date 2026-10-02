@@ -628,12 +628,21 @@ function QuantitySelector({
                     Stok tersisa {lowStock}
                 </p>
             )}
-            <div className="mt-3 flex items-center gap-4">
+            {/*
+                `flex-wrap` is load-bearing at 200% text. Without it this row
+                held its intrinsic width and pushed "Total Rp 48.000" to
+                x=[438,580] on a 390px viewport -- 190px off-screen, and the
+                fixed CTA bar below inherits the same width so its price
+                becomes unreachable by any scroll. Wrapping lets the two
+                labels fall under the stepper instead.
+            */}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <div className="flex items-center rounded-thumb border border-border bg-surface">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => onChange(Math.max(1, quantity - 1))}
+                        aria-label="Kurangi jumlah"
                         className="h-11 w-11 rounded-l-thumb text-text-muted"
                     >
                         <svg
@@ -643,6 +652,7 @@ function QuantitySelector({
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                             strokeWidth="2.5"
+                            aria-hidden="true"
                         >
                             <path strokeLinecap="round" d="M5 12h14" />
                         </svg>
@@ -655,6 +665,7 @@ function QuantitySelector({
                         size="icon"
                         onClick={() => onChange(Math.min(max, quantity + 1))}
                         disabled={quantity >= max}
+                        aria-label="Tambah jumlah"
                         className="h-11 w-11 rounded-r-thumb text-text-muted disabled:opacity-30"
                     >
                         <svg
@@ -664,6 +675,7 @@ function QuantitySelector({
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                             strokeWidth="2.5"
+                            aria-hidden="true"
                         >
                             <path strokeLinecap="round" d="M12 5v14M5 12h14" />
                         </svg>

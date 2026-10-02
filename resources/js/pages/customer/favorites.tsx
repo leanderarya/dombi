@@ -315,7 +315,7 @@ function FavoritesEmpty() {
             </p>
             <Link
                 href="/customer/products"
-                className="mt-4 rounded-thumb bg-primary px-5 py-2.5 text-sm font-semibold text-white active:opacity-80"
+                className="mt-4 rounded-thumb bg-primary px-5 py-2.5 text-sm font-semibold text-white active:opacity-80 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
             >
                 Lihat Produk
             </Link>

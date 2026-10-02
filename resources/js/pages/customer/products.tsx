@@ -250,13 +250,14 @@ function ProductsInner() {
                             variant="ghost"
                             size="icon"
                             onClick={() => setActiveFilter('all')}
+                            aria-label="Semua kategori"
                             className={`h-9 w-9 shrink-0 rounded-full border transition-all ${
                                 activeFilter === 'all'
                                     ? 'border-primary bg-primary-light text-primary hover:bg-primary-light hover:text-primary'
                                     : 'border-border bg-surface text-text-subtle hover:bg-surface hover:text-text-subtle'
                             }`}
                         >
-                            <ThumbsUp className="h-4 w-4" />
+                            <ThumbsUp className="h-4 w-4" aria-hidden="true" />
                         </Button>
                         {filterOptions.map((opt) => (
                             <Button

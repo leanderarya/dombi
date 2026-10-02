@@ -956,7 +956,15 @@ export default function CheckoutPayment({ draft, summary }: any) {
 function SummaryRow({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-center justify-between text-xs">
-            <span className="text-white/60">{label}</span>
+            {/*
+                `/60` measured 2.94:1 on `bg-primary` (#007a55) — under AA for
+                12px text, and these three rows are the price breakdown read
+                immediately before paying. `/90` is 4.66:1, the lightest step
+                that clears the bar; `/100` would spend the hierarchy the two
+                levels exist to draw. The value stays `/90` — it was already
+                the passing half of the pair.
+            */}
+            <span className="text-white/90">{label}</span>
             <span className="font-medium text-white/90 tabular-nums">
                 {value}
             </span>

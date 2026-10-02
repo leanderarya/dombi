@@ -22,7 +22,17 @@ export default function CheckoutItemCard({
     const subtotal = unitPrice * quantity;
 
     return (
-        <div className="flex items-center gap-3 border-b border-border py-3 last:border-b-0 active:bg-surface-muted">
+        /*
+         * `flex-wrap` is what makes this card survive 200% text. At a 32px
+         * root the stepper's own `min-w-11` cells are 88px each, so the trio
+         * is 264px before the text block gets anything -- on a 390px viewport
+         * with the 112px thumbnail that row cannot fit, and it measured
+         * x=[225,489], 99px past the edge. The stepper cannot shrink to
+         * rescue it (those minimums are the tap targets, and they scale with
+         * the same root), so the only honest fix is letting the controls drop
+         * to their own line rather than compressing or overflowing.
+         */
+        <div className="flex flex-wrap items-center gap-3 border-b border-border py-3 last:border-b-0 active:bg-surface-muted">
             {/* Thumbnail */}
             <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-chip bg-surface">
                 {image ? (

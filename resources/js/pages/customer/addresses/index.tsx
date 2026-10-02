@@ -61,8 +61,25 @@ export default function AddressesIndex({ addresses }: any) {
 
                 {/* Search */}
                 <div className="flex items-center gap-2.5 rounded-thumb border border-border bg-surface px-3.5 focus-within:ring-1 focus-within:ring-ring">
-                    <Search className="h-4 w-4 shrink-0 text-text-subtle" />
+                    <Search
+                        className="h-4 w-4 shrink-0 text-text-subtle"
+                        aria-hidden="true"
+                    />
+                    {/*
+                        The placeholder was doing the label's job: no <label>,
+                        no aria-label, no aria-labelledby, so the accessibility
+                        tree took its name from the placeholder and the field
+                        lost its only identifier the moment the user typed.
+                        sr-only rather than a visible <label> because this sits
+                        in a dense stack and adding a line would push the list
+                        down. The same feature already solves the same problem
+                        visibly in location-search-panel.tsx:294-299.
+                    */}
+                    <label htmlFor="address-search" className="sr-only">
+                        Cari alamat
+                    </label>
                     <input
+                        id="address-search"
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -173,7 +190,20 @@ function AddressCard({
             )}
 
             {/* Actions */}
-            <div className="mt-3 flex items-center gap-3 border-t border-border pt-3">
+            {/*
+                `flex-wrap` because at 200% text the three controls are wider
+                than the card and "Hapus" ran to x=[350,464] on a 390px
+                viewport — 73px past the edge, unreachable. Wrapping drops it
+                to its own line instead.
+
+                "Edit" is a raw Link, so unlike the two Buttons beside it
+                (which carry `pointer-coarse:min-h-11` in the component) it
+                measured 38x16 under a coarse pointer. The guard is repeated
+                here for the same reason Button has it: 44px is the contract
+                (DESIGN.md:83) and this is the only control in the row that
+                does not get it for free.
+            */}
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-3">
                 {!isDefault && (
                     <Button
                         type="button"
@@ -186,7 +216,7 @@ function AddressCard({
                 )}
                 <Link
                     href={`/customer/addresses/${address.id}/edit`}
-                    className="flex items-center gap-1 text-xs font-medium text-text-muted active:text-text"
+                    className="flex items-center gap-1 text-xs font-medium text-text-muted active:text-text pointer-coarse:min-h-11"
                 >
                     <svg
                         className="h-3 w-3"
