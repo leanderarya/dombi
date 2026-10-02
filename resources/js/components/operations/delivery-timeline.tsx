@@ -47,7 +47,7 @@ const typeLabels: Record<string, string> = {
 export default function DeliveryTimeline({ histories }: Props) {
     if (histories.length === 0) {
         return (
-            <div className="py-4 text-center text-xs text-slate-400">
+            <div className="py-4 text-center text-xs text-text-subtle">
                 Belum ada riwayat
             </div>
         );
@@ -95,12 +95,12 @@ export default function DeliveryTimeline({ histories }: Props) {
                                 </div>
                             )}
                             {h.actor && (
-                                <div className="mt-0.5 text-[11px] text-slate-400">
+                                <div className="mt-0.5 text-[11px] text-text-subtle">
                                     oleh {h.actor.name}
                                 </div>
                             )}
                             {h.created_at && (
-                                <div className="mt-0.5 text-[11px] text-slate-400 tabular-nums">
+                                <div className="mt-0.5 text-[11px] text-text-subtle tabular-nums">
                                     {new Date(h.created_at).toLocaleString(
                                         'id-ID',
                                         {

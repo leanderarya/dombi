@@ -313,7 +313,7 @@ export default function NotificationSheet({
                         </div>
                     ) : notifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <Bell className="h-8 w-8 text-slate-400" />
+                            <Bell className="h-8 w-8 text-text-subtle" />
                             <p className="mt-2 text-sm text-slate-500">
                                 Belum ada notifikasi
                             </p>
@@ -363,7 +363,7 @@ export default function NotificationSheet({
                                             <p className="mt-0.5 text-sm text-slate-600">
                                                 {notification.message}
                                             </p>
-                                            <p className="mt-1 text-xs text-slate-400">
+                                            <p className="mt-1 text-xs text-text-subtle">
                                                 {notification.time_ago}
                                             </p>
                                         </div>

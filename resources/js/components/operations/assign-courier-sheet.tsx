@@ -165,7 +165,7 @@ function AssignCourierSheetContent({
 
                     {/* Courier List */}
                     <div className="mt-4">
-                        <div className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                        <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                             Available Couriers
                         </div>
                         <div className="mt-2 space-y-1.5">

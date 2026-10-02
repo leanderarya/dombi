@@ -114,7 +114,7 @@ export default function FilterSheet({
                     <div className="mt-4 space-y-5">
                         {sections.map((section) => (
                             <div key={section.key}>
-                                <div className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                                <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                                     {section.label}
                                 </div>
                                 <div className="mt-2 flex flex-wrap gap-2">
