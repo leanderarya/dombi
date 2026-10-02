@@ -36,7 +36,7 @@ export default function PageHeader({ title, titleClassName, subtitle, backHref, 
         <header className={`sticky top-0 z-30 ${isCustomer ? 'pt-safe-header' : 'pt-safe'} ${background}`}>
             <div className={`mx-auto flex items-center justify-between ${isCustomer ? 'max-w-lg px-5 pb-4' : 'max-w-2xl px-4 py-3 lg:max-w-4xl'}`}>
                 {/* Left side: back button, hamburger, or spacer */}
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1">
                     {backHref && (
                         <Link aria-label={backLabel} href={backHref} className={`flex h-11 w-11 items-center justify-center ${isCustomer ? 'rounded-chip text-text active:opacity-80' : 'rounded-lg text-text-muted active:bg-surface-muted'}`}>
                             <ChevronLeft className="h-5 w-5" />
@@ -56,15 +56,26 @@ export default function PageHeader({ title, titleClassName, subtitle, backHref, 
                 </div>
 
                 {title ? (
-                    <div className="text-center">
-                        <h1 className={`${isCustomer ? 'text-base font-bold' : 'text-sm font-semibold'} text-text ${titleClassName ?? ''}`}>{title}</h1>
-                        {subtitle && <div className="text-xs text-text-muted">{subtitle}</div>}
+                    /*
+                     * `min-w-0` is what lets the row shrink. Without it this
+                     * block's automatic minimum is its own content width, so
+                     * at 200% text on a 320px screen the title simply pushed
+                     * the 88px icon buttons past the right edge — the header
+                     * overflowed by 86px and the bell became unreachable.
+                     * A flex item only reflows once its minimum is released;
+                     * the icon slots above and below carry `shrink-0` so the
+                     * release lands on the text, which can wrap, rather than
+                     * on the controls, which cannot.
+                     */
+                    <div className="min-w-0 text-center">
+                        <h1 className={`${isCustomer ? 'text-base font-bold' : 'text-sm font-semibold'} text-text break-words ${titleClassName ?? ''}`}>{title}</h1>
+                        {subtitle && <div className="text-xs text-text-muted break-words">{subtitle}</div>}
                     </div>
                 ) : (
                     <div />
                 )}
 
-                {right ?? <div className="w-11" />}
+                <div className="shrink-0">{right ?? <div className="w-11" />}</div>
             </div>
             {below && (
                 <div className={`mx-auto ${isCustomer ? 'max-w-lg px-5 pb-3' : 'max-w-2xl px-4 pb-3 lg:max-w-4xl'}`}>
