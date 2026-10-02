@@ -38,7 +38,14 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-lg text-text-muted opacity-60 transition-all duration-150 hover:bg-surface-muted hover:opacity-100 focus:outline-none">
+      {/* h-11 w-11 is the app's icon-button size (DESIGN.md line 83 wants
+          44x44 on touch); at h-7 w-7 this was 28x28. `focus:outline-none` had
+          no replacement ring, which made it the only control in the repo whose
+          focused state was invisible — every other one pairs it with a
+          `focus:ring`. And `opacity-60` held the icon at 2.38:1 on a light
+          surface, under the 3:1 a UI component needs; it is a close button at
+          rest, not a disabled one. */}
+      <DialogPrimitive.Close className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
