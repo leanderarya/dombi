@@ -203,7 +203,7 @@ export default function OutletDeliveriesIndex({
                                                 <div className="mt-0.5 text-xs text-text-muted">
                                                     {order.customer_name}
                                                 </div>
-                                                <div className="mt-1 flex items-center gap-2 text-[11px] text-text-subtle">
+                                                <div className="mt-1 flex items-center gap-2 text-caption text-text-subtle">
                                                     {order.distance_km !=
                                                         null && (
                                                         <span>
@@ -290,7 +290,7 @@ export default function OutletDeliveriesIndex({
                                                         ? `· ${d.courier.name}`
                                                         : ''}
                                                 </div>
-                                                <div className="mt-1 text-[11px] text-text-subtle tabular-nums">
+                                                <div className="mt-1 text-caption text-text-subtle tabular-nums">
                                                     {d.delivery_age != null && (
                                                         <span
                                                             className={

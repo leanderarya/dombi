@@ -60,14 +60,14 @@ export default function SettlementShow({
             <OutletPageShell>
                 {/* Hero */}
                 <div className="rounded-xl border border-border bg-surface p-5">
-                    <div className="text-[11px] font-medium text-text-muted uppercase">
+                    <div className="text-caption font-medium text-text-muted uppercase">
                         {settlement.period_label}
                     </div>
                     <div className="mt-1 text-2xl font-bold text-text tabular-nums">
                         {formatCurrency(Math.abs(settlement.net_amount))}
                     </div>
                     <div
-                        className={`mt-1 text-[11px] font-semibold ${
+                        className={`mt-1 text-caption font-semibold ${
                             isOwnerPay ? 'text-success-text' : 'text-danger'
                         }`}
                     >
@@ -75,7 +75,7 @@ export default function SettlementShow({
                             ? 'Owner bayar ke outlet'
                             : 'Outlet bayar ke owner'}
                     </div>
-                    <div className="mt-2 text-[11px] text-text-subtle">
+                    <div className="mt-2 text-caption text-text-subtle">
                         Status:{' '}
                         <span className="font-semibold text-text">
                             {settlement.status}
@@ -144,7 +144,7 @@ export default function SettlementShow({
                                         <div className="truncate text-sm font-medium text-text">
                                             {s.product_name}
                                         </div>
-                                        <div className="text-[11px] text-text-subtle">
+                                        <div className="text-caption text-text-subtle">
                                             {s.quantity} ×{' '}
                                             {formatDate(s.created_at)} ·{' '}
                                             {METHOD_LABELS[s.payment_method] ??
@@ -185,7 +185,7 @@ export default function SettlementShow({
                                                     ? 'Diterima dari Owner'
                                                     : 'Disetor ke Owner'}
                                             </div>
-                                            <div className="text-[11px] text-text-subtle">
+                                            <div className="text-caption text-text-subtle">
                                                 {p.reference} ·{' '}
                                                 {formatDate(p.date)}
                                             </div>
@@ -210,7 +210,7 @@ export default function SettlementShow({
                         }`}
                     >
                         <div
-                            className={`text-[11px] font-semibold uppercase ${
+                            className={`text-caption font-semibold uppercase ${
                                 isOwnerPay
                                     ? 'text-success-border'
                                     : 'text-danger-text'

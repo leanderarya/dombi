@@ -244,7 +244,7 @@ export default function OutletOrderShow({
                     label={isDifferentRecipient(order) ? 'Pemesan' : 'Customer'}
                 >
                     {isDifferentRecipient(order) && (
-                        <div className="mb-3 inline-flex items-center gap-1.5 rounded-lg bg-danger-bg px-2.5 py-1 text-[11px] font-bold text-danger-text ring-1 ring-danger-border">
+                        <div className="mb-3 inline-flex items-center gap-1.5 rounded-lg bg-danger-bg px-2.5 py-1 text-caption font-bold text-danger-text ring-1 ring-danger-border">
                             <AlertTriangle className="h-3 w-3" />
                             Dikirim ke orang lain
                         </div>
@@ -295,7 +295,7 @@ export default function OutletOrderShow({
 
                     {isDifferentRecipient(order) && (
                         <div className="mt-3 border-t border-border pt-3">
-                            <div className="text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                            <div className="text-caption font-semibold tracking-wider text-text-muted uppercase">
                                 Penerima
                             </div>
                             <div className="mt-1.5 space-y-1.5 text-sm">
@@ -493,7 +493,7 @@ export default function OutletOrderShow({
                                             Alasan: {history.reason}
                                         </div>
                                     )}
-                                    <div className="text-[11px] text-text-subtle">
+                                    <div className="text-caption text-text-subtle">
                                         {new Date(
                                             history.created_at,
                                         ).toLocaleString('id-ID')}{' '}

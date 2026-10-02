@@ -103,7 +103,7 @@ export default function OutletReturnsIndex({
                                                 )}
                                             </span>
                                         </div>
-                                        <div className="mt-1 text-[11px] text-text-subtle">
+                                        <div className="mt-1 text-caption text-text-subtle">
                                             {formatDate(ret.created_at)}
                                         </div>
                                     </Link>

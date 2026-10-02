@@ -230,7 +230,7 @@ export default function OutletSettlement({
                             </div>
                         ) : (
                             <div className="rounded-xl border border-danger-border bg-danger-bg p-4">
-                                <div className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
+                                <div className="text-caption font-bold tracking-wider text-text-muted uppercase">
                                     Total Belum Disetor
                                 </div>
                                 <div className="mt-1 text-3xl font-bold text-danger tabular-nums">
@@ -268,10 +268,10 @@ export default function OutletSettlement({
                                                 key={account.id}
                                                 className="flex items-center gap-2 rounded-lg bg-danger-bg/50 px-3 py-2"
                                             >
-                                                <span className="text-[11px] font-bold text-danger-text">
+                                                <span className="text-caption font-bold text-danger-text">
                                                     {account.bank_name}
                                                 </span>
-                                                <span className="text-[11px] text-danger-text">
+                                                <span className="text-caption text-danger-text">
                                                     {account.account_number}
                                                 </span>
                                                 <span className="text-caption text-danger">
@@ -346,10 +346,10 @@ export default function OutletSettlement({
                                             key={account.id}
                                             className="flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2"
                                         >
-                                            <span className="text-[11px] font-bold text-text">
+                                            <span className="text-caption font-bold text-text">
                                                 {account.bank_name}
                                             </span>
-                                            <span className="text-[11px] text-text-muted">
+                                            <span className="text-caption text-text-muted">
                                                 {account.account_number}
                                             </span>
                                             <span className="text-caption text-text-subtle">
@@ -470,7 +470,7 @@ export default function OutletSettlement({
                                                             payment.amount,
                                                         )}
                                                     </div>
-                                                    <div className="text-[11px] text-text-subtle">
+                                                    <div className="text-caption text-text-subtle">
                                                         {formatDate(
                                                             payment.payment_date,
                                                         )}
@@ -495,7 +495,7 @@ export default function OutletSettlement({
                                                     }
                                                 </StatusBadge>
                                             </div>
-                                            <div className="mt-2 text-[11px] font-medium text-primary">
+                                            <div className="mt-2 text-caption font-medium text-primary">
                                                 Lihat Detail →
                                             </div>
                                         </button>
@@ -546,7 +546,7 @@ export default function OutletSettlement({
                                         accent
                                     />
                                     <div className="border-t border-border pt-2">
-                                        <div className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
+                                        <div className="text-caption font-bold tracking-wider text-text-muted uppercase">
                                             Rincian Net Settlement
                                         </div>
                                     </div>
@@ -750,7 +750,7 @@ function TimelineItem({
                             >
                                 {statusLabel}
                             </span>
-                            <span className="text-[11px] text-text-subtle">
+                            <span className="text-caption text-text-subtle">
                                 Jatuh tempo: {formatDate(entry.due_date)}
                             </span>
                         </div>
@@ -760,12 +760,12 @@ function TimelineItem({
                             {formatCurrency(entry.amount)}
                         </div>
                         {entry.direction === 'owner_pays_outlet' && (
-                            <div className="text-[11px] font-medium text-success-text tabular-nums">
+                            <div className="text-caption font-medium text-success-text tabular-nums">
                                 Owner bayar
                             </div>
                         )}
                         {entry.outstanding > 0 && (
-                            <div className="text-[11px] font-medium text-danger tabular-nums">
+                            <div className="text-caption font-medium text-danger tabular-nums">
                                 Sisa: {formatCurrency(entry.outstanding)}
                             </div>
                         )}
@@ -823,7 +823,7 @@ function PaymentSheet({
             <form onSubmit={handleSubmit} className="space-y-4">
                 {outstanding > 0 && (
                     <div className="rounded-xl bg-surface-muted p-3 text-center">
-                        <div className="text-[11px] font-medium text-text-muted">
+                        <div className="text-caption font-medium text-text-muted">
                             Belum Disetor
                         </div>
                         <div className="mt-0.5 text-lg font-bold text-text">
@@ -1021,7 +1021,7 @@ function PaymentDetailSheet({
 
                     {payment.notes && (
                         <div className="rounded-xl border border-border p-3 text-sm text-text-muted">
-                            <div className="text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                            <div className="text-caption font-semibold tracking-wider text-text-muted uppercase">
                                 Catatan
                             </div>
                             <p className="mt-1">{payment.notes}</p>
@@ -1030,7 +1030,7 @@ function PaymentDetailSheet({
 
                     {payment.rejection_reason && (
                         <div className="rounded-xl bg-danger-bg p-3 text-sm text-danger-text">
-                            <div className="text-[11px] font-semibold tracking-wider text-danger uppercase">
+                            <div className="text-caption font-semibold tracking-wider text-danger uppercase">
                                 Alasan Ditolak
                             </div>
                             <p className="mt-1">{payment.rejection_reason}</p>

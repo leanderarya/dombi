@@ -103,7 +103,7 @@ export default function OutletExchangesIndex({ exchanges, filters }: any) {
                                                 )}
                                             </span>
                                         </div>
-                                        <div className="mt-1 text-[11px] text-text-subtle">
+                                        <div className="mt-1 text-caption text-text-subtle">
                                             {formatDate(ex.created_at)}
                                         </div>
                                     </Link>

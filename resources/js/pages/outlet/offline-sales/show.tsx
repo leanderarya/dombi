@@ -29,7 +29,7 @@ export default function OfflineSaleShow({ sale, outlet, week }: any) {
             <OutletPageShell>
                 {/* Hero: total sale */}
                 <div className="rounded-xl border border-border bg-surface p-5">
-                    <div className="text-[11px] font-medium text-text-muted uppercase">
+                    <div className="text-caption font-medium text-text-muted uppercase">
                         Total Penjualan Offline
                     </div>
                     <div className="mt-1 text-2xl font-bold text-text tabular-nums">
@@ -81,7 +81,7 @@ export default function OfflineSaleShow({ sale, outlet, week }: any) {
                             </div>
                         </div>
                         {week.start && (
-                            <div className="mt-2 text-[11px] text-text-subtle">
+                            <div className="mt-2 text-caption text-text-subtle">
                                 Pekan {formatDate(week.start)} –{' '}
                                 {formatDate(week.end)}
                             </div>

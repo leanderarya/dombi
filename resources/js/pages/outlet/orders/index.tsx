@@ -205,7 +205,7 @@ export default function OutletOrdersIndex({
                                                     <span className="text-sm font-bold text-text tabular-nums">
                                                         {order.order_code}
                                                     </span>
-                                                    <span className="text-[11px] text-text-subtle">
+                                                    <span className="text-caption text-text-subtle">
                                                         {order.fulfillment_type ===
                                                         'pickup'
                                                             ? 'Pickup'
@@ -217,7 +217,7 @@ export default function OutletOrdersIndex({
                                                         />
                                                     )}
                                                 </div>
-                                                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-text-muted">
+                                                <span className="inline-flex items-center gap-1.5 text-caption font-medium text-text-muted">
                                                     <span
                                                         className={`h-1.5 w-1.5 rounded-full ${dotColor}`}
                                                     />

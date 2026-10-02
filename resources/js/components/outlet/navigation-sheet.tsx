@@ -168,7 +168,7 @@ export default function OutletNavigationSheet({
                     </div>
                 )}
                 {userName && (
-                    <div className="text-[11px] text-text-subtle">
+                    <div className="text-caption text-text-subtle">
                         Selamat datang, {userName}
                     </div>
                 )}
@@ -181,7 +181,7 @@ export default function OutletNavigationSheet({
                         key={group.label}
                         className={groupIndex > 0 ? 'mt-3' : ''}
                     >
-                        <div className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                        <div className="px-3 pb-1 text-caption font-semibold tracking-wider text-text-muted uppercase">
                             {group.label}
                         </div>
                         <div className="space-y-0.5">

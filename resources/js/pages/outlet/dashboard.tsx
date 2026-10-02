@@ -111,7 +111,7 @@ export default function OutletDashboard({
                                 {stats.pendingOrders > 0 && (
                                     <Link
                                         href="/outlet/orders?status=pending_confirmation"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-[11px] font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
                                     >
                                         <span className="h-1.5 w-1.5 rounded-full bg-warning" />
                                         {stats.pendingOrders} Baru
@@ -120,7 +120,7 @@ export default function OutletDashboard({
                                 {deliveryStats.needsDispatch > 0 && (
                                     <Link
                                         href="/outlet/deliveries"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-[11px] font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
                                     >
                                         <span className="h-1.5 w-1.5 rounded-full bg-info" />
                                         {deliveryStats.needsDispatch} Dikirim
@@ -129,7 +129,7 @@ export default function OutletDashboard({
                                 {deliveryStats.failed > 0 && (
                                     <Link
                                         href="/outlet/deliveries?status=failed"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-[11px] font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
                                     >
                                         <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                                         {deliveryStats.failed} Gagal
@@ -138,7 +138,7 @@ export default function OutletDashboard({
                                 {lowStockItems.length > 0 && (
                                     <Link
                                         href="/outlet/inventory"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-[11px] font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-surface/70 px-2.5 py-1.5 text-caption font-semibold text-text pointer-coarse:min-h-11 active:opacity-80"
                                     >
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent-orange" />
                                         {lowStockItems.length} Stok Rendah
@@ -147,7 +147,7 @@ export default function OutletDashboard({
                                 {(stats.expiredToday ?? 0) > 0 && (
                                     <Link
                                         href="/outlet/orders?tab=riwayat&status=expired"
-                                        className="inline-flex items-center gap-1.5 rounded-lg bg-danger-bg/80 px-2.5 py-1.5 text-[11px] font-semibold text-danger-text pointer-coarse:min-h-11 active:opacity-80"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-danger-bg/80 px-2.5 py-1.5 text-caption font-semibold text-danger-text pointer-coarse:min-h-11 active:opacity-80"
                                     >
                                         <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                                         {stats.expiredToday} Kadaluarsa
@@ -179,7 +179,7 @@ export default function OutletDashboard({
                                     <div className="rounded-xl border border-danger-border bg-danger-bg p-4">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <div className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
+                                                <div className="text-caption font-bold tracking-wider text-text-muted uppercase">
                                                     Belum Disetor
                                                 </div>
                                                 <div className="mt-1 text-2xl font-bold text-danger tabular-nums">
@@ -192,7 +192,7 @@ export default function OutletDashboard({
                                                 <DollarSign className="h-5 w-5 text-danger" />
                                             </div>
                                         </div>
-                                        <div className="mt-2 flex items-center gap-1 text-[11px] font-medium text-danger-text">
+                                        <div className="mt-2 flex items-center gap-1 text-caption font-medium text-danger-text">
                                             <span>
                                                 Ketuk untuk lihat detail & bayar
                                             </span>
@@ -203,7 +203,7 @@ export default function OutletDashboard({
                                     /* All paid — subtle green indicator */
                                     <div className="flex items-center justify-between rounded-xl border border-success-border bg-success-bg p-4">
                                         <div>
-                                            <div className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
+                                            <div className="text-caption font-bold tracking-wider text-text-muted uppercase">
                                                 Settlement
                                             </div>
                                             <div className="mt-0.5 text-sm font-semibold text-success-border">
@@ -213,7 +213,7 @@ export default function OutletDashboard({
                                         <div className="flex items-center gap-3">
                                             {settlementStats.margin > 0 && (
                                                 <div className="text-right">
-                                                    <div className="text-[11px] text-text-subtle">
+                                                    <div className="text-caption text-text-subtle">
                                                         Margin
                                                     </div>
                                                     <div className="text-sm font-bold text-success-border tabular-nums">
@@ -312,7 +312,7 @@ export default function OutletDashboard({
                                 </h2>
                                 <Link
                                     href="/outlet/inventory"
-                                    className="flex min-h-11 items-center text-[11px] font-semibold text-primary"
+                                    className="flex min-h-11 items-center text-caption font-semibold text-primary"
                                 >
                                     Lihat Semua
                                 </Link>
@@ -327,7 +327,7 @@ export default function OutletDashboard({
                                             <div className="truncate text-sm font-medium text-text">
                                                 {item.product?.name}
                                             </div>
-                                            <div className="text-[11px] text-text-subtle">
+                                            <div className="text-caption text-text-subtle">
                                                 Tersedia:{' '}
                                                 {item.current_stock -
                                                     item.reserved_stock}{' '}

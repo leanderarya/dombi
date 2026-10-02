@@ -130,7 +130,7 @@ export default function OutletAnalytics({
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="rounded-xl border border-border bg-surface p-4">
-                                <div className="text-[11px] font-medium text-text-muted">
+                                <div className="text-caption font-medium text-text-muted">
                                     Total Pendapatan
                                 </div>
                                 <div className="mt-1 text-lg font-bold text-text tabular-nums">
@@ -138,7 +138,7 @@ export default function OutletAnalytics({
                                 </div>
                             </div>
                             <div className="rounded-xl border border-border bg-surface p-4">
-                                <div className="text-[11px] font-medium text-text-muted">
+                                <div className="text-caption font-medium text-text-muted">
                                     Total Pesanan
                                 </div>
                                 <div className="mt-1 text-lg font-bold text-text tabular-nums">
@@ -146,7 +146,7 @@ export default function OutletAnalytics({
                                 </div>
                             </div>
                             <div className="rounded-xl border border-border bg-surface p-4">
-                                <div className="text-[11px] font-medium text-text-muted">
+                                <div className="text-caption font-medium text-text-muted">
                                     Rata-rata per Pesanan
                                 </div>
                                 <div className="mt-1 text-lg font-bold text-text tabular-nums">
@@ -156,7 +156,7 @@ export default function OutletAnalytics({
                         </div>
 
                         <div className="rounded-xl border border-border bg-surface p-4">
-                            <div className="mb-3 text-[11px] font-bold tracking-wider text-text-muted uppercase">
+                            <div className="mb-3 text-caption font-bold tracking-wider text-text-muted uppercase">
                                 Produk Terlaris
                             </div>
                             <div className="w-full" style={{ height: 220 }}>
@@ -165,7 +165,7 @@ export default function OutletAnalytics({
                         </div>
 
                         <div className="rounded-xl border border-border bg-surface p-4">
-                            <div className="mb-3 text-[11px] font-bold tracking-wider text-text-muted uppercase">
+                            <div className="mb-3 text-caption font-bold tracking-wider text-text-muted uppercase">
                                 Trend Revenue
                             </div>
                             <div className="w-full" style={{ height: 220 }}>

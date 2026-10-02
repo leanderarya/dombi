@@ -215,7 +215,7 @@ export default function OutletInventory({
                                     <h2 className="text-xs font-semibold tracking-wider text-text-muted uppercase">
                                         Stok Kritis
                                     </h2>
-                                    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
+                                    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-caption font-bold text-text-muted">
                                         {filteredCriticalFamilies.length}
                                     </span>
                                 </div>
@@ -243,7 +243,7 @@ export default function OutletInventory({
                                     <h2 className="text-xs font-semibold tracking-wider text-text-muted uppercase">
                                         Stok Rendah
                                     </h2>
-                                    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
+                                    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-caption font-bold text-text-muted">
                                         {filteredLowStockFamilies.length}
                                     </span>
                                 </div>
@@ -340,7 +340,7 @@ export default function OutletInventory({
                                 labelRight={
                                     <Link
                                         href="/outlet/restocks"
-                                        className="text-[11px] font-semibold text-primary"
+                                        className="text-caption font-semibold text-primary"
                                     >
                                         Lihat Semua →
                                     </Link>
@@ -364,7 +364,7 @@ export default function OutletInventory({
                                                             status={r.status}
                                                         />
                                                     </div>
-                                                    <div className="mt-0.5 text-[11px] text-text-subtle">
+                                                    <div className="mt-0.5 text-caption text-text-subtle">
                                                         {new Date(
                                                             r.created_at,
                                                         ).toLocaleDateString(
@@ -575,7 +575,7 @@ function SummaryCell({
                     {value}
                 </div>
             </div>
-            <div className="text-[11px] font-medium text-text-subtle">
+            <div className="text-caption font-medium text-text-subtle">
                 {label}
             </div>
         </div>
@@ -619,7 +619,7 @@ function InventoryRow({
                                   : 'Sehat'}
                         </StatusBadge>
                     </div>
-                    <div className="mt-0.5 flex items-center gap-2 text-[11px] text-text-subtle">
+                    <div className="mt-0.5 flex items-center gap-2 text-caption text-text-subtle">
                         <span>
                             Tersedia: {available} · Min: {item.minimum_stock}
                         </span>
@@ -720,13 +720,13 @@ function OpnameSheet({
         >
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <span className="text-[11px] font-medium text-text-subtle">
+                    <span className="text-caption font-medium text-text-subtle">
                         Produk
                     </span>
                     <p className="text-sm font-semibold text-text">
                         {displayName}
                     </p>
-                    <p className="text-[11px] text-text-subtle">
+                    <p className="text-caption text-text-subtle">
                         Stok sistem: {item.current_stock}
                     </p>
                 </div>
@@ -734,7 +734,7 @@ function OpnameSheet({
                 <div>
                     <label
                         htmlFor="opname-actual-count"
-                        className="mb-1 block text-[11px] font-medium text-text-subtle"
+                        className="mb-1 block text-caption font-medium text-text-subtle"
                     >
                         Jumlah Aktual
                     </label>
@@ -761,7 +761,7 @@ function OpnameSheet({
                 <div>
                     <label
                         htmlFor="opname-notes"
-                        className="mb-1 block text-[11px] font-medium text-text-subtle"
+                        className="mb-1 block text-caption font-medium text-text-subtle"
                     >
                         Catatan (opsional)
                     </label>
