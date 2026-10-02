@@ -212,7 +212,12 @@ export default function CheckoutIndex({
                                     onRemove={() => removeItem(item.product_id)}
                                 />
                             ))}
-                            <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                            {/*
+                                `flex-wrap`: at 200% text the `text-2xl` total
+                                grows past the row and pushed the document to
+                                439px on a 390px viewport.
+                            */}
+                            <div className="mt-3 flex flex-wrap items-center justify-between gap-y-1 border-t border-border pt-3">
                                 <span className="text-sm text-text-muted">
                                     {itemCount} item
                                 </span>
@@ -242,7 +247,7 @@ export default function CheckoutIndex({
                                 type="button"
                                 variant="ghost"
                                 onClick={() => saveFulfillment('pickup')}
-                                className={`relative z-10 h-auto min-h-0 flex-1 rounded-chip py-2.5 text-xs font-semibold transition-colors duration-300 ${
+                                className={`relative z-10 h-auto min-h-0 min-w-0 flex-1 rounded-chip py-2.5 text-xs font-semibold whitespace-normal transition-colors duration-300 ${
                                     fulfillmentType === 'pickup'
                                         ? 'text-text'
                                         : 'text-text-muted'
@@ -263,7 +268,7 @@ export default function CheckoutIndex({
                                         return;
                                     }
                                 }}
-                                className={`relative z-10 h-auto min-h-0 flex-1 rounded-chip py-2.5 text-xs font-semibold transition-colors duration-300 ${
+                                className={`relative z-10 h-auto min-h-0 min-w-0 flex-1 rounded-chip py-2.5 text-xs font-semibold whitespace-normal transition-colors duration-300 ${
                                     fulfillmentType === 'delivery_dombi'
                                         ? 'text-text'
                                         : 'text-text-muted'

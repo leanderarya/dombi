@@ -829,7 +829,18 @@ function StickyCTA({
                     variant="primary"
                     onClick={onAdd}
                     disabled={adding || isOutOfStock || isOutletClosed || added}
-                    className="h-auto w-full gap-2 rounded-thumb py-3.5 text-sm font-bold shadow-sm transition-all duration-200 active:opacity-80 disabled:opacity-60"
+                    /*
+                     * `flex-wrap` is the whole fix for this bar at 200% text.
+                     * The label, the middot and the price are three children in
+                     * a 326px client box whose combined intrinsic width is
+                     * 401px, so the price ran to right=433 on a 390px viewport.
+                     * Because the bar is `position: fixed`, that overflow never
+                     * reaches the document's scrollable region: `window.scrollTo
+                     * ({ left: 9999 })` moves nothing and the price is
+                     * unreachable by any gesture. Wrapping drops the price to
+                     * its own line instead; measured right=279 after.
+                     */
+                    className="h-auto w-full flex-wrap gap-2 rounded-thumb py-3.5 text-sm font-bold shadow-sm transition-all duration-200 active:opacity-80 disabled:opacity-60"
                 >
                     {isOutletClosed ? (
                         <span className="flex items-center gap-1.5">
