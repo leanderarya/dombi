@@ -1,4 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { useFlashToast } from '@/hooks/use-flash-toast';
 
 interface Props {
     auth?: {
@@ -27,6 +28,11 @@ const roleDashboards: Record<string, string> = {
 
 export default function Login({ auth }: Props) {
     const user = auth?.user;
+    // Every authenticated surface drains the flash channel through its layout;
+    // login has no layout, so this is the only place a throttled sign-in can
+    // reach the user. See the ThrottleRequestsException renderable in
+    // bootstrap/app.php.
+    useFlashToast();
     const form = useForm({
         email: '',
         phone: '',
