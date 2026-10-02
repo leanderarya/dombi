@@ -41,7 +41,7 @@ export default function CourierProfile() {
             </div>
 
             {/* Version */}
-            <div className="text-center text-[11px] text-text-subtle">
+            <div className="text-center text-caption text-text-subtle">
                 Dombi v{appVersion ?? '1.0.0'}
             </div>
         </CourierLayout>

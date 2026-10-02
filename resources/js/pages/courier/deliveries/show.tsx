@@ -451,7 +451,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                         <details className="group rounded-xl border border-border bg-surface">
                             <summary className="flex cursor-pointer items-center justify-between p-4 active:opacity-80">
                                 <div>
-                                    <div className="text-[11px] font-bold tracking-wider text-text-muted uppercase">
+                                    <div className="text-caption font-bold tracking-wider text-text-muted uppercase">
                                         Status Pengiriman
                                     </div>
                                     <div className="mt-1 text-sm font-medium text-text">

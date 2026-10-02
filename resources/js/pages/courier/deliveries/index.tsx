@@ -124,7 +124,7 @@ export default function CourierDeliveriesIndex({
                                 <div className="text-lg font-bold text-text">
                                     {routeSummary.stops}
                                 </div>
-                                <div className="text-[11px] text-text-muted">
+                                <div className="text-caption text-text-muted">
                                     Stops
                                 </div>
                             </div>
@@ -133,7 +133,7 @@ export default function CourierDeliveriesIndex({
                                 <div className="text-lg font-bold text-text">
                                     {routeSummary.total_distance_km}
                                 </div>
-                                <div className="text-[11px] text-text-muted">
+                                <div className="text-caption text-text-muted">
                                     KM
                                 </div>
                             </div>
@@ -142,7 +142,7 @@ export default function CourierDeliveriesIndex({
                                 <div className="text-lg font-bold text-text">
                                     {routeSummary.estimated_minutes}
                                 </div>
-                                <div className="text-[11px] text-text-muted">
+                                <div className="text-caption text-text-muted">
                                     Menit
                                 </div>
                             </div>
