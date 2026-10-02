@@ -21,7 +21,7 @@ export default function ChangePassword({
                 }}
                 className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-4"
             >
-                <p className="text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+                <p className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
                     Operational Access
                 </p>
                 <h1 className="mt-1 text-2xl font-semibold text-slate-900">
