@@ -72,9 +72,13 @@ export default function CourierLayout({
             <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3 lg:max-w-4xl">
                 <div className="flex min-w-0 items-center gap-3">
                     {backHref ? (
+                        /* `shrink-0` holds the 44px target: without it the
+                           flex row squeezed this link to 34x44 at 320px and
+                           42x44 at 360px, while the two icon siblings beside
+                           it stayed at 44 because they already had it. */
                         <Link
                             href={backHref}
-                            className="flex h-11 w-11 items-center justify-center rounded-lg text-white active:bg-white/20"
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white active:bg-white/20"
                             aria-label="Kembali"
                         >
                             <ChevronLeft className="h-5 w-5" />
