@@ -94,7 +94,7 @@ export default function OutletOrdersIndex({
                         <button
                             onClick={() => handleTabChange('aktif')}
                             aria-pressed={isAktif}
-                            className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
+                            className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center pointer-coarse:justify-center ${
                                 isAktif
                                     ? 'bg-surface text-text shadow-sm'
                                     : 'text-text-muted'
@@ -105,7 +105,7 @@ export default function OutletOrdersIndex({
                         <button
                             onClick={() => handleTabChange('riwayat')}
                             aria-pressed={!isAktif}
-                            className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${
+                            className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center pointer-coarse:justify-center ${
                                 !isAktif
                                     ? 'bg-surface text-text shadow-sm'
                                     : 'text-text-muted'
