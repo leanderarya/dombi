@@ -41,7 +41,12 @@ const sizeStyles = {
        byte-identical: it is pinned to the customer kanvas frame and D8 keeps
        that surface consistency-only. */
     sm: 'pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center px-3.5 py-1.5 text-xs',
-    md: 'px-4 py-2 text-xs',
+    /* `md` + `solid` is the default pairing, so it reaches the outlet and
+       courier status rows too — ten call sites between them, measured at
+       34px tall on a touch device. It carried the same defect `sm` was fixed
+       for and simply missed the sweep; the guard is identical so both sizes
+       stay one rule apart. */
+    md: 'pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center px-4 py-2 text-xs',
     /* `leading-tight` keeps the pill at the kanvas height (8/8 padding + 11px
        label) — the inherited 1.5 line-height made it several px taller. */
     caption: 'px-3.5 py-2 text-caption leading-tight',
