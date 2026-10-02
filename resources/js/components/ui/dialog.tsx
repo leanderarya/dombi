@@ -58,8 +58,30 @@ const DialogHeader = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
+  /*
+   * The close button is absolutely positioned at right-4 and is 44px wide, so
+   * it owns a 60px band down the right edge of the dialog — 36px of which
+   * lands inside the p-6 content box. A centred title with nothing reserved
+   * flows straight under it: at 320px, 6 of the 58 real dialog titles put ink
+   * under the close icon, the worst overhanging it by 20px. That count was 5
+   * before the button was widened from 28px, so the touch-target fix
+   * introduced the sixth.
+   *
+   * Reserving the band is the fix that does not depend on any one title's
+   * length. 56px of padding-right caps every line's right edge 20px clear of
+   * the button itself, and 34px clear of the icon, so no title can reach it
+   * however long it grows — the guard test below holds the arithmetic.
+   *
+   * The cost is that a centred title now sits 28px left of the dialog's
+   * centre line, because the padding is on one side only. The alternative —
+   * symmetric padding, which preserves the centre — leaves 128px of line
+   * width at 320px and wraps these titles onto a third line, which is the
+   * more visible of the two problems. Reserved on the right only, and the
+   * shift reads as the title centring beside the close control, which is what
+   * it is actually doing.
+   */
   <div
-    className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)}
+    className={cn("flex flex-col space-y-1.5 pr-14 text-center sm:text-left", className)}
     {...props}
   />
 )
