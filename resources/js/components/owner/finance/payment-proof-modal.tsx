@@ -38,9 +38,10 @@ export default function PaymentProofModal({ open, onClose, imageUrl }: Props) {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-text-subtle hover:bg-surface-muted hover:text-text-muted"
+                            aria-label="Tutup"
+                            className="flex h-11 w-11 items-center justify-center rounded-full text-text-subtle hover:bg-surface-muted hover:text-text-muted"
                         >
-                            <X className="h-4 w-4" />
+                            <X className="h-4 w-4" aria-hidden="true" />
                         </button>
                     </div>
                 </div>

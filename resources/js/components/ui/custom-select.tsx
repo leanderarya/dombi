@@ -167,30 +167,70 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
             )}
 
             {/* Trigger */}
-            <button
-                ref={triggerRef}
-                type="button"
-                onClick={() => setOpen(!open)}
-                aria-haspopup="listbox"
-                aria-expanded={open}
-                aria-labelledby={label ? labelId : undefined}
-                aria-controls={open ? listboxId : undefined}
-                className={cn(
-                    'flex min-h-11 w-full items-center justify-between rounded-control border px-4 py-3 text-left transition-colors',
-                    open ? 'border-primary ring-1 ring-primary/20' : 'border-border',
-                    selected ? 'text-text' : 'text-text-muted',
-                )}
-            >
-                <span className="truncate text-sm font-medium">{selected?.label ?? placeholder}</span>
-                <div className="flex items-center gap-1.5">
-                    {selected && (
-                        <span onClick={handleClear} className="rounded p-0.5 text-text-subtle hover:text-text-muted">
-                            <X className="h-4 w-4" />
-                        </span>
+            {/*
+              The clear affordance used to be a bare <span onClick> nested
+              inside this <button>: not focusable, so a keyboard user could
+              not reach it at all; not a button, so it carried no role or
+              name; and nested inside the trigger, so it was also the only
+              control in the repo whose click had to be caught by
+              stopPropagation to avoid toggling the dropdown it sits in.
+
+              It is now a real button. It stays absolutely positioned over the
+              trigger's right edge — making it a flex sibling would move the
+              chevron when a value is selected — and the trigger reserves its
+              space from the inside instead: see the label's margin below.
+            */}
+            <div className="relative">
+                <button
+                    ref={triggerRef}
+                    type="button"
+                    onClick={() => setOpen(!open)}
+                    aria-haspopup="listbox"
+                    aria-expanded={open}
+                    aria-labelledby={label ? labelId : undefined}
+                    aria-controls={open ? listboxId : undefined}
+                    className={cn(
+                        // Padding stays constant whether or not a value is
+                        // selected: the clear button is absolutely positioned
+                        // over the right edge, so reserving its space must not
+                        // move the chevron. See the label's margin below.
+                        'flex min-h-11 w-full items-center gap-1.5 rounded-control border px-4 py-3 text-left transition-colors',
+                        open ? 'border-primary ring-1 ring-primary/20' : 'border-border',
+                        selected ? 'text-text' : 'text-text-muted',
                     )}
-                    <ChevronDown className={cn('h-5 w-5 text-text-subtle transition-transform', open && 'rotate-180')} />
-                </div>
-            </button>
+                >
+                    {/*
+                      The clear button is absolutely positioned over the
+                      trigger's right edge, so the label has to stop short of
+                      it. Reserving that space with the label's own margin —
+                      not with container padding — keeps the trigger's padding
+                      constant, so the chevron never moves when a value is
+                      selected. Measured from the right edge: pr-4 (16) +
+                      chevron (20) + gap-1.5 (6) + mr-12 (48) = 90, which
+                      clears the button's left edge at right-10 + w-11 = 84
+                      by 6px.
+                    */}
+                    <span
+                        className={cn(
+                            'min-w-0 flex-1 truncate text-sm font-medium',
+                            selected && 'mr-12',
+                        )}
+                    >
+                        {selected?.label ?? placeholder}
+                    </span>
+                    <ChevronDown className={cn('h-5 w-5 shrink-0 text-text-subtle transition-transform', open && 'rotate-180')} />
+                </button>
+                {selected && (
+                    <button
+                        type="button"
+                        onClick={handleClear}
+                        aria-label="Kosongkan pilihan"
+                        className="absolute top-1/2 right-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-text-subtle transition-colors hover:text-text-muted"
+                    >
+                        <X className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                )}
+            </div>
 
             {createPortal(dropdown, document.body)}
         </div>

@@ -1348,9 +1348,13 @@ export default function ProductForm({
                                                             }
                                                             variant="ghost"
                                                             size="icon"
+                                                            aria-label={`Hapus baris ukuran ${i + 1}`}
                                                             className="h-11 w-11 text-text-muted"
                                                         >
-                                                            <X className="h-3.5 w-3.5" />
+                                                            <X
+                                                                className="h-3.5 w-3.5"
+                                                                aria-hidden="true"
+                                                            />
                                                         </Button>
                                                     )}
                                                 </td>

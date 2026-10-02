@@ -154,9 +154,10 @@ export default function ReturnCreateDialog({
                         onClick={onClose}
                         variant="ghost"
                         size="icon"
+                        aria-label="Tutup"
                         className="h-11 w-11 active:opacity-80"
                     >
-                        <X className="h-4 w-4" />
+                        <X className="h-4 w-4" aria-hidden="true" />
                     </Button>
                 </div>
 

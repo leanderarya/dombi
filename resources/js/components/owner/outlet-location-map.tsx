@@ -511,9 +511,10 @@ function MapSearchBox({
                     <button
                         type="button"
                         onClick={handleClear}
-                        className="text-text-subtle hover:text-text-muted"
+                        aria-label="Kosongkan pencarian"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center text-text-subtle hover:text-text-muted"
                     >
-                        <X className="h-4 w-4" />
+                        <X className="h-4 w-4" aria-hidden="true" />
                     </button>
                 )}
                 {loading && (
