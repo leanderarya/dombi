@@ -136,13 +136,13 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                             value={formatDate(delivery.delivered_time)}
                         />
                         {delivery.failed_reason && (
-                            <div className="mt-2 rounded-md bg-danger p-2 text-sm text-danger-text">
+                            <div className="mt-2 rounded-md bg-danger-bg p-2 text-sm text-danger-text">
                                 <strong>Alasan gagal:</strong>{' '}
                                 {delivery.failed_reason}
                             </div>
                         )}
                         {delivery.resolution_status && (
-                            <div className="mt-2 rounded-md bg-warning p-2 text-sm text-warning-text">
+                            <div className="mt-2 rounded-md bg-warning-bg p-2 text-sm text-warning-text">
                                 <strong>Resolusi:</strong>{' '}
                                 {delivery.resolution_status.replaceAll(
                                     '_',

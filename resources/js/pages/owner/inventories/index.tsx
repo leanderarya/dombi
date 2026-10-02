@@ -864,7 +864,7 @@ export default function InventoriesIndex({
                                                                                                 {(isCritical ||
                                                                                                     isLow) &&
                                                                                                     (reminded ? (
-                                                                                                        <span className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-xs font-semibold text-success-text">
+                                                                                                        <span className="inline-flex items-center gap-1 rounded-md bg-success-bg px-2 py-1 text-xs font-semibold text-success-text">
                                                                                                             <Check className="h-3 w-3" />{' '}
                                                                                                             Terkirim
                                                                                                         </span>

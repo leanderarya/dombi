@@ -142,9 +142,16 @@ export default function CourierShow({
                         onClick={handleToggleActive}
                         className={cn(
                             'min-h-11',
+                            // The hover fill was `bg-primary` under
+                            // `text-success-text`: on the owner role
+                            // `--color-primary` is emerald-800, so hovering
+                            // the button dropped its own label to 1.40:1 —
+                            // the moment you press it is the moment you stop
+                            // being able to read it. The success wash is what
+                            // the resting colour belongs to.
                             courier.is_active
                                 ? 'border-danger-border text-danger hover:bg-danger'
-                                : 'border-success-border text-success-text hover:bg-primary',
+                                : 'border-success-border text-success-text hover:bg-success-bg',
                         )}
                     >
                         {courier.is_active ? 'Nonaktifkan' : 'Aktifkan'}

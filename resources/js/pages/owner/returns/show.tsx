@@ -301,8 +301,8 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                         <span
                                                             className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
                                                                 isStored
-                                                                    ? 'bg-primary text-success-text ring-1 ring-success-border'
-                                                                    : 'bg-danger text-danger-text ring-1 ring-danger-border'
+                                                                    ? 'bg-success-bg text-success-text ring-1 ring-success-border'
+                                                                    : 'bg-danger-bg text-danger-text ring-1 ring-danger-border'
                                                             }`}
                                                         >
                                                             {isStored
@@ -364,7 +364,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                                     },
                                                                 );
                                                             }}
-                                                            className="rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-success-text ring-1 ring-success-border transition-colors hover:bg-success-bg"
+                                                            className="rounded-md bg-primary px-2.5 py-1.5 text-xs font-semibold text-white ring-1 ring-success-border transition-colors hover:bg-primary-hover"
                                                         >
                                                             Simpan
                                                         </button>
@@ -392,7 +392,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                                     },
                                                                 );
                                                             }}
-                                                            className="rounded-md bg-danger px-2.5 py-1.5 text-xs font-semibold text-danger-text ring-1 ring-danger-border transition-colors hover:bg-danger-bg"
+                                                            className="rounded-md bg-danger px-2.5 py-1.5 text-xs font-semibold text-white ring-1 ring-danger-border transition-colors hover:bg-danger/90"
                                                         >
                                                             Buang
                                                         </button>

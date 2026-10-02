@@ -219,7 +219,7 @@ export default function CentralStockTab({
                         key={f.key}
                         type="button"
                         onClick={() => setStockFilter(f.key)}
-                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${stockFilter === f.key ? 'bg-primary text-success-text ring-success-border' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${stockFilter === f.key ? 'bg-success-bg text-success-text ring-success-border' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
                     >
                         {f.label}
                     </button>
