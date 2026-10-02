@@ -60,11 +60,13 @@ export default function TopProductsChart({ data }: TopProductsChartProps) {
     return (
         <ResponsiveContainer width="100%" height={220}>
             {/* Names the SVG in the accessibility tree; same reasoning as
-                RevenueTrendChart — see the comment there. */}
+                RevenueTrendChart — see the comment there. `desc` fills the
+                <desc> recharts renders empty beside the <title>. */}
             <BarChart
                 layout="vertical"
                 data={data}
                 title="Produk Terlaris"
+                desc={`Grafik batang horizontal, ${data.length} produk teratas menurut jumlah terjual.`}
                 margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
             >
                 <XAxis

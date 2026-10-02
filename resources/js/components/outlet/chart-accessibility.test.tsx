@@ -87,6 +87,24 @@ describe('outlet chart accessible names', () => {
         expect(svg.querySelector('title')?.textContent).toBe('Produk Terlaris');
     });
 
+    // Recharts always renders an empty <desc> next to the <title>, so the
+    // description has to be supplied or the element ships with a blank one.
+    // These also fail if the count stops tracking the data, which is the part
+    // a screen reader actually reads out.
+    it('describes the revenue chart including its point count', () => {
+        const svg = render(<RevenueTrendChart data={revenue} />);
+
+        expect(svg.querySelector('desc')?.textContent).toContain(
+            '2 titik data',
+        );
+    });
+
+    it('describes the top-products chart including its bar count', () => {
+        const svg = render(<TopProductsChart data={products} />);
+
+        expect(svg.querySelector('desc')?.textContent).toContain('1 produk');
+    });
+
     // The tab stop itself is the library's; keeping it is deliberate. If a
     // future recharts flips the default, this fails loudly rather than the
     // accessible name quietly becoming dead weight.

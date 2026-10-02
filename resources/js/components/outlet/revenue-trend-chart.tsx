@@ -83,10 +83,15 @@ export default function RevenueTrendChart({ data }: RevenueTrendChartProps) {
               screen reader announced an unnamed application. The text
               matches the heading the page renders above the chart, which is
               the name WCAG 2.5.3 expects. The focus ring is in app.css.
+
+              `desc` fills the <desc> recharts already renders next to the
+              <title> — without it that element ships empty. Both props are
+              on CategoricalChartProps, beside `accessibilityLayer`.
             */}
             <LineChart
                 data={data}
                 title="Trend Revenue"
+                desc={`Grafik garis pendapatan harian, ${data.length} titik data.`}
                 margin={{ top: 8, right: 8, left: -8, bottom: 0 }}
             >
                 <defs>
