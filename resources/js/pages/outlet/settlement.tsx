@@ -375,9 +375,17 @@ export default function OutletSettlement({
                                 }}
                                 className="mt-2 space-y-2"
                             >
+                                {/* These three had no label of any kind, so the
+                                    accessibility tree named each one after its
+                                    placeholder — and once the field has content
+                                    the placeholder is gone, leaving a payout
+                                    form whose three fields are visually
+                                    identical. aria-label matches /outlet/scan's
+                                    treatment of the same problem. */}
                                 <input
                                     type="text"
                                     placeholder="Nama Bank (cth: BCA)"
+                                    aria-label="Nama Bank"
                                     value={bankForm.data.bank_name}
                                     onChange={(e) =>
                                         bankForm.setData(
@@ -390,6 +398,7 @@ export default function OutletSettlement({
                                 <input
                                     type="text"
                                     placeholder="Nomor Rekening"
+                                    aria-label="Nomor Rekening"
                                     value={bankForm.data.bank_account_number}
                                     onChange={(e) =>
                                         bankForm.setData(
@@ -402,6 +411,7 @@ export default function OutletSettlement({
                                 <input
                                     type="text"
                                     placeholder="Atas Nama"
+                                    aria-label="Atas Nama"
                                     value={bankForm.data.bank_account_holder}
                                     onChange={(e) =>
                                         bankForm.setData(
