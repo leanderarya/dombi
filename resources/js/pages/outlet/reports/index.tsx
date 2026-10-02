@@ -137,10 +137,18 @@ export default function OutletReports({ outlet, preview }: Props) {
                                 </div>
                             </div>
                             <div className="rounded-lg bg-primary p-3 text-center">
-                                <div className="text-lg font-bold text-success-border tabular-nums">
+                                {/* Both labels on the emerald card have to be
+                                    white: `text-success-text` is #047857,
+                                    which *is* `bg-primary` — the two tokens
+                                    happen to hold the same value and the pair
+                                    measured 1.02:1, so the caption was
+                                    invisible. `text-success-border` on the
+                                    nominal is the same family of mistake
+                                    (4.18:1). White on emerald-700 is 5.36:1. */}
+                                <div className="text-lg font-bold text-white tabular-nums">
                                     {formatCurrency(preview.total_revenue)}
                                 </div>
-                                <div className="text-caption text-success-text">
+                                <div className="text-caption text-white">
                                     Total Penjualan
                                 </div>
                             </div>

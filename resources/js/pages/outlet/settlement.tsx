@@ -730,7 +730,7 @@ function TimelineItem({
                             <span
                                 className={`rounded-full px-2 py-0.5 text-caption font-bold ${
                                     isPaid
-                                        ? 'bg-primary text-success-border'
+                                        ? 'bg-primary text-white'
                                         : isOverdue
                                           ? 'bg-danger-bg text-danger-text'
                                           : isPartial
