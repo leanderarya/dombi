@@ -247,7 +247,7 @@ export default function DeliveryTiersIndex({
                                                     onClick={() =>
                                                         setDeleteId(tier.id)
                                                     }
-                                                    className="text-danger hover:bg-danger hover:text-danger"
+                                                    className="text-danger hover:bg-danger-bg"
                                                     aria-label={`Hapus tier ${tier.min_km}–${tier.max_km} km`}
                                                 >
                                                     <Trash2

@@ -142,15 +142,22 @@ export default function CourierShow({
                         onClick={handleToggleActive}
                         className={cn(
                             'min-h-11',
-                            // The hover fill was `bg-primary` under
-                            // `text-success-text`: on the owner role
-                            // `--color-primary` is emerald-800, so hovering
-                            // the button dropped its own label to 1.40:1 —
-                            // the moment you press it is the moment you stop
-                            // being able to read it. The success wash is what
-                            // the resting colour belongs to.
+                            // Two defects, one line. The ink was the raw solid
+                            // `text-danger`/`text-success-text` rather than the
+                            // readable `-text` half of the pair every other
+                            // danger control in the repo uses, and the hover
+                            // fills were the solid `bg-` colours those inks
+                            // double as: `hover:bg-danger` under `text-danger`
+                            // measured 1.00:1, so the label vanished exactly
+                            // when the pointer reached it, and `hover:bg-primary`
+                            // under `text-success-text` was 1.40:1.
+                            //
+                            // `text-danger-text` is #b91c1c, not #dc2626 —
+                            // reusing the old measurement here would have read
+                            // 4.41:1 and passed a 3:1 icon bar while failing
+                            // the 4.5:1 this text button needs.
                             courier.is_active
-                                ? 'border-danger-border text-danger hover:bg-danger'
+                                ? 'border-danger-border text-danger-text hover:bg-danger-bg'
                                 : 'border-success-border text-success-text hover:bg-success-bg',
                         )}
                     >
