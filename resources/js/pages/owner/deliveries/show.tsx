@@ -266,7 +266,17 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     {canResolve && (
                         <div
                             aria-label="Insiden belum diselesaikan"
-                            className="rounded-2xl border border-warning-border bg-warning p-5"
+                            /*
+                             * `bg-warning` (#d97706) under `text-warning-text`
+                             * (#b45309) is 1.58:1 — the two tokens are the
+                             * light and dark halves of the same amber and are
+                             * not a pairable set. This banner is prose, the
+                             * same job the `bg-warning-bg` wash two hundred
+                             * lines up in this file already does at 4.51:1;
+                             * the `warning-border` keeps the emphasis the
+                             * fill used to carry.
+                             */
+                            className="rounded-2xl border border-warning-border bg-warning-bg p-5"
                         >
                             <div className="mb-3 flex items-center gap-2">
                                 <AlertTriangle

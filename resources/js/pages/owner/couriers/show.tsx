@@ -482,7 +482,16 @@ export default function CourierShow({
                     {/* Outlet Assignment */}
                     {legacyClassification?.isLegacy && (
                         <div
-                            className="rounded-2xl border border-warning-border bg-warning p-5"
+                            /*
+                             * `bg-warning` (#d97706) under `text-warning-text`
+                             * (#b45309) is 1.58:1 — the two tokens are the
+                             * light and dark halves of the same amber and are
+                             * not a pairable set. This banner is prose, so it
+                             * takes the wash the rest of the app uses for that
+                             * job: 4.51:1, with `warning-border` keeping the
+                             * emphasis the fill used to carry.
+                             */
+                            className="rounded-2xl border border-warning-border bg-warning-bg p-5"
                             aria-label="Klasifikasi Kurir Legacy"
                         >
                             <div className="mb-1 text-xs font-semibold text-warning-text">
