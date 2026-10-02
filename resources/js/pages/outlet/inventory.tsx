@@ -152,7 +152,16 @@ export default function OutletInventory({
                     <>
                         {/* Summary Bar + Restock CTA */}
                         <div className="flex items-center gap-3">
-                            <div className="flex flex-1 items-center divide-x divide-border rounded-xl border border-border bg-surface">
+                            {/* `min-w-0` on the flex-1 track and on each cell:
+                                a flex item's automatic minimum is its content
+                                width, so at 200% text the three cells held
+                                their full intrinsic width and pushed the
+                                48px Restock button (96px at that text size,
+                                `shrink-0`) off the right edge — the inventory
+                                screen measured docW 490 against a 390px
+                                viewport. Releasing the minimum is what lets
+                                the row reflow instead. */}
+                            <div className="flex min-w-0 flex-1 items-center divide-x divide-border rounded-xl border border-border bg-surface">
                                 <SummaryCell
                                     label="Kritis"
                                     value={criticalFamilies.length}
@@ -185,6 +194,17 @@ export default function OutletInventory({
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari produk..."
+                            /* The placeholder was doing the label's job: the
+                               input had no <label>, aria-label or
+                               aria-labelledby, so the accessibility tree took
+                               its name from the placeholder and the field lost
+                               its only identifier the moment the user typed.
+                               aria-label rather than a rendered <label> because
+                               this sits in a dense filter stack and adding a
+                               visible line would reflow the four screens that
+                               use it — /outlet/scan already solves the same
+                               field the same way. */
+                            aria-label="Cari produk"
                         />
 
                         {/* Critical */}
@@ -548,9 +568,9 @@ function SummaryCell({
     dot: string;
 }) {
     return (
-        <div className="flex-1 px-4 py-3 text-center">
+        <div className="min-w-0 flex-1 px-4 py-3 text-center">
             <div className="flex items-center justify-center gap-1.5">
-                <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
                 <div className="text-lg font-bold text-text tabular-nums">
                     {value}
                 </div>
