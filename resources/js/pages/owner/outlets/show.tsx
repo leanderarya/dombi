@@ -71,7 +71,7 @@ export default function OutletShow({
                 backHref="/owner/outlets"
             >
                 <div className="grid gap-4 lg:grid-cols-3">
-                    <div className="space-y-4 lg:col-span-2">
+                    <div className="min-w-0 space-y-4 lg:col-span-2">
                         <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
@@ -165,7 +165,16 @@ export default function OutletShow({
                 </div>
             )}
             <div className="grid gap-4 lg:grid-cols-3">
-                <div className="space-y-4 lg:col-span-2">
+                {/*
+                 * `min-w-0` releases this grid track's automatic minimum. Left
+                 * at `auto` the track's floor is the min-content of everything
+                 * inside it, and the "Riwayat Perubahan" card carries raw JSON
+                 * audit values with no break opportunity — one unbreakable
+                 * token set the floor for the whole column. Measured at 100%
+                 * text on a 390px viewport: the track was 881px wide inside a
+                 * 358px parent and the document reached 897px.
+                 */}
+                <div className="min-w-0 space-y-4 lg:col-span-2">
                     <div
                         className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Informasi Outlet"
@@ -522,7 +531,18 @@ export default function OutletShow({
                                     key={log.id}
                                     label={log.field ?? '-'}
                                     value={
-                                        <span className="text-xs">
+                                        /*
+                                         * Audit values are serialised model
+                                         * state, not prose: `operational_hours`
+                                         * arrives as `[{"id":1,"day":1,...}]`,
+                                         * one token with no break opportunity.
+                                         * `break-words` lets it fold once
+                                         * OwnerDetailRow's `min-w-0` has let the
+                                         * span shrink; before that the pair
+                                         * pushed the document to 897px at 100%
+                                         * text on a 390px viewport.
+                                         */
+                                        <span className="text-xs break-words">
                                             {log.old_value ?? '-'} &rarr;{' '}
                                             {log.new_value ?? '-'}
                                             <span className="ml-2 text-text-subtle">
