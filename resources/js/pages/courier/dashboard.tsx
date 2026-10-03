@@ -80,9 +80,14 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
             </div>
 
             {/* Availability Card — large touch targets for outdoor */}
+            {/*
+             * `flex-wrap`: at 200% text the label and the toggle together
+             * measure wider than this 260px row and push the document to
+             * 413px on a 390px viewport. The toggle drops to its own line.
+             */}
             <SectionCard>
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                         <div
                             className={`h-3.5 w-3.5 rounded-full ${courier.is_online ? 'bg-primary' : 'bg-text-subtle'}`}
                         />
@@ -116,8 +121,15 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                 )}
             </SectionCard>
 
-            {/* Stats Summary — high contrast for outdoor */}
-            <div className="mt-4 grid grid-cols-4 gap-2">
+            {/*
+             * `auto-fit` rather than `grid-cols-4`: at 200% text each
+             * `1fr` track floors at 20px while the `text-2xl` number
+             * needs 31px, so all four numbers spill 11px past their
+             * cells and widen the document to 401px. `minmax(4.5rem,
+             * 1fr)` gives four columns at the normal size (5 would need
+             * 392px, there are 358) and drops to two at 200%.
+             */}
+            <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))] gap-2">
                 <StatCard label="Pickup" value={stats.waitingPickup} />
                 <StatCard label="Antar" value={stats.inTransit} />
                 <StatCard label="Selesai" value={stats.completedToday} />
@@ -141,8 +153,22 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                                 href={`/courier/deliveries/${task.id}`}
                                 className="block rounded-xl border border-border bg-surface p-4 transition-all hover:shadow-sm active:opacity-80"
                             >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0 flex-1">
+                                {/*
+                                 * `flex-1 min-w-32` (a 128px floor), not
+                                 * `grow`: `flex-1` is `flex-basis: 0%`,
+                                 * so with `min-width: 0` the column's
+                                 * hypothetical main size is 0, the row
+                                 * never wraps, and at 200% text the
+                                 * badge kept its 257px and squeezed
+                                 * this column to 3px. `grow` fixes
+                                 * that but over-corrects -- its
+                                 * max-content basis wraps the badge
+                                 * onto a second line even at 100%.
+                                 * The floor is the width the wrap
+                                 * decision actually needs.
+                                 */}
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div className="min-w-32 flex-1">
                                         <div className="text-base font-bold text-text">
                                             {task.order_code}
                                         </div>
@@ -157,6 +183,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                                         </div>
                                     </div>
                                     <StatusBadge
+                                        className="shrink-0"
                                         status={task.status ?? 'delivering'}
                                     />
                                 </div>
@@ -179,8 +206,9 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                                 href={`/courier/deliveries/${task.id}`}
                                 className="block rounded-xl border border-border bg-surface p-4 transition-all hover:shadow-sm active:opacity-80"
                             >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0 flex-1">
+                                {/* Same wrap/shrink guard as the in-transit card above. */}
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div className="min-w-32 flex-1">
                                         <div className="text-base font-bold text-text">
                                             {task.order_code}
                                         </div>
@@ -194,7 +222,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                                     {task.age_minutes !== undefined &&
                                         task.age_minutes > 15 && (
                                             <span
-                                                className={`rounded-md px-2 py-1 text-xs font-bold ring-1 ${
+                                                className={`shrink-0 rounded-md px-2 py-1 text-xs font-bold ring-1 ${
                                                     task.age_minutes > 30
                                                         ? 'bg-danger-bg text-danger-text ring-danger-border'
                                                         : 'bg-warning-bg text-warning-text ring-warning-border'
@@ -223,8 +251,9 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                                 href={`/courier/deliveries/${task.id}`}
                                 className="block rounded-xl border border-border bg-surface p-4 transition-all hover:shadow-sm active:opacity-80"
                             >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0 flex-1">
+                                {/* Same wrap/shrink guard as the two cards above. */}
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div className="min-w-32 flex-1">
                                         <div className="text-base font-bold text-text">
                                             {task.order_code}
                                         </div>
@@ -238,7 +267,7 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
                                             </div>
                                         )}
                                     </div>
-                                    <span className="rounded-full bg-danger-bg px-2.5 py-1 text-xs font-bold text-danger-text ring-1 ring-danger-border">
+                                    <span className="shrink-0 rounded-full bg-danger-bg px-2.5 py-1 text-xs font-bold text-danger-text ring-1 ring-danger-border">
                                         Gagal
                                     </span>
                                 </div>

@@ -49,19 +49,26 @@ export default function PushBanner({ variant, onDismiss }: Props) {
     if (variant === 'home') {
         return (
             /*
-             * `flex-wrap`: at 200% text the icon, the copy, "Aktifkan" and
-             * the dismiss button together measure wider than the 326px row
-             * and pushed the document to 393px on a 390px viewport. The
-             * buttons drop to their own line instead.
+             * `flex-1 min-w-32` (a 128px floor), not bare `flex-1`:
+             * `flex-1` is `flex-basis: 0%`, so with `min-width: 0`
+             * the copy's hypothetical main size is 0, the row never
+             * wraps, and at 200% text the paragraph collapsed to a
+             * 53px column 160px tall while the fixed-width
+             * "Aktifkan" button swallowed the line. The floor makes
+             * the copy's width count toward the wrap decision, so
+             * the buttons drop below it, while the normal size stays
+             * on one line. `grow` is not the fix: `basis: auto`
+             * makes the max-content width the wrap input and pushes
+             * the dismiss button to a second line even at 100%.
              */
             <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white/80 px-3 py-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] backdrop-blur">
                 <Bell className="h-4 w-4 shrink-0 text-primary" />
                 {pushState === 'denied' ? (
-                    <p className="min-w-0 flex-1 text-xs text-text-muted">
+                    <p className="min-w-32 flex-1 text-xs text-text-muted">
                         Notifikasi dimatikan
                     </p>
                 ) : (
-                    <p className="min-w-0 flex-1 text-xs text-text-muted">
+                    <p className="min-w-32 flex-1 text-xs text-text-muted">
                         Aktifkan notifikasi untuk info pesanan
                     </p>
                 )}

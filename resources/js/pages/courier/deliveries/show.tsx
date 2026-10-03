@@ -364,23 +364,37 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                 </div>
 
                 {/* Quick Contact */}
+                {/*
+                 * `flex-wrap` + `px-3`, and no `min-w-0`: the Button
+                 * base is `whitespace-nowrap`, so a `min-w-0 flex-1`
+                 * button can shrink below its label instead of
+                 * wrapping -- at 200% text the labels overflowed
+                 * their 121px boxes. Leaving `min-width: auto` gives
+                 * the flex line the button's real min-content as its
+                 * wrap input, so they stack. The default `px-5` is
+                 * 40px a side at the 200% root, which pushed
+                 * WhatsApp's min-content to 270px against a 260px
+                 * row (a 10px spill past the card); `px-3` fits it
+                 * back. The padding is invisible at 100%, because
+                 * `flex-1` stretches both buttons across the row.
+                 */}
                 {order.customer_phone && (
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-3 flex flex-wrap gap-2">
                         <Button
                             onClick={whatsappCustomer}
                             size="lg"
-                            className="flex-1 active:opacity-80"
+                            className="flex-1 px-3 active:opacity-80"
                         >
-                            <MessageCircle className="h-4 w-4" />
+                            <MessageCircle className="h-4 w-4 shrink-0" />
                             WhatsApp
                         </Button>
                         <Button
                             onClick={callCustomer}
                             variant="outline"
                             size="lg"
-                            className="flex-1 active:opacity-80"
+                            className="flex-1 px-3 active:opacity-80"
                         >
-                            <Phone className="h-4 w-4" />
+                            <Phone className="h-4 w-4 shrink-0" />
                             Telepon
                         </Button>
                     </div>
@@ -409,9 +423,9 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                     {order.items.map((item) => (
                         <div
                             key={item.id}
-                            className="flex items-center justify-between text-sm"
+                            className="flex flex-wrap items-center justify-between gap-x-3 text-sm"
                         >
-                            <div>
+                            <div className="min-w-0">
                                 <span className="font-medium text-text">
                                     {item.product_name}
                                 </span>

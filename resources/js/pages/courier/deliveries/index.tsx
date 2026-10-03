@@ -200,8 +200,11 @@ export default function CourierDeliveriesIndex({
                             href={`/courier/deliveries/${delivery.id}`}
                             className="block rounded-xl border border-border bg-surface p-4 transition-all hover:shadow-sm active:opacity-80"
                         >
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0 flex-1">
+                            {/* Same wrap/shrink guard as the dashboard cards:
+                                `flex-1` needs the `min-w-32` floor for the
+                                wrap decision to see the column's width. */}
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div className="min-w-32 flex-1">
                                     <div className="text-sm font-bold text-text">
                                         {delivery.order.order_code}
                                     </div>
@@ -215,7 +218,10 @@ export default function CourierDeliveriesIndex({
                                         {delivery.order.customer_address}
                                     </div>
                                 </div>
-                                <StatusBadge status={delivery.status} />
+                                <StatusBadge
+                                    className="shrink-0"
+                                    status={delivery.status}
+                                />
                             </div>
                         </Link>
                     ))}
