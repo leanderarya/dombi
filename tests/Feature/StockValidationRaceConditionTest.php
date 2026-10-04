@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 use Tests\WithTestOutlet;
 
@@ -27,6 +28,18 @@ class StockValidationRaceConditionTest extends TestCase
 
     public function test_concurrent_checkout_prevents_overselling(): void
     {
+        // Every outbound call must be answered here: this test must never
+        // reach the real DOKU sandbox, or its outcome depends on a third
+        // party's uptime.
+        Http::fake([
+            '*/checkout/v1/payment' => Http::response([
+                'response' => [
+                    'order' => ['session_id' => 'sess-race'],
+                    'payment' => ['url' => 'https://sandbox.doku.com/pay/race'],
+                ],
+            ]),
+        ]);
+
         $family = ProductCategory::create(['name' => 'Susu Kambing Original', 'is_active' => true]);
         $variant = Product::factory()->create([
             'product_category_id' => $family->id,
@@ -85,14 +98,18 @@ class StockValidationRaceConditionTest extends TestCase
             $adjustCount++;
         }
 
-        // Endpoint calls are sequential; parallel race requires separate workers.
-        $this->assertSame(2, $successCount, 'Sequential checkout requests both succeed');
+        // Endpoint calls are sequential, so the first order holds the whole
+        // stock and the second must be told the cart was adjusted instead of
+        // overselling. A parallel race needs separate workers.
+        $this->assertSame(1, $successCount, 'Only the first checkout may take the stock');
+        $this->assertSame(1, $adjustCount, 'The competing checkout must be adjusted, not oversold');
 
         // Verify no overselling
         $inventory = OutletInventory::where('outlet_id', $this->outlet->id)
             ->where('product_id', $variant->id)
             ->first();
 
-        $this->assertGreaterThanOrEqual(0, $inventory->current_stock - $inventory->reserved_stock);
+        $this->assertSame(3, (int) $inventory->reserved_stock);
+        $this->assertSame(0, (int) $inventory->current_stock - (int) $inventory->reserved_stock);
     }
 }
