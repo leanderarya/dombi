@@ -10,11 +10,13 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\FakesDokuPayment;
 use Tests\TestCase;
 use Tests\WithTestOutlet;
 
 class RecipientCheckoutTest extends TestCase
 {
+    use FakesDokuPayment;
     use RefreshDatabase;
     use WithTestOutlet;
 
@@ -31,6 +33,7 @@ class RecipientCheckoutTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->fakeDokuPayment();
 
         $this->product = Product::create([
             'name' => 'Domilk Premium',

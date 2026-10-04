@@ -10,11 +10,13 @@ use App\Models\Product;
 use App\Models\User;
 use App\Services\DeliveryPricingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\FakesDokuPayment;
 use Tests\TestCase;
 use Tests\WithTestOutlet;
 
 class DeliveryPricingTest extends TestCase
 {
+    use FakesDokuPayment;
     use RefreshDatabase;
     use WithTestOutlet;
 
@@ -23,6 +25,7 @@ class DeliveryPricingTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->fakeDokuPayment();
         $this->outlet = $this->withOutletSession();
     }
 

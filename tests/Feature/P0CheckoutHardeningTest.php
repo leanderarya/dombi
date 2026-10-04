@@ -11,11 +11,13 @@ use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
+use Tests\FakesDokuPayment;
 use Tests\TestCase;
 use Tests\WithTestOutlet;
 
 class P0CheckoutHardeningTest extends TestCase
 {
+    use FakesDokuPayment;
     use RefreshDatabase;
     use WithTestOutlet;
 
@@ -30,6 +32,7 @@ class P0CheckoutHardeningTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->fakeDokuPayment();
 
         $this->family = ProductCategory::create([
             'name' => 'Domilk Premium',

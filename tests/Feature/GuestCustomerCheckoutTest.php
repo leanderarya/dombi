@@ -9,11 +9,13 @@ use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\FakesDokuPayment;
 use Tests\TestCase;
 use Tests\WithTestOutlet;
 
 class GuestCustomerCheckoutTest extends TestCase
 {
+    use FakesDokuPayment;
     use RefreshDatabase;
     use WithTestOutlet;
 
@@ -22,6 +24,7 @@ class GuestCustomerCheckoutTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->fakeDokuPayment();
         $this->outlet = $this->withOutletSession();
     }
 
