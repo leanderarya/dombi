@@ -159,6 +159,10 @@ class Notification extends Model
                 default => null,
             },
 
+            $type === 'system.restock_stuck' => $role === 'owner'
+                ? ($restockId ? "/owner/restocks/{$restockId}" : '/owner/restocks')
+                : null,
+
             default => null,
         };
     }

@@ -63,4 +63,17 @@ class NotificationDestinationTest extends TestCase
         $this->assertNull(Notification::destinationUrl('inventory.restock_approved', [], 'outlet'));
         $this->assertNull(Notification::destinationUrl('something.unknown', [], 'owner'));
     }
+
+    public function test_stuck_restock_reaches_the_restock_it_complains_about(): void
+    {
+        $this->assertSame(
+            '/owner/restocks/12',
+            Notification::destinationUrl('system.restock_stuck', ['restock_id' => 12], 'owner')
+        );
+        $this->assertSame(
+            '/owner/restocks',
+            Notification::destinationUrl('system.restock_stuck', [], 'owner')
+        );
+        $this->assertNull(Notification::destinationUrl('system.restock_stuck', ['restock_id' => 12], 'outlet'));
+    }
 }
