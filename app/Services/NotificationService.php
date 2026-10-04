@@ -102,6 +102,8 @@ class NotificationService
 
     public const RETURNED_DELIVERY_PENDING = 'system.returned_delivery_pending';
 
+    public const RESTOCK_STUCK = 'system.restock_stuck';
+
     // Refund notifications
     public const REFUND_REQUESTED = 'order.refund_requested';
 
@@ -745,6 +747,24 @@ class NotificationService
                 type: self::DISTRIBUTION_RECEIVED,
                 title: 'Restock Diterima',
                 message: "Restock #{$restock->id} telah diterima outlet.",
+                data: ['restock_id' => $restock->id],
+                entityType: 'restock_request',
+                entityId: $restock->id
+            );
+        }
+    }
+
+    public function notifyStuckRestock(RestockRequest $restock, int $days): void
+    {
+        // Notify owners: the outlet has sat on a shipped restock past the window.
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::RESTOCK_STUCK,
+                title: 'Restock Belum Dikonfirmasi',
+                message: "Restock #{$restock->id} untuk {$restock->outlet?->name} sudah dikirim lebih dari {$days} hari tanpa konfirmasi penerimaan.",
                 data: ['restock_id' => $restock->id],
                 entityType: 'restock_request',
                 entityId: $restock->id

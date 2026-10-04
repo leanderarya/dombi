@@ -19,7 +19,7 @@ class RestockCheckStuck extends Command
 
         $stuck = RestockRequest::query()
             ->where('status', 'shipped')
-            ->where('shipped_at', '<', $threshold)
+            ->where('sent_at', '<', $threshold)
             ->with('outlet')
             ->get();
 
@@ -32,9 +32,9 @@ class RestockCheckStuck extends Command
         $this->warn("Found {$stuck->count()} stuck restock(s) shipped > {$days} days ago:");
 
         foreach ($stuck as $req) {
-            $this->line("  #{$req->id} {$req->outlet?->name} shipped at {$req->shipped_at}");
+            $this->line("  #{$req->id} {$req->outlet?->name} shipped at {$req->sent_at}");
             try {
-                $notificationService->notifyStuckRestock($req);
+                $notificationService->notifyStuckRestock($req, $days);
             } catch (\Throwable $e) {
                 $this->error("  Failed to notify for #{$req->id}: {$e->getMessage()}");
             }
