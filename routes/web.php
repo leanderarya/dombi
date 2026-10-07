@@ -259,6 +259,9 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::put('profile/password', [OwnerProfileController::class, 'updatePassword'])
             ->middleware('throttle:sensitive')
             ->name('profile.password.update');
+        Route::patch('profile/email', [OwnerProfileController::class, 'updateEmail'])
+            ->middleware('throttle:sensitive')
+            ->name('profile.email.update');
         // No create route: Tambah Outlet is a dialog on the index now.
         Route::resource('outlets', OwnerOutletController::class)->except('create');
         Route::put('outlets/{outlet}/archive', [OwnerOutletController::class, 'archive'])->name('outlets.archive');

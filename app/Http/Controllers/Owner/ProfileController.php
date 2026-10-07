@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Owner\UpdateProfileEmailRequest;
 use App\Http\Requests\Owner\UpdateProfilePasswordRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Str;
@@ -25,5 +26,26 @@ class ProfileController extends Controller
         ])->save();
 
         return back()->with('success', 'Password berhasil diperbarui.');
+    }
+
+    public function updateEmail(UpdateProfileEmailRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+        $email = $request->validated()['email'];
+
+        if ($email === $user->email) {
+            return back()->with('success', 'Email tidak berubah.');
+        }
+
+        $user->forceFill([
+            'email' => $email,
+            // The Google link belongs to the old address; drop it so the
+            // account falls back to password login instead of keeping a
+            // provider_id that no longer matches the email.
+            'provider' => null,
+            'provider_id' => null,
+        ])->save();
+
+        return back()->with('success', 'Email akun berhasil diperbarui.');
     }
 }

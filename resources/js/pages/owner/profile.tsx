@@ -1,5 +1,13 @@
 import { router, useForm, usePage } from '@inertiajs/react';
-import { LogOut, User, Shield, Phone, Package, KeyRound } from 'lucide-react';
+import {
+    LogOut,
+    User,
+    Shield,
+    Phone,
+    Package,
+    KeyRound,
+    Mail,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
@@ -15,12 +23,26 @@ export default function OwnerProfile() {
     const { auth, appVersion } = usePage<any>().props;
     const user = auth?.user;
     const passwordForm = useForm({ ...EMPTY_PASSWORD });
+    const emailForm = useForm({
+        email: user?.email ?? '',
+        current_password: '',
+    });
 
     const submitPassword = (e: React.FormEvent) => {
         e.preventDefault();
         passwordForm.put('/owner/profile/password', {
             preserveScroll: true,
             onSuccess: () => passwordForm.reset(),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
+        });
+    };
+
+    const submitEmail = (e: React.FormEvent) => {
+        e.preventDefault();
+        emailForm.patch('/owner/profile/email', {
+            preserveScroll: true,
+            onSuccess: () => emailForm.reset('current_password'),
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
         });
@@ -48,7 +70,7 @@ export default function OwnerProfile() {
 
                         <div className="mt-4 grid grid-cols-2 gap-2">
                             <InfoBox
-                                label="Role"
+                                label="Peran"
                                 value={user?.role ?? 'owner'}
                                 icon={
                                     <Shield
@@ -59,7 +81,7 @@ export default function OwnerProfile() {
                             />
                             <InfoBox
                                 label="Status"
-                                value={user?.is_active ? 'Active' : 'Inactive'}
+                                value={user?.is_active ? 'Aktif' : 'Nonaktif'}
                                 icon={
                                     <User
                                         className="h-3.5 w-3.5"
@@ -68,7 +90,7 @@ export default function OwnerProfile() {
                                 }
                             />
                             <InfoBox
-                                label="Phone"
+                                label="Telepon"
                                 value={user?.phone ?? '-'}
                                 icon={
                                     <Phone
@@ -78,7 +100,7 @@ export default function OwnerProfile() {
                                 }
                             />
                             <InfoBox
-                                label="Version"
+                                label="Versi"
                                 value={appVersion ?? '1.0.0'}
                                 icon={
                                     <Package
@@ -160,6 +182,61 @@ export default function OwnerProfile() {
                             Simpan Password
                         </Button>
                     </form>
+
+                    {/* Email */}
+                    <form
+                        onSubmit={submitEmail}
+                        className="rounded-lg border border-border bg-white p-4 transition-all duration-200"
+                        aria-label="Ganti email"
+                    >
+                        <div className="mb-3 flex items-center gap-2">
+                            <Mail
+                                className="h-4 w-4 text-text-muted"
+                                aria-hidden="true"
+                            />
+                            <h2 className="text-sm font-bold text-text">
+                                Ganti Email
+                            </h2>
+                        </div>
+                        <div className="space-y-3">
+                            <Input
+                                label="Email"
+                                type="email"
+                                autoComplete="email"
+                                value={emailForm.data.email}
+                                onChange={(e) =>
+                                    emailForm.setData('email', e.target.value)
+                                }
+                                error={emailForm.errors.email}
+                            />
+                            <Input
+                                label="Password Saat Ini"
+                                type="password"
+                                autoComplete="current-password"
+                                value={emailForm.data.current_password}
+                                onChange={(e) =>
+                                    emailForm.setData(
+                                        'current_password',
+                                        e.target.value,
+                                    )
+                                }
+                                error={emailForm.errors.current_password}
+                            />
+                            <p className="text-xs text-text-muted">
+                                Konfirmasi dengan password saat ini. Email baru
+                                langsung aktif — tidak ada email verifikasi.
+                            </p>
+                        </div>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="lg"
+                            className="mt-4"
+                            loading={emailForm.processing}
+                        >
+                            Simpan Email
+                        </Button>
+                    </form>
                 </div>
 
                 {/* Right: quick actions (desktop only, sticky) */}
@@ -167,7 +244,7 @@ export default function OwnerProfile() {
                     <div className="sticky top-4 space-y-3">
                         <div className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
                             <div className="mb-3 text-xs font-medium text-text-subtle">
-                                Quick Actions
+                                Aksi Cepat
                             </div>
                             <Button
                                 onClick={() => router.post('/logout')}
@@ -179,13 +256,13 @@ export default function OwnerProfile() {
                                     className="h-4 w-4"
                                     aria-hidden="true"
                                 />
-                                Logout
+                                Keluar
                             </Button>
                         </div>
                     </div>
                 </div>
 
-                {/* Mobile logout */}
+                {/* Keluar (mobile) */}
                 <div className="mt-4 lg:hidden">
                     <Button
                         onClick={() => router.post('/logout')}
@@ -194,7 +271,7 @@ export default function OwnerProfile() {
                         className="border-danger-border text-danger-text hover:bg-danger-bg active:opacity-80"
                     >
                         <LogOut className="h-4 w-4" aria-hidden="true" />
-                        Logout
+                        Keluar
                     </Button>
                 </div>
             </div>
