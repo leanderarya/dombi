@@ -1,14 +1,33 @@
-import { router, usePage } from '@inertiajs/react';
-import { LogOut, User, Shield, Phone, Package } from 'lucide-react';
+import { router, useForm, usePage } from '@inertiajs/react';
+import { LogOut, User, Shield, Phone, Package, KeyRound } from 'lucide-react';
+import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+
+const EMPTY_PASSWORD = {
+    current_password: '',
+    password: '',
+    password_confirmation: '',
+};
 
 export default function OwnerProfile() {
     const { auth, appVersion } = usePage<any>().props;
     const user = auth?.user;
+    const passwordForm = useForm({ ...EMPTY_PASSWORD });
+
+    const submitPassword = (e: React.FormEvent) => {
+        e.preventDefault();
+        passwordForm.put('/owner/profile/password', {
+            preserveScroll: true,
+            onSuccess: () => passwordForm.reset(),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
+        });
+    };
 
     return (
-        <OwnerPageShell title="Profile" subtitle="Owner account">
+        <OwnerPageShell title="Profil" subtitle="Akun owner">
             <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                 {/* Left: user info */}
                 <div className="space-y-4" aria-label="Informasi profil">
@@ -70,6 +89,77 @@ export default function OwnerProfile() {
                             />
                         </div>
                     </div>
+
+                    {/* Password */}
+                    <form
+                        onSubmit={submitPassword}
+                        className="rounded-lg border border-border bg-white p-4 transition-all duration-200"
+                        aria-label="Ganti password"
+                    >
+                        <div className="mb-3 flex items-center gap-2">
+                            <KeyRound
+                                className="h-4 w-4 text-text-muted"
+                                aria-hidden="true"
+                            />
+                            <h2 className="text-sm font-bold text-text">
+                                Ganti Password
+                            </h2>
+                        </div>
+                        <div className="space-y-3">
+                            <Input
+                                label="Password Saat Ini"
+                                type="password"
+                                autoComplete="current-password"
+                                value={passwordForm.data.current_password}
+                                onChange={(e) =>
+                                    passwordForm.setData(
+                                        'current_password',
+                                        e.target.value,
+                                    )
+                                }
+                                error={passwordForm.errors.current_password}
+                            />
+                            <Input
+                                label="Password Baru"
+                                type="password"
+                                autoComplete="new-password"
+                                value={passwordForm.data.password}
+                                onChange={(e) =>
+                                    passwordForm.setData(
+                                        'password',
+                                        e.target.value,
+                                    )
+                                }
+                                error={passwordForm.errors.password}
+                            />
+                            <Input
+                                label="Konfirmasi Password Baru"
+                                type="password"
+                                autoComplete="new-password"
+                                value={
+                                    passwordForm.data.password_confirmation
+                                }
+                                onChange={(e) =>
+                                    passwordForm.setData(
+                                        'password_confirmation',
+                                        e.target.value,
+                                    )
+                                }
+                                error={
+                                    passwordForm.errors.password_confirmation
+                                }
+                            />
+                        </div>
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="lg"
+                            className="mt-4"
+                            loading={passwordForm.processing}
+                        >
+                            Simpan Password
+                        </Button>
+                    </form>
                 </div>
 
                 {/* Right: quick actions (desktop only, sticky) */}

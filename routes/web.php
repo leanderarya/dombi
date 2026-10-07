@@ -256,6 +256,9 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('finance/refund-obligations/{obligation}', fn (RefundObligation $obligation) => redirect()->route('owner.finance.dashboard', ['tab' => 'refund', 'filter' => 'needs_review']))->name('finance.refund-obligations.show');
         Route::get('/analytics', [OwnerAnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('/profile', OwnerProfileController::class)->name('profile');
+        Route::put('profile/password', [OwnerProfileController::class, 'updatePassword'])
+            ->middleware('throttle:sensitive')
+            ->name('profile.password.update');
         // No create route: Tambah Outlet is a dialog on the index now.
         Route::resource('outlets', OwnerOutletController::class)->except('create');
         Route::put('outlets/{outlet}/archive', [OwnerOutletController::class, 'archive'])->name('outlets.archive');
