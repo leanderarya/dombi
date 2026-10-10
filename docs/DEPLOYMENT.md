@@ -63,15 +63,47 @@ push langsung dulu lolos tanpa gate — itu sebabnya proteksi ini pindah ke jalu
 
 Workflow `.github/workflows/deploy.yml` akan:
 
-1. Menunggu quality gate.
-2. Membangun Composer production dependencies dan frontend assets.
-3. Mengunggah tree production melalui FTP ke `/domains/dombicenter.com/public_html/app/`.
-4. Menjalankan post-deploy SSH pada `domains/dombicenter.com/public_html/app`.
-5. Menjalankan `composer install`, `php artisan migrate --force`, clear cache, dan storage link.
-6. Menjalankan production health gate.
+1. Memvalidasi variabel pembayaran production (`DOKU_IS_SANDBOX=false`,
+   `PAYMENTS_LEGACY_WRITES_ENABLED=false`) dan menolak deploy bila salah.
+2. Menunggu quality gate.
+3. Membangun Composer production dependencies dan frontend assets.
+4. Menyinkronkan repo production lewat SSH (`git fetch` + `git reset --hard` ke SHA rilis),
+   lalu mengunggah `public/build` lewat SCP.
+5. **Menurunkan aplikasi ke maintenance mode** (`php artisan down --retry=15`) untuk jendela
+   mutasi, dengan `trap` yang menjamin `artisan up` dijalankan meski langkah berikutnya gagal.
+6. Menjalankan `composer install`, `php artisan migrate --force`, `config:cache`, dan
+   assertion runtime bahwa config production benar.
+7. Membersihkan cache dan menilai hasilnya **dari isi disk**, bukan dari exit code —
+   lihat catatan di bawah.
+8. Menaikkan aplikasi kembali (`php artisan up`) dan menjalankan production health gate.
 
 Tidak ada upload manual atau copy `.env` dari repository dalam jalur ini. Workflow mengecualikan
 `.env*`; production `.env` harus sudah tersedia dan benar di server.
+
+### Cache clear di host shared
+
+`php artisan cache:clear` pernah gagal di host ini (run `38030307352`) dan menggagalkan seluruh
+job: `FileStore::flush()` mengembalikan `false`, `ClearCommand` mencetak pesan "appropriate
+permissions" yang **menyesatkan** (direktori sudah `777`, dan tidak ada entri milik user lain),
+lalu exit 1 — sehingga health gate di belakangnya tidak pernah jalan.
+
+Langkah cache sekarang menilai kebersihan store **dari jumlah entri di disk**
+(`find storage/framework/cache/data -type f`), dan bila masih ada sisa, menghapus direktori
+level-1 secara langsung. Prinsipnya: store yang melaporkan sukses tapi menyisakan entri usang
+lebih buruk daripada store yang jujur gagal. `CACHE_STORE=file` di production, jadi path itu
+memang sasaran yang benar.
+
+Maintenance mode dijaga dua lapis. `trap ... EXIT` di dalam script menangani kegagalan biasa,
+tapi tidak bisa jalan bila sesi SSH diputus keras — dan host ini memang memutus sesi. Karena itu
+ada step terpisah `Ensure production is not stuck in maintenance mode` dengan `if: always()`
+yang memeriksa `storage/framework/down` dan menjalankan `artisan up` bila perlu. Menjalankan
+`up` saat aplikasi sudah hidup tidak berefek.
+
+Konsekuensi sampingan: heartbeat scheduler disimpan di cache
+(`SchedulerHeartbeat` → key `scheduler:last_heartbeat`), jadi setelah setiap deploy
+`/api/health` akan melaporkan `"scheduler": false` sampai cron `schedule:run` berikutnya
+menuliskannya kembali (≤1 menit). Field ini **informational** — status dan HTTP code hanya
+ditentukan oleh `database`, `cache`, dan `storage`.
 
 ### Tag rilis
 
