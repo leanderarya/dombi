@@ -48,8 +48,20 @@ evidence sebelum melanjutkan ke pre-cutover gate.
 
 ## Production Deploy
 
-Setelah pre-cutover gate lengkap, merge `develop` ke `main` sesuai proses repository lalu
-push `main`. Workflow `.github/workflows/deploy.yml` akan:
+Setelah pre-cutover gate lengkap, promote `develop` ke `main` lewat pull request. Sejak
+2026-10-10 branch protection menolak push langsung ke `main` dan `develop` (`force_push=false`,
+`enforce_admins=true`), jadi satu-satunya jalur masuk adalah PR.
+
+```bash
+gh pr create --base main --head develop --title 'release: <ringkas>' --body '<isi>'
+gh pr merge --merge   # setelah check `quality` hijau
+```
+
+Required check-nya bernama `quality` (job `quality`, workflow `Quality Gate`). Nama itu hanya
+muncul pada event `pull_request`; pada push ia dilaporkan sebagai `quality / quality`, sehingga
+push langsung dulu lolos tanpa gate — itu sebabnya proteksi ini pindah ke jalur PR.
+
+Workflow `.github/workflows/deploy.yml` akan:
 
 1. Menunggu quality gate.
 2. Membangun Composer production dependencies dan frontend assets.
@@ -60,6 +72,18 @@ push `main`. Workflow `.github/workflows/deploy.yml` akan:
 
 Tidak ada upload manual atau copy `.env` dari repository dalam jalur ini. Workflow mengecualikan
 `.env*`; production `.env` harus sudah tersedia dan benar di server.
+
+### Tag rilis
+
+Buat tag annotated pada commit `main` yang baru dipromosikan, lalu push:
+
+```bash
+git tag -a release-YYYY-MM-DD <sha> -F <pesan>
+git push origin release-YYYY-MM-DD
+```
+
+Tag adalah target rollback. Jangan menandai sebelum health gate hijau.
+
 
 ## Health Gate
 
