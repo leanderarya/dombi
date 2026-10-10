@@ -158,9 +158,7 @@ export default function OwnerProfile() {
                                 label="Konfirmasi Password Baru"
                                 type="password"
                                 autoComplete="new-password"
-                                value={
-                                    passwordForm.data.password_confirmation
-                                }
+                                value={passwordForm.data.password_confirmation}
                                 onChange={(e) =>
                                     passwordForm.setData(
                                         'password_confirmation',
