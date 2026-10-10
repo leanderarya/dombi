@@ -114,12 +114,17 @@ transaksi yang masuk setelah deploy.
 | DOKU Live dan Google OAuth | Callback URL production (`DOKU_CALLBACK_URL`) dan URL Notification di DOKU Back Office belum diverifikasi | — | — | ⬜ perlu cek Back Office |
 | Known-good rollback SHA/tag | `2d7bc20c` = tag `release-2026-10-10` (`origin/main`, promote terakhir). Sebelumnya `fddd8a4a`, `e48b6288` | 2026-10-10 | agent | PASS |
 | Production health `/up` + `/api/health` | `https://app.dombicenter.com/api/health` → `{"status":"healthy","checks":{"database":true,"cache":true,"storage":true,"scheduler":true}}` | 2026-10-10 | agent | PASS |
-| CI commit release | deploy-staging run `38030737289` pada `b190201a` → success; production run `38030307352` pada `2d7bc20c` → **failed** (step `cache:clear` exit 1 di host shared, setelah kode/config/assertion lulus; health gate dijalankan manual → sehat) | 2026-10-10 | agent | sebagian |
+| CI commit release | deploy-staging run `38030737289` pada `b190201a` → success; production run `38030307352` pada `2d7bc20c` → **failed** (step `cache:clear` exit 1 di host shared, setelah kode/config/assertion lulus; health gate dijalankan manual → sehat). Langkah itu sudah diganti cache guard berbasis isi disk di `62008ed9` | 2026-10-10 | agent | sebagian |
 | Migration rehearsal | belum dijalankan terpisah | — | — | ⬜ |
 | DOKU sandbox | Skenario 1 PASS pada build `ab33f6ea`; Skenario 2–5 belum | 2026-09-17 | agent + tester | sebagian |
 | Backup restore | di-WAIVE untuk scope Hostinger (2026-07-27) | — | owner | WAIVED |
 | Staging smoke | Skenario 1 PASS; 2–5 belum | 2026-09-17 | agent + tester | sebagian |
 | Production canary | belum dijalankan | — | — | ⬜ |
+| Branch protection `main` + `develop` | `contexts:["quality"]` (phantom `ci` dihapus), `strict:true`, `allow_force_pushes:false`, `enforce_admins:true`. Push langsung ke `develop` ditolak (terbukti saat mencoba), dan run PR `38033696253` membuktikan konteks `quality` resolve di event `pull_request` | 2026-10-10 | agent | PASS |
+| `LOG_CHANNEL` production | `single` → `daily`; runtime assert `daily\|production\|0\|14`; rotasi terbukti menulis `storage/logs/laravel-2026-10-10.log`, `laravel.log` (2.6 MB) berhenti tumbuh | 2026-10-10 | agent | PASS |
+| Perbaikan restock terbukti sembuh | Run terjadwal `restock:check-stuck` 2026-10-10 08:30:04 UTC: `count_error_restock` tetap **49** (tidak bertambah), `error_tgl_10_10` = **0**, error terakhir `[2026-10-09 08:30:03]`, `restock-stuck.log` 735 → 736 baris, tail `No stuck restock requests found.` Ambang lulus ditetapkan sebelum run | 2026-10-10 | agent | PASS |
+| Alert sampai ke manusia | **GAGAL.** `getOwners()` hanya mengembalikan user 7, dan `push_subscriptions` user 7 = **0**. 17 langganan yang ada milik user 6 (15) dan user 1 (2, akun demo nonaktif). Mail = `log`, Sentry/Slack kosong, GOWA tidak dipanggil kode, FCM 0 token, notifikasi backup masih `your@example.com`. Cache guard baru juga menghapus heartbeat scheduler, jadi `/api/health` melaporkan `"scheduler": false` ≤1 menit pasca-deploy (informational, tidak memengaruhi status) | 2026-10-10 | agent | **NO-GO** |
+| Sentry error reporting | DSN belum diprovision; tanpa DSN hub tetap `bound` dan `captureException()` mengembalikan EventId yang lalu dibuang — gagal senyap, bukan absen | — | — | ⬜ blocked (butuh DSN owner) |
 
 ## Blocker yang Diketahui Saat Audit
 
