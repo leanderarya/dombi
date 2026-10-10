@@ -105,6 +105,27 @@ Konsekuensi sampingan: heartbeat scheduler disimpan di cache
 menuliskannya kembali (≤1 menit). Field ini **informational** — status dan HTTP code hanya
 ditentukan oleh `database`, `cache`, dan `storage`.
 
+### Batas jendela maintenance (diketahui, belum ditutup)
+
+Maintenance mode aktif di langkah 5, sementara kode sudah diganti di langkah 4. Jadi langkah
+4 (sinkronisasi git) dan 5 (unggah SCP `public/build`) berjalan **sambil aplikasi melayani
+request**. Ini perilaku lama, bukan regresi dari hardening 2026-10-10 — urutan yang sama sudah
+ada sebelumnya, dan hardening hanya mempersempit jendela.
+
+Dua hal yang membatasi dampaknya sekarang:
+
+- `public/build` ada di `.gitignore`, jadi `git reset --hard` tidak menyentuh asset; asset
+  baru datang lewat SCP dan `index.html` menunjuk nama file ber-hash, sehingga file lama tetap
+  bisa dilayani sampai SCP selesai.
+- Tidak ada perubahan dependensi di antara rilis yang dipromosikan sejauh ini.
+
+Risiko yang **belum** tertutup: `git reset --hard` mengganti `app/`, `composer.json`, dan
+`composer.lock`, sementara `composer install` baru dijalankan di langkah 7. Bila sebuah rilis
+menambah atau mengubah dependensi, kode baru bisa dieksekusi melawan `vendor/` lama selama
+jendela itu. Bila ini menjadi masalah nyata, perbaikan yang benar adalah memindahkan
+`artisan down` ke sebelum langkah 4 dan menerima downtime selama unduhan SCP — itu keputusan
+trade-off, bukan sekadar perbaikan, sehingga belum dilakukan.
+
 ### Tag rilis
 
 Buat tag annotated pada commit `main` yang baru dipromosikan, lalu push:
