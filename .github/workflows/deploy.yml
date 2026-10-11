@@ -132,18 +132,71 @@ jobs:
             done
             echo "Installing dependencies"
             composer install --no-dev --no-interaction --optimize-autoloader
+
+            # Take the app down for the mutating window. The trap guarantees it
+            # comes back up: a failure mid-window must not leave production dark.
+            trap 'php artisan up >/dev/null 2>&1 || true' EXIT
+            php artisan down --retry=15 --no-interaction || echo "artisan down failed; continuing"
+
             echo "Running migrations"
             php artisan migrate --force --no-interaction
             php artisan config:clear
             php artisan config:cache
             php artisan tinker --execute='if (config("app.env") !== "production" || config("app.debug") !== false || config("doku.sandbox") !== false || config("doku.legacy_writes_enabled") !== false) { exit(1); } echo "Production payment configuration assertion passed.", PHP_EOL;'
             php artisan route:clear
-            php artisan cache:clear
+
+            # FileStore::flush() returns false on this shared host when the web
+            # process holds the cache directory, which exited 1 here and skipped
+            # the health gate (run 38030307352). Judge it by whether entries
+            # actually survive, not by the exit code: a store that reports
+            # success while keeping stale entries is the worse failure.
+            cache_entries() {
+              find storage/framework/cache/data -type f ! -name '.gitignore' 2>/dev/null | wc -l | tr -d ' '
+            }
+
+            php artisan cache:clear || echo "cache:clear reported failure; checking the store directly"
+            remaining="$(cache_entries)"
+            if [ "$remaining" -gt 0 ]; then
+              echo "cache store holds $remaining entries after cache:clear; clearing directly"
+              find storage/framework/cache/data -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} + 2>/dev/null || true
+              remaining="$(cache_entries)"
+              if [ "$remaining" -gt 0 ]; then
+                echo "cache store still holds $remaining entries after direct clear"
+                exit 1
+              fi
+            fi
+            echo "cache store empty; continuing"
+
             php artisan view:clear
             php artisan storage:link || true
+
+            php artisan up
+            trap - EXIT
             echo "Production post-deploy done"
 
+      # Safety net for the maintenance window above. The in-script trap cannot
+      # fire if the SSH session is killed outright, and this host does drop
+      # sessions, so the app is brought back up unconditionally. Running `up`
+      # when the app is already live is a no-op.
+      - name: Ensure production is not stuck in maintenance mode
+        if: always()
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          script: |
+            cd domains/dombicenter.com/public_html/app
+            if [ -f storage/framework/down ]; then
+              echo "maintenance mode still active; bringing production back up"
+              php artisan up
+            else
+              echo "production is not in maintenance mode"
+            fi
+
       - name: Verify production health
+        if: always()
         run: |
           echo "Waiting 15s for production to boot"
           sleep 15

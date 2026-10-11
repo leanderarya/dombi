@@ -135,6 +135,35 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Error reporting. Two jobs, and they must not overlap.
+        //
+        // Without an explicit channel the provider registers its own with no level,
+        // which defaults to DEBUG inside SentryHandler — every Log::info() in the app
+        // would become a Sentry event. `error` keeps it to failures.
+        //
+        // `report_exceptions => false` is what keeps this honest. Laravel puts the
+        // Throwable into the log context of every exception it reports, and
+        // SentryHandler turns that into its own capture. But bootstrap/app.php already
+        // reports those exceptions through `Integration::handles()`, which — unlike
+        // this path — carries the transaction name and mechanism hint. So the log
+        // channel must not claim them: with this off, an exception produces exactly
+        // one event (the hook's, properly grouped) and Log::error messages, which the
+        // hook never sees, produce one each. Without it every exception is reported
+        // twice, once of them ungrouped.
+        //
+        // No `action_level`. It looks free — buffer in memory, flush only once an
+        // error appears — but sentry-laravel 4.25.1 filters the flush with
+        // `$record['level'] >= $level`, and on Monolog 3 `LogRecord::offsetGet('level')`
+        // returns an int while `$level` is the `Level` enum. That comparison is false
+        // for every record, so the flush sends nothing: the channel reads as healthy
+        // and captures zero errors. Without it the handler takes the normal
+        // `handle()` path, where the level check uses `->value` on both sides.
+        'sentry' => [
+            'driver' => 'sentry',
+            'level' => 'error',
+            'report_exceptions' => false,
+        ],
+
     ],
 
 ];

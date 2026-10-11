@@ -16,6 +16,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -83,9 +84,8 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        $exceptions->reportable(function (Throwable $e) {
-            if (app()->bound('sentry')) {
-                app('sentry')->captureException($e);
-            }
-        });
+        // The supported Laravel 11+ entry point. `captureException()` on its own
+        // works, but it skips the exception mechanism hint and the transaction
+        // name that tracing middleware attaches, so every event lands ungrouped.
+        Integration::handles($exceptions);
     })->create();

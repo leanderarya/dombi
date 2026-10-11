@@ -67,7 +67,27 @@ jobs:
             php artisan migrate --force --no-interaction
             php artisan config:clear
             php artisan route:clear
-            php artisan cache:clear
+
+            # Same host, same failure mode as production: FileStore::flush() can
+            # return false while entries survive, and the reported error is not a
+            # permission diagnosis. Judge the store by what is left on disk.
+            cache_entries() {
+              find storage/framework/cache/data -type f ! -name '.gitignore' 2>/dev/null | wc -l | tr -d ' '
+            }
+
+            php artisan cache:clear || echo "cache:clear reported failure; checking the store directly"
+            remaining="$(cache_entries)"
+            if [ "$remaining" -gt 0 ]; then
+              echo "cache store holds $remaining entries after cache:clear; clearing directly"
+              find storage/framework/cache/data -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} + 2>/dev/null || true
+              remaining="$(cache_entries)"
+              if [ "$remaining" -gt 0 ]; then
+                echo "cache store still holds $remaining entries after direct clear"
+                exit 1
+              fi
+            fi
+            echo "cache store empty; continuing"
+
             php artisan view:clear
             php artisan storage:link || true
             echo "Running canonical payment verifier"
@@ -86,6 +106,7 @@ jobs:
           strip_components: 0
 
       - name: Verify staging health
+        if: always()
         run: |
           echo "Waiting 10s for app to boot"
           sleep 10
