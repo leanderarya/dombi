@@ -14,6 +14,69 @@ Production path wajib dikonfirmasi terhadap document root aktual pada Hostinger 
 production cutover diotorisasi. Perubahan ini tidak mengubah DNS, SSL, document root,
 secret, atau `.env` server.
 
+## SOP Rilis (operator tunggal)
+
+Satu jalur, tidak ada cabang. Setiap rilis menempuh urutan yang sama, dan tidak ada langkah
+yang boleh dilewati karena "kecil" atau "mendesak".
+
+```text
+ubah kode lokal
+  → quality gate lokal (pint, eslint, prettier, tsc, phpunit)
+  → commit ke branch, buka PR ke develop
+  → merge ke develop          → deploy-staging otomatis
+  → verifikasi di staging     → (bukti, bukan asumsi)
+  → PR develop → main         → job berhenti di `waiting`
+  → setujui environment production
+  → health gate hijau
+  → tag annotated + push
+```
+
+| Langkah | Perintah | Gerbang |
+| --- | --- | --- |
+| 1. Quality lokal | `composer lint:check && npm run lint && npm run format:check && npx tsc --noEmit && php artisan test` | Semua hijau sebelum commit |
+| 2. Masuk `develop` | PR ke `develop` (push langsung ditolak) | Check `quality` hijau |
+| 3. Staging | otomatis dari merge ke `develop` | `/up` + `/api/health` 200 |
+| 4. Verifikasi staging | jalankan skenario yang berubah, simpan bukti | Bukti nyata, bukan "kelihatannya jalan" |
+| 5. Masuk `main` | `gh pr create --base main --head develop` lalu `gh pr merge --merge` | Environment `production` disetujui |
+| 6. Health gate | `/up` + `/api/health` production | Keduanya 2xx |
+| 7. Tag | `git tag -a release-YYYY-MM-DD <sha> -F <pesan> && git push origin release-YYYY-MM-DD` | Hanya setelah langkah 6 hijau |
+
+### Jangan mengubah kode atau config lewat SSH
+
+Perubahan langsung di server terlihat lebih cepat, dan itulah satu-satunya keunggulannya.
+Empat hal yang hilang bersamaan:
+
+- **Tidak ada jejak.** Tidak ada commit, tidak ada PR, tidak ada diff. Sesi berikutnya
+  menemukan perilaku yang tidak dijelaskan kode mana pun.
+- **Hilang pada deploy berikutnya.** `deploy.yml` menjalankan `git reset --hard`. Setiap
+  suntingan pada berkas yang dilacak git lenyap tanpa peringatan.
+- **Tidak ada yang menguji.** Perubahan itu tidak pernah melewati satu pun quality gate.
+- **Tidak bisa di-rollback.** Rollback bekerja dengan menunjuk tag; perubahan di luar git
+  tidak punya tag.
+
+Bila ada yang mendesak di production, jalur yang benar tetap sama: perbaiki di lokal, uji,
+promosikan. Yang bisa dilakukan langsung di server hanya hal yang **tidak** dilacak git dan
+tidak mengubah perilaku kode — `.env`, isi `storage/`, dan perintah `artisan` yang
+read-only atau membangun ulang cache.
+
+### `.env` adalah perkecualian, dan urutannya mengikat
+
+`.env` tidak dilacak git, jadi ia memang satu-satunya hal yang wajar disunting di server.
+Tapi urutannya wajib **kode dulu, `.env` kemudian**. Contoh nyata 2026-10-11: production
+belum punya channel `sentry` di `config/logging.php`, sehingga provider menyuntik default
+tanpa `level` — yaitu `DEBUG`. Mengubah `.env` lebih dulu akan mengirim setiap
+`Log::debug`/`Log::info` ke Sentry. Kode harus mendarat lebih dulu.
+
+Perhatikan juga dua perbedaan yang mudah terlewat:
+
+- Beberapa perubahan butuh **dua** baris, bukan satu. Mengubah `LOG_CHANNEL=daily` menjadi
+  `stack` tanpa menambah `LOG_STACK` tidak melakukan apa pun.
+- Production memakai config cache, staging tidak. Setelah menyunting `.env` production,
+  jalankan `config:clear` **dan** `config:cache`. Di staging, `config:clear` cukup.
+
+Selalu salin `.env` ke luar web root sebelum menyuntingnya:
+`cp .env ~/env-backup-prod-$(date +%Y%m%d-%H%M%S).env`
+
 ## Pre-Cutover Gate
 
 Jangan push `main` sebelum setiap item memiliki evidence:
