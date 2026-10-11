@@ -98,4 +98,30 @@ class SentryReportingTest extends TestCase
 
         $this->assertCount(0, $this->sent);
     }
+
+    public function test_the_production_stack_shape_sends_one_event(): void
+    {
+        // The real shape, not a stand-in: `daily` is an
+        // AbstractProcessingHandler and returns false from handle(), so the
+        // loop continues to `sentry`. A non-bubbling member (the `null`
+        // channel) returns true and silently ends the chain — which is what a
+        // stand-in would have tested instead of the thing that ships.
+        $logFile = storage_path('logs/testing-stack.log');
+        config([
+            'logging.channels.daily.path' => $logFile,
+            'logging.channels.stack.channels' => ['daily', 'sentry'],
+            'logging.default' => 'stack',
+        ]);
+
+        Log::forgetChannel('daily');
+        Log::forgetChannel('stack');
+
+        try {
+            Log::error('Failed to create notification: disk on fire');
+
+            $this->assertCount(1, $this->sent);
+        } finally {
+            @unlink($logFile);
+        }
+    }
 }
