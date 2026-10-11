@@ -2,20 +2,38 @@
 set -e
 
 # Build APK script for Dombi
-# Usage: ./scripts/build-apk.sh [customer|internal]
+# Usage: ./scripts/build-apk.sh [customer|internal] [debug|release]
+#
+# debug   (default) → assembleDebug, unsigned debug key, safe to sideload for testing
+# release           → assembleRelease, signed with android/keystore.properties.
+#                     Fails loudly if that file is missing, because an unsigned
+#                     release APK is worse than no APK: it looks shippable and is not.
 
 APP_TYPE="${1:-customer}"
+BUILD_TYPE="${2:-debug}"
+
+if [ "$BUILD_TYPE" != "debug" ] && [ "$BUILD_TYPE" != "release" ]; then
+    echo "Usage: ./scripts/build-apk.sh [customer|internal] [debug|release]"
+    exit 1
+fi
 
 if [ "$APP_TYPE" = "customer" ]; then
     APP_ID="com.dombi.customer"
-    APP_NAME="Dombi"
-    echo "=== Building Customer APK ==="
+    APP_NAME="Dombi App"
+    echo "=== Building Customer APK ($BUILD_TYPE) ==="
 elif [ "$APP_TYPE" = "internal" ]; then
     APP_ID="com.dombi.internal"
     APP_NAME="Dombi Kurir"
-    echo "=== Building Courier/Outlet APK ==="
+    echo "=== Building Courier/Outlet APK ($BUILD_TYPE) ==="
 else
-    echo "Usage: ./scripts/build-apk.sh [customer|internal]"
+    echo "Usage: ./scripts/build-apk.sh [customer|internal] [debug|release]"
+    exit 1
+fi
+
+if [ "$BUILD_TYPE" = "release" ] && [ ! -f android/keystore.properties ]; then
+    echo "❌ android/keystore.properties not found."
+    echo "   A release build without it produces an UNSIGNED apk, which cannot be installed."
+    echo "   See docs/RELEASE_ANDROID.md for how to create and store the keystore."
     exit 1
 fi
 
@@ -35,16 +53,27 @@ if [ "$APP_TYPE" = "customer" ]; then
 else
     OTHER_PKG="com/dombi/customer"
 fi
-CURRENT_PKG="${APP_ID//./\/}"
+# tr, not ${APP_ID//./\/} — that substitution kept the backslashes, so the script
+# created a literal directory named `com\dombi\customer` beside the real one. Two
+# copies of the same package meant `duplicate class` on every build.
+CURRENT_PKG="$(printf '%s' "$APP_ID" | tr '.' '/')"
+BOGUS_PKG="$(printf '%s' "$APP_ID" | sed 's|\.|\\/|g')"
 
 echo "1. Cleaning stale Java package..."
 if [ -f "$JAVA_BASE/$OTHER_PKG/MainActivity.java" ]; then
     rm -f "$JAVA_BASE/$OTHER_PKG/MainActivity.java"
     echo "   Removed stale $OTHER_PKG/MainActivity.java"
     rmdir "$JAVA_BASE/$OTHER_PKG" 2>/dev/null || true
-    rmdir "$JAVA_BASE/com/dombi" 2>/dev/null || true
-    rmdir "$JAVA_BASE/com" 2>/dev/null || true
 fi
+
+# Remove the literal-backslash directories left by the old bug, for both packages.
+for pkg in "$BOGUS_PKG" 'com\/dombi\/internal' 'com\/dombi\/customer'; do
+    if [ -e "$JAVA_BASE/$pkg" ]; then
+        rm -rf "$JAVA_BASE/$pkg"
+        echo "   Removed malformed package dir: $pkg"
+    fi
+done
+[ -e "$JAVA_BASE/com\\" ] && rm -rf "$JAVA_BASE/com\\"
 
 echo "2. Creating Java package directory: $CURRENT_PKG"
 mkdir -p "$JAVA_BASE/$CURRENT_PKG"
@@ -134,11 +163,21 @@ if ! find_java17; then
 fi
 
 echo "   Using: $(java -version 2>&1 | head -1) | JAVA_HOME=$JAVA_HOME"
-cd android && ./gradlew clean assembleDebug
+if [ "$BUILD_TYPE" = "release" ]; then
+    cd android && ./gradlew clean assembleRelease
+else
+    cd android && ./gradlew clean assembleDebug
+fi
 cd ..
 
-APK_NAME="Dombi-${APP_TYPE}-v1.0.apk"
-cp android/app/build/outputs/apk/debug/app-debug.apk ~/Desktop/$APK_NAME
+# Single source of truth for the version is android/app/build.gradle; read it back
+# rather than hardcoding it here, or the filename will drift from the shipped app.
+VERSION_NAME=$(grep -oE 'versionName "[^"]+"' android/app/build.gradle | head -1 | cut -d'"' -f2)
+OUT_DIR="debug"
+[ "$BUILD_TYPE" = "release" ] && OUT_DIR="release"
+
+APK_NAME="Dombi-${APP_TYPE}-v${VERSION_NAME}-${BUILD_TYPE}.apk"
+cp "android/app/build/outputs/apk/${OUT_DIR}/app-${OUT_DIR}.apk" ~/Desktop/$APK_NAME
 
 echo ""
 echo "=== Build complete ==="

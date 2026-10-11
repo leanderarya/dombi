@@ -219,15 +219,23 @@ canary order bernilai kecil, DOKU callback/webhook, queue, dan log.
 
 ## Production APK
 
+Ritual lengkapnya ada di **[RELEASE_ANDROID.md](RELEASE_ANDROID.md)** — keystore, penandatanganan,
+verifikasi, screenshot, dan aturan update. Bagian ini hanya ringkasannya.
+
 Default build tetap memakai staging untuk mencegah accidental production build. Build APK production
-harus menetapkan server URL secara eksplisit:
+harus menetapkan server URL secara eksplisit, dan **harus** memakai mode `release`:
 
 ```bash
-CAP_SERVER_URL=https://app.dombicenter.com ./scripts/build-apk.sh customer
-CAP_SERVER_URL=https://app.dombicenter.com ./scripts/build-apk.sh internal
+CAP_SERVER_URL=https://app.dombicenter.com ./scripts/build-apk.sh customer release
+CAP_SERVER_URL=https://app.dombicenter.com ./scripts/build-apk.sh internal release
 ```
 
-Simpan command, commit SHA, dan artifact APK sebagai release evidence. APK yang sudah terpasang
+Mode `release` menolak berjalan tanpa `android/keystore.properties`; tanpa berkas itu Gradle
+menghasilkan APK **tidak bertanda tangan** yang tidak bisa dipasang, dan kegagalannya baru
+terlihat di tangan pengguna. Mode ini juga mewajibkan `versionCode` naik setiap rilis, atau
+Android menolak memasang update di atas versi terpasang.
+
+Simpan command, commit SHA, SHA-256 berkas APK, dan artifact APK sebagai release evidence. APK yang sudah terpasang
 mempertahankan URL yang dibake saat build; web domain cutover tidak mengubah APK lama.
 
 ## Rollback
