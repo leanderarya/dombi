@@ -46,6 +46,14 @@ docs/archive/
 /android/capacitor-cordova-android-plugins/build/
 *.apk
 
+# Android signing material — never commit. Losing the keystore means the app can
+# never be updated again, and leaking it lets anyone sign an update for it.
+# android/.gitignore ships these two patterns COMMENTED OUT; the root rule is the
+# one that actually holds.
+*.jks
+*.keystore
+/android/keystore.properties
+
 
 # Claude Code
 .agents/
