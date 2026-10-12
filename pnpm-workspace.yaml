@@ -1,4 +1,9 @@
 allowBuilds:
-  unrs-resolver: set this to true or false
+  # Was the literal placeholder pnpm auto-inserts ("set this to true or
+  # false"), never answered, so pnpm 11 treated the package as unreviewed
+  # and strictDepBuilds failed every install. postinstall.js is only a
+  # napi-postinstall copier and the platform binding arrives as an
+  # optionalDependency, so declining the script costs nothing here.
+  unrs-resolver: false
 publicHoistPattern:
   - '@inertiajs/core'
