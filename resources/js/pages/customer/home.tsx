@@ -190,13 +190,17 @@ function HeroCarousel({
                 {/* Dots */}
                 <div className="mt-3 flex items-center justify-center gap-1.5">
                     {slides.map((_, i) => (
-                        <Button
+                        // A plain <button>, not <Button>: buttonVariants carries
+                        // pointer-coarse:min-h-11 (and min-w-11 for size="icon"),
+                        // which overrides h-1.5/w-1.5 on touch and blew every dot
+                        // up to a 44px blob. The dot is a visual marker, so it
+                        // opts out of the shared touch-target floor.
+                        <button
                             key={i}
                             type="button"
-                            variant="ghost"
-                            size="icon"
                             onClick={() => setIndex(i)}
                             aria-label={`Slide ${i + 1}`}
+                            aria-current={i === index || undefined}
                             className={`rounded-full transition-all duration-300 ${
                                 i === index
                                     ? 'h-1.5 w-5 bg-white hover:bg-white'
