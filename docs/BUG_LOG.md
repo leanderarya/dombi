@@ -3,7 +3,7 @@
 > **Session:** 2026-08-10 · Branch `develop`
 > **Tujuan:** Mencatat bug yang ditemukan saat testing manual, plus file relevan untuk fix.
 > **Format bug baru:** tambah baris ke tabel `## Log` dengan ID `B-<n>`. Jangan edit baris lama; update status via kolom Status.
-> File referensi: `docs/TESTING.md` (test guide + known issues), `docs/PROGRESS.md` (progress).
+> File referensi: `docs/TESTING.md` (test guide + known issues).
 
 ---
 

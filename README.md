@@ -2,26 +2,47 @@
 
 [![Deploy Staging](https://github.com/leanderarya/dombi/actions/workflows/deploy-staging.yml/badge.svg)](https://github.com/leanderarya/dombi/actions/workflows/deploy-staging.yml)
 
-Operational commerce platform untuk distribusi produk segar harian.
+Operational commerce platform untuk bisnis susu kambing Dombi. Satu sistem menangani
+siklus penuh operasi harian: katalog → keranjang → checkout → pembayaran online →
+persiapan order → pengantaran → settlement keuangan. Tujuannya memusatkan operasi yang
+sebelumnya tersebar (order via WhatsApp, stok di kertas, laporan manual) dan
+menghilangkan koreksi transaksi manual.
+
+## Empat Panel
+
+Aplikasi **customer** menghadap pelanggan lewat APK Android (`com.dombi.customer`,
+sideload) dan PWA. Tiga panel **internal** (Owner, Outlet, Courier) diakses lewat browser.
+
+| Panel | Pengguna | Inti pekerjaan |
+|---|---|---|
+| **Customer** | Pelanggan (guest atau terdaftar) | Katalog, checkout pickup/delivery, bayar online, tracking berbasis token, cancel, refund/return/exchange |
+| **Outlet** | Staf titik penjualan | Proses order masuk (`confirmed → preparing → ready`), stok & restock, pilih kurir, penjualan offline, settlement |
+| **Owner** | Pemilik bisnis | Katalog, harga & zona ongkir, stok pusat, verifikasi settlement, kelola kurir, refund manual, dashboard analitik |
+| **Courier** | Kurir pengantar | Lihat assignment sendiri, update status pengantaran, riwayat |
 
 ## Tech Stack
 
-- **Backend:** Laravel 13, PHP 8.3, MySQL 8
-- **Frontend:** React 19, TypeScript, Tailwind CSS v4, Inertia.js
-- **Mobile:** Capacitor (Android)
-- **Payment:** DOKU (QRIS, Transfer, VA)
-- **Auth:** Google OAuth + session-based
+- **Backend:** Laravel 13.8, PHP 8.3, MySQL 8
+- **Frontend:** React 19, TypeScript, Inertia.js 3, Tailwind CSS v4, Vite
+- **Mobile:** Capacitor Android (`com.dombi.customer`)
+- **Pembayaran:** DOKU — QRIS, Transfer Bank, VA, E-Wallet, Kartu (webhook idempotent)
+- **Push:** Web Push (VAPID) + FCM
+- **Auth:** Google OAuth + guest checkout (nama, nomor telepon, guest token)
 - **Maps:** Leaflet + OpenStreetMap
 - **Monitoring:** Sentry
+- **Backup:** spatie/laravel-backup
 
-## Roles
+## Status Rilis
 
-| Role | Description |
-|------|-------------|
-| **Customer** | Belanja produk via app Android / PWA |
-| **Outlet** | Kelola pesanan, stok, restock, settlement |
-| **Owner** | Kelola produk, outlet, pricing, keuangan, kurir |
-| **Courier** | Antar pesanan ke customer |
+| Environment | URL | Sumber |
+|---|---|---|
+| Production | `https://app.dombicenter.com` | branch `main`, tag `release-YYYY-MM-DD` |
+| Staging | `https://staging.dombicenter.com` | branch `develop` |
+
+- **Web** live di production. Rilis terakhir: tag `release-2026-10-11.2`.
+- **Android (customer)** dirilis sebagai **APK bertanda tangan sideload**, v1.1
+  (`versionCode 2`) — belum Play Store. Ritual: [RELEASE_ANDROID.md](docs/RELEASE_ANDROID.md).
+- Branch `main` dan `develop` diproteksi: push langsung ditolak, semua lewat PR.
 
 ## Development
 
@@ -51,11 +72,14 @@ php artisan serve
 
 ## Testing
 
-Pull requests and pushes to `develop` or `main` run the GitHub Actions
-`Quality Gate`: PHP tests on disposable MySQL 8, PHP formatting, frontend
-format/lint/type checks, Vitest, and the production frontend build.
+Pull requests dan push ke `develop` atau `main` menjalankan GitHub Actions **Quality
+Gate**: PHP test di MySQL 8 sekali pakai, format PHP, format/lint/type frontend, Vitest,
+dan production build frontend.
 
 ```bash
+# Quality gate lokal (perintah yang sama dengan CI)
+composer lint:check && npm run lint && npm run format:check && npx tsc --noEmit && php artisan test
+
 # Run all tests
 php artisan test
 
@@ -63,28 +87,57 @@ php artisan test
 php artisan test --testsuite=Feature
 ```
 
-## Deployment
+## Release
 
-GitHub Actions menjalankan quality gate untuk push dan pull request ke `develop` atau `main`.
+Dua jalur rilis yang tidak saling menggantikan. SOP operator tunggal lengkap ada di
+[Deployment Runbook](docs/DEPLOYMENT.md).
 
-- Push ke `develop` → deploy staging: `https://staging.dombicenter.com`
-- Push ke `main` → deploy production: `https://app.dombicenter.com`
+### Web (develop → main)
 
-Detail pre-cutover gate, deployment, health check, APK, dan rollback:
-[Deployment Runbook](docs/DEPLOYMENT.md)
+```text
+ubah kode lokal
+  → quality gate lokal hijau
+  → PR ke develop                → quality gate CI
+  → merge ke develop             → deploy staging otomatis
+  → verifikasi di staging        → simpan bukti
+  → PR develop → main            → setujui environment production
+  → health gate (/up + /api/health 2xx)
+  → tag annotated + push
+```
+
+Detail pre-cutover gate, health check, dan rollback: [DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+### Android APK
+
+APK memuat situs langsung, jadi perubahan web sudah terlihat tanpa merilis APK baru. APK
+baru hanya perlu kalau ada perubahan native (plugin, izin, ikon, splash, nama, URL server).
+
+```bash
+# 1. Naikkan versionCode (wajib) + versionName di android/app/build.gradle
+# 2. Build production (URL dibake ke APK)
+CAP_SERVER_URL=https://app.dombicenter.com ./scripts/build-apk.sh customer release
+# 3. Verifikasi: apksigner, aapt2, install di perangkat, uji kamera/barcode/lokasi
+# 4. Catat evidence, lalu serahkan APK
+```
+
+Tanpa `CAP_SERVER_URL`, build memakai staging — sengaja, supaya build produksi tidak
+pernah terjadi karena lupa. Langkah lengkap + penandatanganan: [RELEASE_ANDROID.md](docs/RELEASE_ANDROID.md).
 
 ## Documentation
 
-- [Product Scope](docs/PRODUCT_SCOPE.md) - Scope soft launch dan batas fitur
+- [Product Scope](docs/PRODUCT_SCOPE.md) - Sumber kebenaran scope soft launch dan invariant bisnis
 - [Production Checklist](docs/PRODUCTION_CHECKLIST.md) - Gate go/no-go berbasis bukti
-- [Test Strategy](docs/TEST_STRATEGY.md) - Pengujian berbasis risiko
+- [Deployment Runbook](docs/DEPLOYMENT.md) - SOP rilis, health gate, rollback
+- [Android Release](docs/RELEASE_ANDROID.md) - Ritual rilis APK dan keystore
+- [Testing](docs/TESTING.md) - Strategi dan panduan pengujian
 - [Runbook](docs/RUNBOOK.md) - Operasi dan penanganan insiden
+- [Bug Log](docs/BUG_LOG.md) - Bug hasil testing manual
+- [Backup & Restore](docs/BACKUP_RESTORE.md) - Prosedur backup
 - [Product Images](docs/PRODUCT-IMAGES.md) - Image management guide
 - [DOKU Payment](docs/doku-payment.md) - Payment integration docs
 
-`PRD.md`, `PROGRESS.md`, `ROADMAP.md`, `TESTING.md`, dan `DEPLOYMENT.md` memuat
-snapshot serta riwayat lama. Jangan gunakan dokumen tersebut sebagai keputusan
-release tanpa memverifikasinya terhadap empat dokumen operasional di atas.
+`docs/PRD.md` adalah draft (v0.4) dan memuat riwayat lama. Untuk keputusan release,
+acu ke Product Scope dan Production Checklist di atas.
 
 ## License
 
