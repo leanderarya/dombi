@@ -77,14 +77,14 @@ Detail pre-cutover gate, deployment, health check, APK, dan rollback:
 
 - [Product Scope](docs/PRODUCT_SCOPE.md) - Scope soft launch dan batas fitur
 - [Production Checklist](docs/PRODUCTION_CHECKLIST.md) - Gate go/no-go berbasis bukti
-- [Test Strategy](docs/TEST_STRATEGY.md) - Pengujian berbasis risiko
+- [Testing](docs/TESTING.md) - Strategi dan panduan pengujian
 - [Runbook](docs/RUNBOOK.md) - Operasi dan penanganan insiden
 - [Product Images](docs/PRODUCT-IMAGES.md) - Image management guide
 - [DOKU Payment](docs/doku-payment.md) - Payment integration docs
 
-`PRD.md`, `PROGRESS.md`, `ROADMAP.md`, `TESTING.md`, dan `DEPLOYMENT.md` memuat
-snapshot serta riwayat lama. Jangan gunakan dokumen tersebut sebagai keputusan
-release tanpa memverifikasinya terhadap empat dokumen operasional di atas.
+`PRD.md` dan `DEPLOYMENT.md` memuat snapshot serta riwayat lama. Jangan gunakan
+dokumen tersebut sebagai keputusan release tanpa memverifikasinya terhadap dokumen
+operasional di atas.
 
 ## License
 
