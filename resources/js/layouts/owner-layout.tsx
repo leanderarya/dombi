@@ -88,6 +88,7 @@ const navGroups: NavGroup[] = [
                 label: 'Harga',
                 isActive: (url: string) => url.startsWith('/owner/pricing'),
             },
+            { href: '/owner/banners', label: 'Banner' },
             { href: '/owner/inventories', label: 'Inventaris' },
             { href: '/owner/restocks', label: 'Restock' },
         ],
