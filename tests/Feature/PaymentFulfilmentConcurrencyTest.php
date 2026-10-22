@@ -25,6 +25,16 @@ class PaymentFulfilmentConcurrencyTest extends TestCase
 {
     use DatabaseTruncation;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->beforeApplicationDestroyed(function (): void {
+            DB::connection()->setTransactionManager(null);
+            $this->truncateTablesForAllConnections();
+        });
+    }
+
     public function test_completion_constraint_migration_backfills_and_reports_duplicates(): void
     {
         $migration = file_get_contents(database_path('migrations/2026_08_24_000008_add_fulfilment_integrity_constraints.php'));
