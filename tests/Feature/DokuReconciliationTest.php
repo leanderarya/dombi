@@ -12,7 +12,7 @@ use App\Services\DokuService;
 use App\Services\DokuWebhookIngressService;
 use App\Services\TransitionResult;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
@@ -24,7 +24,7 @@ use Tests\TestCase;
 
 class DokuReconciliationTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTruncation;
 
     private DokuReconciliationService $reconciliation;
 

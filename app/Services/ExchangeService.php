@@ -23,6 +23,8 @@ class ExchangeService
     public function createRequest(Outlet $outlet, User $requester, array $data): ExchangeRequest
     {
         return DB::transaction(function () use ($outlet, $requester, $data) {
+            Outlet::lockForSettlement($outlet->id);
+
             if (empty($data['return_request_id'])) {
                 throw ValidationException::withMessages([
                     'return_request_id' => ['Exchange harus merujuk ke return yang sudah diterima di pusat.'],
@@ -216,6 +218,7 @@ class ExchangeService
     public function markShipped(ExchangeRequest $exchange, User $owner): ExchangeRequest
     {
         return DB::transaction(function () use ($exchange, $owner) {
+            Outlet::lockForSettlement((int) $exchange->outlet_id);
             $exchange = $this->lockExchange($exchange->id);
 
             if (! $exchange->isPreparing() && ! $exchange->isApproved()) {
@@ -257,6 +260,7 @@ class ExchangeService
     public function confirmReceived(ExchangeRequest $exchange, User $outletUser, ?string $notes = null): ExchangeRequest
     {
         return DB::transaction(function () use ($exchange, $outletUser, $notes) {
+            Outlet::lockForSettlement((int) $exchange->outlet_id);
             $exchange = $this->lockExchange($exchange->id);
 
             if (! $exchange->isShipped()) {
@@ -289,6 +293,7 @@ class ExchangeService
     public function completeExchange(ExchangeRequest $exchange, User $owner): ExchangeRequest
     {
         return DB::transaction(function () use ($exchange, $owner) {
+            Outlet::lockForSettlement((int) $exchange->outlet_id);
             $exchange = $this->lockExchange($exchange->id);
 
             if (! $exchange->isReceived()) {

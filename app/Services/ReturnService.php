@@ -23,6 +23,7 @@ class ReturnService
     public function createRequest(Outlet $outlet, User $requester, array $data, array $evidenceImages = []): ReturnRequest
     {
         return DB::transaction(function () use ($outlet, $requester, $data, $evidenceImages) {
+            Outlet::lockForSettlement($outlet->id);
             $totalValue = 0;
             $items = [];
             $this->assertOutletHasAvailableStock($outlet, $data['items']);
@@ -138,6 +139,9 @@ class ReturnService
     public function markReceivedAtCenter(ReturnRequest $return, User $owner, ?string $notes = null): ReturnRequest
     {
         return DB::transaction(function () use ($return, $owner, $notes) {
+            if ($return->outlet_id) {
+                Outlet::lockForSettlement((int) $return->outlet_id);
+            }
             if (! $return->isApproved()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only approved requests can be marked as received.'],
@@ -291,6 +295,9 @@ class ReturnService
     public function completeReturn(ReturnRequest $return, User $owner, ?string $notes = null, bool $recordAdjustment = true): ReturnRequest
     {
         return DB::transaction(function () use ($return, $owner, $notes, $recordAdjustment) {
+            if ($recordAdjustment) {
+                Outlet::lockForSettlement((int) $return->outlet_id);
+            }
             if (! $return->isReceivedAtCenter()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only received requests can be completed.'],

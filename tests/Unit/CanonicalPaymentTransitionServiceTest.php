@@ -9,13 +9,13 @@ use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
 use App\Services\CanonicalPaymentTransitionService;
 use App\Services\NormalizedPaymentEvent;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CanonicalPaymentTransitionServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTruncation;
 
     public function test_payment_aggregate_lock_order_is_order_then_attempt(): void
     {
