@@ -54,7 +54,9 @@ export default function HeroBanner({ banners }: { banners: HeroSlide[] }) {
         pauseForFocus,
         toggleRotation,
     } = useHeroSlides(banners, { temporarilyPaused: hovered || touching });
-    const touchStart = useRef<{ id: number; x: number; y: number } | null>(null);
+    const touchStart = useRef<{ id: number; x: number; y: number } | null>(
+        null,
+    );
     const keyboardNavigation = useRef(false);
     const swipeClickPending = useRef(false);
 
@@ -148,7 +150,9 @@ export default function HeroBanner({ banners }: { banners: HeroSlide[] }) {
             onBlurCapture={(event) => {
                 if (
                     event.target instanceof HTMLElement &&
-                    !event.currentTarget.contains(event.relatedTarget as Node | null)
+                    !event.currentTarget.contains(
+                        event.relatedTarget as Node | null,
+                    )
                 ) {
                     keyboardNavigation.current = false;
                 }
