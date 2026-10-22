@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\SettlementGeneratorService;
 use App\Services\SettlementPaymentService;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -21,6 +22,29 @@ use Tests\TestCase;
 
 class SettlementConcurrencyTest extends TestCase
 {
+    use DatabaseTruncation;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->beforeApplicationDestroyed(function (): void {
+            $connection = DB::connection();
+            while ($connection->transactionLevel() > 0) {
+                $connection->rollBack();
+            }
+
+            if (function_exists('pcntl_waitpid')) {
+                while (pcntl_waitpid(-1, $status) > 0) {
+                    // Wait for every forked worker before truncating shared tables.
+                }
+            }
+
+            $connection->setTransactionManager(null);
+            $this->truncateTablesForAllConnections();
+        });
+    }
+
     public function test_pending_payment_blocks_concurrent_offline_sale_edit(): void
     {
         $this->requireProductionDatabase();

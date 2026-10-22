@@ -21,6 +21,16 @@ class PickupCompletionConcurrencyTest extends TestCase
 {
     use DatabaseTruncation;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->beforeApplicationDestroyed(function (): void {
+            DB::connection()->setTransactionManager(null);
+            $this->truncateTablesForAllConnections();
+        });
+    }
+
     public function test_valid_pickup_completion_writes_expected_sale_and_inventory_effects(): void
     {
         [$order, $user, $product] = $this->makePickupContext();
