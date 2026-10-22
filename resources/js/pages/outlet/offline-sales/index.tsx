@@ -97,37 +97,79 @@ export default function OfflineSalesIndex({
                                         {formatDate(group.date)}
                                     </span>
                                     <span className="text-xs font-semibold text-text-muted tabular-nums">
-                                        {group.items.length} jualan ·{' '}
-                                        {formatCurrency(group.total)}
+                                        {group.items.length} jualan · Setoran
+                                        Owner {formatCurrency(group.total)}
                                     </span>
                                 </div>
                                 <div className="space-y-2">
                                     {group.items.map((sale: any) => (
-                                        <Link
+                                        <div
                                             key={sale.id}
-                                            href={`/outlet/offline-sales/${sale.id}`}
-                                            className="block rounded-xl border border-border bg-surface px-3.5 py-2.5 active:bg-surface-muted"
+                                            className="rounded-xl border border-border bg-surface px-3.5 py-2.5"
                                         >
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm font-semibold text-text">
-                                                    {sale.product?.category
-                                                        ?.name
-                                                        ? `${sale.product.category.name} - ${sale.product.name}`
-                                                        : (sale.product?.name ??
-                                                          '-')}
-                                                </span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-bold text-text tabular-nums">
-                                                        {formatCurrency(
-                                                            sale.total_amount,
+                                            <div className="flex items-center justify-between gap-2">
+                                                <Link
+                                                    href={`/outlet/offline-sales/${sale.id}`}
+                                                    className="min-w-0 flex-1 rounded-lg active:bg-surface-muted"
+                                                >
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div>
+                                                            <div className="text-sm font-semibold text-text">
+                                                                {sale.product
+                                                                    ?.category
+                                                                    ?.name
+                                                                    ? `${sale.product.category.name} - ${sale.product.name}`
+                                                                    : (sale
+                                                                          .product
+                                                                          ?.name ??
+                                                                      '-')}
+                                                            </div>
+                                                            <div className="mt-1 text-xs text-text-muted">
+                                                                {sale.quantity}{' '}
+                                                                x{' '}
+                                                                {formatCurrency(
+                                                                    sale.center_price,
+                                                                )}
+                                                                {sale.payment_method ? (
+                                                                    <span className="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-caption font-semibold text-text-muted uppercase">
+                                                                        {
+                                                                            sale.payment_method
+                                                                        }
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-right text-sm font-bold text-text tabular-nums">
+                                                            {sale.gross_amount !==
+                                                            null
+                                                                ? formatCurrency(
+                                                                      sale.gross_amount,
+                                                                  )
+                                                                : 'Gross tidak tersedia'}
+                                                            <span className="block text-caption font-medium text-text-muted">
+                                                                Setoran Owner{' '}
+                                                                {formatCurrency(
+                                                                    sale.total_amount,
+                                                                )}
+                                                            </span>
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-1 flex justify-end text-xs text-text-muted">
+                                                        {formatDate(
+                                                            sale.created_at,
                                                         )}
-                                                    </span>
+                                                    </div>
+                                                    {sale.notes && (
+                                                        <div className="mt-1 text-xs text-text-subtle">
+                                                            {sale.notes}
+                                                        </div>
+                                                    )}
+                                                </Link>
+                                                <div className="flex shrink-0 items-center gap-2">
                                                     <Button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            setEditTarget(sale);
-                                                        }}
+                                                        onClick={() =>
+                                                            setEditTarget(sale)
+                                                        }
                                                         aria-label="Edit penjualan"
                                                         variant="ghost"
                                                         size="icon"
@@ -136,13 +178,11 @@ export default function OfflineSalesIndex({
                                                         <Pencil className="h-4 w-4" />
                                                     </Button>
                                                     <Button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
+                                                        onClick={() =>
                                                             setDeleteTarget(
                                                                 sale.id,
-                                                            );
-                                                        }}
+                                                            )
+                                                        }
                                                         aria-label="Hapus penjualan"
                                                         variant="ghost"
                                                         size="icon"
@@ -152,32 +192,7 @@ export default function OfflineSalesIndex({
                                                     </Button>
                                                 </div>
                                             </div>
-                                            <div className="mt-1 flex items-center justify-between text-xs text-text-muted">
-                                                <span>
-                                                    {sale.quantity} x{' '}
-                                                    {formatCurrency(
-                                                        sale.center_price,
-                                                    )}
-                                                    {sale.payment_method ? (
-                                                        <span className="ml-2 rounded-full bg-surface-muted px-2 py-0.5 text-caption font-semibold text-text-muted uppercase">
-                                                            {
-                                                                sale.payment_method
-                                                            }
-                                                        </span>
-                                                    ) : null}
-                                                </span>
-                                                <span>
-                                                    {formatDate(
-                                                        sale.created_at,
-                                                    )}
-                                                </span>
-                                            </div>
-                                            {sale.notes && (
-                                                <div className="mt-1 text-xs text-text-subtle">
-                                                    {sale.notes}
-                                                </div>
-                                            )}
-                                        </Link>
+                                        </div>
                                     ))}
                                 </div>
                             </div>

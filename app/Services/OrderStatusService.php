@@ -89,6 +89,11 @@ class OrderStatusService
         }
 
         return DB::transaction(function () use ($order, $reason, $note, $actor): Order {
+            $outletId = Order::query()->whereKey($order->id)->value('outlet_id');
+            if ($outletId !== null) {
+                Outlet::lockForSettlement((int) $outletId);
+            }
+
             $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
 
             if (! $order->isPendingConfirmation()) {
@@ -159,30 +164,33 @@ class OrderStatusService
 
     public function completePickup(Order $order, User $user): Order
     {
-        if ($order->fulfillment_type !== 'pickup') {
-            throw ValidationException::withMessages([
-                'fulfillment_type' => 'Hanya pesanan pickup yang bisa diselesaikan dengan cara ini.',
-            ]);
-        }
-
-        if ($order->status !== Order::STATUS_READY_FOR_PICKUP) {
-            throw ValidationException::withMessages([
-                'status' => 'Pesanan harus dalam status siap diambil.',
-            ]);
-        }
-
-        $lockedOrder = Order::lockForUpdate()->find($order->id);
-        if (! in_array($lockedOrder->payment_status ?? $order->payment_status, [
-            PaymentStatus::Paid->value,
-            PaymentStatus::Settled->value,
-        ], true)) {
-            throw ValidationException::withMessages([
-                'payment_status' => 'Pesanan belum dibayar dan tidak dapat diproses.',
-            ]);
-        }
-
         return DB::transaction(function () use ($order, $user): Order {
+            $outletId = Order::query()->whereKey($order->id)->value('outlet_id');
+            if ($outletId !== null) {
+                Outlet::lockForSettlement((int) $outletId);
+            }
+
             $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
+            if ($order->fulfillment_type !== 'pickup') {
+                throw ValidationException::withMessages([
+                    'fulfillment_type' => 'Hanya pesanan pickup yang bisa diselesaikan dengan cara ini.',
+                ]);
+            }
+
+            if ($order->status !== Order::STATUS_READY_FOR_PICKUP) {
+                throw ValidationException::withMessages([
+                    'status' => 'Pesanan harus dalam status siap diambil.',
+                ]);
+            }
+
+            if (! in_array($order->payment_status, [
+                PaymentStatus::Paid->value,
+                PaymentStatus::Settled->value,
+            ], true)) {
+                throw ValidationException::withMessages([
+                    'payment_status' => 'Pesanan belum dibayar dan tidak dapat diproses.',
+                ]);
+            }
             $fromStatus = $order->status;
 
             $order->update([
@@ -215,6 +223,11 @@ class OrderStatusService
     public function completeFromPayment(Order $order): Order
     {
         return DB::transaction(function () use ($order): Order {
+            $outletId = Order::query()->whereKey($order->id)->value('outlet_id');
+            if ($outletId !== null) {
+                Outlet::lockForSettlement((int) $outletId);
+            }
+
             $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
             if ($order->status === Order::STATUS_COMPLETED) {
                 return $order;
@@ -265,6 +278,11 @@ class OrderStatusService
     public function transition(Order $order, string $newStatus, array $context = []): Order
     {
         return DB::transaction(function () use ($order, $newStatus, $context): Order {
+            $outletId = Order::query()->whereKey($order->id)->value('outlet_id');
+            if ($outletId !== null) {
+                Outlet::lockForSettlement((int) $outletId);
+            }
+
             $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
             $fromStatus = $order->status;
 

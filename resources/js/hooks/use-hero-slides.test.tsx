@@ -34,6 +34,10 @@ beforeEach(() => {
     (
         globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
+    Object.defineProperty(document, 'hidden', {
+        configurable: true,
+        value: false,
+    });
     container = document.createElement('div');
     root = createRoot(container);
 });

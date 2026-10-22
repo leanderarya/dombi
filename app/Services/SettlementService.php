@@ -18,25 +18,31 @@ class SettlementService
      */
     public function recordSale(Order $order): void
     {
-        if ($order->status !== 'completed') {
-            return;
-        }
+        DB::transaction(function () use ($order): void {
+            $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
+            if ($order->status !== Order::STATUS_COMPLETED || OutletPayable::query()
+                ->where('order_id', $order->id)
+                ->where('type', 'sale')
+                ->exists()) {
+                return;
+            }
 
-        $centerShare = $order->items->sum(fn (OrderItem $item) => (float) $item->center_price_snapshot * $item->quantity);
-        $outletMargin = $order->items->sum(fn (OrderItem $item) => (float) $item->outlet_margin_snapshot * $item->quantity);
+            $centerShare = $order->items->sum(fn (OrderItem $item) => (float) $item->center_price_snapshot * $item->quantity);
+            $outletMargin = $order->items->sum(fn (OrderItem $item) => (float) $item->outlet_margin_snapshot * $item->quantity);
 
-        OutletPayable::create([
-            'outlet_id' => $order->outlet_id,
-            'order_id' => $order->id,
-            'type' => 'sale',
-            'amount' => (float) $order->total,
-            'center_share' => $centerShare,
-            'outlet_margin' => $outletMargin,
-            'due_date' => now()->endOfWeek(Carbon::SUNDAY)->addDays(7)->toDateString(),
-            'paid_amount' => 0,
-            'remaining_amount' => $centerShare,
-            'notes' => "Penjualan order {$order->order_code}",
-        ]);
+            OutletPayable::create([
+                'outlet_id' => $order->outlet_id,
+                'order_id' => $order->id,
+                'type' => 'sale',
+                'amount' => (float) $order->total,
+                'center_share' => $centerShare,
+                'outlet_margin' => $outletMargin,
+                'due_date' => now()->endOfWeek(Carbon::SUNDAY)->addDays(7)->toDateString(),
+                'paid_amount' => 0,
+                'remaining_amount' => $centerShare,
+                'notes' => "Penjualan order {$order->order_code}",
+            ]);
+        });
     }
 
     /**

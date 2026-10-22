@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Order;
+use App\Models\Outlet;
 use App\Services\DokuService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,11 @@ class DokuMarkPaid extends Command
 
         try {
             DB::transaction(function () use ($order) {
+                $outletId = Order::query()->whereKey($order->id)->value('outlet_id');
+                if ($outletId !== null) {
+                    Outlet::lockForSettlement((int) $outletId);
+                }
+
                 $locked = Order::lockForUpdate()
                     ->with('paymentTransactions')
                     ->findOrFail($order->id);

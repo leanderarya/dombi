@@ -6,12 +6,12 @@ use App\Models\Outlet;
 use App\Models\Settlement;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Tests\TestCase;
 
 class SettlementReminderTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTruncation;
 
     public function test_sends_reminders_for_settlements_due_tomorrow(): void
     {

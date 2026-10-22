@@ -47,22 +47,45 @@ const prefersReducedMotion = () =>
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 const serverPaused = () => true;
 
-export function useHeroSlides(banners: HeroSlide[] = []) {
+export function useHeroSlides(
+    banners: HeroSlide[] = [],
+    { temporarilyPaused = false }: { temporarilyPaused?: boolean } = {},
+) {
     const slides = banners.length ? banners : DEFAULT_HERO_SLIDES;
     const [selection, setSelection] = useState<{ id: HeroSlide['id'] } | null>(
         null,
+    );
+    const [manuallyPaused, setManuallyPaused] = useState(false);
+    const [focusPaused, setFocusPaused] = useState(false);
+    const [playRequested, setPlayRequested] = useState(false);
+    const [documentHidden, setDocumentHidden] = useState(
+        () => typeof document !== 'undefined' && document.hidden,
     );
     const reducedMotion = useSyncExternalStore(
         subscribeMotion,
         prefersReducedMotion,
         serverPaused,
     );
+    useEffect(() => {
+        const updateVisibility = () => setDocumentHidden(document.hidden);
+        document.addEventListener('visibilitychange', updateVisibility);
+
+        return () =>
+            document.removeEventListener('visibilitychange', updateVisibility);
+    }, []);
+
     const idsKey = JSON.stringify(slides.map((slide) => slide.id));
     const index = Math.max(
         0,
         slides.findIndex((slide) => slide.id === selection?.id),
     );
-    const rotating = slides.length > 1 && !reducedMotion;
+    const rotating =
+        slides.length > 1 &&
+        !reducedMotion &&
+        !manuallyPaused &&
+        (!focusPaused || playRequested) &&
+        !temporarilyPaused &&
+        !documentHidden;
 
     useEffect(() => {
         if (!rotating) {
@@ -92,6 +115,22 @@ export function useHeroSlides(banners: HeroSlide[] = []) {
     const move = (direction: number) => {
         setIndex((index + direction + slides.length) % slides.length);
     };
+    const play = () => {
+        setManuallyPaused(false);
+        setPlayRequested(true);
+    };
+    const paused = manuallyPaused || (focusPaused && !playRequested);
+    const pauseForFocus = () => {
+        setFocusPaused(true);
+        setPlayRequested(false);
+    };
+    const toggleRotation = () => {
+        if (paused) {
+            play();
+        } else {
+            setManuallyPaused(true);
+        }
+    };
 
     return {
         slides,
@@ -100,6 +139,9 @@ export function useHeroSlides(banners: HeroSlide[] = []) {
         move,
         current: slides[index],
         rotating,
+        paused,
         reducedMotion,
+        pauseForFocus,
+        toggleRotation,
     };
 }
