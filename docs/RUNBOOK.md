@@ -209,3 +209,11 @@ Walaupun saat ini solo developer, satu orang lain harus dapat menemukan:
 - kontak vendor dan prosedur menghentikan transaksi.
 
 Nilai secret tidak boleh ditulis di repository.
+
+## Dombi V1 production preparation and cutover hold
+
+See [Production cutover V1](PRODUCTION-CUTOVER-V1.md) for the independent database/writer
+gates, historical financial dispositions, old callback continuity and recovery boundaries.
+Preparation is not Go-Live approval. Do not use the legacy deploy script or rerun an old
+production workflow to bypass the hold. Execution evidence and the draft PR body are in
+[release preparation evidence](release/V1-PRODUCTION-PREPARATION-20261023.md).
