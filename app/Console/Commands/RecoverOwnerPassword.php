@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Database\Connection;
+use Illuminate\Database\ConnectionInterface;
+use Illuminate\Session\DatabaseSessionHandler;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -72,6 +74,18 @@ class RecoverOwnerPassword extends Command
             return self::FAILURE;
         }
 
+        try {
+            $sessionContext = $this->sessionRevocationContext();
+        } catch (Throwable) {
+            $sessionContext = null;
+        }
+
+        if ($sessionContext === null) {
+            $this->error('The configured session store cannot be safely revoked. No change was made.');
+
+            return self::FAILURE;
+        }
+
         $owners = User::query()->useWritePdo()->whereRaw('LOWER(email) = ?', [self::APPROVED_OWNER_EMAIL])->limit(2)->get();
         if ($owners->count() !== 1 || ! $this->isApprovedOwner($owners->first())) {
             $this->error('The approved active owner account was not found. No account was changed.');
@@ -115,7 +129,7 @@ class RecoverOwnerPassword extends Command
             );
             $credentialPrepared = true;
 
-            $applied = DB::transaction(function () use ($owner, $operationId, $temporaryPassword): bool {
+            $applied = DB::transaction(function () use ($owner, $operationId, $temporaryPassword, $sessionContext): bool {
                 /** @var User|null $lockedOwner */
                 $lockedOwner = User::query()->whereKey($owner->getKey())->lockForUpdate()->first();
                 if (! $this->isApprovedOwner($lockedOwner)) {
@@ -135,7 +149,7 @@ class RecoverOwnerPassword extends Command
                     throw new RuntimeException('A password change is already pending for the approved owner.');
                 }
 
-                [$sessionDriver, $revokedSessions] = $this->revokeDatabaseSessions($lockedOwner);
+                [$sessionDriver, $revokedSessions] = $this->revokeDatabaseSessions($lockedOwner, $sessionContext);
 
                 $lockedOwner->forceFill([
                     'password' => $temporaryPassword,
@@ -262,27 +276,75 @@ class RecoverOwnerPassword extends Command
             && (bool) $user->is_active;
     }
 
-    /** @return array{0: string, 1: int} */
-    private function revokeDatabaseSessions(User $owner): array
+    /** @return array{connection: string, table: string} */
+    private function sessionRevocationContext(): ?array
     {
-        $driver = (string) config('session.driver', 'database');
-        if ($driver !== 'database') {
-            return [$driver.':unsupported', 0];
+        $driver = config('session.driver');
+        if (! is_string($driver) || $driver !== 'database') {
+            return null;
         }
 
-        $sessionConnection = config('session.connection') ?: DB::getDefaultConnection();
-        if ($sessionConnection !== DB::getDefaultConnection()) {
-            return ['database:separate-connection', 0];
+        $applicationConnection = DB::getDefaultConnection();
+        $configuredConnection = config('session.connection');
+        if ($configuredConnection !== null
+            && (! is_string($configuredConnection) || $configuredConnection === '')) {
+            return null;
+        }
+        $sessionConnection = $configuredConnection ?? $applicationConnection;
+        if ($sessionConnection !== $applicationConnection) {
+            return null;
         }
 
-        $table = (string) config('session.table', 'sessions');
-        if (! preg_match('/^[A-Za-z0-9_]+$/', $table)
-            || ! Schema::hasTable($table)
-            || ! in_array('user_id', Schema::getColumnListing($table), true)) {
-            return ['database:unavailable', 0];
+        $table = config('session.table');
+        if (! is_string($table) || ! preg_match('/^[A-Za-z0-9_]+$/', $table)) {
+            return null;
         }
 
-        $sessions = DB::table($table)->where('user_id', $owner->getKey());
+        $store = app('session')->driver();
+        $handler = $store->getHandler();
+        if (! $handler instanceof DatabaseSessionHandler) {
+            return null;
+        }
+
+        $handlerConnection = $this->protectedHandlerProperty($handler, 'connection');
+        $handlerTable = $this->protectedHandlerProperty($handler, 'table');
+        if (! $handlerConnection instanceof ConnectionInterface
+            || $handlerConnection !== DB::connection($applicationConnection)
+            || $handlerTable !== $table) {
+            return null;
+        }
+
+        $schema = Schema::connection($applicationConnection);
+        if (! $schema->hasTable($table)
+            || array_diff(['id', 'user_id', 'payload', 'last_activity'], $schema->getColumnListing($table)) !== []) {
+            return null;
+        }
+
+        return ['connection' => $applicationConnection, 'table' => $table];
+    }
+
+    private function protectedHandlerProperty(DatabaseSessionHandler $handler, string $property): mixed
+    {
+        $reflection = new \ReflectionObject($handler);
+        while ($reflection !== false) {
+            if ($reflection->hasProperty($property)) {
+                return $reflection->getProperty($property)->getValue($handler);
+            }
+
+            $reflection = $reflection->getParentClass();
+        }
+
+        return null;
+    }
+
+    /** @param array{connection: string, table: string} $context
+     * @return array{0: string, 1: int}
+     */
+    private function revokeDatabaseSessions(User $owner, array $context): array
+    {
+        $sessions = DB::connection($context['connection'])
+            ->table($context['table'])
+            ->where('user_id', $owner->getKey());
         $count = $sessions->count();
         $sessions->delete();
 

@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class OwnerRecoveryMariaDbTest extends TestCase
@@ -25,6 +27,7 @@ class OwnerRecoveryMariaDbTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutVite();
 
         if (getenv('DOMBI_OWNER_RECOVERY_MARIADB') !== '1') {
             $this->markTestSkipped('Set DOMBI_OWNER_RECOVERY_MARIADB=1 only for the dedicated disposable MariaDB test instance.');
@@ -129,14 +132,18 @@ class OwnerRecoveryMariaDbTest extends TestCase
         $this->assertSame(1, $unsafeCredentialPath['exit']);
         $this->assertSame($originalPasswordHash, $owner->fresh()->password);
 
-        DB::table('sessions')->insert([
-            'id' => 'synthetic-existing-owner-session',
-            'user_id' => $owner->getKey(),
-            'ip_address' => '127.0.0.1',
-            'user_agent' => 'synthetic-test-agent',
-            'payload' => 'synthetic-payload',
-            'last_activity' => now()->timestamp,
-        ]);
+        $sessionCookie = (string) config('session.cookie');
+        $loggedInSessionIds = [];
+        foreach (['synthetic-browser-session-one', 'synthetic-browser-session-two'] as $sessionId) {
+            $login = $this->withCookie($sessionCookie, $sessionId)
+                ->post(route('login'), ['email' => self::OWNER_EMAIL, 'password' => 'Synthetic-Old-Password-982!'])
+                ->assertRedirect(route('dashboard'));
+            $responseCookie = $login->getCookie($sessionCookie);
+            $this->assertNotNull($responseCookie, 'Successful login must return a session cookie.');
+            $loggedInSessionIds[] = $responseCookie->getValue();
+        }
+        $this->assertNotSame($loggedInSessionIds[0], $loggedInSessionIds[1]);
+        $this->assertSame(2, DB::table('sessions')->where('user_id', $owner->getKey())->count());
 
         $this->assertDisposableDatabaseIdentityAndPrivileges();
         DB::unprepared("CREATE TRIGGER fail_owner_recovery_audit BEFORE INSERT ON owner_recovery_audit_logs FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic audit failure'");
@@ -145,7 +152,7 @@ class OwnerRecoveryMariaDbTest extends TestCase
         $this->assertSame($originalPasswordHash, $owner->fresh()->password);
         $this->assertSame($originalRememberToken, $owner->fresh()->remember_token);
         $this->assertFalse((bool) $owner->fresh()->must_change_password);
-        $this->assertSame(1, DB::table('sessions')->where('user_id', $owner->getKey())->count());
+        $this->assertSame(2, DB::table('sessions')->where('user_id', $owner->getKey())->count());
         $this->assertSame(0, DB::table('owner_recovery_audit_logs')->count());
         $this->assertCount(0, glob($this->credentialDirectory.'/*.txt') ?: []);
         $this->assertDisposableDatabaseIdentityAndPrivileges();
@@ -184,7 +191,7 @@ class OwnerRecoveryMariaDbTest extends TestCase
         $this->assertSame('owner_password_recovered', $event->event);
         $this->assertNotSame('', $event->operator);
         $this->assertSame('database:revoked', $event->session_driver);
-        $this->assertSame(1, (int) $event->sessions_revoked);
+        $this->assertSame(2, (int) $event->sessions_revoked);
 
         $credentialFiles = glob($this->credentialDirectory.'/dombi-owner-recovery-*.txt') ?: [];
         $this->assertCount(1, $credentialFiles);
@@ -204,6 +211,14 @@ class OwnerRecoveryMariaDbTest extends TestCase
         $this->assertFalse($temporaryPassword === $owner->password);
         $this->assertNotSame($originalRememberToken, $owner->remember_token);
         $this->assertSame(0, DB::table('sessions')->where('user_id', $owner->getKey())->count());
+        foreach ($loggedInSessionIds as $sessionId) {
+            app('session')->forgetDrivers();
+            app()->forgetInstance('session.store');
+            Auth::forgetGuards();
+            $this->withCookie($sessionCookie, $sessionId)
+                ->get(route('owner.dashboard'))
+                ->assertRedirect(route('login'));
+        }
         $this->assertNotSame(0, preg_match('/[A-Z]/', $temporaryPassword));
         $this->assertNotSame(0, preg_match('/[a-z]/', $temporaryPassword));
         $this->assertNotSame(0, preg_match('/[0-9]/', $temporaryPassword));
@@ -254,6 +269,77 @@ class OwnerRecoveryMariaDbTest extends TestCase
             ->get(route('owner.dashboard'))
             ->assertOk()
             ->assertJsonPath('component', 'owner/dashboard');
+    }
+
+    public function test_session_store_preflight_fails_closed_without_changing_owner_sessions_or_credentials(): void
+    {
+        $owner = $this->createApprovedSyntheticOwner();
+        DB::table('sessions')->insert([
+            'id' => 'preflight-owner-session',
+            'user_id' => $owner->getKey(),
+            'payload' => 'synthetic-payload',
+            'last_activity' => now()->timestamp,
+        ]);
+
+        $invalidDrivers = ['file', 'redis', 'cookie', 'array'];
+        foreach ($invalidDrivers as $index => $driver) {
+            config(['session.driver' => $driver, 'session.connection' => null]);
+            app('session')->forgetDrivers();
+            $this->assertRecoveryPreflightRejected($owner, sprintf('b0000000-0000-4000-8000-%012d', $index + 1));
+        }
+
+        config(['session.driver' => 'database', 'session.connection' => 'unapproved_session_connection']);
+        app('session')->forgetDrivers();
+        $this->assertRecoveryPreflightRejected($owner, 'b0000000-0000-4000-8000-000000000005');
+
+        $this->assertDisposableDatabaseIdentityAndPrivileges();
+        DB::statement('DROP TABLE sessions');
+        config(['session.connection' => null]);
+        app('session')->forgetDrivers();
+        $this->assertRecoveryPreflightRejected($owner, 'b0000000-0000-4000-8000-000000000006');
+        $this->assertFalse(Schema::hasTable('sessions'));
+
+        $this->assertDisposableDatabaseIdentityAndPrivileges();
+        Schema::create('sessions', function ($table): void {
+            $table->string('id')->primary();
+            $table->longText('payload');
+            $table->integer('last_activity');
+        });
+        DB::table('sessions')->insert([
+            'id' => 'preflight-owner-session',
+            'payload' => 'synthetic-payload',
+            'last_activity' => now()->timestamp,
+        ]);
+        $this->assertRecoveryPreflightRejected($owner, 'b0000000-0000-4000-8000-000000000007');
+        $this->assertSame('synthetic-payload', DB::table('sessions')->where('id', 'preflight-owner-session')->value('payload'));
+
+        app('session')->extend('database', static function (): never {
+            throw new \RuntimeException('Synthetic unavailable session connection.');
+        });
+        config(['session.driver' => 'database', 'session.connection' => null]);
+        app('session')->forgetDrivers();
+        $this->assertRecoveryPreflightRejected($owner, 'b0000000-0000-4000-8000-000000000008');
+        $this->assertSame('synthetic-payload', DB::table('sessions')->where('id', 'preflight-owner-session')->value('payload'));
+    }
+
+    private function assertRecoveryPreflightRejected(User $owner, string $operationId): void
+    {
+        $this->assertDisposableDatabaseIdentityAndPrivileges();
+        $before = $owner->fresh()->only(['password', 'remember_token', 'must_change_password', 'role', 'is_active']);
+        $sessionsBefore = Schema::hasTable('sessions')
+            ? DB::table('sessions')->orderBy('id')->get()->map(static fn (object $row): array => (array) $row)->all()
+            : null;
+        $result = $this->runRecovery(['--operation-id' => $operationId]);
+
+        $this->assertSame(1, $result['exit'], $result['output']);
+        $this->assertStringContainsString('cannot be safely revoked', $result['output']);
+        $this->assertSame($before, $owner->fresh()->only(['password', 'remember_token', 'must_change_password', 'role', 'is_active']));
+        $sessionsAfter = Schema::hasTable('sessions')
+            ? DB::table('sessions')->orderBy('id')->get()->map(static fn (object $row): array => (array) $row)->all()
+            : null;
+        $this->assertSame($sessionsBefore, $sessionsAfter);
+        $this->assertSame(0, DB::table('owner_recovery_audit_logs')->count());
+        $this->assertCount(0, glob($this->credentialDirectory.'/*.txt') ?: []);
     }
 
     private function assertDisposableDatabaseIdentityAndPrivileges(): void
