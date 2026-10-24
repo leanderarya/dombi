@@ -1,9 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
 use Illuminate\Database\ConnectionInterface;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Session\DatabaseSessionHandler;
+use Illuminate\Support\Facades\DB;
 
 /** Read-only database and Laravel-session guards shared by the private runner and its disposable test. */
 final class OwnerBootstrapReadiness
@@ -175,9 +176,9 @@ final class OwnerBootstrapReadiness
             throw new RuntimeException('effective_session_handler_not_database');
         }
 
-        $connectionProperty = new \ReflectionProperty(DatabaseSessionHandler::class, 'connection');
+        $connectionProperty = new ReflectionProperty(DatabaseSessionHandler::class, 'connection');
         $handlerConnection = $connectionProperty->getValue($handler);
-        $tableProperty = new \ReflectionProperty(DatabaseSessionHandler::class, 'table');
+        $tableProperty = new ReflectionProperty(DatabaseSessionHandler::class, 'table');
         $handlerTable = $tableProperty->getValue($handler);
         if ($handlerConnection !== $connection || ! $handlerConnection instanceof ConnectionInterface || $handlerTable !== 'sessions') {
             throw new RuntimeException('session_handler_connection_or_table_mismatch');
@@ -244,8 +245,8 @@ final class OwnerBootstrapReadiness
             try {
                 $pdo->query('SELECT 1 FROM `'.$database.'`.migrations LIMIT 0');
                 throw new RuntimeException('legacy_database_accessible');
-            } catch (\PDOException $exception) {
-                $errorCode = (int) ($exception instanceof \PDOException ? ($exception->errorInfo[1] ?? 0) : 0);
+            } catch (PDOException $exception) {
+                $errorCode = (int) ($exception instanceof PDOException ? ($exception->errorInfo[1] ?? 0) : 0);
                 if (! in_array($errorCode, [1044, 1142], true)) {
                     throw new RuntimeException('legacy_database_denial_unproven');
                 }

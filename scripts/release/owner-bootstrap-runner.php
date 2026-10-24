@@ -1,7 +1,8 @@
 <?php
+
 declare(strict_types=1);
 
-use Database\Seeders\ProductionOwnerSeeder;
+use App\Providers\AppServiceProvider;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\ApplicationBuilder;
@@ -157,7 +158,7 @@ $app = (new ApplicationBuilder(new Application(DOMBI_RELEASE)))
 try {
     $app->make(ConsoleKernel::class)->bootstrap();
     if ($app->environment() !== 'production' || config('database.default') !== 'mysql'
-        || $app->getProvider(App\Providers\AppServiceProvider::class) !== null) {
+        || $app->getProvider(AppServiceProvider::class) !== null) {
         $fail('isolated_production_cli_bootstrap_mismatch');
     }
 

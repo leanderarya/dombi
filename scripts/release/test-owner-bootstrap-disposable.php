@@ -1,7 +1,8 @@
 <?php
+
 declare(strict_types=1);
 
-use App\Services\ProductionOwnerProvisioner;
+use App\Providers\AppServiceProvider;
 use Database\Seeders\ProductionOwnerSeeder;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Database\Schema\Blueprint;
@@ -159,7 +160,7 @@ $app = (new ApplicationBuilder(new Application($release)))
     ->withExceptions()
     ->create();
 $app->make(ConsoleKernel::class)->bootstrap();
-if ($app->environment() !== 'production' || $app->getProvider(App\Providers\AppServiceProvider::class) !== null) {
+if ($app->environment() !== 'production' || $app->getProvider(AppServiceProvider::class) !== null) {
     throw new RuntimeException('disposable_minimal_cli_bootstrap_failed');
 }
 
@@ -249,9 +250,9 @@ $expectFailure('database_identity_mismatch', static fn () => OwnerBootstrapReadi
 $wrongUserPdo = new PDO($dsn, $wrongUser, $wrongPassword, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 $expectFailure('database_identity_mismatch', static fn () => OwnerBootstrapReadiness::assertIdentity($wrongUserPdo, $testDatabase, $testUser));
 
-$pdo->exec("ALTER TABLE owner_recovery_audit_logs MODIFY sessions_revoked INT NOT NULL DEFAULT 0");
+$pdo->exec('ALTER TABLE owner_recovery_audit_logs MODIFY sessions_revoked INT NOT NULL DEFAULT 0');
 $expectFailure('audit_columns_mismatch', static fn () => OwnerBootstrapReadiness::assertAuditSchema($pdo));
-$pdo->exec("ALTER TABLE owner_recovery_audit_logs MODIFY sessions_revoked INT UNSIGNED NOT NULL DEFAULT 0");
+$pdo->exec('ALTER TABLE owner_recovery_audit_logs MODIFY sessions_revoked INT UNSIGNED NOT NULL DEFAULT 0');
 OwnerBootstrapReadiness::assertAuditSchema($pdo);
 
 $approvedMigration = OwnerBootstrapReadiness::AUDIT_MIGRATION;
@@ -304,7 +305,7 @@ foreach (glob($missingGuardRuntime.'/*') ?: [] as $cacheFile) {
 rmdir($missingGuardRuntime);
 
 $seeder = $app->make(ProductionOwnerSeeder::class);
-$expectSeederIdentityRejection = static function (array $connectionOverrides) use ($seeder, $credentialDirectory, $testPassword, $app): void {
+$expectSeederIdentityRejection = static function (array $connectionOverrides) use ($seeder, $testPassword, $app): void {
     config($connectionOverrides);
     DB::purge('mysql');
     $app->make('session')->forgetDrivers();
@@ -441,7 +442,7 @@ foreach ($initialHashes as $relative => $hash) {
 echo "DISPOSABLE_TEST=PASS\n";
 echo "ENGINE=MARIADB\n";
 echo "MIGRATION_165=applied_to_disposable_only\n";
-echo "AUDIT_INTEGER_DISPLAY_WIDTH=".(preg_match('/\\(\\d+\\)/', (string) $auditColumn['COLUMN_TYPE']) ? 'present_and_tolerated' : 'absent_and_tolerated')."\n";
+echo 'AUDIT_INTEGER_DISPLAY_WIDTH='.(preg_match('/\\(\\d+\\)/', (string) $auditColumn['COLUMN_TYPE']) ? 'present_and_tolerated' : 'absent_and_tolerated')."\n";
 echo "WRONG_DATABASE=REJECTED\nWRONG_USER=REJECTED\n";
 echo "SEEDER_WRONG_DATABASE=REJECTED\nSEEDER_WRONG_USER=REJECTED\n";
 echo "MIGRATION_BASELINE_MISMATCH=REJECTED\nNONEMPTY_BUSINESS_TABLE=REJECTED\nSESSION_DRIVER_MISMATCH=REJECTED\n";
