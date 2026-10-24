@@ -221,7 +221,7 @@ export default function OwnerOrdersIndex({
                                         Tanggal
                                     </TableHead>
                                     <TableHead className="px-4 py-3 text-left text-right">
-                                        Total
+                                        Gross / Setoran Owner
                                     </TableHead>
                                 </tr>
                             </TableHeader>
@@ -264,7 +264,17 @@ export default function OwnerOrdersIndex({
                                                 : '-'}
                                         </TableCell>
                                         <TableCell className="px-4 py-3 text-right font-semibold text-text tabular-nums">
-                                            {formatCurrency(sale.total_amount)}
+                                            {sale.gross_amount === null
+                                                ? 'Gross tidak tersedia'
+                                                : formatCurrency(
+                                                      sale.gross_amount,
+                                                  )}
+                                            <div className="text-caption font-medium text-text-muted">
+                                                Setoran Owner{' '}
+                                                {formatCurrency(
+                                                    sale.total_amount,
+                                                )}
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}

@@ -211,7 +211,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
     Route::get('/api/health', [SystemController::class, 'health'])->name('health');
     Route::get('/api/version', [SystemController::class, 'version'])->name('version');
     Route::get('/api/status', [SystemController::class, 'status'])
-        ->middleware(['auth', 'role:owner'])
+        ->middleware(['auth', 'role:owner', 'password.changed'])
         ->name('system.status');
 
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');

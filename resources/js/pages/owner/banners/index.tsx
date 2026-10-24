@@ -105,7 +105,7 @@ export default function BannersIndex({
                         ? 'Customer saat ini melihat 3 banner bawaan Dombi yang bergantian setiap 5 detik. Banner bawaan otomatis diganti saat ada banner Anda yang aktif. Pilih Edit, centang Aktif, lalu Simpan banner untuk menampilkan desain Anda.'
                         : activeCount === 1
                           ? 'Satu banner tampil tanpa pergantian otomatis. Aktifkan banner lain agar carousel berganti.'
-                          : 'Banner aktif bergantian setiap 5 detik. Rotasi otomatis nonaktif jika preferensi kurangi gerakan aktif.'}
+                          : 'Banner aktif bergantian setiap 5 detik. Customer bisa menjeda rotasi kapan saja. Rotasi otomatis nonaktif jika preferensi kurangi gerakan aktif.'}
                 </p>
             </div>
             {banners.length === 0 ? (

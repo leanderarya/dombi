@@ -150,6 +150,36 @@ bukti waktu serta hasil. Listing archive bukan bukti restore.
 - Setelah recovery, rekonsiliasi payment, order, refund, dan stock selama window
   incident.
 
+### Settlement reconciliation mismatch (read-only review)
+
+Saat snapshot sumber dan settlement berbeda setelah ada aktivitas finansial, generator menyimpan atau memperbarui issue `open` dan mempertahankan snapshot settlement yang sudah digunakan untuk payment/allocation. Belum ada halaman atau command khusus untuk membaca issue. Selama belum ada pemeriksaan resmi:
+
+1. Hentikan payout, remittance, verifikasi, atau koreksi manual untuk settlement/outlet/periode terdampak; minta owner/finance operator melakukan review sebelum transaksi terkait dilanjutkan.
+2. Gunakan hanya akun database khusus dengan hak `SELECT` pada tabel relevan; verifikasi identitas host/schema/user melalui kanal operasional resmi. Jangan memakai akun aplikasi/root untuk pemeriksaan rutin.
+3. Jalankan query baca-saja berikut pada database yang sudah disetujui. Jangan menyalin nilai sensitif di luar incident record yang aksesnya dibatasi.
+
+```sql
+SELECT
+    i.id AS issue_id,
+    i.status AS issue_status,
+    i.detected_at,
+    s.id AS settlement_id,
+    s.outlet_id,
+    s.period_start,
+    s.period_end,
+    i.settlement_snapshot,
+    i.source_snapshot
+FROM settlement_reconciliation_issues AS i
+JOIN settlements AS s ON s.id = i.settlement_id
+WHERE i.status = 'open'
+ORDER BY i.detected_at, i.id;
+```
+
+4. Catat waktu pemeriksaan, host/schema (tanpa secret), issue ID, settlement/outlet/periode, kedua snapshot, pembayaran/allocation terkait, dan bukti gateway/source yang relevan. Bandingkan—jangan mengubah record.
+5. Eskalasi selisih kepada owner/finance operator. Jangan menjalankan migration, backfill, replay, update/delete SQL, atau prosedur koreksi sebagai bagian dari review. Koreksi memerlukan keputusan terpisah, approval, audit trail, dan rencana rekonsiliasi.
+
+Pemeriksaan ini membutuhkan read-only DB access yang telah disetujui; runbook tidak memberikan kredensial atau otorisasi akses. Jika akses tersebut belum tersedia, issue belum dapat ditinjau secara operasional dan settlement tidak boleh dianggap tervalidasi.
+
 ## Incident Log Template
 
 ```text
@@ -179,3 +209,11 @@ Walaupun saat ini solo developer, satu orang lain harus dapat menemukan:
 - kontak vendor dan prosedur menghentikan transaksi.
 
 Nilai secret tidak boleh ditulis di repository.
+
+## Dombi V1 production preparation and cutover hold
+
+See [Production cutover V1](PRODUCTION-CUTOVER-V1.md) for the independent database/writer
+gates, historical financial dispositions, old callback continuity and recovery boundaries.
+Preparation is not Go-Live approval. Do not use the legacy deploy script or rerun an old
+production workflow to bypass the hold. Execution evidence and the draft PR body are in
+[release preparation evidence](release/V1-PRODUCTION-PREPARATION-20261023.md).
