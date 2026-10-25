@@ -127,7 +127,6 @@ final class ProductionOwnerProvisioner
             \OwnerBootstrapReadiness::DATABASE_USER,
             base_path(),
             $allowExistingOwner,
-            true,
         );
     }
 

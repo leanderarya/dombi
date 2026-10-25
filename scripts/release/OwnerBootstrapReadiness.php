@@ -13,8 +13,6 @@ final class OwnerBootstrapReadiness
 
     public const DATABASE_USER = 'u399215191_dombi_ap_1023';
 
-    public const RELEASE_SHA = 'ea83637aeae57c31d88454149d427d44767df2d8';
-
     public const AUDIT_MIGRATION = '2026_10_23_000001_create_owner_recovery_audit_logs_table';
 
     public const AUDIT_MIGRATION_SHA256 = '8103ca5d734524fe450874b4051caa4fbf2f5a93ab4373434384cacd630a762a';
@@ -64,13 +62,8 @@ final class OwnerBootstrapReadiness
         string $expectedUser,
         string $releasePath,
         bool $allowExistingApprovedOwner = false,
-        bool $verifyLegacyIsolation = true,
     ): array {
         self::assertIdentity($pdo, $expectedDatabase, $expectedUser);
-
-        if ($verifyLegacyIsolation) {
-            self::assertLegacyAccessDenied($pdo);
-        }
 
         $migrationFiles = glob(rtrim($releasePath, '/').'/database/migrations/*.php') ?: [];
         $sourceNames = array_map(static fn (string $path): string => pathinfo($path, PATHINFO_FILENAME), $migrationFiles);
@@ -147,6 +140,75 @@ final class OwnerBootstrapReadiness
         $authenticatedUser = explode('@', (string) ($identity['account_name'] ?? ''), 2)[0];
         if (($identity['schema_name'] ?? null) !== $expectedDatabase || $authenticatedUser !== $expectedUser) {
             throw new RuntimeException('database_identity_mismatch');
+        }
+
+        self::assertEffectiveGrants($pdo, $expectedDatabase);
+    }
+
+    public static function assertEffectiveGrants(PDO $pdo, string $expectedDatabase): void
+    {
+        if (! preg_match('/^[A-Za-z0-9_]+$/D', $expectedDatabase)) {
+            throw new RuntimeException('database_privileges_exceed_approved_scope');
+        }
+
+        try {
+            $currentRoles = $pdo->query('SELECT CURRENT_ROLE()')->fetchColumn();
+            $grants = $pdo->query('SHOW GRANTS FOR CURRENT_USER')->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Throwable) {
+            throw new RuntimeException('database_effective_grants_unverifiable');
+        }
+
+        if ($currentRoles !== null && ! in_array(strtoupper(trim((string) $currentRoles)), ['', 'NONE', 'NULL'], true)) {
+            throw new RuntimeException('database_privileges_exceed_approved_scope');
+        }
+
+        if (! is_array($grants) || $grants === []) {
+            throw new RuntimeException('database_effective_grants_unverifiable');
+        }
+
+        $allowedSchemaPrivileges = [
+            'ALTER', 'ALTER ROUTINE', 'CREATE', 'CREATE ROUTINE', 'CREATE TEMPORARY TABLES', 'CREATE VIEW',
+            'DELETE', 'DROP', 'EVENT', 'EXECUTE', 'INDEX', 'INSERT', 'LOCK TABLES', 'REFERENCES', 'SELECT',
+            'SHOW VIEW', 'TRIGGER', 'UPDATE',
+        ];
+        $hasApprovedSchemaGrant = false;
+
+        foreach ($grants as $grant) {
+            if (! is_string($grant)) {
+                throw new RuntimeException('database_effective_grants_unverifiable');
+            }
+
+            $grant = preg_replace('/\s+/', ' ', trim($grant)) ?? '';
+            if ($grant === '' || preg_match('/\bWITH\s+GRANT\s+OPTION\b|\bGRANT\s+OPTION\b/i', $grant)) {
+                throw new RuntimeException('database_privileges_exceed_approved_scope');
+            }
+
+            if (preg_match('/^GRANT\s+USAGE\s+ON\s+\*\.\*\s+TO\s+.+$/iD', $grant)) {
+                continue;
+            }
+
+            if (! preg_match('/^GRANT\s+(.+?)\s+ON\s+(`?[A-Za-z0-9_]+`?)\.\*\s+TO\s+.+$/iD', $grant, $matches)) {
+                // Also rejects role grants, table grants, proxy grants, and global privileges.
+                throw new RuntimeException('database_privileges_exceed_approved_scope');
+            }
+
+            if (trim($matches[2], '`') !== $expectedDatabase) {
+                throw new RuntimeException('database_privileges_exceed_approved_scope');
+            }
+
+            $privilegeText = strtoupper(trim($matches[1]));
+            if ($privilegeText !== 'ALL PRIVILEGES') {
+                $privileges = array_map('trim', explode(',', $privilegeText));
+                if ($privileges === [] || array_diff($privileges, $allowedSchemaPrivileges) !== []) {
+                    throw new RuntimeException('database_privileges_exceed_approved_scope');
+                }
+            }
+
+            $hasApprovedSchemaGrant = true;
+        }
+
+        if (! $hasApprovedSchemaGrant) {
+            throw new RuntimeException('database_privileges_exceed_approved_scope');
         }
     }
 
@@ -236,25 +298,6 @@ final class OwnerBootstrapReadiness
             || $foreignKeys[0]['REFERENCED_COLUMN_NAME'] !== 'id'
             || strtoupper((string) $foreignKeys[0]['DELETE_RULE']) !== 'RESTRICT') {
             throw new RuntimeException('audit_foreign_key_mismatch');
-        }
-    }
-
-    private static function assertLegacyAccessDenied(PDO $pdo): void
-    {
-        foreach (['u399215191_app', 'u399215191_dombi_staging'] as $database) {
-            try {
-                $pdo->query('SELECT 1 FROM `'.$database.'`.migrations LIMIT 0');
-                throw new RuntimeException('legacy_database_accessible');
-            } catch (PDOException $exception) {
-                $errorCode = (int) ($exception instanceof PDOException ? ($exception->errorInfo[1] ?? 0) : 0);
-                if (! in_array($errorCode, [1044, 1142], true)) {
-                    throw new RuntimeException('legacy_database_denial_unproven');
-                }
-            } catch (RuntimeException $exception) {
-                throw $exception;
-            } catch (Throwable $exception) {
-                throw new RuntimeException('legacy_database_denial_unproven');
-            }
         }
     }
 

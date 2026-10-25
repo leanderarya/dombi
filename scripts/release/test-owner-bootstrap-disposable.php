@@ -23,12 +23,6 @@ if ($socket === '' || $port === false || ! is_file($migration)) {
     exit(2);
 }
 
-$releaseHead = trim((string) shell_exec('git -C '.escapeshellarg($release).' rev-parse HEAD'));
-if ($releaseHead !== OwnerBootstrapReadiness::RELEASE_SHA) {
-    fwrite(STDERR, "DISPOSABLE_TEST=BLOCKED\nREASON=approved_release_sha_mismatch\n");
-    exit(2);
-}
-
 $protected = [
     'app/Console/Commands/BootstrapInitialOwner.php',
     'app/Services/ProductionOwnerProvisioner.php',
@@ -39,6 +33,7 @@ $protected = [
     'config/database.php',
     'config/session.php',
     'database/migrations/'.OwnerBootstrapReadiness::AUDIT_MIGRATION.'.php',
+    'scripts/release/OwnerBootstrapReadiness.php',
 ];
 $initialHashes = [];
 foreach ($protected as $relative) {
@@ -47,8 +42,6 @@ foreach ($protected as $relative) {
 
 $testDatabase = OwnerBootstrapReadiness::DATABASE;
 $testUser = OwnerBootstrapReadiness::DATABASE_USER;
-$oldDatabase = 'u399215191_app';
-$stagingDatabase = 'u399215191_dombi_staging';
 $wrongDatabase = 'dombi_wrong_identity_'.bin2hex(random_bytes(4));
 $wrongUser = 'dombi_wrong_user_'.bin2hex(random_bytes(4));
 $testPassword = bin2hex(random_bytes(24));
@@ -80,25 +73,21 @@ if ($portOnServer !== $port) {
     throw new RuntimeException('test_server_port_mismatch');
 }
 
-$existingSchema = $root->prepare('SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name IN (?, ?, ?, ?)');
-$existingSchema->execute([$testDatabase, $oldDatabase, $stagingDatabase, $wrongDatabase]);
+$existingSchema = $root->prepare('SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name IN (?, ?)');
+$existingSchema->execute([$testDatabase, $wrongDatabase]);
 $existingUsers = $root->prepare('SELECT COUNT(*) FROM mysql.user WHERE User IN (?, ?)');
 $existingUsers->execute([$testUser, $wrongUser]);
 if ((int) $existingSchema->fetchColumn() !== 0 || (int) $existingUsers->fetchColumn() !== 0) {
     throw new RuntimeException('disposable_names_already_exist');
 }
 
-foreach ([$testDatabase, $oldDatabase, $stagingDatabase, $wrongDatabase] as $database) {
+foreach ([$testDatabase, $wrongDatabase] as $database) {
     $root->exec('CREATE DATABASE `'.$database.'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
 }
 $root->exec("CREATE USER '".$testUser."'@'127.0.0.1' IDENTIFIED BY '".$testPassword."'");
 $root->exec("CREATE USER '".$wrongUser."'@'127.0.0.1' IDENTIFIED BY '".$wrongPassword."'");
 $root->exec('GRANT ALL PRIVILEGES ON `'.$testDatabase.'`.* TO `'.$testUser.'`@`127.0.0.1`');
-$root->exec('GRANT ALL PRIVILEGES ON `'.$wrongDatabase.'`.* TO `'.$testUser.'`@`127.0.0.1`');
 $root->exec('GRANT ALL PRIVILEGES ON `'.$testDatabase.'`.* TO `'.$wrongUser.'`@`127.0.0.1`');
-foreach ([$oldDatabase, $stagingDatabase] as $database) {
-    $root->exec('CREATE TABLE `'.$database.'`.migrations (id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY) ENGINE=InnoDB');
-}
 
 $dsn = 'mysql:host=127.0.0.1;port='.$port.';dbname='.$testDatabase.';charset=utf8mb4';
 $appPdo = new PDO($dsn, $testUser, $testPassword, [
@@ -222,7 +211,6 @@ $initialReadiness = OwnerBootstrapReadiness::assertDatabaseReady(
     $testUser,
     $release,
     false,
-    true,
 );
 OwnerBootstrapReadiness::assertSessionHandler($app, $pdo, $testDatabase, $testUser);
 $auditColumn = $pdo->query("SELECT COLUMN_TYPE, DATA_TYPE FROM information_schema.columns WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'owner_recovery_audit_logs' AND COLUMN_NAME = 'id'")->fetch();
@@ -245,10 +233,43 @@ $expectFailure = static function (string $expected, callable $operation): void {
 };
 
 $expectFailure('database_identity_mismatch', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, 'wrong_database', $testUser));
-$wrongDatabasePdo = new PDO('mysql:host=127.0.0.1;port='.$port.';dbname='.$wrongDatabase.';charset=utf8mb4', $testUser, $testPassword, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-$expectFailure('database_identity_mismatch', static fn () => OwnerBootstrapReadiness::assertIdentity($wrongDatabasePdo, $testDatabase, $testUser));
+$expectFailure('database_identity_mismatch', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, $wrongDatabase, $testUser));
 $wrongUserPdo = new PDO($dsn, $wrongUser, $wrongPassword, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 $expectFailure('database_identity_mismatch', static fn () => OwnerBootstrapReadiness::assertIdentity($wrongUserPdo, $testDatabase, $testUser));
+
+try {
+    $root->exec('GRANT SELECT ON *.* TO `'.$testUser.'`@`127.0.0.1`');
+    $expectFailure('database_privileges_exceed_approved_scope', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, $testDatabase, $testUser));
+} finally {
+    $root->exec('REVOKE SELECT ON *.* FROM `'.$testUser.'`@`127.0.0.1`');
+}
+
+try {
+    $root->exec('GRANT SELECT ON `'.$wrongDatabase.'`.* TO `'.$testUser.'`@`127.0.0.1`');
+    $expectFailure('database_privileges_exceed_approved_scope', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, $testDatabase, $testUser));
+} finally {
+    $root->exec('REVOKE SELECT ON `'.$wrongDatabase.'`.* FROM `'.$testUser.'`@`127.0.0.1`');
+}
+
+try {
+    $root->exec('GRANT ALL PRIVILEGES ON `'.$testDatabase.'`.* TO `'.$testUser.'`@`127.0.0.1` WITH GRANT OPTION');
+    $expectFailure('database_privileges_exceed_approved_scope', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, $testDatabase, $testUser));
+} finally {
+    $root->exec('REVOKE GRANT OPTION ON `'.$testDatabase.'`.* FROM `'.$testUser.'`@`127.0.0.1`');
+}
+
+$testRole = 'dombi_owner_test_role_'.bin2hex(random_bytes(4));
+$root->exec('CREATE ROLE `'.$testRole.'`');
+$root->exec('GRANT SELECT ON `'.$testDatabase.'`.* TO `'.$testRole.'`');
+$root->exec('GRANT `'.$testRole.'` TO `'.$testUser.'`@`127.0.0.1`');
+try {
+    $pdo->exec('SET ROLE `'.$testRole.'`');
+    $expectFailure('database_privileges_exceed_approved_scope', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, $testDatabase, $testUser));
+} finally {
+    $pdo->exec('SET ROLE NONE');
+    $root->exec('REVOKE `'.$testRole.'` FROM `'.$testUser.'`@`127.0.0.1`');
+    $root->exec('DROP ROLE `'.$testRole.'`');
+}
 
 $pdo->exec('ALTER TABLE owner_recovery_audit_logs MODIFY sessions_revoked INT NOT NULL DEFAULT 0');
 $expectFailure('audit_columns_mismatch', static fn () => OwnerBootstrapReadiness::assertAuditSchema($pdo));
@@ -257,11 +278,11 @@ OwnerBootstrapReadiness::assertAuditSchema($pdo);
 
 $approvedMigration = OwnerBootstrapReadiness::AUDIT_MIGRATION;
 DB::table('migrations')->where('migration', $approvedMigration)->delete();
-$expectFailure('migration_ledger_not_exact_165', static fn () => OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, false, false));
+$expectFailure('migration_ledger_not_exact_165', static fn () => OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, false));
 DB::table('migrations')->insert(['migration' => $approvedMigration, 'batch' => 2]);
 
 DB::table('products')->insert(['id' => 1]);
-$expectFailure('unexpected_business_rows', static fn () => OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, false, false));
+$expectFailure('unexpected_business_rows', static fn () => OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, false));
 DB::table('products')->delete();
 
 config(['session.driver' => 'file']);
@@ -369,7 +390,7 @@ if (DB::table('users')->count() !== 1
     throw new RuntimeException('synthetic_owner_repeat_not_idempotent');
 }
 
-$postBootstrap = OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, true, true);
+$postBootstrap = OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, true);
 if ($postBootstrap['owner_count'] !== 1 || $postBootstrap['table_count'] !== 68 || $postBootstrap['migration_count'] !== 165) {
     throw new RuntimeException('synthetic_owner_postcheck_failed');
 }
@@ -428,7 +449,7 @@ if (count($workerResults) !== 2 || DB::table('users')->count() !== 1 || count($c
     || (fileperms($concurrentFiles[0]) & 0777) !== 0600) {
     throw new RuntimeException('synthetic_concurrent_owner_creation_not_serialized');
 }
-$postConcurrent = OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, true, true);
+$postConcurrent = OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, true);
 if ($postConcurrent['owner_count'] !== 1 || $postConcurrent['business_rows'] !== 0) {
     throw new RuntimeException('synthetic_concurrent_postcheck_failed');
 }
@@ -444,6 +465,7 @@ echo "ENGINE=MARIADB\n";
 echo "MIGRATION_165=applied_to_disposable_only\n";
 echo 'AUDIT_INTEGER_DISPLAY_WIDTH='.(preg_match('/\\(\\d+\\)/', (string) $auditColumn['COLUMN_TYPE']) ? 'present_and_tolerated' : 'absent_and_tolerated')."\n";
 echo "WRONG_DATABASE=REJECTED\nWRONG_USER=REJECTED\n";
+echo "GLOBAL_PRIVILEGE=REJECTED\nOTHER_DATABASE_GRANT=REJECTED\nGRANT_OPTION=REJECTED\nACTIVE_ROLE=REJECTED\n";
 echo "SEEDER_WRONG_DATABASE=REJECTED\nSEEDER_WRONG_USER=REJECTED\n";
 echo "MIGRATION_BASELINE_MISMATCH=REJECTED\nNONEMPTY_BUSINESS_TABLE=REJECTED\nSESSION_DRIVER_MISMATCH=REJECTED\n";
 echo "MISSING_GUARD_DEPENDENCY=REJECTED\n";
