@@ -222,6 +222,157 @@ $initialReadiness = OwnerBootstrapReadiness::assertDatabaseReady(
     false,
 );
 OwnerBootstrapReadiness::assertSessionHandler($app, $pdo, $testDatabase, $testUser);
+
+$runnerTestRoot = realpath($runtimeDirectory);
+if ($runnerTestRoot === false) {
+    throw new RuntimeException('full_runner_test_root_unavailable');
+}
+$runnerRelease = $runnerTestRoot.'/release';
+$runnerPrivate = $runnerTestRoot.'/private';
+$runnerOwnerCredentials = $runnerPrivate.'/owner-credentials';
+if (! mkdir($runnerPrivate, 0700) || ! mkdir($runnerOwnerCredentials, 0700)) {
+    throw new RuntimeException('full_runner_test_private_paths_create_failed');
+}
+
+$runTestProcess = static function (array $arguments): array {
+    $pipes = [];
+    $process = proc_open($arguments, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if (! is_resource($process)) {
+        throw new RuntimeException('full_runner_test_process_start_failed');
+    }
+
+    fclose($pipes[0]);
+    $stdout = stream_get_contents($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+
+    return [proc_close($process), trim((string) $stdout), trim((string) $stderr)];
+};
+$runTestCommand = static function (array $arguments) use ($runTestProcess): string {
+    [$status, $stdout, $stderr] = $runTestProcess($arguments);
+    if ($status !== 0 || $stderr !== '') {
+        throw new RuntimeException('full_runner_test_setup_failed');
+    }
+
+    return $stdout;
+};
+$releaseSha = $runTestCommand(['git', '-C', $release, 'rev-parse', 'HEAD']);
+$runTestCommand(['git', 'clone', '--quiet', '--shared', '--no-checkout', $release, $runnerRelease]);
+$runTestCommand(['git', '-C', $runnerRelease, 'checkout', '--quiet', '--detach', $releaseSha]);
+$runTestCommand(['cp', '-a', $release.'/vendor', $runnerRelease.'/vendor']);
+if ($runTestCommand(['git', '-C', $runnerRelease, 'status', '--porcelain=v1']) !== '') {
+    throw new RuntimeException('full_runner_test_release_not_clean');
+}
+
+$runnerCache = $runnerRelease.'/bootstrap/cache/owner-bootstrap-cli';
+if (! mkdir($runnerCache, 0700, true) || (fileperms($runnerCache) & 0777) !== 0700) {
+    throw new RuntimeException('full_runner_test_cache_create_failed');
+}
+$runnerPath = $runnerPrivate.'/owner-bootstrap-runner.php';
+$runnerReadiness = $runnerPrivate.'/OwnerBootstrapReadiness.php';
+$runnerProvisioner = $runnerPrivate.'/ProductionOwnerProvisioner.php';
+$runnerSeeder = $runnerPrivate.'/ProductionOwnerSeeder.php';
+$runnerConfig = $runnerPrivate.'/db.cnf';
+$runnerSource = file_get_contents($release.'/scripts/release/owner-bootstrap-runner.php');
+if (! is_string($runnerSource)) {
+    throw new RuntimeException('full_runner_test_source_unavailable');
+}
+$runnerConstants = [
+    'DOMBI_RELEASE' => $runnerRelease,
+    'DOMBI_RELEASE_SHA' => $releaseSha,
+    'DOMBI_CREDENTIALS' => $runnerConfig,
+    'DOMBI_OWNER_CREDENTIAL_DIR' => $runnerOwnerCredentials,
+    'DOMBI_RUNNER' => $runnerPath,
+    'DOMBI_READINESS' => $runnerReadiness,
+    'DOMBI_PROVISIONER' => $runnerProvisioner,
+    'DOMBI_SEEDER' => $runnerSeeder,
+    'DOMBI_READINESS_SHA256' => hash_file('sha256', $runnerRelease.'/scripts/release/OwnerBootstrapReadiness.php'),
+    'DOMBI_PROVISIONER_SHA256' => hash_file('sha256', $runnerRelease.'/app/Services/ProductionOwnerProvisioner.php'),
+    'DOMBI_SEEDER_SHA256' => hash_file('sha256', $runnerRelease.'/database/seeders/ProductionOwnerSeeder.php'),
+];
+foreach ($runnerConstants as $constant => $value) {
+    if (! is_string($value)) {
+        throw new RuntimeException('full_runner_test_pin_unavailable');
+    }
+    $pattern = '/^const '.preg_quote($constant, '/').' = \'[^\'\r\n]*\';$/m';
+    $replacement = 'const '.$constant.' = '.var_export($value, true).';';
+    $runnerSource = preg_replace($pattern, $replacement, $runnerSource, 1, $replacements);
+    if (! is_string($runnerSource) || $replacements !== 1) {
+        throw new RuntimeException('full_runner_test_pin_replace_failed');
+    }
+}
+if (file_put_contents($runnerPath, $runnerSource, LOCK_EX) !== strlen($runnerSource)
+    || ! chmod($runnerPath, 0600)) {
+    throw new RuntimeException('full_runner_test_runner_write_failed');
+}
+foreach ([
+    $runnerReadiness => $runnerRelease.'/scripts/release/OwnerBootstrapReadiness.php',
+    $runnerProvisioner => $runnerRelease.'/app/Services/ProductionOwnerProvisioner.php',
+    $runnerSeeder => $runnerRelease.'/database/seeders/ProductionOwnerSeeder.php',
+] as $destination => $source) {
+    if (! copy($source, $destination) || ! chmod($destination, 0600)) {
+        throw new RuntimeException('full_runner_test_helper_copy_failed');
+    }
+}
+$runnerConfigContents = "[client]\nprotocol=TCP\nhost=127.0.0.1\nport={$port}\nuser={$testUser}\npassword={$testPassword}\ndatabase={$testDatabase}\n";
+if (file_put_contents($runnerConfig, $runnerConfigContents, LOCK_EX) !== strlen($runnerConfigContents)
+    || ! chmod($runnerConfig, 0600) || (fileperms($runnerConfig) & 0777) !== 0600) {
+    throw new RuntimeException('full_runner_test_credentials_write_failed');
+}
+$runFullRunner = static function (string $case) use ($runTestProcess, $runnerPath, $releaseSha): string {
+    [$status, $stdout, $stderr] = $runTestProcess([
+        'python3', __DIR__.'/test-owner-bootstrap-runner-driver.py', $case, PHP_BINARY, $runnerPath, $releaseSha,
+    ]);
+    if ($status !== 0 || $stderr !== '') {
+        throw new RuntimeException('full_runner_test_case_failed');
+    }
+
+    return $stdout;
+};
+
+$root->exec('CREATE TRIGGER `'.$testDatabase.'`.dombi_full_runner_insert_failure BEFORE INSERT ON `'.$testDatabase.'`.users FOR EACH ROW SIGNAL SQLSTATE \'45000\' SET MESSAGE_TEXT = \'DIAGNOSTIC_SENTINEL_DO_NOT_EMIT\'');
+try {
+    $runnerFailure = $runFullRunner('insert-failure');
+} finally {
+    $root->exec('DROP TRIGGER `'.$testDatabase.'`.dombi_full_runner_insert_failure');
+}
+if (! str_contains($runnerFailure, 'RUNNER_PREFLIGHT=PASS')
+    || ! str_contains($runnerFailure, 'RUNNER_FAILURE=SANITIZED')
+    || ! str_contains($runnerFailure, 'FAILURE_STAGE=eloquent_insert')
+    || ! str_contains($runnerFailure, 'FAILURE_CODE=database_operation_failed')
+    || DB::table('users')->count() !== 0 || glob($runnerOwnerCredentials.'/*') !== []) {
+    throw new RuntimeException('full_runner_failure_propagation_invalid');
+}
+
+$runnerSuccess = $runFullRunner('success');
+$runnerOwner = DB::table('users')->where('email', $ownerEmail)->sole();
+$runnerCredentialFiles = glob($runnerOwnerCredentials.'/*.txt') ?: [];
+if (! str_contains($runnerSuccess, 'RUNNER_PREFLIGHT=PASS')
+    || ! str_contains($runnerSuccess, 'RUNNER_SUCCESS=PASS')
+    || $runnerOwner->name !== $ownerName || $runnerOwner->role !== 'owner'
+    || (int) $runnerOwner->is_active !== 1 || (int) $runnerOwner->must_change_password !== 1
+    || count($runnerCredentialFiles) !== 1 || is_link($runnerCredentialFiles[0])
+    || (fileperms($runnerCredentialFiles[0]) & 0777) !== 0600) {
+    throw new RuntimeException('full_runner_success_postcheck_failed');
+}
+$runnerCredentialContents = (string) file_get_contents($runnerCredentialFiles[0]);
+if (! preg_match('/Temporary password: ([^\r\n]+)/', $runnerCredentialContents, $runnerPasswordMatch)
+    || ! Hash::check($runnerPasswordMatch[1], $runnerOwner->password)) {
+    throw new RuntimeException('full_runner_credential_hash_mismatch');
+}
+$runnerState = OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, true);
+if ($runnerState['owner_count'] !== 1 || $runnerState['business_rows'] !== 0) {
+    throw new RuntimeException('full_runner_database_postcheck_failed');
+}
+DB::table('users')->where('email', $ownerEmail)->delete();
+foreach ($runnerCredentialFiles as $runnerCredentialFile) {
+    unlink($runnerCredentialFile);
+}
+if (glob($runnerOwnerCredentials.'/*') !== []) {
+    throw new RuntimeException('full_runner_test_cleanup_failed');
+}
+
 $auditColumn = $pdo->query("SELECT COLUMN_TYPE, DATA_TYPE FROM information_schema.columns WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'owner_recovery_audit_logs' AND COLUMN_NAME = 'id'")->fetch();
 $widthTolerated = strtolower((string) $auditColumn['DATA_TYPE']) === 'bigint'
     && str_contains(strtolower((string) $auditColumn['COLUMN_TYPE']), 'unsigned');
@@ -576,6 +727,9 @@ foreach ($initialHashes as $relative => $hash) {
 
 echo "DISPOSABLE_TEST=PASS\n";
 echo "ENGINE=MARIADB\n";
+echo "FULL_RUNNER_INTERACTIVE_CONFIRMATION=PASS\n";
+echo "FULL_RUNNER_FAILURE_PROPAGATION=PASS\n";
+echo "FULL_RUNNER_SUCCESS_CONTROL=PASS\n";
 echo "MIGRATION_165=applied_to_disposable_only\n";
 echo 'AUDIT_INTEGER_DISPLAY_WIDTH='.(preg_match('/\\(\\d+\\)/', (string) $auditColumn['COLUMN_TYPE']) ? 'present_and_tolerated' : 'absent_and_tolerated')."\n";
 echo "WRONG_DATABASE=REJECTED\nWRONG_USER=REJECTED\n";

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Providers\AppServiceProvider;
+use App\Services\ProductionOwnerProvisioner;
 use App\Services\ProductionOwnerSeedFailure;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Foundation\Application;
@@ -211,7 +212,7 @@ try {
 
     $runnerStage = 'readiness';
     $pdo->exec('START TRANSACTION READ ONLY');
-    $database = app(App\Services\ProductionOwnerProvisioner::class)->preflight(false);
+    $database = app(ProductionOwnerProvisioner::class)->preflight(false);
     $pdo->exec('ROLLBACK');
 
     if ($mode === 'PREFLIGHT') {
