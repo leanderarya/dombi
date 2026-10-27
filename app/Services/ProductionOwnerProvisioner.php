@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use PDOException;
 use RuntimeException;
 use Throwable;
 
@@ -18,28 +19,36 @@ final class ProductionOwnerProvisioner
 
     public function seed(string $credentialDirectory): bool
     {
-        if (! app()->environment('production')) {
-            throw new RuntimeException('Owner seeding requires production environment.');
-        }
-
-        $credentialDirectory = $this->validateCredentialDirectory($credentialDirectory);
-        $pdo = DB::connection()->getPdo();
-        $this->assertConnectionAndSession($pdo);
+        $failureStage = 'environment_guard';
         $credentialPath = null;
         $password = null;
 
         try {
-            $created = DB::transaction(function () use ($credentialDirectory, $pdo, &$credentialPath, &$password): bool {
+            if (! app()->environment('production')) {
+                throw new RuntimeException('Owner seeding requires production environment.');
+            }
+
+            $failureStage = 'credential_directory_validation';
+            $credentialDirectory = $this->validateCredentialDirectory($credentialDirectory);
+            $failureStage = 'session_guard';
+            $pdo = DB::connection()->getPdo();
+            $this->assertConnectionAndSession($pdo);
+
+            $failureStage = 'transaction_begin';
+            $created = DB::transaction(function () use ($credentialDirectory, $pdo, &$credentialPath, &$password, &$failureStage): bool {
+                $failureStage = 'write_connection_guard';
                 if (DB::connection()->getPdo() !== $pdo) {
                     throw new RuntimeException('Owner write connection changed after identity verification.');
                 }
 
                 // Lock before reading state so concurrent invocations observe the committed owner.
+                $failureStage = 'migration_lock';
                 $lock = DB::table('migrations')->orderByDesc('id')->lockForUpdate()->first();
                 if ($lock === null) {
                     throw new RuntimeException('Approved migration lock row is missing.');
                 }
 
+                $failureStage = 'readiness';
                 $state = $this->assertReady($pdo, true);
                 if ($state['owner_count'] === 1) {
                     $owner = User::query()->sole();
@@ -55,8 +64,10 @@ final class ProductionOwnerProvisioner
                 }
 
                 $password = Str::password(48);
+                $failureStage = 'credential_write';
                 $credentialPath = $this->writeCredential($credentialDirectory, $password);
 
+                $failureStage = 'eloquent_insert';
                 User::forceCreate([
                     'name' => self::OWNER_NAME,
                     'email' => self::OWNER_EMAIL,
@@ -66,10 +77,15 @@ final class ProductionOwnerProvisioner
                     'must_change_password' => true,
                 ]);
 
+                // Laravel commits after the callback returns; keep this stage for commit diagnostics.
+                $failureStage = 'transaction_commit';
+
                 return true;
             }, attempts: 1);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            $failureCode = $this->failureCode($failureStage, $exception);
             $credentialMayMatchCommittedOwner = false;
+            $credentialStateVerified = true;
             if ($credentialPath !== null && is_file($credentialPath)) {
                 try {
                     $storedHash = DB::table('users')->useWritePdo()
@@ -80,26 +96,53 @@ final class ProductionOwnerProvisioner
                 } catch (Throwable) {
                     // Preserve the secret on ambiguous commit outcome so a committed owner is recoverable.
                     $credentialMayMatchCommittedOwner = true;
+                    $credentialStateVerified = false;
+                    $failureCode = 'outcome_unverified';
                 }
 
-                if (! $credentialMayMatchCommittedOwner) {
-                    @unlink($credentialPath);
+                if ($credentialStateVerified && $credentialMayMatchCommittedOwner && $failureStage === 'transaction_commit') {
+                    $failureCode = 'commit_outcome_ambiguous';
+                } elseif (! $credentialMayMatchCommittedOwner && ! @unlink($credentialPath) && is_file($credentialPath)) {
+                    $failureCode = 'credential_cleanup_failed';
                 }
             }
 
-            // Do not expose SQL bindings, exception details, or the password through logs/output.
-            throw new RuntimeException(
-                $credentialMayMatchCommittedOwner
-                    ? 'Owner seed outcome is uncertain; reconcile the private credential file and database before retrying.'
-                    : 'Owner seed failed safely; reconcile database state before retrying.',
-            );
+            throw new ProductionOwnerSeedFailure($failureStage, $failureCode);
         }
 
         if ($created && (! is_string($credentialPath) || ! is_file($credentialPath))) {
-            throw new RuntimeException('Owner was created but private credential confirmation failed; reconcile before retrying.');
+            throw new ProductionOwnerSeedFailure('postcheck_credential', 'postcheck_failed');
         }
 
         return $created;
+    }
+
+    private function failureCode(string $stage, Throwable $exception): string
+    {
+        if ($stage === 'credential_write') {
+            return 'filesystem_write_failed';
+        }
+
+        if ($stage === 'credential_directory_validation') {
+            return 'filesystem_guard_failed';
+        }
+
+        if ($exception instanceof PDOException) {
+            $sqlStateClass = substr(strtoupper((string) $exception->getCode()), 0, 2);
+
+            return match ($sqlStateClass) {
+                '08' => 'database_connection_failed',
+                '23' => 'database_constraint_failed',
+                '28' => 'database_permission_failed',
+                default => 'database_operation_failed',
+            };
+        }
+
+        return match ($stage) {
+            'environment_guard', 'session_guard', 'write_connection_guard', 'migration_lock', 'readiness' => 'guard_rejected',
+            'transaction_begin', 'transaction_commit' => 'transaction_failed',
+            default => 'operation_failed',
+        };
     }
 
     /** @return array{migration_count:int,table_count:int,owner_count:int,business_rows:int,table_fingerprint:string} */
@@ -177,7 +220,7 @@ final class ProductionOwnerProvisioner
         $path = $directory.DIRECTORY_SEPARATOR.'dombi-owner-'.Str::uuid().'.txt';
         $previousUmask = umask(0077);
         try {
-            $file = fopen($path, 'x');
+            $file = @fopen($path, 'x');
         } finally {
             umask($previousUmask);
         }
@@ -206,5 +249,39 @@ final class ProductionOwnerProvisioner
         }
 
         return $path;
+    }
+}
+
+/** Safe diagnostic envelope; messages and previous exceptions are intentionally omitted. */
+final class ProductionOwnerSeedFailure extends RuntimeException
+{
+    private const STAGES = [
+        'environment_guard', 'credential_directory_validation', 'session_guard', 'transaction_begin',
+        'write_connection_guard', 'migration_lock', 'readiness', 'credential_write', 'eloquent_insert',
+        'transaction_commit', 'postcheck_credential',
+    ];
+
+    private const CODES = [
+        'filesystem_write_failed', 'filesystem_guard_failed', 'database_connection_failed',
+        'database_constraint_failed', 'database_permission_failed', 'database_operation_failed',
+        'guard_rejected', 'transaction_failed', 'commit_outcome_ambiguous', 'outcome_unverified',
+        'credential_cleanup_failed', 'postcheck_failed', 'operation_failed',
+    ];
+
+    public readonly string $stage;
+
+    public readonly string $failureCode;
+
+    public function __construct(string $stage, string $failureCode)
+    {
+        $this->stage = in_array($stage, self::STAGES, true) ? $stage : 'environment_guard';
+        $this->failureCode = in_array($failureCode, self::CODES, true) ? $failureCode : 'operation_failed';
+
+        parent::__construct('Guarded production Owner seeding failed.');
+    }
+
+    public function safeDiagnostic(): string
+    {
+        return "FAILURE_STAGE={$this->stage}\nFAILURE_CODE={$this->failureCode}";
     }
 }

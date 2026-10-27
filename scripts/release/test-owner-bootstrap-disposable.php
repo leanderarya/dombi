@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Providers\AppServiceProvider;
+use App\Services\ProductionOwnerProvisioner;
+use App\Services\ProductionOwnerSeedFailure;
 use Database\Seeders\ProductionOwnerSeeder;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Database\Schema\Blueprint;
@@ -55,9 +58,15 @@ register_shutdown_function(static function () use ($credentialDirectory, $runtim
         if (! is_dir($directory) || is_link($directory)) {
             continue;
         }
-        foreach (glob($directory.'/*') ?: [] as $path) {
-            if (is_file($path) || is_link($path)) {
-                @unlink($path);
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
+        );
+        foreach ($iterator as $entry) {
+            if ($entry->isDir() && ! $entry->isLink()) {
+                @rmdir($entry->getPathname());
+            } else {
+                @unlink($entry->getPathname());
             }
         }
         @rmdir($directory);
@@ -364,6 +373,111 @@ $expectSeederIdentityRejection([
 if (DB::table('users')->count() !== 0 || glob($credentialDirectory.'/*') !== []) {
     throw new RuntimeException('wrong_user_seeder_changed_state');
 }
+
+$expectSeedFailure = static function (string $expectedStage, string $expectedCode, callable $operation): ProductionOwnerSeedFailure {
+    try {
+        $operation();
+    } catch (ProductionOwnerSeedFailure $failure) {
+        $diagnostic = $failure->safeDiagnostic();
+        if ($failure->stage !== $expectedStage || $failure->failureCode !== $expectedCode
+            || $failure->getPrevious() !== null
+            || ! preg_match('/^FAILURE_STAGE=[a-z_]+\nFAILURE_CODE=[a-z_]+$/D', $diagnostic)
+            || str_contains($diagnostic, 'DIAGNOSTIC_SENTINEL')) {
+            throw new RuntimeException('seed_failure_diagnostic_mismatch');
+        }
+
+        return $failure;
+    }
+
+    throw new RuntimeException('expected_seed_failure_not_observed_'.$expectedStage);
+};
+
+$migrationsForRestore = DB::table('migrations')->orderBy('id')->get(['migration', 'batch'])
+    ->map(static fn (object $row): array => ['migration' => $row->migration, 'batch' => $row->batch])
+    ->all();
+DB::table('migrations')->delete();
+$expectSeedFailure('migration_lock', 'guard_rejected', static fn () => $seeder->run());
+if (DB::table('users')->count() !== 0 || glob($credentialDirectory.'/*') !== []) {
+    throw new RuntimeException('migration_lock_failure_changed_state');
+}
+foreach (array_chunk($migrationsForRestore, 100) as $chunk) {
+    DB::table('migrations')->insert($chunk);
+}
+
+DB::table('migrations')->where('migration', OwnerBootstrapReadiness::AUDIT_MIGRATION)->delete();
+$expectSeedFailure('readiness', 'guard_rejected', static fn () => $seeder->run());
+if (DB::table('users')->count() !== 0 || glob($credentialDirectory.'/*') !== []) {
+    throw new RuntimeException('readiness_failure_changed_state');
+}
+DB::table('migrations')->insert(['migration' => OwnerBootstrapReadiness::AUDIT_MIGRATION, 'batch' => 2]);
+
+$filesystemFailurePath = $runtimeDirectory.'/credential-write-failure';
+if (! mkdir($filesystemFailurePath, 0700)) {
+    throw new RuntimeException('synthetic_long_path_root_create_failed');
+}
+$targetPathLength = 980;
+while (strlen($filesystemFailurePath) < $targetPathLength) {
+    $componentLength = min(200, $targetPathLength - strlen($filesystemFailurePath) - 1);
+    $filesystemFailurePath .= '/'.str_repeat('x', $componentLength);
+    if (! mkdir($filesystemFailurePath, 0700)) {
+        throw new RuntimeException('synthetic_long_path_directory_create_failed');
+    }
+}
+$expectSeedFailure('credential_write', 'filesystem_write_failed', static fn () => app(ProductionOwnerProvisioner::class)->seed($filesystemFailurePath));
+if (DB::table('users')->count() !== 0 || glob($credentialDirectory.'/*') !== [] || glob($filesystemFailurePath.'/*') !== []) {
+    throw new RuntimeException('credential_write_failure_changed_state');
+}
+
+$root->exec('CREATE TRIGGER `'.$testDatabase.'`.dombi_test_owner_insert_failure BEFORE INSERT ON `'.$testDatabase.'`.users FOR EACH ROW SIGNAL SQLSTATE \'45000\' SET MESSAGE_TEXT = \'DIAGNOSTIC_SENTINEL_DO_NOT_EMIT\'');
+$insertFailure = $expectSeedFailure('eloquent_insert', 'database_operation_failed', static fn () => $seeder->run());
+$root->exec('DROP TRIGGER `'.$testDatabase.'`.dombi_test_owner_insert_failure');
+if (str_contains($insertFailure->getMessage(), 'DIAGNOSTIC_SENTINEL')
+    || DB::table('users')->count() !== 0 || glob($credentialDirectory.'/*') !== []) {
+    throw new RuntimeException('insert_failure_leaked_or_changed_state');
+}
+
+$injectCommitAmbiguity = true;
+User::creating(static function () use (&$injectCommitAmbiguity): void {
+    if (! $injectCommitAmbiguity) {
+        return;
+    }
+
+    $injectCommitAmbiguity = false;
+    DB::afterCommit(static function (): never {
+        throw new RuntimeException('DIAGNOSTIC_SENTINEL_DO_NOT_EMIT');
+    });
+});
+$commitFailure = $expectSeedFailure('transaction_commit', 'commit_outcome_ambiguous', static fn () => $seeder->run());
+$ambiguousOwner = DB::table('users')->where('email', $ownerEmail)->sole();
+$ambiguousCredentials = glob($credentialDirectory.'/*.txt') ?: [];
+if (str_contains($commitFailure->getMessage(), 'DIAGNOSTIC_SENTINEL')
+    || count($ambiguousCredentials) !== 1 || (fileperms($ambiguousCredentials[0]) & 0777) !== 0600
+    || ! Hash::check((string) preg_replace('/.*Temporary password: ([^\r\n]+).*/s', '$1', (string) file_get_contents($ambiguousCredentials[0])), $ambiguousOwner->password)) {
+    throw new RuntimeException('commit_ambiguity_recovery_failed');
+}
+DB::table('users')->where('email', $ownerEmail)->delete();
+foreach ($ambiguousCredentials as $credentialFile) {
+    unlink($credentialFile);
+}
+
+$injectCredentialPostcheckFailure = true;
+User::created(static function () use (&$injectCredentialPostcheckFailure, $credentialDirectory): void {
+    if (! $injectCredentialPostcheckFailure) {
+        return;
+    }
+
+    $injectCredentialPostcheckFailure = false;
+    foreach (glob($credentialDirectory.'/*') ?: [] as $credentialFile) {
+        unlink($credentialFile);
+    }
+});
+$postcheckFailure = $expectSeedFailure('postcheck_credential', 'postcheck_failed', static fn () => $seeder->run());
+if (str_contains($postcheckFailure->getMessage(), 'DIAGNOSTIC_SENTINEL')
+    || DB::table('users')->count() !== 1 || glob($credentialDirectory.'/*') !== []) {
+    throw new RuntimeException('postcheck_failure_was_not_reported_safely');
+}
+DB::table('users')->where('email', $ownerEmail)->delete();
+
 $seeder->run();
 $firstOutput = '';
 $owner = DB::table('users')->where('email', $ownerEmail)->sole();
@@ -469,6 +583,11 @@ echo "GLOBAL_PRIVILEGE=REJECTED\nOTHER_DATABASE_GRANT=REJECTED\nGRANT_OPTION=REJ
 echo "SEEDER_WRONG_DATABASE=REJECTED\nSEEDER_WRONG_USER=REJECTED\n";
 echo "MIGRATION_BASELINE_MISMATCH=REJECTED\nNONEMPTY_BUSINESS_TABLE=REJECTED\nSESSION_DRIVER_MISMATCH=REJECTED\n";
 echo "MISSING_GUARD_DEPENDENCY=REJECTED\n";
+echo "FAILURE_STAGE_MIGRATION_LOCK=REPORTED\nFAILURE_STAGE_READINESS=REPORTED\n";
+echo "FAILURE_STAGE_CREDENTIAL_WRITE=REPORTED\nFAILURE_STAGE_ELOQUENT_INSERT=REPORTED\n";
+echo "FAILURE_STAGE_COMMIT_AMBIGUITY=REPORTED_AND_CREDENTIAL_PRESERVED\n";
+echo "FAILURE_STAGE_POSTCHECK=REPORTED\n";
+echo "DIAGNOSTIC_OUTPUT=ALLOWLISTED_NO_EXCEPTION_DETAILS\n";
 echo "PRODUCTION_OWNER_SEEDER=PASS\nOWNER_IDENTITY=Dombi Center <dombicenter@gmail.com>\n";
 echo "CREDENTIAL_DIRECTORY_MODE=0700\nCREDENTIAL_FILE_MODE=0600\nFIRST_LOGIN_CHANGE_REQUIRED=yes\nREPEAT_INVOCATION=IDEMPOTENT\n";
 echo "CONCURRENT_INVOCATIONS=SERIALIZED_ONE_OWNER_ONE_CREDENTIAL\nNO_CATALOG_OR_DEMO_ROWS=yes\n";
