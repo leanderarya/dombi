@@ -1,5 +1,7 @@
 import { Link } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { Pause, Play } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import type { MouseEvent, TouchEvent } from 'react';
 import { DEFAULT_HERO_SLIDE, useHeroSlides } from '@/hooks/use-hero-slides';
 import type { HeroSlide } from '@/hooks/use-hero-slides';
 
@@ -40,11 +42,92 @@ export function BannerImage({
 }
 
 export default function HeroBanner({ banners }: { banners: HeroSlide[] }) {
-    const { slides, index, setIndex, move, rotating } = useHeroSlides(banners);
+    const [hovered, setHovered] = useState(false);
+    const [touching, setTouching] = useState(false);
+    const {
+        slides,
+        index,
+        setIndex,
+        move,
+        paused,
+        reducedMotion,
+        pauseForFocus,
+        toggleRotation,
+    } = useHeroSlides(banners, { temporarilyPaused: hovered || touching });
     const touchStart = useRef<{ id: number; x: number; y: number } | null>(
         null,
     );
-    const swiped = useRef(false);
+    const keyboardNavigation = useRef(false);
+    const swipeClickPending = useRef(false);
+
+    useEffect(() => {
+        const resetKeyboardNavigation = (event: KeyboardEvent) => {
+            if (event.key === 'Tab') {
+                keyboardNavigation.current = false;
+            }
+        };
+
+        window.addEventListener('keyup', resetKeyboardNavigation);
+
+        return () =>
+            window.removeEventListener('keyup', resetKeyboardNavigation);
+    }, []);
+
+    const beginKeyboardNavigation = () => {
+        keyboardNavigation.current = true;
+    };
+
+    const handleClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+        if (event.detail > 0) {
+            keyboardNavigation.current = false;
+        }
+
+        if (swipeClickPending.current && event.detail !== 0) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        swipeClickPending.current = false;
+    };
+
+    const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+        const touch = event.touches[0];
+        touchStart.current =
+            event.touches.length === 1
+                ? { id: touch.identifier, x: touch.clientX, y: touch.clientY }
+                : null;
+        swipeClickPending.current = false;
+    };
+
+    const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+        const start = touchStart.current;
+        touchStart.current = null;
+
+        if (!start) {
+            return;
+        }
+
+        const touch = Array.from(event.changedTouches).find(
+            (touch) => touch.identifier === start.id,
+        );
+
+        if (!touch || event.touches.length > 0) {
+            return;
+        }
+
+        const dx = touch.clientX - start.x;
+        const dy = touch.clientY - start.y;
+
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+            swipeClickPending.current = true;
+            move(dx < 0 ? 1 : -1);
+        }
+    };
+
+    const handleTouchCancel = () => {
+        touchStart.current = null;
+        swipeClickPending.current = false;
+    };
 
     return (
         <div
@@ -52,61 +135,40 @@ export default function HeroBanner({ banners }: { banners: HeroSlide[] }) {
             role="region"
             aria-label="Banner Dombi"
             aria-roledescription="carousel"
-            onPointerDown={() => {
-                swiped.current = false;
-            }}
-            onTouchStart={(event) => {
-                const touch = event.touches[0];
-                touchStart.current =
-                    event.touches.length === 1
-                        ? {
-                              id: touch.identifier,
-                              x: touch.clientX,
-                              y: touch.clientY,
-                          }
-                        : null;
-                swiped.current = false;
-            }}
-            onTouchEnd={(event) => {
-                const start = touchStart.current;
-                touchStart.current = null;
-
-                if (!start) {
-                    return;
-                }
-
-                const touch = Array.from(event.changedTouches).find(
-                    (touch) => touch.identifier === start.id,
-                );
-
-                if (!touch || event.touches.length > 0) {
-                    return;
-                }
-
-                const dx = touch.clientX - start.x;
-                const dy = touch.clientY - start.y;
-
-                if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
-                    swiped.current = true;
-                    move(dx < 0 ? 1 : -1);
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onFocusCapture={() => {
+                if (keyboardNavigation.current) {
+                    pauseForFocus();
                 }
             }}
-            onTouchCancel={() => {
-                touchStart.current = null;
-            }}
-            onClickCapture={(event) => {
-                if (swiped.current && event.detail !== 0) {
-                    event.preventDefault();
-                    event.stopPropagation();
+            onKeyDownCapture={(event) => {
+                if (event.key === 'Tab') {
+                    beginKeyboardNavigation();
                 }
-
-                swiped.current = false;
             }}
+            onBlurCapture={(event) => {
+                if (
+                    event.target instanceof HTMLElement &&
+                    !event.currentTarget.contains(
+                        event.relatedTarget as Node | null,
+                    )
+                ) {
+                    keyboardNavigation.current = false;
+                }
+            }}
+            onClickCapture={handleClickCapture}
+            onTouchStartCapture={() => setTouching(true)}
+            onTouchEndCapture={(event) => setTouching(event.touches.length > 0)}
+            onTouchCancelCapture={(event) =>
+                setTouching(event.touches.length > 0)
+            }
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchCancel}
+            data-carousel="true"
         >
-            <div
-                aria-live={rotating ? 'off' : 'polite'}
-                className="overflow-hidden rounded-card"
-            >
+            <div aria-live="off" className="overflow-hidden rounded-card">
                 <div
                     className="flex touch-pan-y transition-transform duration-300 ease-out motion-reduce:transition-none"
                     style={{ transform: `translateX(-${index * 100}%)` }}
@@ -131,24 +193,41 @@ export default function HeroBanner({ banners }: { banners: HeroSlide[] }) {
                 </div>
             </div>
             {slides.length > 1 && (
-                <div
-                    className="flex flex-wrap justify-center"
-                    aria-label="Pilih banner"
-                >
-                    {slides.map((slide, i) => (
+                <div className="flex flex-wrap items-center justify-center">
+                    {!reducedMotion && (
                         <button
-                            key={slide.id}
                             type="button"
-                            onClick={() => setIndex(i)}
-                            aria-label={`Banner ${i + 1}`}
-                            aria-current={i === index || undefined}
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white"
+                            data-rotation-control
+                            aria-label={`${paused ? 'Putar' : 'Jeda'} banner`}
+                            onClick={toggleRotation}
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white"
                         >
-                            <span
-                                className={`h-1.5 rounded-full ${i === index ? 'w-5 bg-white' : 'w-1.5 bg-white/60'}`}
-                            />
+                            {paused ? (
+                                <Play className="h-4 w-4" aria-hidden="true" />
+                            ) : (
+                                <Pause className="h-4 w-4" aria-hidden="true" />
+                            )}
                         </button>
-                    ))}
+                    )}
+                    <div
+                        className="flex flex-wrap justify-center"
+                        aria-label="Pilih banner"
+                    >
+                        {slides.map((slide, i) => (
+                            <button
+                                key={slide.id}
+                                type="button"
+                                onClick={() => setIndex(i)}
+                                aria-label={`Banner ${i + 1}`}
+                                aria-current={i === index || undefined}
+                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-white"
+                            >
+                                <span
+                                    className={`h-1.5 rounded-full ${i === index ? 'w-5 bg-white' : 'w-1.5 bg-white/60'}`}
+                                />
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

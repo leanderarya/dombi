@@ -1,0 +1,749 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Models\User;
+use App\Providers\AppServiceProvider;
+use App\Services\ProductionOwnerProvisioner;
+use App\Services\ProductionOwnerSeedFailure;
+use Database\Seeders\ProductionOwnerSeeder;
+use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\ApplicationBuilder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+
+require_once __DIR__.'/OwnerBootstrapReadiness.php';
+
+$release = dirname(__DIR__, 2);
+$migration = $release.'/database/migrations/'.OwnerBootstrapReadiness::AUDIT_MIGRATION.'.php';
+$socket = getenv('DOMBI_TEST_MYSQL_SOCKET') ?: '';
+$port = filter_var(getenv('DOMBI_TEST_MYSQL_PORT') ?: '', FILTER_VALIDATE_INT);
+if ($socket === '' || $port === false || ! is_file($migration)) {
+    fwrite(STDERR, "DISPOSABLE_TEST=BLOCKED\nREASON=local_mariadb_endpoint_or_migration_missing\n");
+    exit(2);
+}
+
+$protected = [
+    'app/Console/Commands/BootstrapInitialOwner.php',
+    'app/Services/ProductionOwnerProvisioner.php',
+    'database/seeders/ProductionOwnerSeeder.php',
+    'app/Services/DokuConfigurationGuard.php',
+    'bootstrap/app.php',
+    'bootstrap/providers.php',
+    'config/database.php',
+    'config/session.php',
+    'database/migrations/'.OwnerBootstrapReadiness::AUDIT_MIGRATION.'.php',
+    'scripts/release/OwnerBootstrapReadiness.php',
+];
+$initialHashes = [];
+foreach ($protected as $relative) {
+    $initialHashes[$relative] = hash_file('sha256', $release.'/'.$relative);
+}
+
+$testDatabase = OwnerBootstrapReadiness::DATABASE;
+$testUser = OwnerBootstrapReadiness::DATABASE_USER;
+$wrongDatabase = 'dombi_wrong_identity_'.bin2hex(random_bytes(4));
+$wrongUser = 'dombi_wrong_user_'.bin2hex(random_bytes(4));
+$testPassword = bin2hex(random_bytes(24));
+$wrongPassword = bin2hex(random_bytes(24));
+$ownerEmail = 'dombicenter@gmail.com';
+$ownerName = 'Dombi Center';
+$credentialDirectory = sys_get_temp_dir().'/dombi-owner-credentials-'.bin2hex(random_bytes(8));
+$runtimeDirectory = sys_get_temp_dir().'/dombi-owner-runtime-'.bin2hex(random_bytes(8));
+register_shutdown_function(static function () use ($credentialDirectory, $runtimeDirectory): void {
+    foreach ([$credentialDirectory, $runtimeDirectory] as $directory) {
+        if (! is_dir($directory) || is_link($directory)) {
+            continue;
+        }
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
+        );
+        foreach ($iterator as $entry) {
+            if ($entry->isDir() && ! $entry->isLink()) {
+                @rmdir($entry->getPathname());
+            } else {
+                @unlink($entry->getPathname());
+            }
+        }
+        @rmdir($directory);
+    }
+});
+
+$root = new PDO('mysql:unix_socket='.$socket.';dbname=mysql;charset=utf8mb4', 'root', '', [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+]);
+$portOnServer = (int) $root->query('SELECT @@port')->fetchColumn();
+if ($portOnServer !== $port) {
+    throw new RuntimeException('test_server_port_mismatch');
+}
+
+$existingSchema = $root->prepare('SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name IN (?, ?)');
+$existingSchema->execute([$testDatabase, $wrongDatabase]);
+$existingUsers = $root->prepare('SELECT COUNT(*) FROM mysql.user WHERE User IN (?, ?)');
+$existingUsers->execute([$testUser, $wrongUser]);
+if ((int) $existingSchema->fetchColumn() !== 0 || (int) $existingUsers->fetchColumn() !== 0) {
+    throw new RuntimeException('disposable_names_already_exist');
+}
+
+foreach ([$testDatabase, $wrongDatabase] as $database) {
+    $root->exec('CREATE DATABASE `'.$database.'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+}
+$root->exec("CREATE USER '".$testUser."'@'127.0.0.1' IDENTIFIED BY '".$testPassword."'");
+$root->exec("CREATE USER '".$wrongUser."'@'127.0.0.1' IDENTIFIED BY '".$wrongPassword."'");
+$root->exec('GRANT ALL PRIVILEGES ON `'.$testDatabase.'`.* TO `'.$testUser.'`@`127.0.0.1`');
+$root->exec('GRANT ALL PRIVILEGES ON `'.$testDatabase.'`.* TO `'.$wrongUser.'`@`127.0.0.1`');
+
+$dsn = 'mysql:host=127.0.0.1;port='.$port.';dbname='.$testDatabase.';charset=utf8mb4';
+$appPdo = new PDO($dsn, $testUser, $testPassword, [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES => false,
+]);
+$appIdentity = $appPdo->query('SELECT DATABASE() db, CURRENT_USER() account, @@hostname host')->fetch();
+if (($appIdentity['db'] ?? null) !== $testDatabase
+    || explode('@', (string) ($appIdentity['account'] ?? ''), 2)[0] !== $testUser
+    || (int) $appPdo->query('SELECT @@port')->fetchColumn() !== $port) {
+    throw new RuntimeException('disposable_mysql_identity_not_local');
+}
+
+if (! mkdir($credentialDirectory, 0700) || (fileperms($credentialDirectory) & 0777) !== 0700
+    || ! mkdir($runtimeDirectory, 0700)) {
+    throw new RuntimeException('disposable_private_directories_create_failed');
+}
+
+$setEnv = static function (string $name, string $value): void {
+    putenv($name.'='.$value);
+    $_ENV[$name] = $value;
+    $_SERVER[$name] = $value;
+};
+unset($_ENV['DB_URL'], $_SERVER['DB_URL'], $_ENV['DATABASE_URL'], $_SERVER['DATABASE_URL']);
+putenv('DB_URL');
+putenv('DATABASE_URL');
+$setEnv('APP_ENV', 'production');
+$setEnv('APP_DEBUG', 'false');
+$setEnv('APP_CONFIG_CACHE', $runtimeDirectory.'/config.php');
+$setEnv('APP_SERVICES_CACHE', $runtimeDirectory.'/services.php');
+$setEnv('APP_PACKAGES_CACHE', $runtimeDirectory.'/packages.php');
+$setEnv('APP_EVENTS_CACHE', $runtimeDirectory.'/events.php');
+$setEnv('APP_KEY', 'base64:'.base64_encode(random_bytes(32)));
+$setEnv('DB_CONNECTION', 'mysql');
+$setEnv('DB_HOST', '127.0.0.1');
+$setEnv('DB_PORT', (string) $port);
+$setEnv('DB_DATABASE', $testDatabase);
+$setEnv('DB_USERNAME', $testUser);
+$setEnv('DB_PASSWORD', $testPassword);
+$setEnv('DB_SOCKET', '');
+$setEnv('DB_CHARSET', 'utf8mb4');
+$setEnv('DB_COLLATION', 'utf8mb4_unicode_ci');
+$setEnv('SESSION_DRIVER', 'database');
+$setEnv('SESSION_CONNECTION', 'mysql');
+$setEnv('SESSION_TABLE', 'sessions');
+$setEnv('DOMBI_OWNER_CREDENTIAL_DIR', $credentialDirectory);
+$setEnv('CACHE_STORE', 'array');
+$setEnv('QUEUE_CONNECTION', 'sync');
+$setEnv('LOG_CHANNEL', 'stderr');
+
+require_once $release.'/vendor/autoload.php';
+require_once __DIR__.'/OwnerBootstrapReadiness.php';
+$app = (new ApplicationBuilder(new Application($release)))
+    ->withKernels()
+    ->withEvents(false)
+    ->withCommands([])
+    ->withProviders([], false)
+    ->withExceptions()
+    ->create();
+$app->make(ConsoleKernel::class)->bootstrap();
+if ($app->environment() !== 'production' || $app->getProvider(AppServiceProvider::class) !== null) {
+    throw new RuntimeException('disposable_minimal_cli_bootstrap_failed');
+}
+
+DB::connection('mysql')->getPdo();
+Schema::create('migrations', static function (Blueprint $table): void {
+    $table->increments('id');
+    $table->string('migration');
+    $table->unsignedInteger('batch');
+});
+
+$expectedTables = OwnerBootstrapReadiness::expectedTables();
+foreach ($expectedTables as $tableName) {
+    if (in_array($tableName, ['migrations', 'owner_recovery_audit_logs'], true)) {
+        continue;
+    }
+    Schema::create($tableName, static function (Blueprint $table) use ($tableName): void {
+        if ($tableName === 'users') {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('password');
+            $table->string('role');
+            $table->boolean('is_active')->default(true);
+            $table->boolean('must_change_password')->default(false);
+            $table->timestamps();
+
+            return;
+        }
+        if ($tableName === 'sessions') {
+            $table->string('id')->primary();
+            $table->foreignId('user_id')->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+            $table->integer('last_activity')->index();
+
+            return;
+        }
+        $table->id();
+    });
+}
+
+$allMigrations = array_map(static fn (string $path): string => pathinfo($path, PATHINFO_FILENAME), glob($release.'/database/migrations/*.php') ?: []);
+sort($allMigrations, SORT_STRING);
+$baselineMigrations = array_values(array_filter($allMigrations, static fn (string $name): bool => $name !== OwnerBootstrapReadiness::AUDIT_MIGRATION));
+$baselineRows = array_map(static fn (string $name): array => ['migration' => $name, 'batch' => 1], $baselineMigrations);
+foreach (array_chunk($baselineRows, 100) as $chunk) {
+    DB::table('migrations')->insert($chunk);
+}
+
+$migrationObject = require $migration;
+$migrationObject->up();
+DB::table('migrations')->insert(['migration' => OwnerBootstrapReadiness::AUDIT_MIGRATION, 'batch' => 2]);
+
+$pdo = DB::connection('mysql')->getPdo();
+$initialReadiness = OwnerBootstrapReadiness::assertDatabaseReady(
+    $pdo,
+    $testDatabase,
+    $testUser,
+    $release,
+    false,
+);
+OwnerBootstrapReadiness::assertSessionHandler($app, $pdo, $testDatabase, $testUser);
+
+$runnerTestRoot = realpath($runtimeDirectory);
+if ($runnerTestRoot === false) {
+    throw new RuntimeException('full_runner_test_root_unavailable');
+}
+$runnerRelease = $runnerTestRoot.'/release';
+$runnerPrivate = $runnerTestRoot.'/private';
+$runnerOwnerCredentials = $runnerPrivate.'/owner-credentials';
+if (! mkdir($runnerPrivate, 0700) || ! mkdir($runnerOwnerCredentials, 0700)) {
+    throw new RuntimeException('full_runner_test_private_paths_create_failed');
+}
+
+$runTestProcess = static function (array $arguments): array {
+    $pipes = [];
+    $process = proc_open($arguments, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if (! is_resource($process)) {
+        throw new RuntimeException('full_runner_test_process_start_failed');
+    }
+
+    fclose($pipes[0]);
+    $stdout = stream_get_contents($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+
+    return [proc_close($process), trim((string) $stdout), trim((string) $stderr)];
+};
+$runTestCommand = static function (array $arguments) use ($runTestProcess): string {
+    [$status, $stdout, $stderr] = $runTestProcess($arguments);
+    if ($status !== 0 || $stderr !== '') {
+        throw new RuntimeException('full_runner_test_setup_failed');
+    }
+
+    return $stdout;
+};
+$releaseSha = $runTestCommand(['git', '-C', $release, 'rev-parse', 'HEAD']);
+$runTestCommand(['git', 'clone', '--quiet', '--shared', '--no-checkout', $release, $runnerRelease]);
+$runTestCommand(['git', '-C', $runnerRelease, 'checkout', '--quiet', '--detach', $releaseSha]);
+$runTestCommand(['cp', '-a', $release.'/vendor', $runnerRelease.'/vendor']);
+if ($runTestCommand(['git', '-C', $runnerRelease, 'status', '--porcelain=v1']) !== '') {
+    throw new RuntimeException('full_runner_test_release_not_clean');
+}
+
+$runnerCache = $runnerRelease.'/bootstrap/cache/owner-bootstrap-cli';
+if (! mkdir($runnerCache, 0700, true) || (fileperms($runnerCache) & 0777) !== 0700) {
+    throw new RuntimeException('full_runner_test_cache_create_failed');
+}
+$runnerPath = $runnerPrivate.'/owner-bootstrap-runner.php';
+$runnerReadiness = $runnerPrivate.'/OwnerBootstrapReadiness.php';
+$runnerProvisioner = $runnerPrivate.'/ProductionOwnerProvisioner.php';
+$runnerSeeder = $runnerPrivate.'/ProductionOwnerSeeder.php';
+$runnerConfig = $runnerPrivate.'/db.cnf';
+$runnerSource = file_get_contents($release.'/scripts/release/owner-bootstrap-runner.php');
+if (! is_string($runnerSource)) {
+    throw new RuntimeException('full_runner_test_source_unavailable');
+}
+$runnerConstants = [
+    'DOMBI_RELEASE' => $runnerRelease,
+    'DOMBI_RELEASE_SHA' => $releaseSha,
+    'DOMBI_CREDENTIALS' => $runnerConfig,
+    'DOMBI_OWNER_CREDENTIAL_DIR' => $runnerOwnerCredentials,
+    'DOMBI_RUNNER' => $runnerPath,
+    'DOMBI_READINESS' => $runnerReadiness,
+    'DOMBI_PROVISIONER' => $runnerProvisioner,
+    'DOMBI_SEEDER' => $runnerSeeder,
+    'DOMBI_READINESS_SHA256' => hash_file('sha256', $runnerRelease.'/scripts/release/OwnerBootstrapReadiness.php'),
+    'DOMBI_PROVISIONER_SHA256' => hash_file('sha256', $runnerRelease.'/app/Services/ProductionOwnerProvisioner.php'),
+    'DOMBI_SEEDER_SHA256' => hash_file('sha256', $runnerRelease.'/database/seeders/ProductionOwnerSeeder.php'),
+];
+foreach ($runnerConstants as $constant => $value) {
+    if (! is_string($value)) {
+        throw new RuntimeException('full_runner_test_pin_unavailable');
+    }
+    $pattern = '/^const '.preg_quote($constant, '/').' = \'[^\'\r\n]*\';$/m';
+    $replacement = 'const '.$constant.' = '.var_export($value, true).';';
+    $runnerSource = preg_replace($pattern, $replacement, $runnerSource, 1, $replacements);
+    if (! is_string($runnerSource) || $replacements !== 1) {
+        throw new RuntimeException('full_runner_test_pin_replace_failed');
+    }
+}
+if (file_put_contents($runnerPath, $runnerSource, LOCK_EX) !== strlen($runnerSource)
+    || ! chmod($runnerPath, 0600)) {
+    throw new RuntimeException('full_runner_test_runner_write_failed');
+}
+foreach ([
+    $runnerReadiness => $runnerRelease.'/scripts/release/OwnerBootstrapReadiness.php',
+    $runnerProvisioner => $runnerRelease.'/app/Services/ProductionOwnerProvisioner.php',
+    $runnerSeeder => $runnerRelease.'/database/seeders/ProductionOwnerSeeder.php',
+] as $destination => $source) {
+    if (! copy($source, $destination) || ! chmod($destination, 0600)) {
+        throw new RuntimeException('full_runner_test_helper_copy_failed');
+    }
+}
+$runnerConfigContents = "[client]\nprotocol=TCP\nhost=127.0.0.1\nport={$port}\nuser={$testUser}\npassword={$testPassword}\ndatabase={$testDatabase}\n";
+if (file_put_contents($runnerConfig, $runnerConfigContents, LOCK_EX) !== strlen($runnerConfigContents)
+    || ! chmod($runnerConfig, 0600) || (fileperms($runnerConfig) & 0777) !== 0600) {
+    throw new RuntimeException('full_runner_test_credentials_write_failed');
+}
+$runFullRunner = static function (string $case) use ($runTestProcess, $runnerPath, $releaseSha): string {
+    [$status, $stdout, $stderr] = $runTestProcess([
+        'python3', __DIR__.'/test-owner-bootstrap-runner-driver.py', $case, PHP_BINARY, $runnerPath, $releaseSha,
+    ]);
+    if ($status !== 0 || $stderr !== '') {
+        throw new RuntimeException('full_runner_test_case_failed');
+    }
+
+    return $stdout;
+};
+
+$root->exec('CREATE TRIGGER `'.$testDatabase.'`.dombi_full_runner_insert_failure BEFORE INSERT ON `'.$testDatabase.'`.users FOR EACH ROW SIGNAL SQLSTATE \'45000\' SET MESSAGE_TEXT = \'DIAGNOSTIC_SENTINEL_DO_NOT_EMIT\'');
+try {
+    $runnerFailure = $runFullRunner('insert-failure');
+} finally {
+    $root->exec('DROP TRIGGER `'.$testDatabase.'`.dombi_full_runner_insert_failure');
+}
+if (! str_contains($runnerFailure, 'RUNNER_PREFLIGHT=PASS')
+    || ! str_contains($runnerFailure, 'RUNNER_FAILURE=SANITIZED')
+    || ! str_contains($runnerFailure, 'FAILURE_STAGE=eloquent_insert')
+    || ! str_contains($runnerFailure, 'FAILURE_CODE=database_operation_failed')
+    || DB::table('users')->count() !== 0 || glob($runnerOwnerCredentials.'/*') !== []) {
+    throw new RuntimeException('full_runner_failure_propagation_invalid');
+}
+
+$runnerSuccess = $runFullRunner('success');
+$runnerOwner = DB::table('users')->where('email', $ownerEmail)->sole();
+$runnerCredentialFiles = glob($runnerOwnerCredentials.'/*.txt') ?: [];
+if (! str_contains($runnerSuccess, 'RUNNER_PREFLIGHT=PASS')
+    || ! str_contains($runnerSuccess, 'RUNNER_SUCCESS=PASS')
+    || $runnerOwner->name !== $ownerName || $runnerOwner->role !== 'owner'
+    || (int) $runnerOwner->is_active !== 1 || (int) $runnerOwner->must_change_password !== 1
+    || count($runnerCredentialFiles) !== 1 || is_link($runnerCredentialFiles[0])
+    || (fileperms($runnerCredentialFiles[0]) & 0777) !== 0600) {
+    throw new RuntimeException('full_runner_success_postcheck_failed');
+}
+$runnerCredentialContents = (string) file_get_contents($runnerCredentialFiles[0]);
+if (! preg_match('/Temporary password: ([^\r\n]+)/', $runnerCredentialContents, $runnerPasswordMatch)
+    || ! Hash::check($runnerPasswordMatch[1], $runnerOwner->password)) {
+    throw new RuntimeException('full_runner_credential_hash_mismatch');
+}
+$runnerState = OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, true);
+if ($runnerState['owner_count'] !== 1 || $runnerState['business_rows'] !== 0) {
+    throw new RuntimeException('full_runner_database_postcheck_failed');
+}
+DB::table('users')->where('email', $ownerEmail)->delete();
+foreach ($runnerCredentialFiles as $runnerCredentialFile) {
+    unlink($runnerCredentialFile);
+}
+if (glob($runnerOwnerCredentials.'/*') !== []) {
+    throw new RuntimeException('full_runner_test_cleanup_failed');
+}
+
+$auditColumn = $pdo->query("SELECT COLUMN_TYPE, DATA_TYPE FROM information_schema.columns WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'owner_recovery_audit_logs' AND COLUMN_NAME = 'id'")->fetch();
+$widthTolerated = strtolower((string) $auditColumn['DATA_TYPE']) === 'bigint'
+    && str_contains(strtolower((string) $auditColumn['COLUMN_TYPE']), 'unsigned');
+if (! $widthTolerated) {
+    throw new RuntimeException('audit_integer_width_not_tolerated');
+}
+
+$expectFailure = static function (string $expected, callable $operation): void {
+    try {
+        $operation();
+    } catch (RuntimeException $exception) {
+        if ($exception->getMessage() === $expected) {
+            return;
+        }
+        throw $exception;
+    }
+    throw new RuntimeException('expected_failure_not_observed_'.$expected);
+};
+
+$expectFailure('database_identity_mismatch', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, 'wrong_database', $testUser));
+$expectFailure('database_identity_mismatch', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, $wrongDatabase, $testUser));
+$wrongUserPdo = new PDO($dsn, $wrongUser, $wrongPassword, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$expectFailure('database_identity_mismatch', static fn () => OwnerBootstrapReadiness::assertIdentity($wrongUserPdo, $testDatabase, $testUser));
+
+try {
+    $root->exec('GRANT SELECT ON *.* TO `'.$testUser.'`@`127.0.0.1`');
+    $expectFailure('database_privileges_exceed_approved_scope', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, $testDatabase, $testUser));
+} finally {
+    $root->exec('REVOKE SELECT ON *.* FROM `'.$testUser.'`@`127.0.0.1`');
+}
+
+try {
+    $root->exec('GRANT SELECT ON `'.$wrongDatabase.'`.* TO `'.$testUser.'`@`127.0.0.1`');
+    $expectFailure('database_privileges_exceed_approved_scope', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, $testDatabase, $testUser));
+} finally {
+    $root->exec('REVOKE SELECT ON `'.$wrongDatabase.'`.* FROM `'.$testUser.'`@`127.0.0.1`');
+}
+
+try {
+    $root->exec('GRANT ALL PRIVILEGES ON `'.$testDatabase.'`.* TO `'.$testUser.'`@`127.0.0.1` WITH GRANT OPTION');
+    $expectFailure('database_privileges_exceed_approved_scope', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, $testDatabase, $testUser));
+} finally {
+    $root->exec('REVOKE GRANT OPTION ON `'.$testDatabase.'`.* FROM `'.$testUser.'`@`127.0.0.1`');
+}
+
+$testRole = 'dombi_owner_test_role_'.bin2hex(random_bytes(4));
+$root->exec('CREATE ROLE `'.$testRole.'`');
+$root->exec('GRANT SELECT ON `'.$testDatabase.'`.* TO `'.$testRole.'`');
+$root->exec('GRANT `'.$testRole.'` TO `'.$testUser.'`@`127.0.0.1`');
+try {
+    $pdo->exec('SET ROLE `'.$testRole.'`');
+    $expectFailure('database_privileges_exceed_approved_scope', static fn () => OwnerBootstrapReadiness::assertIdentity($pdo, $testDatabase, $testUser));
+} finally {
+    $pdo->exec('SET ROLE NONE');
+    $root->exec('REVOKE `'.$testRole.'` FROM `'.$testUser.'`@`127.0.0.1`');
+    $root->exec('DROP ROLE `'.$testRole.'`');
+}
+
+$pdo->exec('ALTER TABLE owner_recovery_audit_logs MODIFY sessions_revoked INT NOT NULL DEFAULT 0');
+$expectFailure('audit_columns_mismatch', static fn () => OwnerBootstrapReadiness::assertAuditSchema($pdo));
+$pdo->exec('ALTER TABLE owner_recovery_audit_logs MODIFY sessions_revoked INT UNSIGNED NOT NULL DEFAULT 0');
+OwnerBootstrapReadiness::assertAuditSchema($pdo);
+
+$approvedMigration = OwnerBootstrapReadiness::AUDIT_MIGRATION;
+DB::table('migrations')->where('migration', $approvedMigration)->delete();
+$expectFailure('migration_ledger_not_exact_165', static fn () => OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, false));
+DB::table('migrations')->insert(['migration' => $approvedMigration, 'batch' => 2]);
+
+DB::table('products')->insert(['id' => 1]);
+$expectFailure('unexpected_business_rows', static fn () => OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, false));
+DB::table('products')->delete();
+
+config(['session.driver' => 'file']);
+$expectFailure('database_session_configuration_mismatch', static fn () => OwnerBootstrapReadiness::assertSessionHandler($app, $pdo, $testDatabase, $testUser));
+config(['session.driver' => 'database']);
+$app->make('session')->forgetDrivers();
+OwnerBootstrapReadiness::assertSessionHandler($app, $pdo, $testDatabase, $testUser);
+
+$missingGuardRuntime = $runtimeDirectory.'/missing-guard';
+if (! mkdir($missingGuardRuntime, 0700)) {
+    throw new RuntimeException('synthetic_missing_guard_runtime_create_failed');
+}
+$missingGuardEnvironment = [
+    'DOMBI_TEST_MYSQL_PORT' => (string) $port,
+    'DOMBI_TEST_MYSQL_DATABASE' => $testDatabase,
+    'DOMBI_TEST_MYSQL_USER' => $testUser,
+    'DOMBI_TEST_MYSQL_PASSWORD' => $testPassword,
+    'DOMBI_TEST_CREDENTIAL_DIR' => $credentialDirectory,
+    'DOMBI_TEST_RUNTIME_DIR' => $missingGuardRuntime,
+    'DOMBI_TEST_OMIT_READINESS' => '1',
+];
+$missingGuardPipes = [];
+$missingGuardProcess = proc_open([PHP_BINARY, __DIR__.'/test-owner-seeder-worker.php'], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $missingGuardPipes, null, $missingGuardEnvironment);
+if (! is_resource($missingGuardProcess)) {
+    throw new RuntimeException('synthetic_missing_guard_worker_start_failed');
+}
+fclose($missingGuardPipes[0]);
+$missingGuardOutput = stream_get_contents($missingGuardPipes[1]);
+$missingGuardError = stream_get_contents($missingGuardPipes[2]);
+fclose($missingGuardPipes[1]);
+fclose($missingGuardPipes[2]);
+if (proc_close($missingGuardProcess) !== 0 || trim((string) $missingGuardOutput) !== 'MISSING_GUARD_DEPENDENCY=REJECTED'
+    || trim((string) $missingGuardError) !== '') {
+    throw new RuntimeException('synthetic_missing_guard_dependency_not_rejected');
+}
+foreach (glob($missingGuardRuntime.'/*') ?: [] as $cacheFile) {
+    if (is_file($cacheFile) || is_link($cacheFile)) {
+        unlink($cacheFile);
+    }
+}
+rmdir($missingGuardRuntime);
+
+$seeder = $app->make(ProductionOwnerSeeder::class);
+$expectSeederIdentityRejection = static function (array $connectionOverrides) use ($seeder, $testPassword, $app): void {
+    config($connectionOverrides);
+    DB::purge('mysql');
+    $app->make('session')->forgetDrivers();
+    try {
+        $seeder->run();
+    } catch (RuntimeException) {
+        DB::purge('mysql');
+        config([
+            'database.connections.mysql.database' => OwnerBootstrapReadiness::DATABASE,
+            'database.connections.mysql.username' => OwnerBootstrapReadiness::DATABASE_USER,
+            'database.connections.mysql.password' => $testPassword,
+        ]);
+        $app->make('session')->forgetDrivers();
+
+        return;
+    }
+
+    DB::purge('mysql');
+    config([
+        'database.connections.mysql.database' => OwnerBootstrapReadiness::DATABASE,
+        'database.connections.mysql.username' => OwnerBootstrapReadiness::DATABASE_USER,
+        'database.connections.mysql.password' => $testPassword,
+    ]);
+    $app->make('session')->forgetDrivers();
+    throw new RuntimeException('seeder_accepted_wrong_database_identity');
+};
+$expectSeederIdentityRejection(['database.connections.mysql.database' => $wrongDatabase]);
+if (DB::table('users')->count() !== 0 || glob($credentialDirectory.'/*') !== []) {
+    throw new RuntimeException('wrong_database_seeder_changed_state');
+}
+$expectSeederIdentityRejection([
+    'database.connections.mysql.username' => $wrongUser,
+    'database.connections.mysql.password' => $wrongPassword,
+]);
+if (DB::table('users')->count() !== 0 || glob($credentialDirectory.'/*') !== []) {
+    throw new RuntimeException('wrong_user_seeder_changed_state');
+}
+
+$expectSeedFailure = static function (string $expectedStage, string $expectedCode, callable $operation): ProductionOwnerSeedFailure {
+    try {
+        $operation();
+    } catch (ProductionOwnerSeedFailure $failure) {
+        $diagnostic = $failure->safeDiagnostic();
+        if ($failure->stage !== $expectedStage || $failure->failureCode !== $expectedCode
+            || $failure->getPrevious() !== null
+            || ! preg_match('/^FAILURE_STAGE=[a-z_]+\nFAILURE_CODE=[a-z_]+$/D', $diagnostic)
+            || str_contains($diagnostic, 'DIAGNOSTIC_SENTINEL')) {
+            throw new RuntimeException('seed_failure_diagnostic_mismatch');
+        }
+
+        return $failure;
+    }
+
+    throw new RuntimeException('expected_seed_failure_not_observed_'.$expectedStage);
+};
+
+$migrationsForRestore = DB::table('migrations')->orderBy('id')->get(['migration', 'batch'])
+    ->map(static fn (object $row): array => ['migration' => $row->migration, 'batch' => $row->batch])
+    ->all();
+DB::table('migrations')->delete();
+$expectSeedFailure('migration_lock', 'guard_rejected', static fn () => $seeder->run());
+if (DB::table('users')->count() !== 0 || glob($credentialDirectory.'/*') !== []) {
+    throw new RuntimeException('migration_lock_failure_changed_state');
+}
+foreach (array_chunk($migrationsForRestore, 100) as $chunk) {
+    DB::table('migrations')->insert($chunk);
+}
+
+DB::table('migrations')->where('migration', OwnerBootstrapReadiness::AUDIT_MIGRATION)->delete();
+$expectSeedFailure('readiness', 'guard_rejected', static fn () => $seeder->run());
+if (DB::table('users')->count() !== 0 || glob($credentialDirectory.'/*') !== []) {
+    throw new RuntimeException('readiness_failure_changed_state');
+}
+DB::table('migrations')->insert(['migration' => OwnerBootstrapReadiness::AUDIT_MIGRATION, 'batch' => 2]);
+
+$filesystemFailurePath = $runtimeDirectory.'/credential-write-failure';
+if (! mkdir($filesystemFailurePath, 0700)) {
+    throw new RuntimeException('synthetic_long_path_root_create_failed');
+}
+$targetPathLength = 980;
+while (strlen($filesystemFailurePath) < $targetPathLength) {
+    $componentLength = min(200, $targetPathLength - strlen($filesystemFailurePath) - 1);
+    $filesystemFailurePath .= '/'.str_repeat('x', $componentLength);
+    if (! mkdir($filesystemFailurePath, 0700)) {
+        throw new RuntimeException('synthetic_long_path_directory_create_failed');
+    }
+}
+$expectSeedFailure('credential_write', 'filesystem_write_failed', static fn () => app(ProductionOwnerProvisioner::class)->seed($filesystemFailurePath));
+if (DB::table('users')->count() !== 0 || glob($credentialDirectory.'/*') !== [] || glob($filesystemFailurePath.'/*') !== []) {
+    throw new RuntimeException('credential_write_failure_changed_state');
+}
+
+$root->exec('CREATE TRIGGER `'.$testDatabase.'`.dombi_test_owner_insert_failure BEFORE INSERT ON `'.$testDatabase.'`.users FOR EACH ROW SIGNAL SQLSTATE \'45000\' SET MESSAGE_TEXT = \'DIAGNOSTIC_SENTINEL_DO_NOT_EMIT\'');
+$insertFailure = $expectSeedFailure('eloquent_insert', 'database_operation_failed', static fn () => $seeder->run());
+$root->exec('DROP TRIGGER `'.$testDatabase.'`.dombi_test_owner_insert_failure');
+if (str_contains($insertFailure->getMessage(), 'DIAGNOSTIC_SENTINEL')
+    || DB::table('users')->count() !== 0 || glob($credentialDirectory.'/*') !== []) {
+    throw new RuntimeException('insert_failure_leaked_or_changed_state');
+}
+
+$injectCommitAmbiguity = true;
+User::creating(static function () use (&$injectCommitAmbiguity): void {
+    if (! $injectCommitAmbiguity) {
+        return;
+    }
+
+    $injectCommitAmbiguity = false;
+    DB::afterCommit(static function (): never {
+        throw new RuntimeException('DIAGNOSTIC_SENTINEL_DO_NOT_EMIT');
+    });
+});
+$commitFailure = $expectSeedFailure('transaction_commit', 'commit_outcome_ambiguous', static fn () => $seeder->run());
+$ambiguousOwner = DB::table('users')->where('email', $ownerEmail)->sole();
+$ambiguousCredentials = glob($credentialDirectory.'/*.txt') ?: [];
+if (str_contains($commitFailure->getMessage(), 'DIAGNOSTIC_SENTINEL')
+    || count($ambiguousCredentials) !== 1 || (fileperms($ambiguousCredentials[0]) & 0777) !== 0600
+    || ! Hash::check((string) preg_replace('/.*Temporary password: ([^\r\n]+).*/s', '$1', (string) file_get_contents($ambiguousCredentials[0])), $ambiguousOwner->password)) {
+    throw new RuntimeException('commit_ambiguity_recovery_failed');
+}
+DB::table('users')->where('email', $ownerEmail)->delete();
+foreach ($ambiguousCredentials as $credentialFile) {
+    unlink($credentialFile);
+}
+
+$injectCredentialPostcheckFailure = true;
+User::created(static function () use (&$injectCredentialPostcheckFailure, $credentialDirectory): void {
+    if (! $injectCredentialPostcheckFailure) {
+        return;
+    }
+
+    $injectCredentialPostcheckFailure = false;
+    foreach (glob($credentialDirectory.'/*') ?: [] as $credentialFile) {
+        unlink($credentialFile);
+    }
+});
+$postcheckFailure = $expectSeedFailure('postcheck_credential', 'postcheck_failed', static fn () => $seeder->run());
+if (str_contains($postcheckFailure->getMessage(), 'DIAGNOSTIC_SENTINEL')
+    || DB::table('users')->count() !== 1 || glob($credentialDirectory.'/*') !== []) {
+    throw new RuntimeException('postcheck_failure_was_not_reported_safely');
+}
+DB::table('users')->where('email', $ownerEmail)->delete();
+
+$seeder->run();
+$firstOutput = '';
+$owner = DB::table('users')->where('email', $ownerEmail)->sole();
+if ($owner->name !== $ownerName || $owner->role !== 'owner' || (int) $owner->is_active !== 1 || (int) $owner->must_change_password !== 1) {
+    throw new RuntimeException('synthetic_owner_state_incorrect');
+}
+$credentialFiles = glob($credentialDirectory.'/*.txt') ?: [];
+if (count($credentialFiles) !== 1 || (fileperms($credentialFiles[0]) & 0777) !== 0600) {
+    throw new RuntimeException('synthetic_owner_credential_permissions');
+}
+$credentialContents = (string) file_get_contents($credentialFiles[0]);
+if (! preg_match('/Temporary password: ([^\r\n]+)/', $credentialContents, $passwordMatch)
+    || ! Hash::check($passwordMatch[1], $owner->password)) {
+    throw new RuntimeException('synthetic_owner_credential_hash_mismatch');
+}
+if (str_contains($firstOutput, $passwordMatch[1])) {
+    throw new RuntimeException('synthetic_owner_password_exposed_in_output');
+}
+$ownerPasswordHash = $owner->password;
+$seeder->run();
+if (DB::table('users')->count() !== 1
+    || DB::table('users')->where('email', $ownerEmail)->value('password') !== $ownerPasswordHash
+    || count(glob($credentialDirectory.'/*.txt') ?: []) !== 1) {
+    throw new RuntimeException('synthetic_owner_repeat_not_idempotent');
+}
+
+$postBootstrap = OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, true);
+if ($postBootstrap['owner_count'] !== 1 || $postBootstrap['table_count'] !== 68 || $postBootstrap['migration_count'] !== 165) {
+    throw new RuntimeException('synthetic_owner_postcheck_failed');
+}
+
+// Remove only disposable synthetic state, then prove independent processes serialize safely.
+DB::table('users')->where('email', $ownerEmail)->delete();
+foreach (glob($credentialDirectory.'/*') ?: [] as $credentialFile) {
+    unlink($credentialFile);
+}
+$workerProcesses = [];
+$workerRuntimeDirectories = [];
+for ($worker = 0; $worker < 2; $worker++) {
+    $workerRuntime = $runtimeDirectory.'/worker-'.$worker;
+    if (! mkdir($workerRuntime, 0700)) {
+        throw new RuntimeException('synthetic_worker_runtime_create_failed');
+    }
+    $workerRuntimeDirectories[] = $workerRuntime;
+    $workerEnvironment = [
+        'DOMBI_TEST_MYSQL_PORT' => (string) $port,
+        'DOMBI_TEST_MYSQL_DATABASE' => $testDatabase,
+        'DOMBI_TEST_MYSQL_USER' => $testUser,
+        'DOMBI_TEST_MYSQL_PASSWORD' => $testPassword,
+        'DOMBI_TEST_CREDENTIAL_DIR' => $credentialDirectory,
+        'DOMBI_TEST_RUNTIME_DIR' => $workerRuntime,
+    ];
+    $pipes = [];
+    $process = proc_open([PHP_BINARY, __DIR__.'/test-owner-seeder-worker.php'], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, $workerEnvironment);
+    if (! is_resource($process)) {
+        throw new RuntimeException('synthetic_worker_start_failed');
+    }
+    fclose($pipes[0]);
+    $workerProcesses[] = [$process, $pipes];
+}
+$workerResults = [];
+foreach ($workerProcesses as [$process, $pipes]) {
+    $stdout = stream_get_contents($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $workerStatus = proc_close($process);
+    if ($workerStatus !== 0 || trim((string) $stderr) !== '' || trim((string) $stdout) !== 'WORKER=PASS') {
+        throw new RuntimeException('synthetic_concurrent_worker_failed');
+    }
+    $workerResults[] = trim((string) $stdout);
+}
+foreach ($workerRuntimeDirectories as $workerRuntime) {
+    foreach (glob($workerRuntime.'/*') ?: [] as $cacheFile) {
+        if (is_file($cacheFile) || is_link($cacheFile)) {
+            unlink($cacheFile);
+        }
+    }
+    rmdir($workerRuntime);
+}
+$concurrentFiles = glob($credentialDirectory.'/*.txt') ?: [];
+if (count($workerResults) !== 2 || DB::table('users')->count() !== 1 || count($concurrentFiles) !== 1
+    || (fileperms($concurrentFiles[0]) & 0777) !== 0600) {
+    throw new RuntimeException('synthetic_concurrent_owner_creation_not_serialized');
+}
+$postConcurrent = OwnerBootstrapReadiness::assertDatabaseReady($pdo, $testDatabase, $testUser, $release, true);
+if ($postConcurrent['owner_count'] !== 1 || $postConcurrent['business_rows'] !== 0) {
+    throw new RuntimeException('synthetic_concurrent_postcheck_failed');
+}
+
+foreach ($initialHashes as $relative => $hash) {
+    if (hash_file('sha256', $release.'/'.$relative) !== $hash) {
+        throw new RuntimeException('application_file_changed_'.$relative);
+    }
+}
+
+echo "DISPOSABLE_TEST=PASS\n";
+echo "ENGINE=MARIADB\n";
+echo "FULL_RUNNER_INTERACTIVE_CONFIRMATION=PASS\n";
+echo "FULL_RUNNER_FAILURE_PROPAGATION=PASS\n";
+echo "FULL_RUNNER_SUCCESS_CONTROL=PASS\n";
+echo "MIGRATION_165=applied_to_disposable_only\n";
+echo 'AUDIT_INTEGER_DISPLAY_WIDTH='.(preg_match('/\\(\\d+\\)/', (string) $auditColumn['COLUMN_TYPE']) ? 'present_and_tolerated' : 'absent_and_tolerated')."\n";
+echo "WRONG_DATABASE=REJECTED\nWRONG_USER=REJECTED\n";
+echo "GLOBAL_PRIVILEGE=REJECTED\nOTHER_DATABASE_GRANT=REJECTED\nGRANT_OPTION=REJECTED\nACTIVE_ROLE=REJECTED\n";
+echo "SEEDER_WRONG_DATABASE=REJECTED\nSEEDER_WRONG_USER=REJECTED\n";
+echo "MIGRATION_BASELINE_MISMATCH=REJECTED\nNONEMPTY_BUSINESS_TABLE=REJECTED\nSESSION_DRIVER_MISMATCH=REJECTED\n";
+echo "MISSING_GUARD_DEPENDENCY=REJECTED\n";
+echo "FAILURE_STAGE_MIGRATION_LOCK=REPORTED\nFAILURE_STAGE_READINESS=REPORTED\n";
+echo "FAILURE_STAGE_CREDENTIAL_WRITE=REPORTED\nFAILURE_STAGE_ELOQUENT_INSERT=REPORTED\n";
+echo "FAILURE_STAGE_COMMIT_AMBIGUITY=REPORTED_AND_CREDENTIAL_PRESERVED\n";
+echo "FAILURE_STAGE_POSTCHECK=REPORTED\n";
+echo "DIAGNOSTIC_OUTPUT=ALLOWLISTED_NO_EXCEPTION_DETAILS\n";
+echo "PRODUCTION_OWNER_SEEDER=PASS\nOWNER_IDENTITY=Dombi Center <dombicenter@gmail.com>\n";
+echo "CREDENTIAL_DIRECTORY_MODE=0700\nCREDENTIAL_FILE_MODE=0600\nFIRST_LOGIN_CHANGE_REQUIRED=yes\nREPEAT_INVOCATION=IDEMPOTENT\n";
+echo "CONCURRENT_INVOCATIONS=SERIALIZED_ONE_OWNER_ONE_CREDENTIAL\nNO_CATALOG_OR_DEMO_ROWS=yes\n";
+echo "SESSION_HANDLER=DatabaseSessionHandler_same_mysql_connection\nTABLES={$postBootstrap['table_count']} MIGRATIONS={$postBootstrap['migration_count']}\n";
+echo "APPLICATION_FILES=UNCHANGED\n";

@@ -116,7 +116,12 @@ describe('BannersIndex', () => {
         );
         expect(container.textContent).toContain('3 dari 3 banner aktif');
         expect(container.textContent).toContain('bergantian setiap 5 detik');
-        expect(container.textContent).not.toContain('menjeda rotasi');
+        expect(container.textContent).toContain(
+            'bisa menjeda rotasi kapan saja',
+        );
+        expect(container.textContent).toContain(
+            'preferensi kurangi gerakan aktif',
+        );
     });
     it('disables the add button and explains why at capacity', () => {
         render([banner(1, 'Satu'), banner(2, 'Dua'), banner(3, 'Tiga')]);
