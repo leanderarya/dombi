@@ -28,6 +28,15 @@ class DokuReconciliationTest extends TestCase
 
     private DokuReconciliationService $reconciliation;
 
+    protected function tearDown(): void
+    {
+        try {
+            $this->truncateDatabaseTables();
+        } finally {
+            parent::tearDown();
+        }
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -39,14 +48,14 @@ class DokuReconciliationTest extends TestCase
         $this->reconciliation = app(DokuReconciliationService::class);
     }
 
-    private function makeAttempt(string $creationState, array $metadata = []): PaymentAttempt
+    private function makeAttempt(string $creationState, array $metadata = [], ?string $invoice = null): PaymentAttempt
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
 
         return PaymentAttempt::create([
             'order_id' => $order->id,
             'attempt_key' => 'recon-'.$order->id,
-            'invoice_number' => $order->order_code,
+            'invoice_number' => $invoice ?? 'DMB1'.strtoupper(bin2hex(random_bytes(12))),
             'merchant_request_id' => 'recon-req-'.$order->id,
             'amount_snapshot' => $order->total,
             'currency_snapshot' => 'IDR',
@@ -70,6 +79,19 @@ class DokuReconciliationTest extends TestCase
         $this->assertTrue($result->changed);
         $attempt->refresh();
         $this->assertSame('paid', $attempt->settlement_status?->value);
+    }
+
+    public function test_old_format_attempt_is_not_reconciled_or_sent_to_doku(): void
+    {
+        $attempt = $this->makeAttempt('pending', [], 'DMB-OLD-FORMAT-123');
+        Http::fake();
+
+        $result = $this->reconciliation->reconcile($attempt);
+
+        $this->assertFalse($result->changed);
+        $this->assertSame('pending', $attempt->fresh()->settlement_status->value);
+        $this->assertArrayNotHasKey('reconciliation_attempts', $attempt->fresh()->metadata ?? []);
+        Http::assertNothingSent();
     }
 
     public function test_unknown_attempt_reconciles_to_success(): void

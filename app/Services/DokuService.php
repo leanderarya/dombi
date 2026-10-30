@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\Log;
 
 class DokuService
 {
+    private const NEW_INVOICE_PREFIX = 'DMB1';
+
+    private const NEW_INVOICE_RANDOM_BYTES = 12;
+
     private string $baseUrl;
 
     private string $clientId;
@@ -229,6 +233,9 @@ class DokuService
     public function reconcilePaymentAttempt(PaymentAttempt $attempt): PaymentAttempt
     {
         $attempt = PaymentAttempt::query()->whereKey($attempt->id)->with('order')->firstOrFail();
+        if (! $this->isNewInvoiceNumber($attempt->invoice_number)) {
+            return $attempt;
+        }
         $claimToken = bin2hex(random_bytes(16));
         $expired = $this->expireUnknownAttemptIfDue($attempt->id);
         if ($expired) {
@@ -413,7 +420,7 @@ class DokuService
         if (PaymentAttempt::query()->where('order_id', $order->id)->count() >= config('order.max_payment_attempts', 3)) {
             return PaymentAttempt::query()->where('order_id', $order->id)->latest('id')->firstOrFail();
         }
-        $identity = strtoupper('DMB-'.$order->id.'-'.bin2hex(random_bytes(6)));
+        $identity = self::NEW_INVOICE_PREFIX.strtoupper(bin2hex(random_bytes(self::NEW_INVOICE_RANDOM_BYTES)));
 
         return PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => $identity, 'invoice_number' => $identity, 'merchant_request_id' => $identity.'-REQ', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'payment_method' => $order->payment_method ?? 'qris', 'creation_state' => 'initiated', 'metadata' => ['line_items' => $this->buildLineItems($order), 'customer_snapshot' => $this->buildCustomerInfo($order)]]);
     }
@@ -437,12 +444,21 @@ class DokuService
         $invoiceNumber = $payload['order']['invoice_number'] ?? null;
         $paymentStatus = $payload['transaction']['status'] ?? null;
 
-        if (! $invoiceNumber) {
+        if (! is_string($invoiceNumber) || $invoiceNumber === '') {
             PaymentWebhookLog::create([
                 'source' => 'doku', 'status' => $paymentStatus,
                 'payload' => $payload, 'error' => 'missing_invoice_number',
             ]);
             Log::warning('DOKU webhook: missing invoice_number');
+
+            return;
+        }
+        if (! $this->isNewInvoiceNumber($invoiceNumber)) {
+            PaymentWebhookLog::create([
+                'source' => 'doku', 'invoice_number' => $invoiceNumber,
+                'status' => $paymentStatus, 'payload' => $payload,
+                'error' => 'invoice_namespace_mismatch',
+            ]);
 
             return;
         }
@@ -583,6 +599,11 @@ class DokuService
     {
         if (empty($order->doku_order_id)) {
             Log::info('DOKU checkStatus: no doku_order_id', ['order_id' => $order->id]);
+
+            return null;
+        }
+        if (! is_string($order->doku_order_id) || ! $this->isNewInvoiceNumber($order->doku_order_id)) {
+            Log::warning('DOKU status check skipped outside current invoice namespace', ['order_id' => $order->id]);
 
             return null;
         }
@@ -830,6 +851,9 @@ class DokuService
     public function handleNormalizedWebhook(NormalizedPaymentEvent $event): void
     {
         $invoiceNumber = data_get($event->rawEvidence, 'order.invoice_number');
+        if (! is_string($invoiceNumber) || ! $this->isNewInvoiceNumber($invoiceNumber)) {
+            throw new \UnexpectedValueException('invoice_namespace_mismatch');
+        }
         $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->first();
         if (! $attempt) {
             throw new \RuntimeException('canonical_attempt_missing');
@@ -838,11 +862,19 @@ class DokuService
         app(CanonicalPaymentTransitionService::class)->apply($attempt, $event);
     }
 
+    public function isNewInvoiceNumber(string $invoiceNumber): bool
+    {
+        return preg_match('/\ADMB1[A-F0-9]{24}\z/', $invoiceNumber) === 1;
+    }
+
     public function processPaymentStatusChange(Order $order, string $status, array $evidence = []): void
     {
         $invoiceNumber = $evidence['order']['invoice_number'] ?? null;
-        if (! $invoiceNumber) {
+        if (! is_string($invoiceNumber) || $invoiceNumber === '') {
             throw new \LogicException('Canonical payment invoice required before status processing.');
+        }
+        if (! $this->isNewInvoiceNumber($invoiceNumber)) {
+            throw new \LogicException('invoice_namespace_mismatch');
         }
         $attempt = $order->paymentAttempts()->where('invoice_number', $invoiceNumber)->first();
         if (! $attempt) {

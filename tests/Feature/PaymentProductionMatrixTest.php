@@ -164,10 +164,11 @@ class PaymentProductionMatrixTest extends TestCase
     {
         $observability = app(PaymentObservabilityService::class);
         $order = Order::factory()->create(['payment_status' => 'pending']);
-        $attempt = PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'owner-path-'.uniqid(), 'invoice_number' => $order->order_code, 'merchant_request_id' => 'owner-path-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'pending']);
-        DB::transaction(function () use ($order, $observability): void {
-            app(DokuService::class)->handleNormalizedWebhook(new NormalizedPaymentEvent('matrix', 'UNKNOWN_PROVIDER_STATUS', $order->total, 'IDR', 'gateway-owner', now(), ['order' => ['invoice_number' => $order->order_code]]));
-            app(DokuService::class)->handleNormalizedWebhook(new NormalizedPaymentEvent('matrix', 'SUCCESS', 1, 'IDR', 'gateway-owner', now()->addSecond(), ['order' => ['invoice_number' => $order->order_code]]));
+        $invoice = 'DMB1'.str_repeat('A', 24);
+        PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => 'owner-path-'.uniqid(), 'invoice_number' => $invoice, 'merchant_request_id' => 'owner-path-request', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'creation_state' => 'pending']);
+        DB::transaction(function () use ($order, $observability, $invoice): void {
+            app(DokuService::class)->handleNormalizedWebhook(new NormalizedPaymentEvent('matrix', 'UNKNOWN_PROVIDER_STATUS', $order->total, 'IDR', 'gateway-owner', now(), ['order' => ['invoice_number' => $invoice]]));
+            app(DokuService::class)->handleNormalizedWebhook(new NormalizedPaymentEvent('matrix', 'SUCCESS', 1, 'IDR', 'gateway-owner', now()->addSecond(), ['order' => ['invoice_number' => $invoice]]));
             $observability->refreshPendingAgeGauge();
         });
         $this->assertSame('unknown_status', PaymentObservabilityService::taxonomyOwners()['unknown_status'] !== '' ? 'unknown_status' : '');
@@ -266,10 +267,11 @@ class PaymentProductionMatrixTest extends TestCase
                 && ! isset($context['raw_body'], $context['signature'], $context['secret_key']);
         });
         $order = Order::factory()->create(['payment_status' => 'pending']);
+        $invoice = 'DMB1'.str_repeat('B', 24);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id,
             'attempt_key' => 'matrix-'.$order->id,
-            'invoice_number' => $order->order_code,
+            'invoice_number' => $invoice,
             'merchant_request_id' => 'matrix-request-'.$order->id,
             'amount_snapshot' => $order->total,
             'currency_snapshot' => 'IDR',
@@ -282,7 +284,7 @@ class PaymentProductionMatrixTest extends TestCase
             currency: 'IDR',
             gatewayReference: 'gateway-'.$attempt->id,
             receivedAt: now(),
-            rawEvidence: ['order' => ['invoice_number' => $order->order_code]],
+            rawEvidence: ['order' => ['invoice_number' => $invoice]],
         ));
 
         Log::channel('operational')->shouldHaveReceived('info')->withArgs(function (string $message, array $context): bool {
