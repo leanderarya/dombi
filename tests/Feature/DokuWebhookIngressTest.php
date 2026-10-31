@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Order;
+use App\Models\PaymentAttempt;
 use App\Models\PaymentWebhookLog;
 use App\Services\DokuService;
 use App\Services\DokuWebhookIngressService;
@@ -13,6 +15,76 @@ use Tests\TestCase;
 class DokuWebhookIngressTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function createAttempt(Order $order, string $invoice): PaymentAttempt
+    {
+        $suffix = bin2hex(random_bytes(8));
+
+        return PaymentAttempt::create([
+            'order_id' => $order->id,
+            'attempt_key' => 'test-'.$suffix,
+            'invoice_number' => $invoice,
+            'merchant_request_id' => 'test-request-'.$suffix,
+            'amount_snapshot' => $order->total,
+            'currency_snapshot' => 'IDR',
+            'creation_state' => 'created',
+        ]);
+    }
+
+    public function test_new_payment_attempt_uses_the_current_doku_invoice_namespace(): void
+    {
+        $attempt = app(DokuService::class)->preparePaymentAttempt(Order::factory()->create());
+
+        $this->assertMatchesRegularExpression('/\ADMB1[A-F0-9]{24}\z/', $attempt->invoice_number);
+        $this->assertSame(28, strlen($attempt->invoice_number));
+        $this->assertTrue(app(DokuService::class)->isNewInvoiceNumber($attempt->invoice_number));
+    }
+
+    public function test_signed_old_format_webhook_is_retryable_without_matching_or_mutating_new_payment(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $invoice = 'DMB-'.$order->id.'-abcdef123456';
+        $attempt = $this->createAttempt($order, $invoice);
+        $body = json_encode([
+            'order' => ['invoice_number' => $invoice, 'amount' => $order->total, 'currency' => 'IDR'],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
+        ], JSON_THROW_ON_ERROR);
+
+        $response = $this->call('POST', route('doku.notify'), [], [], [], $this->signed('REQ-OLD-FORMAT', $body), $body);
+
+        $response->assertStatus(500);
+        $this->assertSame('pending', $order->fresh()->payment_status);
+        $this->assertSame('pending', $attempt->fresh()->settlement_status->value);
+        $this->assertNull($attempt->fresh()->raw_response);
+        $this->assertDatabaseHas('payment_webhook_logs', [
+            'request_id' => 'REQ-OLD-FORMAT',
+            'status' => 'retryable',
+            'signature_valid' => true,
+            'error' => 'invoice_namespace_mismatch',
+        ]);
+    }
+
+    public function test_signed_new_invoice_webhook_processes_once_and_duplicate_is_idempotent(): void
+    {
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $invoice = 'DMB1'.str_repeat('A', 24);
+        $attempt = $this->createAttempt($order, $invoice);
+        $body = json_encode([
+            'order' => ['invoice_number' => $invoice, 'amount' => $order->total, 'currency' => 'IDR'],
+            'transaction' => ['status' => 'SUCCESS', 'amount' => $order->total],
+        ], JSON_THROW_ON_ERROR);
+        $headers = $this->signed('REQ-NEW-FORMAT', $body);
+
+        $first = $this->call('POST', route('doku.notify'), [], [], [], $headers, $body);
+        $second = $this->call('POST', route('doku.notify'), [], [], [], $headers, $body);
+
+        $first->assertOk();
+        $second->assertOk();
+        $this->assertSame('paid', $order->fresh()->payment_status);
+        $this->assertSame('paid', $attempt->fresh()->settlement_status->value);
+        $this->assertDatabaseCount('payment_webhook_logs', 1);
+        $this->assertSame('processed', PaymentWebhookLog::where('request_id', 'REQ-NEW-FORMAT')->value('status'));
+    }
 
     private function signed(string $requestId, string $body, ?string $clientId = null, ?string $timestamp = null): array
     {
