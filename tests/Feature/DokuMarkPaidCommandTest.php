@@ -15,6 +15,7 @@ class DokuMarkPaidCommandTest extends TestCase
 
     public function test_pending_terminal_order_reaches_refund_pending(): void
     {
+        $invoiceNumber = $this->newInvoiceNumber('mark-paid');
         $order = Order::factory()->create([
             'status' => Order::STATUS_CANCELLED_BY_CUSTOMER,
             'payment_status' => 'pending',
@@ -22,7 +23,7 @@ class DokuMarkPaidCommandTest extends TestCase
         ]);
         $transaction = PaymentTransaction::create([
             'order_id' => $order->id,
-            'doku_order_id' => $order->order_code,
+            'doku_order_id' => $invoiceNumber,
             'payment_method' => 'qris',
             'amount' => 50000,
             'status' => 'pending',
@@ -31,7 +32,7 @@ class DokuMarkPaidCommandTest extends TestCase
             'order_id' => $order->id,
             'legacy_payment_transaction_id' => $transaction->id,
             'attempt_key' => 'mark-paid-attempt',
-            'invoice_number' => $order->order_code,
+            'invoice_number' => $invoiceNumber,
             'merchant_request_id' => 'mark-paid-request',
             'amount_snapshot' => 50000,
             'currency_snapshot' => 'IDR',
@@ -58,5 +59,10 @@ class DokuMarkPaidCommandTest extends TestCase
 
         $this->assertSame(1, $exit);
         $this->assertStringContainsString('tidak dapat ditandai paid', Artisan::output());
+    }
+
+    private function newInvoiceNumber(string $seed): string
+    {
+        return 'DMB1'.strtoupper(substr(hash('sha256', $seed), 0, 24));
     }
 }
