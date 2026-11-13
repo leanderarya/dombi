@@ -55,57 +55,37 @@ jobs:
         env:
           FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
         run: test -n "$FINGERPRINT"
+      - name: Install runner-only OpenSSH password helper
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq openssh-client sshpass
       - name: Prepare exclusive private staging transfer
-        uses: appleboy/ssh-action@v1
         env:
           TRANSFER_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-        with:
-          host: ${{ secrets.HOSTINGER_SSH_HOST }}
-          username: ${{ secrets.HOSTINGER_SSH_USER }}
-          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
-          port: ${{ secrets.HOSTINGER_SSH_PORT }}
-          fingerprint: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
-          envs: TRANSFER_ID
-          script: |
-            set -eu
-            umask 077
-            root="$HOME/domains/dombicenter.com/public_html/staging"
-            test -d "$root"
-            test "$(realpath "$root")" = "$root"
-            parent="$HOME/dombi-ci-staging"
-            if test ! -e "$parent" && test ! -L "$parent"; then mkdir -m 700 "$parent"; fi
-            test ! -L "$parent"
-            test -O "$parent"
-            test "$(realpath "$parent")" = "$parent"
-            test "$(stat -c %a "$parent")" = 700
-            mkdir -m 700 "$parent/$TRANSFER_ID"
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
+        run: python3 -B scripts/ci/staging_transport.py prepare
       - name: Upload into private run-owned directory
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOSTINGER_SSH_HOST }}
-          username: ${{ secrets.HOSTINGER_SSH_USER }}
-          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
-          port: ${{ secrets.HOSTINGER_SSH_PORT }}
-          fingerprint: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
-          source: transfer/*
-          target: dombi-ci-staging/${{ github.run_id }}-${{ github.run_attempt }}
-          strip_components: 1
+        env:
+          TRANSFER_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
+        run: python3 -B scripts/ci/staging_transport.py upload
       - name: Deploy staging only
-        uses: appleboy/ssh-action@v1
         env:
           RELEASE_SHA: ${{ steps.release.outputs.sha }}
           TRANSFER_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-          STAGING_DB_DATABASE: ${{ secrets.STAGING_DATABASE_NAME }}
-        with:
-          host: ${{ secrets.HOSTINGER_SSH_HOST }}
-          username: ${{ secrets.HOSTINGER_SSH_USER }}
-          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
-          port: ${{ secrets.HOSTINGER_SSH_PORT }}
-          fingerprint: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
-          envs: RELEASE_SHA,TRANSFER_ID,STAGING_DB_DATABASE
-          script: |
-            set -eu
-            bash "$HOME/dombi-ci-staging/$TRANSFER_ID/deploy-staging.sh" "$HOME/dombi-ci-staging/$TRANSFER_ID" "$RELEASE_SHA"
+          STAGING_DATABASE_NAME: ${{ secrets.STAGING_DATABASE_NAME }}
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
+        run: python3 -B scripts/ci/staging_transport.py deploy
       - name: Health and deployed asset checks
         env:
           RELEASE_SHA: ${{ steps.release.outputs.sha }}

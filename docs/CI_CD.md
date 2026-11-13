@@ -29,8 +29,21 @@ pinned artifact, recovery tools, backups, runbook or worktree with this pipeline
 4. `deploy-staging.yml`: after trusted successful `develop` push CI, or manual selection
    of such a run, resolve exactly one unexpired artifact and validate its origin.
    PR/fork/failed/non-CI runs are rejected. No server-side Composer/npm install, Git
-   reset or separate asset build. The existing appleboy password SSH/SCP transport is
-   retained with mandatory pinned SSH fingerprint. Deployment is opt-in and serialized,
+   reset or separate asset build. OpenSSH password-only SSH/SCP transport validates the
+   scanned ED25519 key against the existing fingerprint before constructing temporary,
+   endpoint-scoped `known_hosts`. Every SSH/SCP connection forces
+   `HostKeyAlgorithms=ssh-ed25519`, `StrictHostKeyChecking=yes` and `UpdateHostKeys=no`,
+   with user/global SSH configuration and agent/interactive-key fallback excluded.
+   The existing owner-approved TOFU pin is retained; no independent provider verification
+   or new trust anchor is implied. Multiple distinct ED25519 candidates, wrong endpoints,
+   invalid secrets and fingerprint mismatches fail closed before authenticated transport.
+   Only validated DNS/IPv4 host strings and canonical numeric ports are supported; IPv6,
+   embedded ports, multi-host lists and proxy configuration are not supported. SCP uses
+   OpenSSH's SFTP transfer mode with no automatic legacy fallback. Unsupported server
+   capabilities fail the run rather than weakening verification. No raw SSH/SCP output,
+   credentials or database-secret values are printed; remote failures require inspection
+   of the preserved private transfer and maintenance state. Temporary runner trust files
+   are removed on both success and failure. Deployment is opt-in and serialized,
    never cancelled by a newer deployment. GitHub concurrency may supersede pending runs;
    it is not a FIFO queue. Deploy the desired CI run manually when necessary.
 5. Staging preflight binds the fixed resolved staging root, effective `APP_ENV`, URL and
