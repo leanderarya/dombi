@@ -2,6 +2,11 @@
 
 ## Source of Truth
 
+Current workflow behavior/configuration: [CI/CD contract](CI_CD.md). Production Actions
+execution is manual-preflight-only and hard-disabled; older trigger/deployment
+examples below are historical and do not authorize execution. Staging is opt-in and
+consumes the immutable CI artifact, not a separate rebuild.
+
 GitHub Actions adalah mekanisme deploy canonical. Jangan mencampur workflow FTP,
 upload manual, dan script server sebagai jalur deploy yang berbeda.
 

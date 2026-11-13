@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\PaymentAttempt;
 use App\Models\PaymentWebhookLog;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -19,8 +18,7 @@ final class DokuWebhookIngressService
         $requestId = trim($header('Request-Id') ?? '');
         if ($requestId === '') {
             $invoice = data_get($payload, 'order.invoice_number');
-            $attempt = $invoice ? PaymentAttempt::query()->where('invoice_number', $invoice)->first() : null;
-            app(PaymentObservabilityService::class)->event('webhook_rejected', ['order_id' => $attempt?->order_id, 'attempt_id' => $attempt?->id, 'invoice_number' => $invoice, 'processing_result' => 'rejected', 'error_reason' => 'missing_request_id']);
+            app(PaymentObservabilityService::class)->event('webhook_rejected', ['invoice_number' => $invoice, 'processing_result' => 'rejected', 'error_reason' => 'missing_request_id']);
 
             return new WebhookReceipt(new PaymentWebhookLog, 400, 'Request-Id required');
         }
@@ -103,6 +101,9 @@ final class DokuWebhookIngressService
 
         try {
             $event = $this->normalize($payload);
+            if (! is_string($event->gatewayReference) || ! $this->doku->isNewInvoiceNumber($event->gatewayReference)) {
+                throw new \UnexpectedValueException('invoice_namespace_mismatch');
+            }
             $this->doku->handleNormalizedWebhook($event);
             $updated = PaymentWebhookLog::query()->whereKey($log->id)->where('claim_token', $claimToken)->update(['status' => 'processed', 'claim_token' => null]);
             if ($updated !== 1) {

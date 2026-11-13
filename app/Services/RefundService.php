@@ -7,6 +7,7 @@ use App\Enums\RefundObligationStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Order;
 use App\Models\OrderRefundDestination;
+use App\Models\Outlet;
 use App\Models\PaymentAttempt;
 use App\Models\RefundObligation;
 use App\Models\RefundStatusHistory;
@@ -46,6 +47,7 @@ class RefundService
         }
 
         return DB::transaction(function () use ($order, $actorType, $actorId, $source) {
+            $this->lockOutletForOrder($order->id);
             $locked = Order::lockForUpdate()
                 ->with('paymentTransactions')
                 ->findOrFail($order->id);
@@ -131,6 +133,7 @@ class RefundService
     public function submitDestination(Order $order, string $destinationType, string $actorType, ?int $actorId, array $data): RefundStatusHistory
     {
         return DB::transaction(function () use ($order, $destinationType, $actorType, $actorId, $data) {
+            $this->lockOutletForOrder($order->id);
             $locked = Order::lockForUpdate()
                 ->with('customer')
                 ->findOrFail($order->id);
@@ -246,6 +249,7 @@ class RefundService
     public function start(Order $order, int $ownerId): RefundStatusHistory
     {
         return DB::transaction(function () use ($order, $ownerId) {
+            $this->lockOutletForOrder($order->id);
             $locked = Order::lockForUpdate()->findOrFail($order->id);
             $obligation = $this->canonicalObligation($locked, true);
 
@@ -311,6 +315,7 @@ class RefundService
     public function reject(Order $order, string $reason, ?string $note, string $actorType, ?int $actorId, bool $legacyRepair = false): RefundStatusHistory
     {
         return DB::transaction(function () use ($order, $reason, $note, $actorType, $actorId, $legacyRepair) {
+            $this->lockOutletForOrder($order->id);
             $locked = Order::lockForUpdate()->findOrFail($order->id);
             $obligation = $this->canonicalObligation($locked, true);
 
@@ -401,6 +406,7 @@ class RefundService
         }
 
         return DB::transaction(function () use ($order, $ownerId, $mode, $trimmed) {
+            $this->lockOutletForOrder($order->id);
             $locked = Order::lockForUpdate()->findOrFail($order->id);
             $obligation = $this->canonicalObligation($locked, true);
 
@@ -454,6 +460,7 @@ class RefundService
         }
 
         return DB::transaction(function () use ($order, $ownerId, $proofPath, $transferReference, $transferNote) {
+            $this->lockOutletForOrder($order->id);
             $locked = Order::lockForUpdate()->findOrFail($order->id);
             $obligation = $this->canonicalObligation($locked, true);
 
@@ -525,6 +532,7 @@ class RefundService
     public function startAndComplete(Order $order, int $actorId, string $proofPath, ?string $transferRef, ?string $transferNote): RefundStatusHistory
     {
         return DB::transaction(function () use ($order, $actorId, $proofPath, $transferRef, $transferNote) {
+            $this->lockOutletForOrder($order->id);
             $locked = Order::lockForUpdate()->findOrFail($order->id);
             $obligation = $this->canonicalObligation($locked, true);
 
@@ -547,6 +555,14 @@ class RefundService
 
             return $this->complete($order, $actorId, $proofPath, $transferRef, $transferNote);
         });
+    }
+
+    private function lockOutletForOrder(int $orderId): void
+    {
+        $outletId = Order::query()->whereKey($orderId)->value('outlet_id');
+        if ($outletId !== null) {
+            Outlet::lockForSettlement((int) $outletId);
+        }
     }
 
     private function canonicalObligation(Order $order, bool $lock = false): ?RefundObligation

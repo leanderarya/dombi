@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { X } from 'lucide-react';
+import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import CustomSelect from '@/components/ui/custom-select';
@@ -8,13 +9,19 @@ interface Variant {
     id: number;
     name: string;
     center_price: number;
+    selling_price: number;
     stock: number;
 }
 
 interface EditSale {
     id: number;
     product_id: number;
+    product_name: string;
     quantity: number;
+    center_price: number;
+    selling_price_snapshot: number | null;
+    gross_amount: number | null;
+    total_amount: number;
     payment_method: string;
     notes: string | null;
 }
@@ -25,6 +32,8 @@ interface Props {
     onClose: () => void;
     sale?: EditSale | null;
 }
+
+const formatRupiah = (amount: number) => `Rp ${amount.toLocaleString('id-ID')}`;
 
 export default function OfflineSaleDialog({
     open,
@@ -39,21 +48,55 @@ export default function OfflineSaleDialog({
         notes: sale?.notes ?? '',
     });
 
-    const variantOptions = variants.map((v) => ({
-        value: String(v.id),
-        label: v.name,
-        subtitle: `Stok: ${v.stock} · @Rp ${Number(v.center_price).toLocaleString('id-ID')}`,
+    const saleId = sale?.id ?? null;
+    const productId = sale?.product_id ?? null;
+    const initialQuantity = sale?.quantity ?? 1;
+    const paymentMethod = sale?.payment_method ?? 'cash';
+    const notes = sale?.notes ?? '';
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        form.setData({
+            variant_id: productId === null ? '' : String(productId),
+            quantity: initialQuantity,
+            payment_method: paymentMethod,
+            notes,
+        });
+    }, [saleId, productId, initialQuantity, paymentMethod, notes, open, form]);
+
+    void sale; // props can be reconstructed each render; depend on scalar snapshot fields above instead.
+
+    const variantOptions = variants.map((variant) => ({
+        value: String(variant.id),
+        label: variant.name,
+        subtitle: `Stok: ${variant.stock} · Harga jual ${formatRupiah(variant.selling_price)}`,
     }));
-
     const selectedVariant = variants.find(
-        (v) => String(v.id) === form.data.variant_id,
+        (variant) => String(variant.id) === form.data.variant_id,
     );
-    const totalAmount = selectedVariant
-        ? selectedVariant.center_price * form.data.quantity
-        : 0;
+    const centerPrice =
+        sale?.center_price ?? selectedVariant?.center_price ?? 0;
+    const sellingPrice = sale
+        ? sale.selling_price_snapshot
+        : (selectedVariant?.selling_price ?? null);
+    const grossAmount =
+        sellingPrice === null ? null : sellingPrice * form.data.quantity;
+    const centerShare = centerPrice * form.data.quantity;
+    const outletMargin =
+        grossAmount === null ? null : grossAmount - centerShare;
+    const quantity = Number(form.data.quantity);
+    const qtyValid = Number.isInteger(quantity) && quantity >= 1;
+    const availableStock = selectedVariant?.stock;
+    const qtyOverflow =
+        qtyValid &&
+        availableStock !== undefined &&
+        quantity > availableStock + (sale?.quantity ?? 0);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = (event: React.FormEvent) => {
+        event.preventDefault();
         const opts = {
             onSuccess: () => {
                 form.reset();
@@ -68,12 +111,6 @@ export default function OfflineSaleDialog({
         }
     };
 
-    const qtyValue = form.data.quantity.toString();
-    const qtyNum = Number(form.data.quantity);
-    const qtyValid = Number.isInteger(qtyNum) && qtyNum >= 1;
-    const qtyMax = selectedVariant?.stock ?? null;
-    const qtyOverflow = qtyValid && qtyMax !== null && qtyNum > qtyMax;
-
     if (!open) {
         return null;
     }
@@ -85,10 +122,9 @@ export default function OfflineSaleDialog({
         >
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
             <div
-                onClick={(e) => e.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
                 className="relative w-full max-w-md rounded-2xl bg-surface shadow-2xl"
             >
-                {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-4 py-3">
                     <h2 className="text-sm font-bold text-text">
                         {sale ? 'Edit Penjualan' : 'Catat Penjualan'}
@@ -106,16 +142,27 @@ export default function OfflineSaleDialog({
 
                 <form onSubmit={handleSubmit}>
                     <div className="space-y-3 px-4 py-3">
-                        <CustomSelect
-                            label="Produk"
-                            options={variantOptions}
-                            value={form.data.variant_id}
-                            onChange={(v: string) =>
-                                form.setData('variant_id', v)
-                            }
-                            placeholder="Pilih produk"
-                            searchable
-                        />
+                        {sale ? (
+                            <div>
+                                <span className="mb-1.5 block text-xs font-medium text-text-muted">
+                                    Produk
+                                </span>
+                                <div className="min-h-11 rounded-control border border-border bg-surface-muted px-4 py-3 text-sm font-medium text-text">
+                                    {sale.product_name}
+                                </div>
+                            </div>
+                        ) : (
+                            <CustomSelect
+                                label="Produk"
+                                options={variantOptions}
+                                value={form.data.variant_id}
+                                onChange={(value: string) =>
+                                    form.setData('variant_id', value)
+                                }
+                                placeholder="Pilih produk"
+                                searchable
+                            />
+                        )}
 
                         <CustomSelect
                             label="Metode Bayar"
@@ -126,8 +173,8 @@ export default function OfflineSaleDialog({
                                 { value: 'other', label: 'Lainnya' },
                             ]}
                             value={form.data.payment_method}
-                            onChange={(v: string) =>
-                                form.setData('payment_method', v)
+                            onChange={(value: string) =>
+                                form.setData('payment_method', value)
                             }
                         />
 
@@ -146,9 +193,9 @@ export default function OfflineSaleDialog({
                                     inputMode="numeric"
                                     min="1"
                                     placeholder="0"
-                                    value={qtyValue}
-                                    onChange={(e) => {
-                                        const raw = e.target.value;
+                                    value={form.data.quantity.toString()}
+                                    onChange={(event) => {
+                                        const raw = event.target.value;
                                         form.setData(
                                             'quantity',
                                             raw === '' ? 0 : Number(raw),
@@ -158,12 +205,10 @@ export default function OfflineSaleDialog({
                                 />
                                 {qtyOverflow && (
                                     <p className="mt-1 text-xs text-danger">
-                                        Maksimal {qtyMax} (stok tersedia)
-                                    </p>
-                                )}
-                                {qtyValid && qtyNum < 1 && (
-                                    <p className="mt-1 text-xs text-danger">
-                                        Jumlah minimal 1
+                                        Maksimal{' '}
+                                        {availableStock! +
+                                            (sale?.quantity ?? 0)}{' '}
+                                        (stok tersedia)
                                     </p>
                                 )}
                             </div>
@@ -179,15 +224,17 @@ export default function OfflineSaleDialog({
                                     name="notes"
                                     type="text"
                                     value={form.data.notes}
-                                    onChange={(e) =>
-                                        form.setData('notes', e.target.value)
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'notes',
+                                            event.target.value,
+                                        )
                                     }
                                     placeholder="Opsional"
                                     className="min-h-11 w-full rounded-lg border border-border bg-surface px-2.5 text-sm text-text placeholder:text-text-muted focus:ring-2 focus:ring-primary/30 focus:outline-none"
                                 />
                             </div>
                         </div>
-
                         {form.errors.quantity && (
                             <p className="text-xs text-danger">
                                 {form.errors.quantity}
@@ -195,21 +242,42 @@ export default function OfflineSaleDialog({
                         )}
                     </div>
 
-                    {/* Footer */}
                     <div className="rounded-b-2xl border-t border-border bg-surface-muted/50 px-4 py-3">
-                        {totalAmount > 0 && (
-                            <div className="mb-2 flex items-center justify-between text-xs text-text-muted">
-                                <span>Hutang ke pusat</span>
-                                <span className="font-semibold text-text">
-                                    Rp {totalAmount.toLocaleString('id-ID')}
-                                </span>
+                        {grossAmount !== null && (
+                            <div className="mb-2 space-y-1 text-xs text-text-muted">
+                                <div className="flex items-center justify-between">
+                                    <span>Harga jual × jumlah</span>
+                                    <span className="font-semibold text-text">
+                                        {formatRupiah(grossAmount)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Setoran ke Owner</span>
+                                    <span className="font-semibold text-text">
+                                        {formatRupiah(centerShare)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Margin Outlet</span>
+                                    <span className="font-semibold text-text">
+                                        {formatRupiah(outletMargin!)}
+                                    </span>
+                                </div>
                             </div>
+                        )}
+                        {grossAmount === null && sale && (
+                            <p className="mb-2 text-xs text-text-muted">
+                                Harga jual historis tidak tersedia; gross dan
+                                margin tidak dapat dihitung.
+                            </p>
                         )}
                         <Button
                             type="submit"
                             disabled={
                                 form.processing ||
-                                !form.data.variant_id ||
+                                (sale &&
+                                    sale.selling_price_snapshot === null) ||
+                                (!sale && !form.data.variant_id) ||
                                 !qtyValid ||
                                 qtyOverflow
                             }

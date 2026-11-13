@@ -132,7 +132,7 @@ export default function SettlementShow({
                 {offlineSales.length > 0 && (
                     <div className="mt-4">
                         <SectionCard
-                            label={`Penjualan Offline (${offlineSales.length} jualan · ${formatCurrency(offlineTotal)})`}
+                            label={`Penjualan Offline · Setoran Owner (${offlineSales.length} jualan · ${formatCurrency(offlineTotal)})`}
                         >
                             {offlineSales.map((s: any) => (
                                 <Link
@@ -151,8 +151,14 @@ export default function SettlementShow({
                                                 s.payment_method}
                                         </div>
                                     </div>
-                                    <div className="ml-3 shrink-0 text-sm font-semibold text-text tabular-nums">
-                                        {formatCurrency(s.total_amount)}
+                                    <div className="ml-3 shrink-0 text-right text-sm font-semibold text-text tabular-nums">
+                                        {s.gross_amount === null
+                                            ? 'Gross tidak tersedia'
+                                            : formatCurrency(s.gross_amount)}
+                                        <div className="text-caption font-medium text-text-muted">
+                                            Setoran Owner{' '}
+                                            {formatCurrency(s.total_amount)}
+                                        </div>
                                     </div>
                                 </Link>
                             ))}

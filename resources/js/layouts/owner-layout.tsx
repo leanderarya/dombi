@@ -9,7 +9,6 @@ import {
 import { useState } from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import OwnerCommandSheet from '@/components/owner/owner-command-sheet';
-import OwnerPageSkeleton from '@/components/owner/owner-page-skeleton';
 import OwnerSidebarNav from '@/components/owner/owner-sidebar-nav';
 import NotificationBell from '@/components/shared/notification-bell';
 import NotificationSheet from '@/components/shared/notification-sheet';
@@ -18,7 +17,6 @@ import UpdateBanner from '@/components/shared/update-banner';
 import BrandMark from '@/components/ui/brand-mark';
 import { SidebarProvider, useSidebar } from '@/contexts/sidebar-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
-import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 import { useRoleTheme } from '@/hooks/use-role-theme';
 
 interface NavGroup {
@@ -88,6 +86,7 @@ const navGroups: NavGroup[] = [
                 label: 'Harga',
                 isActive: (url: string) => url.startsWith('/owner/pricing'),
             },
+            { href: '/owner/banners', label: 'Banner' },
             { href: '/owner/inventories', label: 'Inventaris' },
             { href: '/owner/restocks', label: 'Restock' },
         ],
@@ -108,7 +107,7 @@ const navGroups: NavGroup[] = [
                 },
             },
             {
-                href: '/owner/refunds',
+                href: '/owner/finance?tab=refund',
                 label: 'Refund',
                 badgeKey: 'pendingRefunds',
                 isActive: (url: string) => {
@@ -141,7 +140,6 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
 function OwnerLayoutInner({ children }: PropsWithChildren) {
     useFlashToast();
     useRoleTheme('owner');
-    const { loading } = useInertiaLoading();
     const page = usePage<any>();
     const { ownerOperationalCounts } = page.props;
     const pendingCounts = ownerOperationalCounts ?? {
@@ -152,6 +150,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [commandOpen, setCommandOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const { collapsed } = useSidebar();
 
     return (
@@ -190,6 +189,9 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                 <div className="ml-auto">
                     <NotificationBell
                         onClick={() => setNotificationOpen(true)}
+                        onUnreadCountChange={setUnreadCount}
+                        pollingEnabled={page.props.auth?.user?.role === 'owner'}
+                        pollingKey="owner"
                     />
                 </div>
             </div>
@@ -243,6 +245,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                         {collapsed ? (
                             <div className="flex flex-col items-center gap-1">
                                 <NotificationBell
+                                    unreadCount={unreadCount}
                                     onClick={() => setNotificationOpen(true)}
                                     className="text-emerald-200/90 active:bg-primary-hover/40"
                                 />
@@ -258,6 +261,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                             <>
                                 <div className="mb-2">
                                     <NotificationBell
+                                        unreadCount={unreadCount}
                                         onClick={() =>
                                             setNotificationOpen(true)
                                         }
@@ -296,9 +300,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                 id="main-content"
                 className={`pt-14 transition-[padding] duration-200 ease-out md:pt-0 ${collapsed ? 'md:pl-16' : 'md:pl-56'}`}
             >
-                <div className="px-4 py-6 md:px-8 md:py-6">
-                    {loading ? <OwnerPageSkeleton /> : children}
-                </div>
+                <div className="px-4 py-6 md:px-8 md:py-6">{children}</div>
             </main>
             <NotificationSheet
                 open={notificationOpen}

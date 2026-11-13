@@ -215,12 +215,19 @@ class SettlementController extends Controller
                     ? "{$s->product->category->name} - {$s->product->name}"
                     : ($s->product?->name ?? '-'),
                 'quantity' => $s->quantity,
+                'selling_price_snapshot' => $s->selling_price_snapshot !== null
+                    ? (float) $s->selling_price_snapshot
+                    : null,
+                'gross_amount' => $s->gross_amount !== null
+                    ? (float) $s->gross_amount
+                    : null,
                 'total_amount' => (float) $s->total_amount,
                 'payment_method' => $s->payment_method,
                 'created_at' => $s->created_at->toDateTimeString(),
             ]);
 
         $payments = SettlementPayment::where('outlet_id', $outlet->id)
+            ->where('settlement_id', $settlement->id)
             ->where('status', SettlementPayment::STATUS_VERIFIED)
             ->latest('payment_date')
             ->get()

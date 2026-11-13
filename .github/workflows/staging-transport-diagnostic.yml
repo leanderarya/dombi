@@ -1,0 +1,40 @@
+name: Staging Transport Diagnostic (read-only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-transport-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check out approved transport revision
+        uses: actions/checkout@v4
+        with:
+          ref: b56dea9b14be7e42ab777763d88aac84f72a70f7
+          path: pinned-transport
+          persist-credentials: false
+      - name: Verify pinned checkout
+        run: test "$(git -C pinned-transport rev-parse HEAD)" = b56dea9b14be7e42ab777763d88aac84f72a70f7
+      - name: Install runner-only OpenSSH password helper
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq openssh-client sshpass
+      - name: Verify SSH identity and read-only SFTP
+        env:
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
+        run: python3 -B scripts/ci/diagnose_staging_transport.py

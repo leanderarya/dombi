@@ -212,10 +212,10 @@ export default function ProductCategoriesIndex({
                     <button
                         key={f.key}
                         onClick={() => setStatusFilter(f.key)}
-                        className={`flex min-h-11 shrink-0 items-center rounded-full px-3.5 text-xs font-semibold ring-1 transition-all ${
+                        className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center ${
                             statusFilter === f.key
                                 ? 'bg-primary/10 text-primary ring-primary/20'
-                                : 'bg-surface text-text-muted ring-border hover:bg-success-bg/40'
+                                : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                         }`}
                     >
                         {f.label}

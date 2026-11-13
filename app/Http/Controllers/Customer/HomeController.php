@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\CustomerBanner;
 use App\Models\Order;
 use App\Services\RefundPayloadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -52,6 +54,14 @@ class HomeController extends Controller
             'customerName' => $user?->customer?->name ?? $user?->name ?? null,
             'activeOrders' => $activeOrders,
             'lastOrder' => $lastOrder,
+            'banners' => CustomerBanner::where('is_active', true)->orderBy('sort_order')->orderBy('id')
+                ->get(['id', 'alt_text', 'image_path', 'target_path'])
+                ->map(fn (CustomerBanner $banner) => [
+                    'id' => $banner->id,
+                    'alt_text' => $banner->alt_text,
+                    'image_url' => Storage::disk('public')->url($banner->image_path),
+                    'target_path' => $banner->target_path,
+                ]),
         ]);
     }
 

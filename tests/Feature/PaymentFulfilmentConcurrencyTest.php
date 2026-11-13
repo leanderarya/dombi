@@ -16,14 +16,24 @@ use App\Services\InventoryService;
 use App\Services\NormalizedPaymentEvent;
 use App\Services\SettlementService;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Facades\DB;
 use Mockery;
 use Tests\TestCase;
 
 class PaymentFulfilmentConcurrencyTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTruncation;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->beforeApplicationDestroyed(function (): void {
+            DB::connection()->setTransactionManager(null);
+            $this->truncateTablesForAllConnections();
+        });
+    }
 
     public function test_completion_constraint_migration_backfills_and_reports_duplicates(): void
     {

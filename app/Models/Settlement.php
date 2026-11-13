@@ -98,6 +98,11 @@ class Settlement extends Model
         return $this->hasMany(SettlementAuditLog::class);
     }
 
+    public function reconciliationIssues(): HasMany
+    {
+        return $this->hasMany(SettlementReconciliationIssue::class);
+    }
+
     public function isPaid(): bool
     {
         return $this->status === self::STATUS_PAID;

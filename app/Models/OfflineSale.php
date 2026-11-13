@@ -12,6 +12,8 @@ class OfflineSale extends Model
         'product_id',
         'quantity',
         'center_price',
+        'selling_price_snapshot',
+        'gross_amount',
         'total_amount',
         'notes',
         'payment_method',
@@ -23,6 +25,8 @@ class OfflineSale extends Model
         return [
             'quantity' => 'integer',
             'center_price' => 'decimal:2',
+            'selling_price_snapshot' => 'decimal:2',
+            'gross_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
         ];
     }

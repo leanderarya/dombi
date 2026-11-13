@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480" role="img" aria-label="Dombi. Pilihan Dombi untuk harimu. Lihat produk.">
+  <defs>
+    <pattern id="checks" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M0 0h32v32H0zm32 32h32v32H32z" fill="#e5ecd3"/></pattern>
+  </defs>
+  <rect width="1200" height="480" rx="32" fill="#f4f3df"/>
+  <path d="M830 0h370v480H830z" fill="url(#checks)"/>
+  <circle cx="995" cy="235" r="162" fill="#d7e89f"/>
+  <g font-family="Arial, sans-serif" fill="#124e3b">
+    <text x="64" y="78" font-size="32" font-weight="800" letter-spacing="5">DOMBI</text>
+    <text x="64" y="176" font-size="54" font-weight="800">Pilihan Dombi</text>
+    <text x="64" y="240" font-size="54" font-weight="800">untuk harimu.</text>
+    <text x="64" y="290" font-size="24">Temukan favoritmu, pilih cara ambilnya.</text>
+    <rect x="64" y="340" width="236" height="64" rx="32" fill="#124e3b"/>
+    <text x="94" y="381" font-size="26" font-weight="700" fill="#fff">Lihat produk</text>
+    <path d="M264 364l10 9-10 9m-15-9h24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g transform="translate(890 75) rotate(9 100 180)">
+    <rect x="53" y="2" width="94" height="35" rx="10" fill="#124e3b"/>
+    <path d="M56 36h88v33c0 18 38 33 38 64v188c0 25-17 40-42 40H60c-25 0-42-15-42-40V133c0-31 38-46 38-64z" fill="#fffdf3" stroke="#124e3b" stroke-width="4"/>
+    <path d="M19 159h162v128H19z" fill="#124e3b"/>
+    <g fill="#fffdf3" font-family="Arial, sans-serif" text-anchor="middle">
+      <text x="100" y="211" font-size="28" font-weight="800">DOMBI</text>
+      <text x="100" y="244" font-size="16" letter-spacing="1">SUSU KAMBING</text>
+    </g>
+    <path d="M45 118c0-19 14-30 25-41" fill="none" stroke="#e5e2c9" stroke-width="8" stroke-linecap="round"/>
+  </g>
+</svg>

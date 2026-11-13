@@ -14,13 +14,13 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
+import HeroBanner from '@/components/customer/hero-banner';
 import { gridCols } from '@/components/customer/responsive-layout-helpers';
 import NotificationBell from '@/components/shared/notification-bell';
 import NotificationSheet from '@/components/shared/notification-sheet';
 import PushBanner from '@/components/shared/push-banner';
 import { Button } from '@/components/ui/button';
 import { useGoogleLogin } from '@/hooks/use-google-login';
-import { useHeroSlides } from '@/hooks/use-hero-slides';
 import type { HeroSlide } from '@/hooks/use-hero-slides';
 import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import { useNearestOutlet } from '@/hooks/use-nearest-outlet';
@@ -30,12 +30,15 @@ import { usePolling } from '@/lib/use-polling';
 
 /* ─── Main ─────────────────────────────────────────────────── */
 
-export default function Home({ customerName, activeOrders }: any) {
+export default function Home({
+    customerName,
+    activeOrders,
+    banners = [],
+}: any) {
     usePolling(20000);
     const { auth } = usePage<any>().props;
     const isLoggedIn = !!auth?.user;
 
-    const hero = useHeroSlides();
     const nearestOutlet = useNearestOutlet();
     const pickup = usePickupFlow(nearestOutlet);
 
@@ -76,7 +79,7 @@ export default function Home({ customerName, activeOrders }: any) {
             >
                 <div className="min-w-0">
                     <HeroCarousel
-                        hero={hero}
+                        banners={banners}
                         outletName={nearestOutlet?.name ?? null}
                         onOpenNotifications={() => setNotificationOpen(true)}
                     />
@@ -87,10 +90,6 @@ export default function Home({ customerName, activeOrders }: any) {
                     />
 
                     <div className="lg:hidden">
-                        <div className="mt-4">
-                            <PushBanner variant="home" />
-                        </div>
-
                         {showPhoneBanner && (
                             <PhoneBanner
                                 onDismiss={() => {
@@ -115,7 +114,6 @@ export default function Home({ customerName, activeOrders }: any) {
                 {showPhoneBanner && (
                     <aside className="hidden lg:block">
                         <div className="space-y-4">
-                            <PushBanner variant="home" />
                             <PhoneBanner
                                 onDismiss={() => {
                                     setPhoneBannerDismissed(true);
@@ -146,18 +144,16 @@ export default function Home({ customerName, activeOrders }: any) {
 /* ─── Hero Header & Carousel ───────────────────────────────── */
 
 function HeroCarousel({
-    hero,
+    banners,
     outletName,
     onOpenNotifications,
 }: {
-    hero: ReturnType<typeof useHeroSlides>;
+    banners: HeroSlide[];
     outletName: string | null;
     onOpenNotifications: () => void;
 }) {
-    const { slides, index, setIndex } = hero;
-
     return (
-        <section className="relative -mx-4 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-brand-deep via-brand-deep-mid to-brand-deep-soft pb-14">
+        <section className="relative -mx-4 overflow-hidden rounded-b-[28px] bg-gradient-to-b from-brand-deep via-brand-deep-mid to-brand-deep-soft pb-10">
             {/* Decorative blobs */}
             <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
             <div className="pointer-events-none absolute bottom-0 -left-10 h-36 w-36 rounded-full bg-black/10 blur-xl" />
@@ -174,73 +170,10 @@ function HeroCarousel({
                 />
             </div>
 
-            {/* Carousel slides */}
-            <div className="relative z-10 px-4 pb-3">
-                <div className="overflow-hidden">
-                    <div
-                        className="flex transition-transform duration-500 ease-out"
-                        style={{ transform: `translateX(-${index * 100}%)` }}
-                    >
-                        {slides.map((slide) => (
-                            <HeroSlideCard key={slide.title} slide={slide} />
-                        ))}
-                    </div>
-                </div>
-
-                {/* Dots */}
-                <div className="mt-3 flex items-center justify-center gap-1.5">
-                    {slides.map((_, i) => (
-                        // A plain <button>, not <Button>: buttonVariants carries
-                        // pointer-coarse:min-h-11 (and min-w-11 for size="icon"),
-                        // which overrides h-1.5/w-1.5 on touch and blew every dot
-                        // up to a 44px blob. The dot is a visual marker, so it
-                        // opts out of the shared touch-target floor.
-                        <button
-                            key={i}
-                            type="button"
-                            onClick={() => setIndex(i)}
-                            aria-label={`Slide ${i + 1}`}
-                            aria-current={i === index || undefined}
-                            className={`rounded-full transition-all duration-300 ${
-                                i === index
-                                    ? 'h-1.5 w-5 bg-white hover:bg-white'
-                                    : 'h-1.5 w-1.5 bg-white/40 hover:bg-white/40'
-                            }`}
-                        />
-                    ))}
-                </div>
+            <div className="relative z-10 px-2 sm:px-4">
+                <HeroBanner banners={banners} />
             </div>
         </section>
-    );
-}
-
-function HeroSlideCard({ slide }: { slide: HeroSlide }) {
-    // The card sits on the hero gradient, so its own fill sets the backdrop for
-    // everything on it. At bg-white/10 the tint was too pale: the eyebrow ran
-    // 3.51:1 against it and the CTA 3.35:1, both under the 4.5:1 AA floor.
-    // Deepening the fill to brand-deep/45 puts the eyebrow at 8.25:1 and the
-    // CTA at 6.5:1, measured from the rendered pixels on staging.
-    return (
-        <div className="flex min-w-full items-center justify-between gap-3 rounded-card border border-white/20 bg-brand-deep/45 p-4 backdrop-blur-md">
-            <div className="max-w-[60%] space-y-1">
-                <span className="inline-block rounded-md bg-brand-deep/40 px-2 py-0.5 text-caption font-bold tracking-wider text-white uppercase">
-                    {slide.title}
-                </span>
-                <h2 className="text-xl leading-tight font-extrabold text-white">
-                    {slide.subtitle}
-                </h2>
-                <p className="text-[9px] font-medium text-primary-light">
-                    {slide.cta}
-                </p>
-            </div>
-            <div className="relative flex h-28 w-28 shrink-0 items-center justify-center">
-                <img
-                    src={slide.image}
-                    alt={slide.title}
-                    className="h-24 w-24 rotate-3 rounded-thumb object-cover shadow-lg transition-transform duration-300 hover:rotate-0"
-                />
-            </div>
-        </div>
     );
 }
 
@@ -293,6 +226,8 @@ function GreetingCard({
                         </Button>
                     )}
                 </div>
+
+                <PushBanner variant="home" />
 
                 {isLoggedIn && (
                     <div className="flex items-center gap-2 border-t border-border pt-3">

@@ -9,6 +9,7 @@ use App\Models\Delivery;
 use App\Models\DeliveryResolutionLog;
 use App\Models\DeliveryStatusHistory;
 use App\Models\Order;
+use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\StockMovement;
 use App\Models\User;
@@ -68,6 +69,10 @@ class DeliveryService
         }
 
         return DB::transaction(function () use ($order, $courier, $assignedBy, $overrideCapacity, $overrideReason): Delivery {
+            $outletId = Order::query()->whereKey($order->id)->value('outlet_id');
+            if ($outletId !== null) {
+                Outlet::lockForSettlement((int) $outletId);
+            }
             $order = Order::query()->lockForUpdate()->with('delivery')->findOrFail($order->id);
 
             if (! $order->isDelivery()) {
@@ -175,6 +180,10 @@ class DeliveryService
     private function assignEksternal(Order $order, User $actor, ?string $externalName, ?string $externalPhone, ?string $externalPlate, ?string $externalProvider, ?string $externalReference, ?float $courierCost): Delivery
     {
         return DB::transaction(function () use ($order, $actor, $externalName, $externalPhone, $externalPlate, $externalProvider, $externalReference, $courierCost): Delivery {
+            $outletId = Order::query()->whereKey($order->id)->value('outlet_id');
+            if ($outletId !== null) {
+                Outlet::lockForSettlement((int) $outletId);
+            }
             $order = Order::query()->lockForUpdate()->findOrFail($order->id);
 
             if (! $order->isDelivery()) {
@@ -219,6 +228,7 @@ class DeliveryService
     public function rejectAssignment(Delivery $delivery, User $courier, string $reason, ?string $note = null): Delivery
     {
         return DB::transaction(function () use ($delivery, $courier, $reason, $note): Delivery {
+            $this->lockOutletForDelivery($delivery);
             $delivery = Delivery::query()->lockForUpdate()->findOrFail($delivery->id);
 
             if ($delivery->courier_id !== $courier->id) {
@@ -275,6 +285,7 @@ class DeliveryService
     public function confirmPickup(Delivery $delivery, User $courier): Delivery
     {
         return DB::transaction(function () use ($delivery, $courier): Delivery {
+            $this->lockOutletForDelivery($delivery);
             $result = $this->transition($delivery, $courier, 'waiting_pickup', 'picked_up', 'picked_up', [
                 'pickup_time' => now(),
             ]);
@@ -291,6 +302,7 @@ class DeliveryService
     public function startDelivery(Delivery $delivery, User $courier): Delivery
     {
         return DB::transaction(function () use ($delivery, $courier): Delivery {
+            $this->lockOutletForDelivery($delivery);
             $result = $this->transition($delivery, $courier, 'picked_up', 'delivering', 'delivering');
 
             $courier->recordActivity();
@@ -305,6 +317,7 @@ class DeliveryService
     public function completeDelivery(Delivery $delivery, User $courier, ?array $payload = []): Delivery
     {
         return DB::transaction(function () use ($delivery, $courier, $payload): Delivery {
+            $this->lockOutletForDelivery($delivery);
             $delivery = $this->transition($delivery, $courier, 'delivering', 'completed', 'completed', [
                 'delivered_time' => now(),
                 'notes' => $payload['notes'] ?? $delivery->notes,
@@ -329,6 +342,7 @@ class DeliveryService
     public function failDelivery(Delivery $delivery, User $courier, string $reason, ?string $failureNote = null): Delivery
     {
         return DB::transaction(function () use ($delivery, $courier, $reason, $failureNote): Delivery {
+            $this->lockOutletForDelivery($delivery);
             $failedReason = $reason;
             if ($reason === 'Lainnya' && $failureNote) {
                 $failedReason = 'Lainnya: '.$failureNote;
@@ -352,6 +366,7 @@ class DeliveryService
     public function returnToOutlet(Delivery $delivery, User $courier, ?string $note = null): Delivery
     {
         return DB::transaction(function () use ($delivery, $courier, $note): Delivery {
+            $this->lockOutletForDelivery($delivery);
             $delivery = Delivery::query()->lockForUpdate()->findOrFail($delivery->id);
 
             if ($delivery->courier_id !== $courier->id) {
@@ -392,6 +407,7 @@ class DeliveryService
     public function confirmReturn(Delivery $delivery, User $outletUser, ?string $note = null): Delivery
     {
         return DB::transaction(function () use ($delivery, $outletUser, $note): Delivery {
+            $this->lockOutletForDelivery($delivery);
             $delivery = Delivery::query()->lockForUpdate()->with('order.items')->findOrFail($delivery->id);
 
             if ($delivery->return_status !== 'returning_to_outlet') {
@@ -452,6 +468,7 @@ class DeliveryService
         ?string $reason = null,
     ): Delivery {
         return DB::transaction(function () use ($delivery, $operator, $targetStatus, $reason): Delivery {
+            $this->lockOutletForDelivery($delivery);
             $delivery = Delivery::query()
                 ->lockForUpdate()
                 ->with('order')
@@ -540,6 +557,7 @@ class DeliveryService
     public function resolveFailedDelivery(Delivery $delivery, User $resolver, string $resolution, ?string $notes = null): Delivery
     {
         return DB::transaction(function () use ($delivery, $resolver, $resolution, $notes): Delivery {
+            $this->lockOutletForDelivery($delivery);
             $delivery = Delivery::query()->lockForUpdate()->with('order.items')->findOrFail($delivery->id);
 
             if (! $delivery->canResolveTo($resolution)) {
@@ -692,6 +710,7 @@ class DeliveryService
     private function transition(Delivery $delivery, User $courier, string $fromDeliveryStatus, string $toDeliveryStatus, string $toOrderStatus, array $attributes = []): Delivery
     {
         return DB::transaction(function () use ($delivery, $courier, $fromDeliveryStatus, $toDeliveryStatus, $toOrderStatus, $attributes): Delivery {
+            $this->lockOutletForDelivery($delivery);
             $delivery = Delivery::query()->lockForUpdate()->with('order.items')->findOrFail($delivery->id);
 
             if ($delivery->courier_id !== $courier->id) {
@@ -725,6 +744,19 @@ class DeliveryService
 
             return $delivery->fresh(['order.outlet', 'order.items.product', 'order.statusHistories.actor', 'courier']);
         });
+    }
+
+    private function lockOutletForDelivery(Delivery $delivery): void
+    {
+        $orderId = Delivery::query()->whereKey($delivery->id)->value('order_id');
+        $outletId = $orderId === null
+            ? null
+            : Order::query()->whereKey($orderId)->value('outlet_id');
+
+        if ($outletId !== null) {
+            Outlet::lockForSettlement((int) $outletId);
+            Order::query()->whereKey($orderId)->lockForUpdate()->firstOrFail();
+        }
     }
 
     private function assertCourierAvailableForOutlet(User $courier, int $outletId): void

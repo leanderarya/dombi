@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
+use App\Models\Outlet;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use App\Services\NotificationService;
+use App\Services\SettlementPaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,21 +35,12 @@ class SettlementPaymentController extends Controller
         ]);
     }
 
-    public function store(Request $request, NotificationService $notificationService): RedirectResponse
+    public function store(Request $request, NotificationService $notificationService, SettlementPaymentService $paymentService): RedirectResponse
     {
         $user = $request->user();
         $outlet = $user->outlet;
 
         abort_unless($outlet, 403);
-
-        // Block if there's already a pending payment
-        $hasPending = SettlementPayment::where('outlet_id', $outlet->id)
-            ->where('status', SettlementPayment::STATUS_PENDING)
-            ->exists();
-
-        if ($hasPending) {
-            return back()->with('error', 'Anda sudah memiliki pembayaran yang menunggu verifikasi. Silakan tunggu hingga pembayaran sebelumnya diverifikasi.');
-        }
 
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:1'],
@@ -56,45 +50,82 @@ class SettlementPaymentController extends Controller
             'proof_image' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        // Guard: outlet must have outstanding > 0
-        $totalOutstanding = (float) Settlement::where('outlet_id', $outlet->id)
-            ->where('period_type', 'weekly')
-            ->sum(DB::raw('amount_due - paid_amount - adjustment_amount'));
-
-        if ($totalOutstanding <= 0) {
-            return back()->with('error', 'Tidak ada tagihan yang belum dibayar.');
-        }
-
-        // Guard: amount must not exceed total outstanding
-        if ((float) $validated['amount'] > $totalOutstanding) {
-            return back()->with('error', 'Jumlah pembayaran (Rp '.number_format($validated['amount'], 0, ',', '.').') melebihi total tagihan (Rp '.number_format($totalOutstanding, 0, ',', '.').').');
-        }
-
         $proofPath = null;
         if ($request->hasFile('proof_image')) {
             $proofPath = $request->file('proof_image')->store('payment-proofs', 'public');
         }
 
-        $settlement = Settlement::where('outlet_id', $outlet->id)
-            ->where('status', '!=', Settlement::STATUS_PAID)
-            ->orderBy('due_date', 'asc')
-            ->first();
+        $blockedByOpenIssue = false;
+        $payment = DB::transaction(function () use ($outlet, $validated, $proofPath, $paymentService, &$blockedByOpenIssue) {
+            Outlet::lockForSettlement($outlet->id);
 
-        $payment = SettlementPayment::create([
-            'outlet_id' => $outlet->id,
-            'settlement_id' => $settlement?->id,
-            'reference_number' => $validated['reference_number'],
-            'payment_date' => $validated['payment_date'],
-            'amount' => $validated['amount'],
-            'proof_image' => $proofPath,
-            'notes' => $validated['notes'] ?? null,
-            'status' => SettlementPayment::STATUS_PENDING,
-        ]);
+            $settlements = Settlement::query()
+                ->where('outlet_id', $outlet->id)
+                ->where('period_type', 'weekly')
+                ->where('direction', Settlement::DIRECTION_OUTLET_PAYS)
+                ->orderBy('period_start')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+            $unpaidSettlements = $settlements->where('status', '!=', Settlement::STATUS_PAID)->values();
+            $outstandingBySettlement = $unpaidSettlements
+                ->mapWithKeys(fn (Settlement $candidate) => [(int) $candidate->id => max(0, abs((float) $candidate->net_amount) - (float) $candidate->paid_amount - (float) $candidate->adjustment_amount)])
+                ->all();
+            $totalOutstanding = (float) array_sum($outstandingBySettlement);
+            $hasPending = SettlementPayment::query()
+                ->where('outlet_id', $outlet->id)
+                ->where('direction', Settlement::DIRECTION_OUTLET_PAYS)
+                ->where('status', SettlementPayment::STATUS_PENDING)
+                ->exists();
+            $settlement = $unpaidSettlements->first();
+            $hasOpenIssue = $paymentService->settlementsHaveOpenIssue($settlements);
+            $pathHasOpenIssue = $paymentService->allocationPathHasOpenIssue(
+                $unpaidSettlements,
+                (float) $validated['amount'],
+                $settlement ? [(int) $settlement->id] : [],
+            );
+            $blockedByOpenIssue = $pathHasOpenIssue || ($totalOutstanding <= 0 && $hasOpenIssue);
+            if (! $blockedByOpenIssue && (float) $validated['amount'] > $totalOutstanding) {
+                return null;
+            }
+
+            if ($hasPending) {
+                return null;
+            }
+            if (! $blockedByOpenIssue && ($totalOutstanding <= 0 || (float) $validated['amount'] > $totalOutstanding)) {
+                return null;
+            }
+            if ($blockedByOpenIssue && ($totalOutstanding <= 0 || ! $settlement) && ! $hasOpenIssue) {
+                return null;
+            }
+
+            return SettlementPayment::create([
+                'outlet_id' => $outlet->id,
+                'settlement_id' => $blockedByOpenIssue ? null : $settlement?->id,
+                'reference_number' => $validated['reference_number'],
+                'payment_date' => $validated['payment_date'],
+                'amount' => $validated['amount'],
+                'proof_image' => $proofPath,
+                'notes' => $validated['notes'] ?? null,
+                'status' => SettlementPayment::STATUS_PENDING,
+            ]);
+        });
+
+        if (! $payment) {
+            if ($proofPath) {
+                Storage::disk('public')->delete($proofPath);
+            }
+
+            return back()->with('error', 'Tidak ada tagihan outlet yang belum dibayar, jumlah pembayaran melebihi tagihan, atau pembayaran lain menunggu verifikasi.');
+        }
 
         $payment->load('outlet');
         $notificationService->notifyPaymentSubmitted($payment);
+        if ($blockedByOpenIssue) {
+            return back()->with('error', 'Bukti transfer tersimpan sebagai pembayaran menunggu verifikasi tanpa alokasi. Verifikasi diblokir sampai rekonsiliasi settlement diselesaikan.');
+        }
 
-        return back()
-            ->with('success', 'Berhasil dikirim. Terimakasih sudah melakukan pembayaran.');
+        return back()->with('success', 'Berhasil dikirim. Terimakasih sudah melakukan pembayaran.');
+
     }
 }

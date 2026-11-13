@@ -7,14 +7,14 @@ use App\Models\Outlet;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use App\Services\SettlementReconciliationService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class SettlementReconciliationBulkTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTruncation;
 
     /**
      * getOutletReconciliations() is the bulk path and getOutletReconciliation()

@@ -6,6 +6,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Exceptions\DokuPaymentException;
 use App\Models\Order;
+use App\Models\Outlet;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentWebhookLog;
 use Carbon\Carbon;
@@ -17,6 +18,10 @@ use Illuminate\Support\Facades\Log;
 
 class DokuService
 {
+    private const NEW_INVOICE_PREFIX = 'DMB1';
+
+    private const NEW_INVOICE_RANDOM_BYTES = 12;
+
     private string $baseUrl;
 
     private string $clientId;
@@ -53,6 +58,7 @@ class DokuService
         $lease = data_get($attempt->metadata ?? [], 'creation_lease');
         if ($lease && Carbon::parse(data_get($lease, 'expires_at'))->utc()->isPast()) {
             $expired = DB::transaction(function () use ($attempt, $lease): bool {
+                $this->lockOutletForOrder($attempt->order_id);
                 $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
                 if (data_get($locked->metadata ?? [], 'creation_lease.token') !== data_get($lease, 'token')) {
                     return false;
@@ -72,6 +78,7 @@ class DokuService
         }
         $claimToken = bin2hex(random_bytes(16));
         $claimed = DB::transaction(function () use ($attempt, $claimToken): bool {
+            $this->lockOutletForOrder($attempt->order_id);
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             if ($locked->creation_state?->value !== 'initiated') {
                 return false;
@@ -119,6 +126,7 @@ class DokuService
         $sessionId = $data['response']['order']['session_id'] ?? null;
         $tokenId = $data['response']['payment']['token_id'] ?? null;
         $persisted = DB::transaction(function () use ($attempt, $claimToken, $paymentUrl, $order, $data, $sessionId, $tokenId): bool {
+            $this->lockOutletForOrder($attempt->order_id);
             $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             if (data_get($locked->metadata ?? [], 'creation_lease.token') !== $claimToken) {
@@ -142,6 +150,7 @@ class DokuService
         return retry(3, function () use ($attempt, $claimToken, $state, $rawResponse, $metadata): bool {
             return DB::transaction(function () use ($attempt, $claimToken, $state, $rawResponse, $metadata): bool {
                 $orderId = PaymentAttempt::query()->whereKey($attempt->id)->value('order_id');
+                $this->lockOutletForOrder((int) $orderId);
                 $order = Order::query()->whereKey($orderId)->lockForUpdate()->with('items')->firstOrFail();
                 $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
                 if (data_get($locked->metadata ?? [], 'creation_lease.token') !== $claimToken) {
@@ -199,6 +208,7 @@ class DokuService
         return retry(3, function () use ($attemptId): bool {
             return DB::transaction(function () use ($attemptId): bool {
                 $attemptOrderId = PaymentAttempt::query()->whereKey($attemptId)->value('order_id');
+                $this->lockOutletForOrder((int) $attemptOrderId);
                 $order = Order::query()->whereKey($attemptOrderId)->lockForUpdate()->firstOrFail();
                 $locked = PaymentAttempt::query()->whereKey($attemptId)->lockForUpdate()->firstOrFail();
                 $deadline = data_get($locked->metadata ?? [], 'reconciliation_deadline_at');
@@ -223,12 +233,16 @@ class DokuService
     public function reconcilePaymentAttempt(PaymentAttempt $attempt): PaymentAttempt
     {
         $attempt = PaymentAttempt::query()->whereKey($attempt->id)->with('order')->firstOrFail();
+        if (! $this->isNewInvoiceNumber($attempt->invoice_number)) {
+            return $attempt;
+        }
         $claimToken = bin2hex(random_bytes(16));
         $expired = $this->expireUnknownAttemptIfDue($attempt->id);
         if ($expired) {
             return $attempt->fresh();
         }
         $claimed = DB::transaction(function () use ($attempt, $claimToken): bool {
+            $this->lockOutletForOrder($attempt->order_id);
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             if (! in_array($locked->creation_state?->value, ['pending', 'unknown', 'failed'], true)
                  || ($locked->settlement_status !== null && ! in_array($locked->settlement_status?->value, ['pending', 'unknown'], true))) {
@@ -274,7 +288,8 @@ class DokuService
         $status = $this->providerStatus($data);
         if ($status === 'SUCCESS') {
             $persisted = DB::transaction(function () use ($attempt, $claimToken, $data, $status): bool {
-                $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
+                $this->lockOutletForOrder($attempt->order_id);
+                Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
                 $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
                 if (data_get($locked->metadata ?? [], 'reconciliation_lease.token') !== $claimToken) {
                     return false;
@@ -297,6 +312,7 @@ class DokuService
             }
         } elseif (in_array($status, ['FAILED', 'REJECTED', 'DENIED', 'CANCELLED', 'EXPIRED'], true)) {
             $persisted = DB::transaction(function () use ($attempt, $claimToken, $status, $data): bool {
+                $this->lockOutletForOrder($attempt->order_id);
                 Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
                 $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
                 if (data_get($locked->metadata ?? [], 'reconciliation_lease.token') !== $claimToken) {
@@ -331,6 +347,8 @@ class DokuService
     private function persistReconciliationResult(PaymentAttempt $attempt, string $claimToken, string $creationState, string $status, array $data): bool
     {
         return DB::transaction(function () use ($attempt, $claimToken, $creationState, $status, $data): bool {
+            $this->lockOutletForOrder($attempt->order_id);
+            $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
             $locked = PaymentAttempt::query()->whereKey($attempt->id)->lockForUpdate()->firstOrFail();
             if (data_get($locked->metadata ?? [], 'reconciliation_lease.token') !== $claimToken) {
                 return false;
@@ -383,21 +401,36 @@ class DokuService
     public function preparePaymentAttempt(Order $order): PaymentAttempt
     {
         return DB::transaction(function () use ($order): PaymentAttempt {
+            $this->lockOutletForOrder($order->id);
             $order = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
-            $active = PaymentAttempt::query()->where('order_id', $order->id)->where(function ($query): void {
-                $query->whereIn('creation_state', ['initiated', 'pending', 'created', 'unknown'])
-                    ->orWhereIn('settlement_status', ['pending', 'unknown']);
-            })->latest('id')->first();
-            if ($active) {
-                return $active;
-            }
-            if (PaymentAttempt::query()->where('order_id', $order->id)->count() >= config('order.max_payment_attempts', 3)) {
-                return PaymentAttempt::query()->where('order_id', $order->id)->latest('id')->firstOrFail();
-            }
-            $identity = strtoupper('DMB-'.$order->id.'-'.bin2hex(random_bytes(6)));
 
-            return PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => $identity, 'invoice_number' => $identity, 'merchant_request_id' => $identity.'-REQ', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'payment_method' => $order->payment_method ?? 'qris', 'creation_state' => 'initiated', 'metadata' => ['line_items' => $this->buildLineItems($order), 'customer_snapshot' => $this->buildCustomerInfo($order)]]);
+            return $this->preparePaymentAttemptLocked($order);
         });
+    }
+
+    private function preparePaymentAttemptLocked(Order $order): PaymentAttempt
+    {
+        $active = PaymentAttempt::query()->where('order_id', $order->id)->where(function ($query): void {
+            $query->whereIn('creation_state', ['initiated', 'pending', 'created', 'unknown'])
+                ->orWhereIn('settlement_status', ['pending', 'unknown']);
+        })->latest('id')->first();
+        if ($active) {
+            return $active;
+        }
+        if (PaymentAttempt::query()->where('order_id', $order->id)->count() >= config('order.max_payment_attempts', 3)) {
+            return PaymentAttempt::query()->where('order_id', $order->id)->latest('id')->firstOrFail();
+        }
+        $identity = self::NEW_INVOICE_PREFIX.strtoupper(bin2hex(random_bytes(self::NEW_INVOICE_RANDOM_BYTES)));
+
+        return PaymentAttempt::create(['order_id' => $order->id, 'attempt_key' => $identity, 'invoice_number' => $identity, 'merchant_request_id' => $identity.'-REQ', 'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR', 'payment_method' => $order->payment_method ?? 'qris', 'creation_state' => 'initiated', 'metadata' => ['line_items' => $this->buildLineItems($order), 'customer_snapshot' => $this->buildCustomerInfo($order)]]);
+    }
+
+    private function lockOutletForOrder(int $orderId): void
+    {
+        $outletId = Order::query()->whereKey($orderId)->value('outlet_id');
+        if ($outletId !== null) {
+            Outlet::lockForSettlement((int) $outletId);
+        }
     }
 
     /**
@@ -411,12 +444,21 @@ class DokuService
         $invoiceNumber = $payload['order']['invoice_number'] ?? null;
         $paymentStatus = $payload['transaction']['status'] ?? null;
 
-        if (! $invoiceNumber) {
+        if (! is_string($invoiceNumber) || $invoiceNumber === '') {
             PaymentWebhookLog::create([
                 'source' => 'doku', 'status' => $paymentStatus,
                 'payload' => $payload, 'error' => 'missing_invoice_number',
             ]);
             Log::warning('DOKU webhook: missing invoice_number');
+
+            return;
+        }
+        if (! $this->isNewInvoiceNumber($invoiceNumber)) {
+            PaymentWebhookLog::create([
+                'source' => 'doku', 'invoice_number' => $invoiceNumber,
+                'status' => $paymentStatus, 'payload' => $payload,
+                'error' => 'invoice_namespace_mismatch',
+            ]);
 
             return;
         }
@@ -434,6 +476,9 @@ class DokuService
                 ]);
 
                 return;
+            }
+            if ($attempt) {
+                $this->lockOutletForOrder((int) $attempt->order_id);
             }
             $order = $attempt
                 ? Order::query()->whereKey($attempt->order_id)->lockForUpdate()->first()
@@ -554,6 +599,11 @@ class DokuService
     {
         if (empty($order->doku_order_id)) {
             Log::info('DOKU checkStatus: no doku_order_id', ['order_id' => $order->id]);
+
+            return null;
+        }
+        if (! is_string($order->doku_order_id) || ! $this->isNewInvoiceNumber($order->doku_order_id)) {
+            Log::warning('DOKU status check skipped outside current invoice namespace', ['order_id' => $order->id]);
 
             return null;
         }
@@ -801,6 +851,9 @@ class DokuService
     public function handleNormalizedWebhook(NormalizedPaymentEvent $event): void
     {
         $invoiceNumber = data_get($event->rawEvidence, 'order.invoice_number');
+        if (! is_string($invoiceNumber) || ! $this->isNewInvoiceNumber($invoiceNumber)) {
+            throw new \UnexpectedValueException('invoice_namespace_mismatch');
+        }
         $attempt = PaymentAttempt::where('invoice_number', $invoiceNumber)->first();
         if (! $attempt) {
             throw new \RuntimeException('canonical_attempt_missing');
@@ -809,11 +862,19 @@ class DokuService
         app(CanonicalPaymentTransitionService::class)->apply($attempt, $event);
     }
 
+    public function isNewInvoiceNumber(string $invoiceNumber): bool
+    {
+        return preg_match('/\ADMB1[A-F0-9]{24}\z/', $invoiceNumber) === 1;
+    }
+
     public function processPaymentStatusChange(Order $order, string $status, array $evidence = []): void
     {
         $invoiceNumber = $evidence['order']['invoice_number'] ?? null;
-        if (! $invoiceNumber) {
+        if (! is_string($invoiceNumber) || $invoiceNumber === '') {
             throw new \LogicException('Canonical payment invoice required before status processing.');
+        }
+        if (! $this->isNewInvoiceNumber($invoiceNumber)) {
+            throw new \LogicException('invoice_namespace_mismatch');
         }
         $attempt = $order->paymentAttempts()->where('invoice_number', $invoiceNumber)->first();
         if (! $attempt) {

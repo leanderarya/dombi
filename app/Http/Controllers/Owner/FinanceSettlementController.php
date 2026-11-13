@@ -20,6 +20,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,6 +37,21 @@ class FinanceSettlementController extends Controller
      */
     public function dashboard(Request $request): Response
     {
+        $requestedTab = $request->query('tab', 'tagihan');
+        $tab = is_string($requestedTab) && in_array($requestedTab, ['tagihan', 'pembayaran', 'rekening', 'refund'], true)
+            ? $requestedTab
+            : 'tagihan';
+
+        if ($tab !== 'tagihan') {
+            $tabData = match ($tab) {
+                'pembayaran' => $this->paymentTabData($request),
+                'rekening' => $this->rekeningTabData(),
+                'refund' => $this->refundTabData($request),
+            };
+
+            return Inertia::render('owner/finance/index', ['tab' => $tab] + $tabData);
+        }
+
         // Don't cache Eloquent models — they have serialization issues
         $outlets = Outlet::where('status', 'active')
             ->orderBy('name')
@@ -198,7 +214,22 @@ class FinanceSettlementController extends Controller
             }
         }
 
-        // Pembayaran tab data
+        return Inertia::render('owner/finance/index', [
+            'tab' => $tab,
+            'kpis' => [
+                'total_unpaid' => (float) $totalUnpaid,
+                'outlets_unpaid' => (int) $outletsUnpaid,
+                'due_this_week' => (float) $dueThisWeek,
+            ],
+            'outlets' => $outletList,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function paymentTabData(Request $request): array
+    {
         $status = $request->string('status', 'all')->toString();
         $paymentQuery = SettlementPayment::query()->with(['outlet', 'verifier', 'settlement']);
         if ($status !== 'all') {
@@ -214,10 +245,28 @@ class FinanceSettlementController extends Controller
             ->whereInMonth('verified_at', now())
             ->sum('amount');
 
-        // Rekening tab data
-        $accounts = PaymentAccount::orderBy('bank_name')->get();
+        return [
+            'payments' => $payments,
+            'statusFilter' => $status,
+            'paymentKpis' => [
+                'pending_count' => $pendingCount,
+                'verified_today' => (float) $verifiedToday,
+                'verified_month' => (float) $verifiedMonth,
+            ],
+        ];
+    }
 
-        // Refund tab data
+    /** @return array<string, mixed> */
+    private function rekeningTabData(): array
+    {
+        return ['accounts' => PaymentAccount::orderBy('bank_name')->get()];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function refundTabData(Request $request): array
+    {
         $filter = $request->string('filter', 'ready')->toString();
         $validQueues = RefundPayloadService::QUEUES;
         if (! in_array($filter, $validQueues, true)) {
@@ -241,14 +290,14 @@ class FinanceSettlementController extends Controller
 
         $query = match ($filter) {
             'awaiting_customer' => $query->withCanonicalRefund([RefundObligationStatus::Pending->value], false)
+                ->whereHas('customer', fn ($cq) => $cq->whereNotNull('user_id')),
+            'awaiting_guest' => $query->withCanonicalRefund([RefundObligationStatus::Pending->value], false)
                 ->where(fn ($q) => $q
-                    ->whereHas('customer', fn ($cq) => $cq->whereNotNull('user_id'))
+                    ->whereHas('customer', fn ($cq) => $cq->whereNull('user_id'))
                     ->orDoesntHave('customer')
                 ),
-            'awaiting_guest' => $query->withCanonicalRefund([RefundObligationStatus::Pending->value], false)
-                ->whereHas('customer', fn ($cq) => $cq->whereNull('user_id')),
             'ready' => $query->withCanonicalRefund([RefundObligationStatus::Pending->value], true),
-            'in_progress' => $query->withCanonicalRefund([RefundObligationStatus::InProgress->value]),
+            'in_progress' => $query->withCanonicalRefund([RefundObligationStatus::InProgress->value], null, false, true),
             'action_required' => $query->withCanonicalRefund(null, null, true),
             'completed' => $query->withCanonicalRefund([RefundObligationStatus::Completed->value]),
             'rejected' => $query->withCanonicalRefund([RefundObligationStatus::Rejected->value]),
@@ -259,7 +308,10 @@ class FinanceSettlementController extends Controller
             default => $query,
         };
 
-        $refunds = $query->paginate(20)->through(
+        $refunds = $query->paginate(20)->appends([
+            'tab' => 'refund',
+            'filter' => $filter,
+        ])->through(
             fn (Order $order) => $this->refundPayloads->forOwner($order),
         );
 
@@ -276,29 +328,11 @@ class FinanceSettlementController extends Controller
             }
         });
 
-        return Inertia::render('owner/finance/index', [
-            // Tagihan
-            'kpis' => [
-                'total_unpaid' => (float) $totalUnpaid,
-                'outlets_unpaid' => (int) $outletsUnpaid,
-                'due_this_week' => (float) $dueThisWeek,
-            ],
-            'outlets' => $outletList,
-            // Pembayaran
-            'payments' => $payments,
-            'statusFilter' => $status,
-            'paymentKpis' => [
-                'pending_count' => $pendingCount,
-                'verified_today' => (float) $verifiedToday,
-                'verified_month' => (float) $verifiedMonth,
-            ],
-            // Rekening
-            'accounts' => $accounts,
-            // Refund
+        return [
             'refunds' => $refunds,
             'refundCounts' => $refundCounts,
             'refundFilter' => $filter,
-        ]);
+        ];
     }
 
     /**
@@ -416,11 +450,12 @@ class FinanceSettlementController extends Controller
         Request $request,
         Outlet $outlet,
         SettlementPaymentService $paymentService,
+        NotificationService $notificationService,
     ): RedirectResponse {
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:1'],
             'payment_method' => ['required', 'string'],
-            'reference_number' => ['nullable', 'string', 'max:100'],
+            'reference_number' => ['nullable', 'string', 'max:100', 'unique:settlement_payments,reference_number'],
             'notes' => ['nullable', 'string', 'max:500'],
             'proof_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
@@ -431,10 +466,37 @@ class FinanceSettlementController extends Controller
         }
 
         // Create a single payment record, immediately verified
-        $payment = DB::transaction(function () use ($validated, $outlet, $request, $proofPath, $paymentService) {
+        [$payment, $blockedByOpenIssue] = DB::transaction(function () use ($validated, $outlet, $request, $proofPath, $paymentService) {
+            Outlet::lockForSettlement($outlet->id);
+            $settlements = Settlement::query()
+                ->where('outlet_id', $outlet->id)
+                ->where('period_type', 'weekly')
+                ->where('direction', Settlement::DIRECTION_OUTLET_PAYS)
+                ->where('status', '!=', Settlement::STATUS_PAID)
+                ->orderBy('period_start')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+            if ($settlements->isEmpty()) {
+                return [null, false];
+            }
+
+            if ($paymentService->allocationPathHasOpenIssue($settlements, (float) $validated['amount'])) {
+                return [null, true];
+            }
+
+            $totalOutstanding = (float) $settlements->sum(
+                fn (Settlement $candidate) => max(0, abs((float) $candidate->net_amount) - (float) $candidate->paid_amount - (float) $candidate->adjustment_amount),
+            );
+            if ((float) $validated['amount'] > $totalOutstanding) {
+                return [null, false];
+            }
+
+            $settlement = $settlements->first();
             $payment = SettlementPayment::create([
                 'outlet_id' => $outlet->id,
                 'direction' => Settlement::DIRECTION_OUTLET_PAYS,
+                'settlement_id' => $settlement->id,
                 'reference_number' => $validated['reference_number'] ?? 'PAY-'.strtoupper(Str::random(8)),
                 'payment_date' => now()->toDateString(),
                 'amount' => $validated['amount'],
@@ -446,11 +508,22 @@ class FinanceSettlementController extends Controller
                 'verified_at' => now(),
             ]);
 
-            // FIFO allocate to unpaid settlements
             $paymentService->fifoAllocate($outlet->id, (float) $validated['amount'], $payment->id, Settlement::DIRECTION_OUTLET_PAYS);
 
-            return $payment;
+            return [$payment, false];
         });
+
+        if (! $payment) {
+            if ($proofPath) {
+                Storage::disk('public')->delete($proofPath);
+            }
+
+            if ($blockedByOpenIssue) {
+                return back()->with('error', 'Pembayaran ditolak karena rekonsiliasi settlement belum selesai; bukti unggahan ini tidak disimpan di Dombi.');
+            }
+
+            return back()->with('error', 'Tidak ada tagihan outlet yang belum dibayar atau jumlah pembayaran melebihi tagihan.');
+        }
 
         return back()->with('success', 'Pembayaran berhasil dicatat dan diverifikasi.');
     }
@@ -465,24 +538,32 @@ class FinanceSettlementController extends Controller
         SettlementPaymentService $paymentService,
         NotificationService $notificationService,
     ): RedirectResponse {
-        // Guard: outlet must have outstanding owner_pays_outlet settlements
-        $hasReceiver = Settlement::where('outlet_id', $outlet->id)
-            ->where('period_type', 'weekly')
-            ->where('direction', Settlement::DIRECTION_OWNER_PAYS)
-            ->where('status', '!=', Settlement::STATUS_PAID)
-            ->exists();
-
-        if (! $hasReceiver) {
-            return back()->with('error', 'Outlet tidak memiliki profit yang belum dibayar owner.');
-        }
-
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:1'],
             'reference_number' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $payment = DB::transaction(function () use ($validated, $outlet, $request, $paymentService) {
+        $result = DB::transaction(function () use ($validated, $outlet, $request, $paymentService): array {
+            Outlet::lockForSettlement($outlet->id);
+            $settlements = Settlement::query()
+                ->where('outlet_id', $outlet->id)
+                ->where('period_type', 'weekly')
+                ->where('direction', Settlement::DIRECTION_OWNER_PAYS)
+                ->where('status', '!=', Settlement::STATUS_PAID)
+                ->orderBy('period_start')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            if ($settlements->isEmpty()) {
+                return [null, false];
+            }
+
+            if ($paymentService->allocationPathHasOpenIssue($settlements, (float) $validated['amount'])) {
+                return [null, true];
+            }
+
             $payment = SettlementPayment::create([
                 'outlet_id' => $outlet->id,
                 'direction' => Settlement::DIRECTION_OWNER_PAYS,
@@ -498,8 +579,16 @@ class FinanceSettlementController extends Controller
 
             $paymentService->fifoAllocate($outlet->id, (float) $validated['amount'], $payment->id, Settlement::DIRECTION_OWNER_PAYS);
 
-            return $payment;
+            return [$payment, false];
         });
+        [$payment, $blockedByOpenIssue] = $result;
+
+        if ($blockedByOpenIssue) {
+            return back()->with('error', 'Payout diblokir karena rekonsiliasi settlement belum selesai. Selesaikan isu terlebih dahulu.');
+        }
+        if (! $payment) {
+            return back()->with('error', 'Outlet tidak memiliki profit yang belum dibayar owner.');
+        }
 
         $notificationService->notifyPayoutRecorded($payment);
 

@@ -1,5 +1,7 @@
 <?php
 
+use App\Console\Commands\BootstrapInitialOwner;
+use App\Console\Commands\RecoverOwnerPassword;
 use App\Exceptions\RegisteredPhoneException;
 use App\Http\Middleware\AllowCustomerOrRecoveredGuest;
 use App\Http\Middleware\AllowGuestOrCustomer;
@@ -19,12 +21,16 @@ use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
+    ->withCommands([BootstrapInitialOwner::class, RecoverOwnerPassword::class])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Preserve raw banner targets so validation can reject control characters.
+        $middleware->trimStrings(except: ['target_path']);
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

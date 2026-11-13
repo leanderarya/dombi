@@ -27,16 +27,25 @@ export default function OfflineSaleShow({ sale, outlet, week }: any) {
             backHref="/outlet/offline-sales"
         >
             <OutletPageShell>
-                {/* Hero: total sale */}
                 <div className="rounded-xl border border-border bg-surface p-5">
                     <div className="text-caption font-medium text-text-muted uppercase">
-                        Total Penjualan Offline
+                        Gross Penjualan
                     </div>
                     <div className="mt-1 text-2xl font-bold text-text tabular-nums">
-                        {formatCurrency(sale.total_amount)}
+                        {sale.gross_amount === null
+                            ? 'Tidak tersedia'
+                            : formatCurrency(sale.gross_amount)}
                     </div>
                     <div className="mt-1 text-xs text-text-subtle">
-                        Produk dijual tunai — jumlah yang disetor ke pusat
+                        {sale.gross_amount === null
+                            ? 'Harga jual historis tidak tersimpan.'
+                            : `Harga jual ${formatCurrency(sale.selling_price_snapshot)} × ${sale.quantity}`}
+                    </div>
+                    <div className="mt-3 border-t border-border pt-3 text-sm text-text-muted">
+                        Setoran Owner:{' '}
+                        <span className="font-semibold text-text">
+                            {formatCurrency(sale.total_amount)}
+                        </span>
                     </div>
                 </div>
 
@@ -54,7 +63,7 @@ export default function OfflineSaleShow({ sale, outlet, week }: any) {
                             </div>
                             <div className="flex items-center justify-between rounded-lg border border-border bg-surface-muted px-3 py-2">
                                 <span className="text-xs text-text-muted">
-                                    Penjualan Offline (setor ke pusat)
+                                    Penjualan Offline (kewajiban setoran Owner)
                                 </span>
                                 <span className="text-sm font-semibold text-text tabular-nums">
                                     {formatCurrency(week.offline_total)}
@@ -68,14 +77,24 @@ export default function OfflineSaleShow({ sale, outlet, week }: any) {
                                     className={`text-sm font-bold tabular-nums ${
                                         week.direction === 'owner_pays_outlet'
                                             ? 'text-success-text'
-                                            : 'text-danger'
+                                            : week.direction ===
+                                                'outlet_pays_owner'
+                                              ? 'text-danger'
+                                              : 'text-text-muted'
                                     }`}
                                 >
-                                    {formatCurrency(Math.abs(week.net_amount))}
+                                    {week.direction === null
+                                        ? 'Belum tersedia'
+                                        : formatCurrency(
+                                              Math.abs(week.net_amount),
+                                          )}
                                     <span className="ml-1 text-caption font-medium text-text-subtle">
                                         {week.direction === 'owner_pays_outlet'
                                             ? 'Owner bayar'
-                                            : 'Outlet bayar'}
+                                            : week.direction ===
+                                                'outlet_pays_owner'
+                                              ? 'Outlet bayar'
+                                              : ''}
                                     </span>
                                 </span>
                             </div>

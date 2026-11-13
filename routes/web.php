@@ -44,6 +44,7 @@ use App\Http\Controllers\Outlet\SettlementController;
 use App\Http\Controllers\Owner\AnalyticsController as OwnerAnalyticsController;
 use App\Http\Controllers\Owner\CourierController;
 use App\Http\Controllers\Owner\CourierManagementController;
+use App\Http\Controllers\Owner\CustomerBannerController;
 use App\Http\Controllers\Owner\CustomerController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
 use App\Http\Controllers\Owner\DeliveryController as OwnerDeliveryController;
@@ -210,7 +211,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
     Route::get('/api/health', [SystemController::class, 'health'])->name('health');
     Route::get('/api/version', [SystemController::class, 'version'])->name('version');
     Route::get('/api/status', [SystemController::class, 'status'])
-        ->middleware(['auth', 'role:owner'])
+        ->middleware(['auth', 'role:owner', 'password.changed'])
         ->name('system.status');
 
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -281,6 +282,10 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::delete('outlets/{outlet}/products/{product}', [OutletProductController::class, 'remove'])->name('outlets.products.remove');
         Route::post('outlets/{outlet}/products/bulk-assign', [OutletProductController::class, 'bulkAssign'])->name('outlets.products.bulk-assign');
         Route::post('outlets/{outlet}/restock', [OutletProductController::class, 'restock'])->name('outlets.products.restock');
+        Route::get('banners', [CustomerBannerController::class, 'index'])->name('banners.index');
+        Route::post('banners', [CustomerBannerController::class, 'store'])->name('banners.store');
+        Route::put('banners/{banner}', [CustomerBannerController::class, 'update'])->name('banners.update');
+        Route::delete('banners/{banner}', [CustomerBannerController::class, 'destroy'])->name('banners.destroy');
         Route::resource('products', OwnerProductController::class)->except(['show']);
         Route::get('products/{product}', [OwnerProductController::class, 'show'])->name('products.show');
         // New ProductCategory / Product domain – Task 12 canonical routes

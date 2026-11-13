@@ -29,9 +29,12 @@ class DokuPaymentController extends Controller
     public function redirect(Request $request, DokuService $doku): RedirectResponse
     {
         $invoiceNumber = $request->query('invoice_number') ?? $request->query('order_id');
+        if (! is_string($invoiceNumber)) {
+            $invoiceNumber = null;
+        }
         $dokuStatus = $request->query('status');
 
-        PaymentWebhookLog::create([
+        $redirectLog = PaymentWebhookLog::create([
             'source' => 'redirect',
             'invoice_number' => $invoiceNumber,
             'status' => 'received',
@@ -43,6 +46,12 @@ class DokuPaymentController extends Controller
             'invoice_number' => $invoiceNumber,
             'doku_status' => $dokuStatus,
         ]);
+
+        if (! is_string($invoiceNumber) || ! $doku->isNewInvoiceNumber($invoiceNumber)) {
+            $redirectLog->update(['status' => 'rejected', 'error' => 'invoice_namespace_mismatch']);
+
+            return redirect()->route('customer.home');
+        }
 
         if ($invoiceNumber) {
             $order = $this->resolveOrder($invoiceNumber);
@@ -95,10 +104,8 @@ class DokuPaymentController extends Controller
      * Resolve the order behind a DOKU redirect.
      *
      * DOKU echoes back the `order.invoice_number` we sent, which is the payment
-     * attempt's invoice (DMB-{order}-{hex}) — not the customer-facing
-     * order_code (DOMBI-YYYYMMDD-NNNN). Legacy rows may still carry the
-     * invoice in `doku_order_id`, so keep that as a fallback before giving up
-     * and bouncing the customer to the dashboard.
+     * attempt's invoice (DMB1 followed by 24 hexadecimal characters), not the
+     * customer-facing order_code. Only the canonical attempt may resolve it.
      */
     private function resolveOrder(string $invoiceNumber): ?Order
     {
@@ -108,7 +115,6 @@ class DokuPaymentController extends Controller
             return $attempt->order;
         }
 
-        return Order::where('order_code', $invoiceNumber)->first()
-            ?? Order::where('doku_order_id', $invoiceNumber)->first();
+        return null;
     }
 }

@@ -48,45 +48,24 @@ export default function PushBanner({ variant, onDismiss }: Props) {
 
     if (variant === 'home') {
         return (
-            /*
-             * `flex-1 min-w-32` (a 128px floor), not bare `flex-1`:
-             * `flex-1` is `flex-basis: 0%`, so with `min-width: 0`
-             * the copy's hypothetical main size is 0, the row never
-             * wraps, and at 200% text the paragraph collapsed to a
-             * 53px column 160px tall while the fixed-width
-             * "Aktifkan" button swallowed the line. The floor makes
-             * the copy's width count toward the wrap decision, so
-             * the buttons drop below it, while the normal size stays
-             * on one line. `grow` is not the fix: `basis: auto`
-             * makes the max-content width the wrap input and pushes
-             * the dismiss button to a second line even at 100%.
-             */
-            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white/80 px-3 py-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] backdrop-blur">
-                <Bell className="h-4 w-4 shrink-0 text-primary" />
-                {pushState === 'denied' ? (
-                    <p className="min-w-32 flex-1 text-xs text-text-muted">
-                        Notifikasi dimatikan
-                    </p>
-                ) : (
-                    <p className="min-w-32 flex-1 text-xs text-text-muted">
-                        Aktifkan notifikasi untuk info pesanan
-                    </p>
-                )}
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-surface-muted/60 px-2 py-1.5">
+                <Bell className="h-3.5 w-3.5 shrink-0 text-primary" />
+                <p className="min-w-32 flex-1 text-xs text-text-muted">
+                    {pushState === 'denied'
+                        ? 'Notifikasi dimatikan'
+                        : 'Aktifkan notifikasi untuk info pesanan'}
+                </p>
                 {pushState !== 'denied' && (
                     <button
                         onClick={handleEnable}
-                        className="inline-flex min-h-11 shrink-0 items-center rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80"
+                        className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 text-xs font-bold text-primary active:bg-primary/10"
                     >
                         Aktifkan
                     </button>
                 )}
                 <button
                     onClick={handleDismiss}
-                    // Was h-6 w-6 (24px). DESIGN.md line 83 wants 44x44 on
-                    // touch, and this is the dismiss for a banner above the
-                    // fold. Guarded by pointer-coarse so the desktop banner
-                    // keeps its height (spec D6).
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-text-subtle active:bg-surface-muted pointer-coarse:h-11 pointer-coarse:w-11"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-text-subtle active:bg-surface-muted"
                     aria-label="Tutup"
                 >
                     <X className="h-3.5 w-3.5" />

@@ -7,6 +7,7 @@ use App\Enums\PaymentAttemptVerificationStatus;
 use App\Enums\RefundObligationStatus;
 use App\Jobs\DispatchPaymentOutboxEvent;
 use App\Models\Order;
+use App\Models\Outlet;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentOutboxEvent;
 use App\Models\RefundObligation;
@@ -19,6 +20,11 @@ class CanonicalPaymentTransitionService
     public function apply(PaymentAttempt $attempt, NormalizedPaymentEvent $event): TransitionResult
     {
         return DB::transaction(function () use ($attempt, $event): TransitionResult {
+            $outletId = Order::query()->whereKey($attempt->order_id)->value('outlet_id');
+            if ($outletId !== null) {
+                Outlet::lockForSettlement((int) $outletId);
+            }
+
             $order = Order::query()->whereKey($attempt->order_id)->lockForUpdate()->firstOrFail();
             $terminalAtBeforeTransition = $this->terminalTransitionAt($order);
             $terminalStatusBeforeTransition = $order->status;

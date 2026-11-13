@@ -49,6 +49,11 @@ class Outlet extends Model
         return $this->status === 'active';
     }
 
+    public static function lockForSettlement(int $outletId): self
+    {
+        return static::query()->whereKey($outletId)->lockForUpdate()->firstOrFail();
+    }
+
     public function isTemporarilyClosed(): bool
     {
         return $this->status === 'temporarily_closed';
