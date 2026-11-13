@@ -6,8 +6,13 @@ import { usePushSubscription } from '@/hooks/use-push-subscription';
 interface Props {
     unreadCount?: number;
     onClick?: () => void;
+    onUnreadCountChange?: (count: number) => void;
+    pollingEnabled?: boolean;
+    pollingKey?: string;
     className?: string;
 }
+
+const activePollingKeys = new Set<string>();
 
 interface LatestNotif {
     id: number;
@@ -20,6 +25,9 @@ interface LatestNotif {
 export default function NotificationBell({
     unreadCount: initialCount,
     onClick,
+    onUnreadCountChange,
+    pollingEnabled = true,
+    pollingKey,
     className = 'text-text-muted active:bg-surface-muted',
 }: Props) {
     const [polledUnreadCount, setPolledUnreadCount] = useState(0);
@@ -42,24 +50,90 @@ export default function NotificationBell({
     };
 
     useEffect(() => {
-        if (initialCount !== undefined) {
+        if (!pollingEnabled || initialCount !== undefined) {
             return;
         }
 
+        if (pollingKey && activePollingKeys.has(pollingKey)) {
+            return;
+        }
+
+        if (pollingKey) {
+            activePollingKeys.add(pollingKey);
+        }
+
+        let active = true;
+        const interval: { current?: ReturnType<typeof setInterval> } = {};
+        let inFlight: AbortController | null = null;
+        let removeLogoutListener = () => {};
+
+        const stopPolling = () => {
+            if (!active) {
+                return;
+            }
+
+            active = false;
+
+            if (interval.current !== undefined) {
+                clearInterval(interval.current);
+            }
+
+            inFlight?.abort();
+
+            if (pollingKey) {
+                activePollingKeys.delete(pollingKey);
+            }
+
+            removeLogoutListener();
+        };
+
         const fetchCount = async () => {
+            if (!active || inFlight) {
+                return;
+            }
+
+            const controller = new AbortController();
+            inFlight = controller;
+
             try {
                 const params =
                     lastIdRef.current > 0
                         ? `?since_id=${lastIdRef.current}`
                         : '';
-                const res = await fetch(`/notifications/unread-count${params}`);
+                const res = await fetch(
+                    `/notifications/unread-count${params}`,
+                    { signal: controller.signal },
+                );
+
+                if (!active || controller.signal.aborted) {
+                    return;
+                }
+
+                const responsePath = res.url
+                    ? new URL(res.url, window.location.href).pathname
+                    : '';
+
+                if (
+                    (res.redirected && responsePath === '/login') ||
+                    [401, 403, 419].includes(res.status)
+                ) {
+                    stopPolling();
+
+                    return;
+                }
 
                 if (!res.ok) {
                     return;
                 }
 
                 const data = await res.json();
+
+                if (!active || controller.signal.aborted) {
+                    return;
+                }
+
                 setPolledUnreadCount(data.unread_count);
+                onUnreadCountChange?.(data.unread_count);
 
                 if (data.latest?.length) {
                     for (const notif of data.latest as LatestNotif[]) {
@@ -83,14 +157,31 @@ export default function NotificationBell({
                 }
             } catch {
                 // silently fail
+            } finally {
+                if (inFlight === controller) {
+                    inFlight = null;
+                }
             }
         };
 
-        fetchCount();
-        const interval = setInterval(fetchCount, 30000);
+        if (pollingKey === 'owner') {
+            removeLogoutListener = router.on('before', (event) => {
+                const url = new URL(
+                    event.detail.visit.url,
+                    window.location.origin,
+                );
 
-        return () => clearInterval(interval);
-    }, [initialCount]);
+                if (url.pathname === '/logout') {
+                    stopPolling();
+                }
+            });
+        }
+
+        interval.current = setInterval(() => void fetchCount(), 30000);
+        void fetchCount();
+
+        return stopPolling;
+    }, [initialCount, onUnreadCountChange, pollingEnabled, pollingKey]);
 
     return (
         <div className="relative">

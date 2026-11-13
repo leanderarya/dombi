@@ -5,8 +5,8 @@ import FilterSheet from '@/components/owner/filter-sheet';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
-import { SkeletonPage } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/format';
+import { AnalyticsAuditSkeleton } from './loading-skeletons';
 
 interface Props {
     movements?: any;
@@ -65,7 +65,7 @@ export function AuditTrailTab({
     };
 
     if (!movements) {
-        return <SkeletonPage />;
+        return <AnalyticsAuditSkeleton />;
     }
 
     if (movements.data.length === 0) {

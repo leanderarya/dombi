@@ -214,4 +214,49 @@ describe('RefundTab action buttons', () => {
 
         expect(container.textContent).toContain('Perlu Ditinjau');
     });
+
+    it('keeps the Refund tab and active queue in pagination links', () => {
+        act(() => {
+            root.render(
+                <RefundTab
+                    refunds={{
+                        data: [],
+                        links: [
+                            {
+                                url: null,
+                                label: 'pagination.previous',
+                                active: false,
+                            },
+                            {
+                                url: '/owner/finance?tab=refund&filter=awaiting_guest&page=1',
+                                label: '1',
+                                active: true,
+                            },
+                            {
+                                url: '/owner/finance?tab=refund&filter=awaiting_guest&page=2',
+                                label: '2',
+                                active: false,
+                            },
+                            {
+                                url: '/owner/finance?tab=refund&filter=awaiting_guest&page=2',
+                                label: 'pagination.next',
+                                active: false,
+                            },
+                        ],
+                        current_page: 1,
+                        last_page: 2,
+                        total: 21,
+                    }}
+                    refundCounts={counts}
+                    refundFilter="awaiting_guest"
+                />,
+            );
+        });
+
+        expect(
+            Array.from(container.querySelectorAll('a')).map((link) =>
+                link.getAttribute('href'),
+            ),
+        ).toContain('/owner/finance?tab=refund&filter=awaiting_guest&page=2');
+    });
 });

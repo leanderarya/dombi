@@ -2,7 +2,6 @@ import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { useSidebar } from '@/contexts/sidebar-context';
-import OwnerLayout from '@/layouts/owner-layout';
 
 interface Props extends PropsWithChildren {
     title: string;
@@ -15,7 +14,7 @@ interface Props extends PropsWithChildren {
 
 /**
  * Unified owner page shell.
- * Wraps OwnerLayout with a page header (title, subtitle, back, actions).
+ * Provides a page header (title, subtitle, back, actions) for owner pages.
  */
 export default function OwnerPageShell({
     title,
@@ -25,7 +24,7 @@ export default function OwnerPageShell({
     children,
 }: Props) {
     return (
-        <OwnerLayout>
+        <>
             <Head title={title} />
             <div className="min-h-full">
                 <PageHeader
@@ -36,7 +35,7 @@ export default function OwnerPageShell({
                 />
                 {children}
             </div>
-        </OwnerLayout>
+        </>
     );
 }
 

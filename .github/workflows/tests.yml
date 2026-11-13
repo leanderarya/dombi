@@ -1,12 +1,18 @@
 name: Quality Gate
 
 on:
-  workflow_call:
   pull_request:
+    branches: [develop, main]
+  push:
     branches: [develop, main]
 
 permissions:
   contents: read
+  actions: read
+
+concurrency:
+  group: quality-${{ github.sha }}
+  cancel-in-progress: false
 
 jobs:
   quality:
@@ -17,13 +23,10 @@ jobs:
         env:
           MYSQL_DATABASE: dombi_test
           MYSQL_ROOT_PASSWORD: ci-password
-        ports:
-          - 3306:3306
+        ports: [3306:3306]
         options: >-
           --health-cmd="mysqladmin ping -h 127.0.0.1 -pci-password"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
+          --health-interval=10s --health-timeout=5s --health-retries=10
     env:
       APP_ENV: testing
       RUN_PRODUCTION_DRIVER_TESTS: "true"
@@ -42,25 +45,56 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
-          extensions: pcntl
+          extensions: pcntl, pdo_mysql, gd, zip, intl, bcmath
           tools: composer:v2
           coverage: none
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "22.22.2"
           cache: npm
+      - run: composer validate --strict --no-check-publish
       - run: composer install --no-interaction --prefer-dist
-      - run: npm ci
+      - run: composer check-platform-reqs
+      - run: npm ci --engine-strict --no-audit --no-fund
       - run: cp .env.example .env
       - run: php artisan key:generate
-      - run: php artisan migrate:fresh --force
-      - run: npm run build
-      - run: composer lint:check
-      - run: npm run format:check
-      - run: npm run lint:check
-      - run: npm run types:check
-      # Run suites as separate, ordered invocations; race-gate tests fork their
-      # own workers against shared MySQL, so no external PHPUnit parallelism.
-      - run: php artisan test --testsuite Unit
-      - run: php artisan test --testsuite Feature
+      - name: Require staging filesystem test tools
+        run: for tool in rsync flock realpath sha256sum; do command -v "$tool" >/dev/null || exit 1; done
+      - run: python3 -B -m unittest discover -s scripts/ci -p 'test_*.py' -v
+      - run: node --test scripts/ci/test-select-release.cjs
       - run: npm test
+      - run: npm run build
+      - name: Focused PHP regression gate (ordered, no parallel workers)
+        run: |
+          php artisan test --testsuite Unit
+          php artisan test tests/Feature/CanonicalPaymentVerifierTest.php tests/Feature/CheckoutPaymentJsonResponseTest.php tests/Feature/DokuWebhookIngressTest.php tests/Feature/PaymentAuthorizationMutationTest.php tests/Feature/PaymentFulfilmentConcurrencyTest.php
+      - name: Dependency files must remain unchanged
+        run: git diff --exit-code -- composer.json composer.lock package.json package-lock.json
+      - name: Locate existing immutable release for this commit
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+        id: existing
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo,
+              {...context.repo, name: `release-${context.sha}`, per_page: 100});
+            if (artifacts.some(a => !a.expired)) {
+              core.setOutput('found', 'true');
+              await core.summary.addRaw('Existing immutable release retained; not rebuilding or replacing it.\n').write();
+            }
+      - name: Assemble production dependencies without changing tested workspace
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && steps.existing.outputs.found != 'true'
+        run: |
+          mkdir "$RUNNER_TEMP/runtime"
+          cp composer.json composer.lock "$RUNNER_TEMP/runtime/"
+          composer install --working-dir="$RUNNER_TEMP/runtime" --no-dev --no-scripts --no-interaction --prefer-dist --optimize-autoloader
+          composer check-platform-reqs --working-dir="$RUNNER_TEMP/runtime" --no-dev
+          python3 scripts/ci/release.py pack --root . --vendor "$RUNNER_TEMP/runtime/vendor" --sha "$GITHUB_SHA" --output "$RUNNER_TEMP/release"
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && steps.existing.outputs.found != 'true'
+        with:
+          name: release-${{ github.sha }}
+          path: ${{ runner.temp }}/release/*
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90

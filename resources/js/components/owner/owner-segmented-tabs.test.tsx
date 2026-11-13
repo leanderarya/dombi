@@ -2,7 +2,7 @@
 import { act } from 'react';
 import type { Root } from 'react-dom/client';
 import { createRoot } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import OwnerSegmentedTabs from './owner-segmented-tabs';
 
 let container: HTMLDivElement;
@@ -22,6 +22,7 @@ beforeEach(() => {
 afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    vi.restoreAllMocks();
 });
 
 function render(ui: React.ReactElement): HTMLElement {
@@ -104,5 +105,72 @@ describe('OwnerSegmentedTabs', () => {
 
         expect(selected).toHaveLength(1);
         expect(selected[0].textContent).toBe('Dua');
+    });
+
+    it('reveals the selected tab inside its own scroll container', () => {
+        const rect = (left: number, right: number): DOMRect => ({
+            x: left,
+            y: 0,
+            width: right - left,
+            height: 32,
+            top: 0,
+            right,
+            bottom: 32,
+            left,
+            toJSON: () => ({}),
+        });
+        const getBoundingClientRect = vi
+            .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+            .mockImplementation(function (this: HTMLElement) {
+                if (this.getAttribute('role') === 'tablist') {
+                    return rect(0, 100);
+                }
+
+                const tabList = this.closest('[role="tablist"]');
+                const positions: Record<string, [number, number]> = {
+                    Satu: [0, 40],
+                    Dua: [40, 80],
+                    Tiga: [80, 120],
+                    Empat: [120, 160],
+                };
+                const [left, right] = positions[this.textContent ?? ''] ?? [
+                    0, 0,
+                ];
+                const scrollLeft = tabList?.scrollLeft ?? 0;
+
+                return rect(left - scrollLeft, right - scrollLeft);
+            });
+        vi.spyOn(
+            HTMLElement.prototype,
+            'clientWidth',
+            'get',
+        ).mockImplementation(function (this: HTMLElement) {
+            return this.getAttribute('role') === 'tablist' ? 100 : 0;
+        });
+
+        const tabList = render(
+            <OwnerSegmentedTabs
+                tabs={TABS}
+                activeTab="d"
+                onChange={() => {}}
+                revealActiveTab
+            />,
+        );
+
+        expect(tabList.scrollLeft).toBe(60);
+        expect(getBoundingClientRect).toHaveBeenCalled();
+
+        act(() => {
+            root.render(
+                <OwnerSegmentedTabs
+                    tabs={TABS}
+                    activeTab="b"
+                    onChange={() => {}}
+                    revealActiveTab
+                />,
+            );
+        });
+
+        expect(tabList.scrollLeft).toBe(40);
     });
 });

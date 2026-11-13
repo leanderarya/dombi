@@ -12,10 +12,6 @@ vi.mock('@inertiajs/react', () => ({
     ),
 }));
 
-vi.mock('@/layouts/owner-layout', () => ({
-    default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 vi.mock('@/contexts/sidebar-context', () => ({
     useSidebar: () => ({ collapsed: false, toggle: () => {} }),
 }));

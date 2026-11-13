@@ -1,3 +1,5 @@
+import { useLayoutEffect, useRef } from 'react';
+
 interface Tab {
     key: string;
     label: string;
@@ -9,6 +11,7 @@ interface Props {
     activeTab: string;
     onChange: (key: string) => void;
     className?: string;
+    revealActiveTab?: boolean;
 }
 
 export default function OwnerSegmentedTabs({
@@ -16,9 +19,41 @@ export default function OwnerSegmentedTabs({
     activeTab,
     onChange,
     className = '',
+    revealActiveTab = false,
 }: Props) {
+    const tabListRef = useRef<HTMLDivElement>(null);
+
+    useLayoutEffect(() => {
+        if (!revealActiveTab) {
+            return;
+        }
+
+        const tabList = tabListRef.current;
+        const selectedTab = tabList?.querySelector<HTMLButtonElement>(
+            '[role="tab"][aria-selected="true"]',
+        );
+
+        if (!tabList || !selectedTab) {
+            return;
+        }
+
+        const tabListRect = tabList.getBoundingClientRect();
+        const visibleLeft = tabListRect.left + tabList.clientLeft;
+        const visibleRight = visibleLeft + tabList.clientWidth;
+        const selectedTabRect = selectedTab.getBoundingClientRect();
+
+        if (selectedTabRect.left < visibleLeft) {
+            tabList.scrollLeft -= Math.ceil(visibleLeft - selectedTabRect.left);
+        } else if (selectedTabRect.right > visibleRight) {
+            tabList.scrollLeft += Math.ceil(
+                selectedTabRect.right - visibleRight,
+            );
+        }
+    }, [activeTab, revealActiveTab]);
+
     return (
         <div
+            ref={tabListRef}
             role="tablist"
             // max-w-full + overflow-x-auto, not w-full: `inline-flex` stays
             // shrink-to-fit so the desktop layout is unchanged, but the two
