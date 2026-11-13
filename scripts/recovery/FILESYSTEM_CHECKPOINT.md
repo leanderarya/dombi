@@ -103,6 +103,33 @@ durability has been tested on Linux or the hosting filesystem. Private journals
 and approvals remain operator attestations under the existing authority model,
 not cryptographic authentication against a malicious same-account operator.
 
+### ACL handling
+
+ACLs are probed explicitly rather than inferred from `listxattr`. For every entry
+the tool calls `getxattr` with `follow_symlinks=False` on
+`system.posix_acl_access`; directories are also probed for
+`system.posix_acl_default`. Descriptor-relative paths are used on Linux.
+
+| Result | Handling |
+| --- | --- |
+| `ENODATA` / `ENOATTR` | Treated as absent; inventory continues. |
+| ACL value returned | Fail closed (`acl_present`); metadata is not silently dropped. |
+| `EPERM` / `EACCES` | Fail closed (`acl_inaccessible`). |
+| `ENOTSUP` / `EOPNOTSUPP` | Fail closed (`acl_unsupported`). |
+| Missing `os.getxattr` | Fail closed (`unsupported_metadata_platform`). |
+| Any other `OSError` | Fail closed (`acl_check_failed`). |
+
+The same inventory path runs for capture, inspect/verify and recovery, so an
+ACL that appears after approval causes recovery to abort before mutation. Database
+files stay metadata-only: ACL probing reads metadata, never file contents.
+
+Remaining limitations: ACLs on symlinks are probed with no-follow semantics but
+may report unsupported/inaccessible on some filesystems, which fails closed rather
+than being ignored. Non-POSIX ACL implementations (for example NFSv4 or
+platform-specific ACL xattrs) are not detected, and a host-side ACL that is
+invisible to `getxattr` cannot be excluded. Coverage is per path; a passing sample
+does not prove the whole tree is ACL-free.
+
 Database files/sidecars are never opened for content. Their metadata-only equality
 cannot detect content changes that leave metadata unchanged. Protected state is
 compared with immediately pre-recovery state, not an old business-data snapshot.

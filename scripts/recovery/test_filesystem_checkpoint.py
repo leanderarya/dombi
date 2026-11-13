@@ -3,6 +3,7 @@
 import copy
 from contextlib import contextmanager
 import datetime as dt
+import errno
 import importlib.util
 import io
 import json
@@ -34,9 +35,18 @@ class FilesystemCheckpointTests(unittest.TestCase):
             prefix="dombi-fs-synthetic-", dir=preferred if preferred.is_dir() else temporary,
         )
         self.addCleanup(self.temporary.cleanup)
-        # macOS Python lacks listxattr; only synthetic fixtures use this adapter.
+        # macOS Python lacks listxattr/getxattr; only synthetic fixtures use these adapters.
         if not hasattr(os, "listxattr"):
             adapter = mock.patch.object(os, "listxattr", return_value=[], create=True)
+            adapter.start()
+            self.addCleanup(adapter.stop)
+        if not hasattr(os, "getxattr"):
+            absent = getattr(errno, "ENOATTR", None) or errno.ENODATA
+
+            def no_attribute(path, name, follow_symlinks=True):
+                raise OSError(absent, "no attribute")
+
+            adapter = mock.patch.object(os, "getxattr", side_effect=no_attribute, create=True)
             adapter.start()
             self.addCleanup(adapter.stop)
         base = Path(self.temporary.name)
@@ -937,6 +947,107 @@ class FilesystemCheckpointTests(unittest.TestCase):
         with self.assertRaisesRegex(fs.CheckpointError, "incomplete_journal"):
             fs.inspect(self.policy, self.checkpoint_id, self.manifest_sha)
         self.assertEqual(before, self.snapshot(self.root))
+
+
+    @staticmethod
+    def absent_acl_error():
+        return OSError(getattr(errno, "ENOATTR", None) or errno.ENODATA, "no acl")
+
+    def test_acl_absent_allows_inventory(self):
+        def missing(path, name, follow_symlinks=True):
+            raise self.absent_acl_error()
+
+        with mock.patch.object(fs.os, "getxattr", side_effect=missing):
+            self.assertIn(".", fs.inventory(self.policy, self.boundaries))
+
+    def test_acl_present_rejected(self):
+        with mock.patch.object(fs.os, "getxattr", return_value=b"\x02\x00\x00\x00"):
+            with self.assertRaisesRegex(fs.CheckpointError, "acl_present"):
+                fs.inventory(self.policy, self.boundaries)
+
+    def test_acl_inaccessible_rejected(self):
+        for code in (errno.EPERM, errno.EACCES):
+            with self.subTest(code=code):
+                def denied(path, name, follow_symlinks=True):
+                    raise OSError(code, "denied")
+
+                with mock.patch.object(fs.os, "getxattr", side_effect=denied):
+                    with self.assertRaisesRegex(fs.CheckpointError, "acl_inaccessible"):
+                        fs.inventory(self.policy, self.boundaries)
+
+    def test_acl_unsupported_rejected(self):
+        def unsupported(path, name, follow_symlinks=True):
+            raise OSError(errno.ENOTSUP, "unsupported")
+
+        with mock.patch.object(fs.os, "getxattr", side_effect=unsupported):
+            with self.assertRaisesRegex(fs.CheckpointError, "acl_unsupported"):
+                fs.inventory(self.policy, self.boundaries)
+
+    def test_acl_unexpected_error_rejected(self):
+        def failed(path, name, follow_symlinks=True):
+            raise OSError(errno.EIO, "io failure")
+
+        with mock.patch.object(fs.os, "getxattr", side_effect=failed):
+            with self.assertRaisesRegex(fs.CheckpointError, "acl_check_failed"):
+                fs.inventory(self.policy, self.boundaries)
+
+    def test_acl_default_directory_rejected(self):
+        def probe(path, name, follow_symlinks=True):
+            if name == fs.ACL_DEFAULT:
+                return b"\x02\x00\x00\x00"
+            raise self.absent_acl_error()
+
+        with mock.patch.object(fs.os, "getxattr", side_effect=probe):
+            with self.assertRaisesRegex(fs.CheckpointError, "acl_present"):
+                fs.inventory(self.policy, self.boundaries)
+
+    def test_acl_default_skipped_for_files_and_no_follow_everywhere(self):
+        calls = []
+
+        def probe(path, name, follow_symlinks=True):
+            calls.append((str(path), name, follow_symlinks))
+            raise self.absent_acl_error()
+
+        with mock.patch.object(fs.os, "getxattr", side_effect=probe):
+            fs.inventory(self.policy, self.boundaries)
+
+        access = {path for path, name, _ in calls if name == fs.ACL_ACCESS}
+        default = {path for path, name, _ in calls if name == fs.ACL_DEFAULT}
+        self.assertTrue(any(path.endswith("service.php") for path in access))
+        self.assertFalse(any(path.endswith("service.php") for path in default))
+        self.assertTrue(calls)
+        self.assertTrue(all(follow is False for _, _, follow in calls))
+
+    def test_acl_symlink_probed_without_following(self):
+        calls = []
+
+        def probe(path, name, follow_symlinks=True):
+            calls.append((str(path), name, follow_symlinks))
+            if name == fs.ACL_ACCESS and str(path).endswith("link.php"):
+                return b"\x02\x00\x00\x00"
+            raise self.absent_acl_error()
+
+        with mock.patch.object(fs.os, "getxattr", side_effect=probe):
+            with self.assertRaisesRegex(fs.CheckpointError, "acl_present"):
+                fs.inventory(self.policy, self.boundaries)
+        self.assertTrue(any(path.endswith("link.php") and follow is False
+                            for path, _, follow in calls))
+
+    def test_acl_check_preserves_database_metadata_only(self):
+        def missing(path, name, follow_symlinks=True):
+            raise self.absent_acl_error()
+
+        with mock.patch.object(fs.os, "getxattr", side_effect=missing):
+            items = fs.inventory(self.policy, self.boundaries)
+        entry = items["database/local.sqlite"]
+        self.assertNotIn("sha256", entry)
+        self.assertEqual(entry["content_integrity"], "not-verified")
+
+    def test_missing_acl_api_fails_closed(self):
+        with mock.patch.object(fs.os, "getxattr"):
+            delattr(fs.os, "getxattr")
+            with self.assertRaisesRegex(fs.CheckpointError, "unsupported_metadata_platform"):
+                fs.inventory(self.policy, self.boundaries)
 
 
 if __name__ == "__main__":

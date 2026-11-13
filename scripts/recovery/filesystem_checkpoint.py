@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from decimal import Decimal
 import datetime as dt
+import errno
 import fcntl
 import gzip
 import hashlib
@@ -39,6 +40,10 @@ EVIDENCE = (
     "host_identity", "writer_drain", "callback_hold", "runtime_identity",
     "schema_compatibility", "persistent_preservation", "capacity_quota", "authority",
 )
+ACL_ACCESS = "system.posix_acl_access"
+ACL_DEFAULT = "system.posix_acl_default"
+ACL_ABSENT = {errno.ENODATA, getattr(errno, "ENOATTR", errno.ENODATA)}
+ACL_UNSUPPORTED = {errno.ENOTSUP, getattr(errno, "EOPNOTSUPP", errno.ENOTSUP)}
 
 
 class CheckpointError(Exception):
@@ -48,6 +53,22 @@ class CheckpointError(Exception):
 def require(condition, reason):
     if not condition:
         raise CheckpointError(reason)
+
+
+def require_no_acl(path, directory):
+    require(hasattr(os, "getxattr"), "unsupported_metadata_platform")
+    for name in ((ACL_ACCESS, ACL_DEFAULT) if directory else (ACL_ACCESS,)):
+        try:
+            os.getxattr(path, name, follow_symlinks=False)
+        except OSError as error:
+            if error.errno in ACL_ABSENT:
+                continue
+            if error.errno in {errno.EPERM, errno.EACCES}:
+                raise CheckpointError("acl_inaccessible")
+            if error.errno in ACL_UNSUPPORTED:
+                raise CheckpointError("acl_unsupported")
+            raise CheckpointError("acl_check_failed")
+        raise CheckpointError("acl_present")
 
 
 @dataclass(frozen=True)
@@ -286,13 +307,14 @@ def inventory(policy, boundaries, damaged=None):
     def visit(parent, leaf, path, name):
         s = os.stat(leaf, dir_fd=parent, follow_symlinks=False)
         require(s.st_dev == root_stat.st_dev and not s.st_mode & 0o7000, "metadata_boundary")
-        require(hasattr(os, "listxattr"), "unsupported_metadata_platform")
-        attribute_path = f"/proc/self/fd/{parent}/{leaf}" if sys.platform == "linux" else path
-        require(not os.listxattr(attribute_path, follow_symlinks=False), "unsupported_xattrs_or_acl")
         kind = ("directory" if stat.S_ISDIR(s.st_mode) else
                 "file" if stat.S_ISREG(s.st_mode) else
                 "symlink" if stat.S_ISLNK(s.st_mode) else None)
         require(kind is not None and (kind != "file" or s.st_nlink == 1), "special_or_hardlink")
+        require(hasattr(os, "listxattr"), "unsupported_metadata_platform")
+        attribute_path = f"/proc/self/fd/{parent}/{leaf}" if sys.platform == "linux" else path
+        require(not os.listxattr(attribute_path, follow_symlinks=False), "unsupported_xattrs_or_acl")
+        require_no_acl(attribute_path, kind == "directory")
         entry = {
             "class": classification(name, boundaries, kind == "directory"),
             "type": kind, "uid": s.st_uid, "gid": s.st_gid,
