@@ -1,0 +1,33 @@
+name: Staging Readiness (read-only)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-readiness
+  cancel-in-progress: false
+
+jobs:
+  readiness:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install runner-only SSH password helper
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+      - name: Verify password, pinned host key and staging schema
+        env:
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
+          STAGING_DATABASE_NAME: ${{ secrets.STAGING_DATABASE_NAME }}
+        run: python3 -B scripts/ci/check-staging-readiness.py
