@@ -2,14 +2,13 @@
 """Authenticate with staging secrets and query connection identity only."""
 
 import base64
-import hashlib
 import json
 import os
-import re
-import struct
 import subprocess
 import tempfile
 from pathlib import Path
+
+from staging_transport import connection_values, pinned_key
 
 
 DATABASE_PROBE = r"""
@@ -65,44 +64,6 @@ try {
     exit(1);
 }
 """
-
-
-def pinned_key(scan, fingerprint):
-    if not re.fullmatch(r"SHA256:[A-Za-z0-9+/]{43}", fingerprint):
-        raise ValueError("Invalid fingerprint format")
-    matches = set()
-    for line in scan.splitlines():
-        fields = line.split()
-        if len(fields) != 3 or fields[1] != "ssh-ed25519":
-            continue
-        try:
-            blob = base64.b64decode(fields[2], validate=True)
-        except ValueError:
-            continue
-        expected_prefix = struct.pack(">I", 11) + b"ssh-ed25519" + struct.pack(">I", 32)
-        if len(blob) != 51 or not blob.startswith(expected_prefix):
-            continue
-        digest = "SHA256:" + base64.b64encode(hashlib.sha256(blob).digest()).decode().rstrip("=")
-        if digest == fingerprint:
-            matches.add(fields[2])
-    if len(matches) != 1:
-        raise ValueError("Pinned ED25519 key not found")
-    return matches.pop()
-
-
-def connection_values(env):
-    values = [env.get("HOSTINGER_SSH_" + name, "") for name in
-              ("HOST", "USER", "PASSWORD", "PORT", "FINGERPRINT")]
-    host, user, password, port, fingerprint = values
-    database = env.get("STAGING_DATABASE_NAME", "")
-    if (not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.-]*", host) or
-            not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.-]*", user) or
-            not port.isascii() or not port.isdigit() or not 1 <= int(port) <= 65535 or
-            not password or "\x00" in password or not database or
-            re.search(r"[;\x00-\x1f]", database) or
-            not re.fullmatch(r"SHA256:[A-Za-z0-9+/]{43}", fingerprint)):
-        raise ValueError("Invalid or missing staging secret")
-    return host, user, password, port, fingerprint, database
 
 
 def main():

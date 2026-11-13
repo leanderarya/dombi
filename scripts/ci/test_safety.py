@@ -23,9 +23,15 @@ class StagingCodeOnlySafetyTests(unittest.TestCase):
                       'group: deploy-staging', 'cancel-in-progress: false',
                       "require('./scripts/ci/select-release.cjs')", 'artifact-ids:',
                       'scripts/ci/release.py verify', 'scripts/ci/release.py extract',
-                      'fingerprint: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}',
+                      'HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}',
                       'scripts/ci/health.py', 'if: failure()']:
             self.assertIn(guard, workflow)
+        self.assertNotIn('appleboy/', workflow)
+        for phase in ['prepare', 'upload', 'deploy']:
+            self.assertIn('scripts/ci/staging_transport.py ' + phase, workflow)
+        for name in ['HOST', 'USER', 'PASSWORD', 'PORT', 'FINGERPRINT']:
+            binding = f'HOSTINGER_SSH_{name}: ${{{{ secrets.HOSTINGER_SSH_{name} }}}}'
+            self.assertEqual(workflow.count(binding), 3)
 
 
 class ProductionSafetyTests(unittest.TestCase):
