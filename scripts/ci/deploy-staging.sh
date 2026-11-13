@@ -9,7 +9,7 @@ sha="${2:?full SHA required}"
 root="$HOME/domains/dombicenter.com/public_html/staging"
 [[ -d "$root" && ! -L "$root" && "$(realpath "$root")" == "$root" ]]
 [[ -f "$root/.env" && ! -L "$root/.env" ]]
-for tool in php python3 rsync flock tar; do command -v "$tool" >/dev/null; done
+for tool in php python3 rsync flock tar find mktemp rm rmdir; do command -v "$tool" >/dev/null; done
 cd "$root"
 chmod 700 "$transfer"
 
@@ -51,16 +51,56 @@ for name in names:
         raise SystemExit('Non-regular or hard-linked deployment destination rejected')
 PY
 
+list_dir=
+cleanup_deployment_lists() {
+    local status="${1:-$?}"
+    if [[ -n "$list_dir" ]]; then
+        rm -f -- "$list_dir/links" "$list_dir/public" || return 1
+        rmdir -- "$list_dir" || return 1
+        list_dir=
+    fi
+    return "$status"
+}
+chain_list_cleanup() {
+    local signal="$1" finish="$2" previous action=:
+    previous="$(trap -p "$signal")"
+    if [[ -n "$previous" ]]; then
+        # Decode only Bash's own quoted trap representation, not external input.
+        eval "set -- ${previous#trap -- }"
+        action="${1:-:}"
+    fi
+    # Both branches preserve the incoming status for the existing trap action.
+    trap -- "deployment_lists_status=\$?; if cleanup_deployment_lists \"\$deployment_lists_status\"; then $action; else $action; fi$finish" "$signal"
+}
+chain_list_cleanup EXIT '; exit "$deployment_lists_status"'
+chain_list_cleanup HUP '; exit 129'
+chain_list_cleanup INT '; exit 130'
+chain_list_cleanup TERM '; exit 143'
+list_dir="$(mktemp -d "$transfer/.find-lists.XXXXXXXX")"
+(umask 077; set -o noclobber; : > "$list_dir/links"; : > "$list_dir/public")
+
 managed=(app config routes resources/views database/migrations vendor public/build)
 for path in bootstrap public resources database; do [[ ! -L "$path" ]]; done
 for path in "${managed[@]}"; do
     [[ ! -L "$path" ]]
     if [[ -e "$path" ]]; then
         # Refuse linked code rather than following links into protected state.
+        if ! find "$path" -type l -print0 > "$list_dir/links"; then
+            echo 'Managed symlink enumeration failed' >&2
+            exit 1
+        fi
         while IFS= read -r -d '' link; do
-            [[ "$path" == vendor && -f "$link" && "$(realpath "$link")" == "$root/vendor/"* ]]
-        done < <(find "$path" -type l -print0)
-        test -z "$(find "$path" -type f -links +1 -print -quit)"
+            if ! [[ "$path" == vendor && -f "$link" && "$(realpath "$link")" == "$root/vendor/"* ]]; then
+                echo 'Managed symlink destination rejected' >&2
+                exit 1
+            fi
+        done < "$list_dir/links"
+        if ! find "$path" -type f -links +1 -print0 -quit > "$list_dir/links"; then
+            echo 'Managed hard-link enumeration failed' >&2
+            exit 1
+        fi
+        test -f "$list_dir/links"
+        test ! -s "$list_dir/links"
     fi
 done
 test ! -L bootstrap/cache
@@ -69,10 +109,15 @@ backup=()
 for path in "${managed[@]}" artisan composer.json composer.lock bootstrap/app.php bootstrap/providers.php; do
     [[ ! -e "$path" ]] || backup+=("$path")
 done
+if ! find "$transfer/runtime/public" -type f -print0 > "$list_dir/public"; then
+    echo 'Public backup enumeration failed' >&2
+    exit 1
+fi
 while IFS= read -r -d '' path; do
     relative="${path#"$transfer/runtime/"}"
     [[ "$relative" == public/build/* || ! -e "$relative" ]] || backup+=("$relative")
-done < <(find "$transfer/runtime/public" -type f -print0)
+done < "$list_dir/public"
+cleanup_deployment_lists
 (umask 077; tar -czf "$transfer/before-code.tar.gz" "${backup[@]}")
 sha256sum "$transfer/before-code.tar.gz" > "$transfer/before-code.sha256"
 
