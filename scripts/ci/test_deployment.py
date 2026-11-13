@@ -13,7 +13,7 @@ import test_release
 @unittest.skipUnless(all(shutil.which(tool) for tool in ('rsync', 'flock', 'realpath', 'sha256sum')),
                      'Linux staging filesystem tools required; exercised on GitHub runner')
 class DeploymentTests(unittest.TestCase):
-    def exercise(self, fail_migration=False):
+    def exercise(self, fail_discovery=False):
         fixture = test_release.ReleaseTests()
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
@@ -49,33 +49,50 @@ class DeploymentTests(unittest.TestCase):
             if name in ('vendor', 'app', 'public/build'):
                 (path / 'obsolete.php').write_text('obsolete code')
         (root / 'public/storage').symlink_to(root / 'storage/app/public', target_is_directory=True)
+        uploads = root / 'storage/app/public'
+        uploads.chmod(0o755)
+        uploads_before = (stat.S_IMODE(uploads.stat().st_mode), uploads.stat().st_uid, uploads.stat().st_gid)
         tools = fixture.root / 'tools'
         tools.mkdir()
         php = tools / 'php'
         php.write_text('''#!/usr/bin/env bash
 set -eu
+printf '%s\\n' "$*" >> "$COMMAND_LOG"
 if [[ "$1" == -r ]]; then exit 0; fi
 case "$2" in
   env) echo 'The application environment is [staging].' ;;
   down) echo '{}' > storage/framework/down ;;
   up) rm storage/framework/down ;;
   package:discover)
+    test "${FAIL_DISCOVERY:-0}" != 1
     printf '<?php return [];\\n' > "$APP_PACKAGES_CACHE"
     printf '<?php return [];\\n' > "$APP_SERVICES_CACHE" ;;
-  migrate) test "${FAIL_MIGRATION:-0}" != 1 ;;
+  config:clear|route:clear|view:clear) ;;
+  *) echo 'Unexpected Artisan command rejected by fixture' >&2; exit 95 ;;
 esac
 ''')
         php.chmod(0o755)
-        before = {name: ((root / name).read_bytes(), stat.S_IMODE((root / name).stat().st_mode)) for name in protected}
+        before = {name: ((root / name).read_bytes(), stat.S_IMODE((root / name).stat().st_mode),
+                         (root / name).stat().st_uid, (root / name).stat().st_gid) for name in protected}
         env = dict(os.environ, HOME=str(home), PATH=str(tools) + os.pathsep + os.environ['PATH'],
-                   STAGING_DB_DATABASE='fixture_only', FAIL_MIGRATION='1' if fail_migration else '0')
+                   STAGING_DB_DATABASE='fixture_only', FAIL_DISCOVERY='1' if fail_discovery else '0',
+                   COMMAND_LOG=str(fixture.root / 'php-commands.log'))
         result = subprocess.run(['bash', str(Path(__file__).with_name('deploy-staging.sh')), str(transfer), sha],
                                 env=env, text=True, capture_output=True)
-        self.assertEqual(result.returncode != 0, fail_migration, result.stdout + result.stderr)
+        self.assertEqual(result.returncode != 0, fail_discovery, result.stdout + result.stderr)
+        commands = [line.split()[1] for line in Path(env['COMMAND_LOG']).read_text().splitlines()
+                    if line.startswith('artisan ')]
+        expected_commands = ['env', 'down', 'package:discover']
+        if not fail_discovery:
+            expected_commands += ['config:clear', 'route:clear', 'view:clear', 'up']
+        self.assertEqual(commands, expected_commands)
         for name, expected in before.items():
-            self.assertEqual(((root / name).read_bytes(), stat.S_IMODE((root / name).stat().st_mode)), expected)
+            self.assertEqual(((root / name).read_bytes(), stat.S_IMODE((root / name).stat().st_mode),
+                              (root / name).stat().st_uid, (root / name).stat().st_gid), expected)
+        self.assertEqual((stat.S_IMODE(uploads.stat().st_mode), uploads.stat().st_uid, uploads.stat().st_gid), uploads_before)
         self.assertTrue((root / 'public/storage').is_symlink())
-        self.assertEqual((root / 'storage/framework/down').exists(), fail_migration)
+        self.assertEqual((root / 'storage/framework/down').exists(), fail_discovery)
+        self.assertEqual((transfer / 'deployed-release.json').exists(), not fail_discovery)
         for name in ('app/obsolete.php', 'vendor/obsolete.php', 'public/build/obsolete.php'):
             self.assertFalse((root / name).exists())
         self.assertEqual(stat.S_IMODE(transfer.stat().st_mode), 0o700)
@@ -88,8 +105,8 @@ esac
     def test_preserve_persistent_files_and_permissions(self):
         self.exercise()
 
-    def test_migration_failure_stays_closed_without_data_changes(self):
-        self.exercise(fail_migration=True)
+    def test_post_copy_failure_stays_closed_without_data_changes(self):
+        self.exercise(fail_discovery=True)
 
 
 if __name__ == '__main__':
