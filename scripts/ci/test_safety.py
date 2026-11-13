@@ -1,8 +1,31 @@
 from pathlib import Path
+import re
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+class StagingCodeOnlySafetyTests(unittest.TestCase):
+    def test_exact_infrastructure_artisan_allowlist(self):
+        script = (ROOT / 'scripts/ci/deploy-staging.sh').read_text()
+        commands = re.findall(r'\bphp\s+artisan\s+([\w:-]+)', script)
+        self.assertEqual(commands, ['env', 'down', 'package:discover',
+                                    'config:clear', 'route:clear', 'view:clear', 'up'])
+        for forbidden in [r'\bartisan\s+migrate\b', r'\bartisan\s+db:seed\b',
+                          r'\bartisan\s+\S*(?:payment|refund)\S*', r'\bartisan\s+db:wipe\b']:
+            self.assertNotRegex(script, forbidden)
+
+    def test_workflow_retains_trusted_transport_and_has_no_extra_artisan_or_http_calls(self):
+        workflow = (ROOT / '.github/workflows/deploy-staging.yml').read_text()
+        self.assertNotRegex(workflow, r'\bartisan\b|\bcurl\b|\bwget\b|api/health')
+        for guard in ["vars.STAGING_DEPLOY_ENABLED == 'true'", 'environment: staging',
+                      'group: deploy-staging', 'cancel-in-progress: false',
+                      "require('./scripts/ci/select-release.cjs')", 'artifact-ids:',
+                      'scripts/ci/release.py verify', 'scripts/ci/release.py extract',
+                      'fingerprint: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}',
+                      'scripts/ci/health.py', 'if: failure()']:
+            self.assertIn(guard, workflow)
 
 
 class ProductionSafetyTests(unittest.TestCase):

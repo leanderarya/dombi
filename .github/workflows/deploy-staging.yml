@@ -126,7 +126,7 @@ jobs:
           receipt['status'] = 'staging-health-and-assets-passed'
           pathlib.Path('staging-acceptance.json').write_text(json.dumps(receipt, indent=2) + '\n')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
-              summary.write(f"Staging PASS: `{receipt['release_sha']}`, artifact `{receipt['artifact_id']}`, SHA-256 `{receipt['sha256']}`. Both health endpoints and every built asset matched. Runtime worker adoption and business smoke are not proved.\n")
+              summary.write(f"Staging code-only PASS: `{receipt['release_sha']}`, artifact `{receipt['artifact_id']}`, SHA-256 `{receipt['sha256']}`. JSON /up and every built asset matched. No migrations, seeders or payment operations were run. Database/cache/storage health, session pages, runtime worker adoption and business smoke are not proved.\n")
           PY
       - uses: actions/upload-artifact@v4
         with:

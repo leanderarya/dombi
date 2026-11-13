@@ -105,8 +105,6 @@ done
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear
-php artisan migrate --force --no-interaction
-php artisan payments:verify-cutover
 cp "$transfer/runtime/release.json" "$transfer/deployed-release.json"
 php artisan up
 echo "Staging code installed: $sha; HTTP acceptance follows on the runner."

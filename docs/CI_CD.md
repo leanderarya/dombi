@@ -47,19 +47,27 @@ pinned artifact, recovery tools, backups, runbook or worktree with this pipeline
    refreshed, not application cache data. Symlinked/shared code layouts require review,
    not bypassing the rejection. The server `.git` index is intentionally not moved and
    is not the deployed-identity source; retain artifact/receipt identity instead.
-7. Staging migration/payment verification failures leave maintenance held. No automatic
-   `up` trap or migration rollback. After successful CLI verification, staging is brought
-   up for HTTP acceptance. Both `/up` and `/api/health` must be unredirected 2xx, with
-   database/cache/storage healthy; every built asset and manifest must match its SHA-256.
-   Public `/` and `/login` must also return unredirected Inertia HTML pages. These are
-   unauthenticated route probes, not login, payment or Owner business acceptance.
-   Scheduler is informational under the existing health contract. A health failure after
-   `up` does not automatically close staging again; investigate before accepting/retrying.
-   The health endpoint itself performs staging cache/storage probes. No production probe
-   is performed. HTTP health and disk hashes do not prove PHP worker-pool adoption.
+7. Staging deployment is code-only: no migration, seeder, payment or refund command is
+   invoked. Schema compatibility with the selected artifact must be established before
+   activation; this workflow cannot repair an incompatible schema. Post-copy CLI failures
+   leave maintenance held. No automatic `up` trap or rollback is added. After successful
+   cache/discovery refresh, staging is brought up for HTTP acceptance. JSON `/up` must
+   return unredirected 2xx with `status: up`; every built asset and manifest must match
+   its SHA-256. The HTTP probe allows only `/up` and static `/build/` asset paths.
+   `/api/health` is excluded because it writes cache/storage. `/`, `/login` and business
+   pages are excluded because their web middleware may persist sessions even for GETs.
+   No cookies, login, authenticated routes or application-session configuration changes
+   are used. The installed health route must remain outside session middleware with no
+   write-producing health listeners; verify that contract before activation. Database,
+   cache, storage, scheduler, page rendering and business health are not proved by these
+   probes. A health failure after `up` does not automatically close staging again;
+   investigate before accepting/retrying. No production probe is performed. HTTP health
+   and disk hashes do not prove complete PHP worker-pool adoption.
 8. Only complete success issues `staging-acceptance-<run>-<attempt>` binding CI run,
-   release artifact ID/origin run, full SHA and tarball checksum. This is health/asset
-   acceptance, not human business acceptance. Run summary is concise and secret-free.
+   release artifact ID/origin run, full SHA and tarball checksum. The existing receipt
+   status `staging-health-and-assets-passed` now means JSON liveness and static-asset
+   acceptance only, not dependency/page/business acceptance. Run summary states that
+   scope explicitly and is secret-free.
 
 ## Required GitHub configuration
 
@@ -83,8 +91,8 @@ pinned artifact, recovery tools, backups, runbook or worktree with this pipeline
 - Reuse staging environment secret `STAGING_DATABASE_NAME`: the independently verified staging
   schema name (not production). Confirm the effective host/schema/user isolation, PHP
   extensions, Python >=3.9, rsync, flock, tar, sha256sum, writable existing Laravel runtime
-  directories, Linux realpath/stat, private transfer-path ownership/free space and the canonical payment
-  verifier prerequisites before enabling deployment. No server repair/install is done.
+  directories, Linux realpath/stat and private transfer-path ownership/free space before
+  enabling deployment. No server repair/install is done.
   The private transfer parent must be operator-owned, real and 0700; a missing parent
   is created privately only by a future authorized staging run. An unexpected existing
   parent is rejected, not repaired. Each run/attempt directory is created exclusively
@@ -153,9 +161,25 @@ Required production-only gates, still **unverified/NO-GO**:
    a new payment canary into the accepted RC's view-only acceptance scope.
 
 For a failed staging deployment, preserve the run-owned transfer, before-code checksum,
-maintenance state and failure output. The before-code archive is not a DB backup and
-cannot undo migrations. Review schema compatibility before separately authorizing any
-code restore. Existing production recovery scripts are never a staging rollback tool.
+maintenance state and failure output. The before-code archive is not a DB backup. No
+schema rollback is performed; schema compatibility remains required before separately
+authorizing any code restore. Existing production recovery scripts are never a staging
+rollback tool.
+
+## Previously approved artifact compatibility
+
+The code-only deployment adapter can consume the existing schema-1 release format;
+artifact selection and archive/inventory verification are unchanged. The selected
+candidate remains artifact `14015610232`, from successful `develop` push CI
+`43377554794`, commit `4ebe5e1da608b0c7404e2667cb99742747db4796`, with
+`release.tar.gz` SHA-256
+`5b5a54453badc86134e890cb4f5448a80dce1fc1b391eec03ec41284988225d5`.
+It was generated by the earlier Quality Gate, not by this revised deployment workflow.
+The deployment workflow uses reviewed helpers from `develop` to verify and install
+that selected older artifact, without rebuilding it. Merge of the code-only change,
+fresh preflight of schema/recovery/persistent paths and a separate controlled deployment
+authorization are still required. This PR does not activate the gate or prove a live
+deployment, database compatibility or business acceptance.
 
 ## Verification scope
 
