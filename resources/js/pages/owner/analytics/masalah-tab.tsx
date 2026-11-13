@@ -3,9 +3,9 @@ import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
-import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatDate } from '@/lib/format';
+import { AnalyticsIssuesSkeleton } from './loading-skeletons';
 
 interface Props {
     reports?: any;
@@ -40,7 +40,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
     };
 
     if (!reports) {
-        return <SkeletonPage />;
+        return <AnalyticsIssuesSkeleton />;
     }
 
     if (reports.data.length === 0) {

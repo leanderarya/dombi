@@ -1,10 +1,12 @@
 import { createInertiaApp, router } from '@inertiajs/react';
+import type { ResolvedComponent } from '@inertiajs/react';
 import { Component, lazy, Suspense, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
+import { applyOwnerLayout } from '@/lib/owner-page-layout';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
 
@@ -87,7 +89,11 @@ createInertiaApp({
             throw new Error(`Page not found: ${name}`);
         }
 
-        return page().then(({ default: component }) => component);
+        return page().then(({ default: component }) =>
+            name.startsWith('owner/')
+                ? applyOwnerLayout(component as ResolvedComponent)
+                : component,
+        );
     },
     setup({ el, App, props }) {
         const devValue = props.initialPage.props.dev;

@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerSegmentedTabs from '@/components/owner/owner-segmented-tabs';
 import { SkeletonPage } from '@/components/ui/skeleton';
@@ -35,24 +35,50 @@ const TABS = [
 type TabKey = (typeof TABS)[number]['key'];
 
 export default function FinanceIndex(props: any) {
-    const [activeTab, setActiveTab] = useState<TabKey>(() =>
-        getInitialOwnerTab(
-            TABS.map((tab) => tab.key),
-            'tagihan',
-            props.tab,
-        ),
+    const [requestedTab, setRequestedTab] = useState<TabKey | null>(null);
+    const visitSequence = useRef(0);
+    const pageTab = getInitialOwnerTab(
+        TABS.map((tab) => tab.key),
+        'tagihan',
+        props.tab,
     );
+    const activeTab = requestedTab ?? pageTab;
 
     const handleTabChange = (tab: TabKey) => {
-        setActiveTab(tab);
+        if (tab === activeTab) {
+            return;
+        }
+
+        const visit = ++visitSequence.current;
+        setRequestedTab(tab);
         router.get(
             '/owner/finance',
             { tab },
-            { preserveState: true, replace: true },
+            {
+                preserveState: true,
+                replace: true,
+                onFinish: () => {
+                    if (visit === visitSequence.current) {
+                        setRequestedTab(null);
+                    }
+                },
+            },
         );
     };
 
-    if (!props.kpis && !props.payments && !props.accounts && !props.refunds) {
+    const hasActiveTabData =
+        (activeTab === 'tagihan' && props.kpis && props.outlets) ||
+        (activeTab === 'pembayaran' &&
+            props.payments &&
+            props.paymentKpis &&
+            props.statusFilter !== undefined) ||
+        (activeTab === 'rekening' && props.accounts !== undefined) ||
+        (activeTab === 'refund' &&
+            props.refunds &&
+            props.refundCounts &&
+            props.refundFilter !== undefined);
+
+    if (requestedTab !== null || !hasActiveTabData) {
         return (
             <OwnerPageShell
                 title="Keuangan"
@@ -72,6 +98,7 @@ export default function FinanceIndex(props: any) {
                 tabs={TABS.map((t) => ({ key: t.key, label: t.label }))}
                 activeTab={activeTab}
                 onChange={(key) => handleTabChange(key as TabKey)}
+                revealActiveTab
                 className="mb-5"
             />
             <p

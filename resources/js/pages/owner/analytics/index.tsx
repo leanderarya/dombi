@@ -6,6 +6,11 @@ import { getInitialOwnerTab } from '../tab-state';
 import { AuditTrailTab } from './audit-tab';
 import { DashboardTab } from './dashboard-tab';
 import { LaporanTab } from './laporan-tab';
+import {
+    AnalyticsAuditSkeleton,
+    AnalyticsDashboardSkeleton,
+    AnalyticsIssuesSkeleton,
+} from './loading-skeletons';
 import { MasalahTab } from './masalah-tab';
 
 const TABS = [
@@ -51,12 +56,23 @@ export default function AnalyticsIndex(props: Props) {
     };
 
     if (!props.kpis && !props.movements && !props.summary && !props.reports) {
+        const loadingContent =
+            activeTab === 'dashboard' ? (
+                <AnalyticsDashboardSkeleton />
+            ) : activeTab === 'audit' ? (
+                <AnalyticsAuditSkeleton />
+            ) : activeTab === 'masalah' ? (
+                <AnalyticsIssuesSkeleton />
+            ) : (
+                <SkeletonPage />
+            );
+
         return (
             <OwnerPageShell
                 title="Analitik"
                 subtitle="Analitik performa bisnis"
             >
-                <SkeletonPage />
+                {loadingContent}
             </OwnerPageShell>
         );
     }

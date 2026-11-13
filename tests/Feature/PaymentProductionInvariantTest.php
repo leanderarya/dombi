@@ -7,6 +7,7 @@ use App\Enums\PaymentAttemptVerificationStatus;
 use App\Models\Order;
 use App\Models\PaymentAttempt;
 use App\Models\PaymentTransaction;
+use App\Models\PaymentWebhookLog;
 use App\Models\RefundObligation;
 use App\Services\DokuService;
 use App\Services\NotificationService;
@@ -33,6 +34,7 @@ class PaymentProductionInvariantTest extends TestCase
 
     public function test_duplicate_success_notifications_do_not_create_duplicate_paid_attempts(): void
     {
+        Http::fake();
         $order = Order::factory()->create(['payment_status' => 'pending']);
         PaymentTransaction::create([
             'order_id' => $order->id,
@@ -53,10 +55,14 @@ class PaymentProductionInvariantTest extends TestCase
         $this->assertDatabaseCount('payment_transactions', 1);
         $this->assertSame('pending', $order->fresh()->payment_status);
         $this->assertSame(0, PaymentAttempt::where('order_id', $order->id)->count());
+        $this->assertSame('pending', PaymentTransaction::where('order_id', $order->id)->sole()->status);
+        $this->assertSame(2, PaymentWebhookLog::where('invoice_number', $order->order_code)->where('error', 'invoice_namespace_mismatch')->count());
+        Http::assertNothingSent();
     }
 
     public function test_legacy_synthesized_attempt_never_fulfils_from_webhook_success(): void
     {
+        Http::fake();
         $order = Order::factory()->create(['payment_status' => 'pending']);
         PaymentTransaction::create([
             'order_id' => $order->id,
@@ -73,14 +79,21 @@ class PaymentProductionInvariantTest extends TestCase
 
         $this->assertSame(0, PaymentAttempt::where('order_id', $order->id)->count());
         $this->assertSame('pending', $order->fresh()->payment_status);
+        $this->assertSame('pending', PaymentTransaction::where('order_id', $order->id)->sole()->status);
+        $this->assertDatabaseHas('payment_webhook_logs', [
+            'invoice_number' => $order->order_code,
+            'error' => 'invoice_namespace_mismatch',
+        ]);
+        Http::assertNothingSent();
     }
 
     public function test_success_with_amount_mismatch_does_not_settle_order(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $invoiceNumber = $this->newInvoiceNumber('amount-mismatch-'.$order->id);
         PaymentTransaction::create([
             'order_id' => $order->id,
-            'doku_order_id' => $order->order_code,
+            'doku_order_id' => $invoiceNumber,
             'payment_method' => 'qris',
             'amount' => $order->total,
             'status' => 'pending',
@@ -88,11 +101,11 @@ class PaymentProductionInvariantTest extends TestCase
 
         PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'mismatch-'.$order->id,
-            'invoice_number' => $order->order_code, 'merchant_request_id' => 'mismatch-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'mismatch-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
         ]);
         app(DokuService::class)->handleWebhook([
-            'order' => ['invoice_number' => $order->order_code],
+            'order' => ['invoice_number' => $invoiceNumber],
             'transaction' => ['status' => 'SUCCESS', 'amount' => 10000],
         ]);
 
@@ -106,9 +119,10 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_order_payment_status_projects_from_successful_attempt_state(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
+        $invoiceNumber = $this->newInvoiceNumber('projection-'.$order->id);
         $transaction = PaymentTransaction::create([
             'order_id' => $order->id,
-            'doku_order_id' => $order->order_code,
+            'doku_order_id' => $invoiceNumber,
             'payment_method' => 'qris',
             'amount' => $order->total,
             'status' => 'pending',
@@ -117,7 +131,7 @@ class PaymentProductionInvariantTest extends TestCase
         PaymentAttempt::create([
             'order_id' => $order->id,
             'attempt_key' => 'projection-'.$order->id,
-            'invoice_number' => $order->order_code,
+            'invoice_number' => $invoiceNumber,
             'merchant_request_id' => 'projection-request-'.$order->id,
             'amount_snapshot' => $order->total,
             'currency_snapshot' => 'IDR',
@@ -154,15 +168,22 @@ class PaymentProductionInvariantTest extends TestCase
 
     public function test_invoice_without_canonical_attempt_cannot_settle_order(): void
     {
+        $invoiceNumber = $this->newInvoiceNumber('missing-attempt');
+        Http::fake();
         $order = Order::factory()->create(['payment_status' => 'pending']);
 
         app(DokuService::class)->handleWebhook([
-            'order' => ['invoice_number' => 'INV-NO-ATTEMPT'],
+            'order' => ['invoice_number' => $invoiceNumber],
             'transaction' => ['status' => 'SUCCESS'],
         ]);
 
         $this->assertSame('pending', $order->fresh()->payment_status);
-        $this->assertDatabaseMissing('payment_transactions', ['doku_order_id' => 'INV-NO-ATTEMPT']);
+        $this->assertDatabaseMissing('payment_transactions', ['doku_order_id' => $invoiceNumber]);
+        $this->assertDatabaseHas('payment_webhook_logs', [
+            'invoice_number' => $invoiceNumber,
+            'error' => 'canonical_attempt_missing',
+        ]);
+        Http::assertNothingSent();
     }
 
     public function test_duplicate_late_success_webhooks_create_one_refund_obligation_for_attempt(): void
@@ -172,20 +193,21 @@ class PaymentProductionInvariantTest extends TestCase
             'payment_status' => 'pending',
             'total' => 50000,
         ]);
+        $invoiceNumber = $this->newInvoiceNumber('late-'.$order->id);
         PaymentTransaction::create([
             'order_id' => $order->id,
-            'doku_order_id' => $order->order_code,
+            'doku_order_id' => $invoiceNumber,
             'payment_method' => 'qris',
             'amount' => $order->total,
             'status' => 'pending',
         ]);
         PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'late-'.$order->id,
-            'invoice_number' => $order->order_code, 'merchant_request_id' => 'late-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'late-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
         ]);
         $payload = [
-            'order' => ['invoice_number' => $order->order_code],
+            'order' => ['invoice_number' => $invoiceNumber],
             'transaction' => ['status' => 'SUCCESS', 'amount' => 50000],
         ];
         $service = app(DokuService::class);
@@ -203,9 +225,10 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_status_sync_reads_amount_from_order_payload_and_marks_paid(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $invoiceNumber = $this->newInvoiceNumber('sync-order-amount-'.$order->id);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'sync-order-amount-'.$order->id,
-            'invoice_number' => 'SYNC-ORDER-AMOUNT', 'merchant_request_id' => 'sync-order-amount-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'sync-order-amount-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
         ]);
 
@@ -228,9 +251,10 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_status_sync_accepts_float_amount_from_provider(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $invoiceNumber = $this->newInvoiceNumber('sync-float-amount-'.$order->id);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'sync-float-amount-'.$order->id,
-            'invoice_number' => 'SYNC-FLOAT-AMOUNT', 'merchant_request_id' => 'sync-float-amount-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'sync-float-amount-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
         ]);
 
@@ -250,14 +274,15 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_webhook_success_reads_amount_from_order_payload(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $invoiceNumber = $this->newInvoiceNumber('webhook-order-amount-'.$order->id);
         PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'webhook-order-amount-'.$order->id,
-            'invoice_number' => 'WEBHOOK-ORDER-AMOUNT', 'merchant_request_id' => 'webhook-order-amount-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'webhook-order-amount-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
         ]);
 
         app(DokuService::class)->handleWebhook([
-            'order' => ['invoice_number' => 'WEBHOOK-ORDER-AMOUNT', 'amount' => 50000, 'currency' => 'IDR'],
+            'order' => ['invoice_number' => $invoiceNumber, 'amount' => 50000, 'currency' => 'IDR'],
             'transaction' => ['status' => 'SUCCESS'],
         ]);
 
@@ -269,16 +294,17 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_status_sync_queries_documented_check_status_endpoint(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $invoiceNumber = $this->newInvoiceNumber('endpoint-'.$order->id);
 
         Http::fake(['*/orders/v1/status/*' => Http::response([
-            'order' => ['invoice_number' => 'ENDPOINT-1', 'amount' => 50000],
+            'order' => ['invoice_number' => $invoiceNumber, 'amount' => 50000],
             'transaction' => ['status' => 'PENDING'],
         ])]);
 
-        app(DokuService::class)->checkStatus($order->forceFill(['doku_order_id' => 'ENDPOINT-1']));
+        app(DokuService::class)->checkStatus($order->forceFill(['doku_order_id' => $invoiceNumber]));
 
         Http::assertSent(fn ($request) => $request->method() === 'GET'
-            && str_ends_with($request->url(), '/orders/v1/status/ENDPOINT-1'));
+            && str_ends_with($request->url(), '/orders/v1/status/'.$invoiceNumber));
         Http::assertNotSent(fn ($request) => str_contains($request->url(), '/checkout/v1/payment/'));
     }
 
@@ -287,21 +313,22 @@ class PaymentProductionInvariantTest extends TestCase
         config(['doku.client_id' => 'test-client', 'doku.api_key' => 'test-key', 'doku.base_url' => 'https://api-sandbox.doku.com']);
 
         $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $invoiceNumber = $this->newInvoiceNumber('signature-'.$order->id);
         $sent = [];
 
-        Http::fake(['*/orders/v1/status/*' => function ($request) use (&$sent) {
+        Http::fake(['*/orders/v1/status/*' => function ($request) use (&$sent, $invoiceNumber) {
             $sent[] = $request;
 
             return Http::response([
-                'order' => ['invoice_number' => 'SIG-1', 'amount' => 50000],
+                'order' => ['invoice_number' => $invoiceNumber, 'amount' => 50000],
                 'transaction' => ['status' => 'PENDING'],
             ]);
         }]);
 
-        app(DokuService::class)->checkStatus($order->forceFill(['doku_order_id' => 'SIG-1']));
+        app(DokuService::class)->checkStatus($order->forceFill(['doku_order_id' => $invoiceNumber]));
 
         $request = $sent[0];
-        $endpoint = '/orders/v1/status/SIG-1';
+        $endpoint = '/orders/v1/status/'.$invoiceNumber;
         $timestamp = $request->header('Request-Timestamp')[0];
         $requestId = $request->header('Request-Id')[0];
 
@@ -325,9 +352,10 @@ class PaymentProductionInvariantTest extends TestCase
             'total' => 50000,
             'confirmation_expires_at' => now()->addMinutes(30),
         ]);
+        $invoiceNumber = $this->newInvoiceNumber('due-date-'.$order->id);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'due-date-'.$order->id,
-            'invoice_number' => 'DUE-DATE-1', 'merchant_request_id' => 'due-date-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'due-date-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
         ]);
 
@@ -353,9 +381,10 @@ class PaymentProductionInvariantTest extends TestCase
             'total' => 50000,
             'confirmation_expires_at' => now()->addMinutes(12),
         ]);
+        $invoiceNumber = $this->newInvoiceNumber('due-date-cap-'.$order->id);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'due-date-cap-'.$order->id,
-            'invoice_number' => 'DUE-DATE-2', 'merchant_request_id' => 'due-date-cap-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'due-date-cap-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
         ]);
 
@@ -372,9 +401,10 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_status_sync_treats_order_expired_as_terminal_expiry(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $invoiceNumber = $this->newInvoiceNumber('order-expired-'.$order->id);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'order-expired-'.$order->id,
-            'invoice_number' => 'ORDER-EXPIRED-1', 'merchant_request_id' => 'order-expired-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'order-expired-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
             'creation_state' => 'created',
         ]);
@@ -400,9 +430,10 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_status_sync_keeps_generated_order_pending(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending', 'total' => 50000]);
+        $invoiceNumber = $this->newInvoiceNumber('order-generated-'.$order->id);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'order-generated-'.$order->id,
-            'invoice_number' => 'ORDER-GENERATED-1', 'merchant_request_id' => 'order-generated-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'order-generated-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
         ]);
 
@@ -420,9 +451,10 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_duplicate_refund_request_returns_null_without_second_obligation(): void
     {
         $order = Order::factory()->paid()->create(['total' => 50000]);
+        $invoiceNumber = $this->newInvoiceNumber('refund-'.$order->id);
         PaymentTransaction::create([
             'order_id' => $order->id,
-            'doku_order_id' => 'REFUND-'.$order->id,
+            'doku_order_id' => $invoiceNumber,
             'payment_method' => 'qris',
             'amount' => $order->total,
             'status' => 'paid',
@@ -430,7 +462,7 @@ class PaymentProductionInvariantTest extends TestCase
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id,
             'attempt_key' => 'refund-'.$order->id,
-            'invoice_number' => 'REFUND-'.$order->id,
+            'invoice_number' => $invoiceNumber,
             'merchant_request_id' => 'refund-request-'.$order->id,
             'amount_snapshot' => $order->total,
             'currency_snapshot' => 'IDR',
@@ -449,10 +481,11 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_manual_paid_without_authoritative_amount_requires_review_and_cannot_fulfil(): void
     {
         $order = Order::factory()->create(['payment_status' => 'pending']);
+        $invoiceNumber = $this->newInvoiceNumber('manual-'.$order->id);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id,
             'attempt_key' => 'manual-'.$order->id,
-            'invoice_number' => $order->order_code,
+            'invoice_number' => $invoiceNumber,
             'merchant_request_id' => 'manual-request-'.$order->id,
             'amount_snapshot' => $order->total,
             'currency_snapshot' => 'IDR',
@@ -470,14 +503,15 @@ class PaymentProductionInvariantTest extends TestCase
     public function test_paid_attempt_cannot_regress_on_failed_status_sync_without_legacy_transaction(): void
     {
         $order = Order::factory()->paid()->create();
+        $invoiceNumber = $this->newInvoiceNumber('sync-canonical-'.$order->id);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'sync-canonical-'.$order->id,
-            'invoice_number' => $order->order_code, 'merchant_request_id' => 'sync-canonical-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'sync-canonical-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
             'settlement_status' => PaymentAttemptSettlementStatus::Paid,
             'verification_status' => PaymentAttemptVerificationStatus::Verified,
         ]);
-        Http::fake(['*/orders/v1/status/*' => Http::response(['order' => ['invoice_number' => $order->order_code], 'transaction' => ['status' => 'FAILED']])]);
+        Http::fake(['*/orders/v1/status/*' => Http::response(['order' => ['invoice_number' => $invoiceNumber], 'transaction' => ['status' => 'FAILED']])]);
 
         app(DokuService::class)->syncStatusFromDoku($attempt);
 
@@ -485,7 +519,7 @@ class PaymentProductionInvariantTest extends TestCase
         $this->assertSame(PaymentAttemptSettlementStatus::Paid, $attempt->fresh()->settlement_status);
         $this->assertDatabaseHas('payment_attempts', [
             'id' => $attempt->id,
-            'invoice_number' => $order->order_code,
+            'invoice_number' => $invoiceNumber,
             'settlement_status' => PaymentAttemptSettlementStatus::Paid->value,
         ]);
         $this->assertDatabaseCount('payment_transactions', 0);
@@ -495,18 +529,19 @@ class PaymentProductionInvariantTest extends TestCase
     {
         $order = Order::factory()->paid()->create();
         $order->update(['doku_order_id' => $order->order_code]);
+        $invoiceNumber = $this->newInvoiceNumber('sync-'.$order->id);
         PaymentTransaction::create([
             'order_id' => $order->id, 'doku_order_id' => $order->order_code,
             'payment_method' => 'qris', 'amount' => $order->total, 'status' => 'paid',
         ]);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'sync-'.$order->id,
-            'invoice_number' => $order->order_code, 'merchant_request_id' => 'sync-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'sync-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
             'settlement_status' => PaymentAttemptSettlementStatus::Paid,
             'verification_status' => PaymentAttemptVerificationStatus::Verified,
         ]);
-        Http::fake(['*/orders/v1/status/*' => Http::response(['order' => ['invoice_number' => $order->order_code], 'transaction' => ['status' => 'FAILED']])]);
+        Http::fake(['*/orders/v1/status/*' => Http::response(['order' => ['invoice_number' => $invoiceNumber], 'transaction' => ['status' => 'FAILED']])]);
 
         app(DokuService::class)->syncStatusFromDoku($attempt);
 
@@ -520,19 +555,20 @@ class PaymentProductionInvariantTest extends TestCase
     {
         $order = Order::factory()->paid()->create();
         $order->update(['doku_order_id' => $order->order_code]);
+        $invoiceNumber = $this->newInvoiceNumber('sync-ambiguous-'.$order->id);
         PaymentTransaction::create([
             'order_id' => $order->id, 'doku_order_id' => $order->order_code,
             'payment_method' => 'qris', 'amount' => $order->total, 'status' => 'paid',
         ]);
         $attempt = PaymentAttempt::create([
             'order_id' => $order->id, 'attempt_key' => 'sync-ambiguous-'.$order->id,
-            'invoice_number' => $order->order_code, 'merchant_request_id' => 'sync-ambiguous-request-'.$order->id,
+            'invoice_number' => $invoiceNumber, 'merchant_request_id' => 'sync-ambiguous-request-'.$order->id,
             'amount_snapshot' => $order->total, 'currency_snapshot' => 'IDR',
             'settlement_status' => PaymentAttemptSettlementStatus::Paid,
             'verification_status' => PaymentAttemptVerificationStatus::Verified,
         ]);
         Http::fake(['*/orders/v1/status/*' => Http::response([
-            'order' => ['invoice_number' => $order->order_code],
+            'order' => ['invoice_number' => $invoiceNumber],
             'transaction' => ['status' => 'PENDING_REVIEW'],
         ])]);
 
@@ -546,6 +582,7 @@ class PaymentProductionInvariantTest extends TestCase
 
     public function test_paid_order_cannot_regress_on_late_failure(): void
     {
+        Http::fake();
         $order = Order::factory()->create(['payment_status' => 'paid']);
         PaymentTransaction::create([
             'order_id' => $order->id,
@@ -572,5 +609,16 @@ class PaymentProductionInvariantTest extends TestCase
         ]);
 
         $this->assertSame('paid', $order->fresh()->payment_status);
+        $this->assertSame('paid', PaymentTransaction::where('order_id', $order->id)->sole()->status);
+        $this->assertDatabaseHas('payment_webhook_logs', [
+            'invoice_number' => $order->order_code,
+            'error' => 'invoice_namespace_mismatch',
+        ]);
+        Http::assertNothingSent();
+    }
+
+    private function newInvoiceNumber(string $seed): string
+    {
+        return 'DMB1'.strtoupper(substr(hash('sha256', $seed), 0, 24));
     }
 }

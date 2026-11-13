@@ -7,8 +7,8 @@ import {
     Users,
 } from 'lucide-react';
 import EmptyState from '@/components/ui/empty-state';
-import { SkeletonPage } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/format';
+import { AnalyticsDashboardSkeleton } from './loading-skeletons';
 
 interface TrendData {
     value: number;
@@ -74,7 +74,7 @@ export function DashboardTab({
               : 'bulan lalu';
 
     if (!kpis) {
-        return <SkeletonPage />;
+        return <AnalyticsDashboardSkeleton />;
     }
 
     const maxRevenue = Math.max(...outletRevenue.map((o) => o.revenue), 1);
