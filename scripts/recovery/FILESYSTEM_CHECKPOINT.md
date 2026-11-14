@@ -40,6 +40,10 @@ approval binds `operation`, `checkpoint_id`, `operator`, `independent_verifier`,
 `EVIDENCE` reference defined in the tool. Times are UTC and bounded to 15 minutes.
 The operation is `filesystem-checkpoint-capture` or `filesystem-code-recovery`.
 
+The tool digest is also pinned in each checkpoint manifest. Any change to this
+script changes `tool_digest()`; approvals and checkpoints pinned to the previous
+tool digest will fail validation. They are not migrated or silently repinned.
+
 Recovery additionally binds `manifest_sha256`, the exact `prior_operations` digest
 map, and an explicit `removals` map of paths to observed-entry digest and reason
 (`candidate-only` or `type-conflict`). A `deletion_evidence_reference` must support
@@ -108,24 +112,32 @@ not cryptographic authentication against a malicious same-account operator.
 ACLs are probed explicitly rather than inferred from `listxattr`. For every entry
 the tool calls `getxattr` with `follow_symlinks=False` on
 `system.posix_acl_access`; directories are also probed for
-`system.posix_acl_default`. Descriptor-relative paths are used on Linux.
+`system.posix_acl_default`. Descriptor-relative paths are used on Linux. The entry
+type is established with no-follow `stat` and rechecked for identity after inventory.
+Linux symlinks have no POSIX ACL of their own, so `ENOTSUP`/`EOPNOTSUPP` from the
+`system.posix_acl_access` probe is treated as non-applicable only for a verified
+Linux symlink. The symlink probe remains no-follow; it never checks the target.
 
 | Result | Handling |
 | --- | --- |
 | `ENODATA` / `ENOATTR` | Treated as absent; inventory continues. |
 | ACL value returned | Fail closed (`acl_present`); metadata is not silently dropped. |
 | `EPERM` / `EACCES` | Fail closed (`acl_inaccessible`). |
-| `ENOTSUP` / `EOPNOTSUPP` | Fail closed (`acl_unsupported`). |
+| `ENOTSUP` / `EOPNOTSUPP` | Accepted only for `system.posix_acl_access` on a verified Linux symlink; otherwise fail closed (`acl_unsupported`). |
 | Missing `os.getxattr` | Fail closed (`unsupported_metadata_platform`). |
 | Any other `OSError` | Fail closed (`acl_check_failed`). |
+
+`system.posix_acl_default` is queried only for directories, never symlinks.
+`listxattr` remains independently strict: a listed attribute or any listing error
+still aborts inventory; an empty listing does not replace the explicit ACL probes.
 
 The same inventory path runs for capture, inspect/verify and recovery, so an
 ACL that appears after approval causes recovery to abort before mutation. Database
 files stay metadata-only: ACL probing reads metadata, never file contents.
 
-Remaining limitations: ACLs on symlinks are probed with no-follow semantics but
-may report unsupported/inaccessible on some filesystems, which fails closed rather
-than being ignored. Non-POSIX ACL implementations (for example NFSv4 or
+Remaining limitations: this exception does not establish `listxattr` behavior on a
+host or permit unsupported checks on regular files, directories, other platforms,
+or other errors. Non-POSIX ACL implementations (for example NFSv4 or
 platform-specific ACL xattrs) are not detected, and a host-side ACL that is
 invisible to `getxattr` cannot be excluded. Coverage is per path; a passing sample
 does not prove the whole tree is ACL-free.

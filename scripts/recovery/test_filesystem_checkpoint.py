@@ -983,6 +983,97 @@ class FilesystemCheckpointTests(unittest.TestCase):
             with self.assertRaisesRegex(fs.CheckpointError, "acl_unsupported"):
                 fs.inventory(self.policy, self.boundaries)
 
+    def test_linux_symlink_acl_unsupported_allows_inventory_no_follow(self):
+        unsupported_codes = {errno.ENOTSUP, getattr(errno, "EOPNOTSUPP", errno.ENOTSUP)}
+        for code in sorted(unsupported_codes):
+            with self.subTest(code=code):
+                calls = []
+
+                def probe(path, name, follow_symlinks=True):
+                    calls.append((str(path), name, follow_symlinks))
+                    if name == fs.ACL_ACCESS and str(path).endswith("/link.php"):
+                        raise OSError(code, "unsupported")
+                    raise self.absent_acl_error()
+
+                with mock.patch.object(fs.sys, "platform", "linux"), \
+                        mock.patch.object(fs.os, "listxattr", return_value=[]), \
+                        mock.patch.object(fs.os, "getxattr", side_effect=probe):
+                    items = fs.inventory(self.policy, self.boundaries)
+
+                self.assertEqual(items["app/link.php"]["type"], "symlink")
+                link_calls = [call for call in calls if call[0].endswith("/link.php")]
+                self.assertTrue(link_calls)
+                self.assertTrue(all(path.startswith("/proc/self/fd/") and follow is False
+                                    and name == fs.ACL_ACCESS
+                                    for path, name, follow in link_calls))
+                self.assertFalse(any(name == fs.ACL_DEFAULT for _, name, _ in link_calls))
+
+    def test_acl_unsupported_rejected_for_non_symlinks_and_non_linux(self):
+        cases = (("config", "linux"), ("app/service.php", "linux"), ("app/link.php", "darwin"))
+        for target, platform in cases:
+            with self.subTest(target=target, platform=platform):
+                def probe(path, name, follow_symlinks=True):
+                    if name == fs.ACL_ACCESS and str(path).endswith("/" + target.rsplit("/", 1)[-1]):
+                        raise OSError(errno.ENOTSUP, "unsupported")
+                    raise self.absent_acl_error()
+
+                with mock.patch.object(fs.sys, "platform", platform), \
+                        mock.patch.object(fs.os, "listxattr", return_value=[]), \
+                        mock.patch.object(fs.os, "getxattr", side_effect=probe):
+                    with self.assertRaisesRegex(fs.CheckpointError, "acl_unsupported"):
+                        fs.inventory(self.policy, self.boundaries)
+
+    def test_linux_symlink_present_inaccessible_and_unexpected_acl_errors_rejected(self):
+        cases = (
+            (b"\x02\x00\x00\x00", "acl_present"),
+            (OSError(errno.EPERM, "denied"), "acl_inaccessible"),
+            (OSError(errno.EACCES, "denied"), "acl_inaccessible"),
+            (OSError(errno.EIO, "io failure"), "acl_check_failed"),
+        )
+        for result, reason in cases:
+            with self.subTest(reason=reason, result=result):
+                def probe(path, name, follow_symlinks=True):
+                    if name == fs.ACL_ACCESS and str(path).endswith("/link.php"):
+                        if isinstance(result, OSError):
+                            raise OSError(result.errno, result.strerror)
+                        return result
+                    raise self.absent_acl_error()
+
+                with mock.patch.object(fs.sys, "platform", "linux"), \
+                        mock.patch.object(fs.os, "listxattr", return_value=[]), \
+                        mock.patch.object(fs.os, "getxattr", side_effect=probe):
+                    with self.assertRaisesRegex(fs.CheckpointError, reason):
+                        fs.inventory(self.policy, self.boundaries)
+
+    def test_listxattr_attributes_and_errors_still_reject_symlink(self):
+        for failure in ("listed", "error"):
+            with self.subTest(failure=failure):
+                acl_calls = []
+
+                def list_attributes(path, follow_symlinks=True):
+                    if str(path).endswith("/link.php"):
+                        if failure == "listed":
+                            return ["user.synthetic"]
+                        raise OSError(errno.EIO, "listxattr failed")
+                    return []
+
+                def probe(path, name, follow_symlinks=True):
+                    acl_calls.append((str(path), name))
+                    raise self.absent_acl_error()
+
+                with mock.patch.object(fs.sys, "platform", "linux"), \
+                        mock.patch.object(fs.os, "listxattr", side_effect=list_attributes), \
+                        mock.patch.object(fs.os, "getxattr", side_effect=probe):
+                    if failure == "listed":
+                        with self.assertRaisesRegex(fs.CheckpointError, "unsupported_xattrs_or_acl"):
+                            fs.inventory(self.policy, self.boundaries)
+                    else:
+                        with self.assertRaises(OSError) as raised:
+                            fs.inventory(self.policy, self.boundaries)
+                        self.assertEqual(raised.exception.errno, errno.EIO)
+
+                self.assertFalse(any(path.endswith("/link.php") for path, _ in acl_calls))
+
     def test_acl_unexpected_error_rejected(self):
         def failed(path, name, follow_symlinks=True):
             raise OSError(errno.EIO, "io failure")

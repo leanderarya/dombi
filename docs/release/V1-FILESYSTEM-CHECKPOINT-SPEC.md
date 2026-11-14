@@ -62,11 +62,16 @@ targets; device/inode are mandatory for shared-parent identity comparison.
 Reject unsupported special files, hardlinked regular
 files, privileged mode bits, unclassified entries and unsupported ACLs/xattrs.
 Probe ACLs explicitly with no-follow `getxattr` on `system.posix_acl_access` for
-every entry and `system.posix_acl_default` for directories. Treat only
-`ENODATA`/`ENOATTR` as absent. Reject a present ACL, `EPERM`/`EACCES`,
-`ENOTSUP`/`EOPNOTSUPP`, a missing ACL API and any unexpected error. Do not infer
-ACL absence from an empty `listxattr` result alone, and do not claim full-tree
-ACL coverage from sampled paths. Symlink mode/mtime support must be explicit.
+every entry and `system.posix_acl_default` for directories only. Treat only
+`ENODATA`/`ENOATTR` as absent. Linux POSIX symlinks have no ACL of their own, so
+`ENOTSUP`/`EOPNOTSUPP` from the `system.posix_acl_access` probe is non-applicable
+only when no-follow entry classification verified a Linux symlink; never follow or
+probe its target. For regular files, directories, other platforms, ACL defaults,
+and every other error, fail closed. Reject a present ACL, `EPERM`/`EACCES`, a
+missing ACL API and any unexpected error. Keep `listxattr` independently strict:
+listed attributes and listing errors abort; an empty result does not establish ACL
+absence. Do not claim full-tree ACL coverage from sampled paths. Symlink mode/mtime
+support must be explicit.
 
 Preserve managed-entry mtime as integer nanoseconds without rounding through
 floating-point timestamps. Restore managed directory timestamps only after all
@@ -78,6 +83,9 @@ metadata protections remain in force.
 The manifest does not contain its own digest. A separate approval pins SHA-256
 of its exact bytes and checkpoint ID. The manifest pins each archive; no circular
 digest or reliance on a mutable checksum file inside the same archive.
+The recovery-tool digest is pinned in the manifest and approval. Any tool change
+that changes `tool_digest()` invalidates approvals and checkpoints pinned to the
+previous digest; do not migrate or silently repin existing records.
 All manifests, protected-file hashes and receipts remain private: no environment
 values, keys, payloads or raw process commands in shared output.
 
