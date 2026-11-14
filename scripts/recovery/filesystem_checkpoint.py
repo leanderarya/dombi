@@ -55,9 +55,9 @@ def require(condition, reason):
         raise CheckpointError(reason)
 
 
-def require_no_acl(path, directory):
+def require_no_acl(path, entry_type):
     require(hasattr(os, "getxattr"), "unsupported_metadata_platform")
-    for name in ((ACL_ACCESS, ACL_DEFAULT) if directory else (ACL_ACCESS,)):
+    for name in ((ACL_ACCESS, ACL_DEFAULT) if entry_type == "directory" else (ACL_ACCESS,)):
         try:
             os.getxattr(path, name, follow_symlinks=False)
         except OSError as error:
@@ -66,6 +66,9 @@ def require_no_acl(path, directory):
             if error.errno in {errno.EPERM, errno.EACCES}:
                 raise CheckpointError("acl_inaccessible")
             if error.errno in ACL_UNSUPPORTED:
+                if (name == ACL_ACCESS and entry_type == "symlink"
+                        and sys.platform == "linux"):
+                    continue
                 raise CheckpointError("acl_unsupported")
             raise CheckpointError("acl_check_failed")
         raise CheckpointError("acl_present")
@@ -314,7 +317,7 @@ def inventory(policy, boundaries, damaged=None):
         require(hasattr(os, "listxattr"), "unsupported_metadata_platform")
         attribute_path = f"/proc/self/fd/{parent}/{leaf}" if sys.platform == "linux" else path
         require(not os.listxattr(attribute_path, follow_symlinks=False), "unsupported_xattrs_or_acl")
-        require_no_acl(attribute_path, kind == "directory")
+        require_no_acl(attribute_path, kind)
         entry = {
             "class": classification(name, boundaries, kind == "directory"),
             "type": kind, "uid": s.st_uid, "gid": s.st_gid,
