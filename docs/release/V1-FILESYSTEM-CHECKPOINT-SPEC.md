@@ -61,8 +61,12 @@ Device/inode/link count support capture-drift checks but are not restoration
 targets; device/inode are mandatory for shared-parent identity comparison.
 Reject unsupported special files, hardlinked regular
 files, privileged mode bits, unclassified entries and unsupported ACLs/xattrs.
-Observe and record ACL/xattr absence or supported preservation requirements;
-do not silently discard metadata. Symlink mode/mtime support must be explicit.
+Probe ACLs explicitly with no-follow `getxattr` on `system.posix_acl_access` for
+every entry and `system.posix_acl_default` for directories. Treat only
+`ENODATA`/`ENOATTR` as absent. Reject a present ACL, `EPERM`/`EACCES`,
+`ENOTSUP`/`EOPNOTSUPP`, a missing ACL API and any unexpected error. Do not infer
+ACL absence from an empty `listxattr` result alone, and do not claim full-tree
+ACL coverage from sampled paths. Symlink mode/mtime support must be explicit.
 
 Preserve managed-entry mtime as integer nanoseconds without rounding through
 floating-point timestamps. Restore managed directory timestamps only after all
