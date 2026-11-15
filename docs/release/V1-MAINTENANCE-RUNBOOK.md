@@ -89,9 +89,49 @@ per-route to the five checkout/order/payment-initiation routes, controlled by
 | # | Action | Status |
 | --- | --- | --- |
 | P3.1 | Close customer admission in-app: set `ADMISSION_CUSTOMER_CHECKOUT=held` and rebuild the config cache | **AVAILABLE — only after this code is deployed** |
-| P3.2 | Close the **pre-deploy** window with an external boundary (vhost/`.htaccess` deny) that preserves an operator smoke path | **STILL UNAVAILABLE — requires a provider-supported mechanism not established** |
+| P3.2 | Narrow `artisan down` so `/up` and the two DOKU routes stay reachable: `$middleware->preventRequestsDuringMaintenance(except: ['up','payment/doku/notify','payment/doku/redirect'])` in `bootstrap/app.php` | **AVAILABLE once this release is deployed — see P3.5** |
 | P3.3 | Decide DOKU disposition: durable intake is now the in-app behaviour; record any edge-rejection ledger if an external boundary is used instead | pending |
 | P3.4 | Record chosen DOKU disposition + merchant-confirmed retry deadline | pending |
+| P3.5 | Close the **pre-deploy** window (while old code is still serving) | **UNAVAILABLE — no provider-supported mechanism established** |
+
+**Verified activation / verification / restoration (P3.2):**
+
+```bash
+# activate (maintenance window)
+php artisan down --retry=15
+# verify: 503 for customers, 200 for health, DOKU NOT swallowed by 503
+curl -s -o /dev/null -w '%{http_code}\n' https://app.dombicenter.com/           # expect 503
+curl -s -o /dev/null -w '%{http_code}\n' https://app.dombicenter.com/up        # expect 200
+curl -s -o /dev/null -w '%{http_code}\n' https://app.dombicenter.com/api/health # expect 200 (authenticated path if gated)
+curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+  https://app.dombicenter.com/payment/doku/notify                              # expect 400, not 503
+# restore
+php artisan up
+curl -s -o /dev/null -w '%{http_code}\n' https://app.dombicenter.com/           # expect 200
+```
+
+The `/up` probe is the authoritative health signal during maintenance. A `500` on `/`
+immediately after `artisan up` must be investigated before declaring the window closed: the
+application can be genuinely up while an unrelated fault (for example a missing or stale
+Vite manifest in `public/build`) still breaks page rendering.
+
+**STOP if:** `/up` is not `200` while down · `POST /payment/doku/notify` returns `503`
+(routes not exempt) · the DOKU route returns `2xx` for a request with no `Request-Id`
+(false acknowledgement) · any path outside the three listed URIs stops returning `503`.
+
+**Why this is exact-match only.** Verified in `Illuminate\Foundation\Http\Middleware\Concerns\ExcludesPaths`:
+exception entries are compared with `$request->is($pattern)`, so a wildcard such as
+`payment/doku/*` would reopen unrelated routes. The three entries above are the exact URIs.
+Method is not part of the match, so both `GET` and `POST` are exempt on the DOKU routes —
+which is correct, because DOKU uses `GET` for redirect and `POST` for notify.
+
+**Two hard limits remain.** First, exceptions are evaluated by Laravel middleware, so they
+require a working bootstrap: during **in-place file replacement they do not apply**, and the
+pre-deploy window (P3.5) is uncovered — neither B1 nor DOKU continuity is fully solved
+without deploy-window evidence. Second, holding admissions stops *new* payment attempts only;
+payments already initiated at DOKU remain completable by design. If the window requires a
+hard money-stop, that is a separate decision and is **not** provided here.
+
 
 **Gate properties (verified):**
 - Default is **OPEN**. Only the literal token `held` (trimmed, case-insensitive) closes the
@@ -105,15 +145,15 @@ per-route to the five checkout/order/payment-initiation routes, controlled by
 
 **Two hard limits remain.** First, this is application code, so it only takes effect once
 this release is deployed — it does **not** cover the deploy window itself, which still
-needs P3.2. Second, holding admissions stops *new* payment attempts only; payments already
+needs P3.5. Second, holding admissions stops *new* payment attempts only; payments already
 initiated at DOKU remain completable by design. If the window requires a hard money-stop,
 that is a separate decision and is **not** provided here.
 
 **Never** treat any of these as callback safety: `schedule:pause`, a quiet queue,
-maintenance mode, a 503 alone, or "DOKU will retry". DOKU retry/resend behaviour is
-**not evidenced in this repository**.
+maintenance-mode exceptions, a 503 alone, or "DOKU will retry". DOKU retry/resend
+behaviour is **not evidenced in this repository**.
 
-**STOP gate (hard):** if P3.2 is not satisfied with recorded evidence, the pre-deploy
+**STOP gate (hard):** if P3.5 is not satisfied with recorded evidence, the pre-deploy
 window is uncovered. If P3.3/P3.4 are not recorded, **do not proceed to P6**.
 
 ---
@@ -243,8 +283,8 @@ not documentation gaps.
 
 | # | Blocker | Evidence |
 | --- | --- | --- |
-| B1 | **No deploy-independent, pre-deploy admission boundary.** An in-app gate exists (P3.1) but only works after deployment; the deploy window itself is uncovered. `artisan down` remains unusable (blocks `/up` and DOKU, no durable rejection record). | `CheckCustomerAdmission`; global `PreventRequestsDuringMaintenance` |
-| B2 | **No edge-level DOKU containment decision.** In-app durable intake is now the default behaviour and unpersisted notifications are never acknowledged, but DOKU retry/resend semantics remain unevidenced and no edge-rejection ledger policy exists. | `DokuWebhookIngressService::receive()` |
+| B1 | **No deploy-independent, pre-deploy admission boundary.** An in-app gate exists (P3.1) and `artisan down` now preserves `/up` + DOKU (P3.2), but neither covers the window while old code is still serving, nor in-place file replacement. | `CheckCustomerAdmission`; `preventRequestsDuringMaintenance` in `bootstrap/app.php` |
+| B2 | **No edge-level DOKU containment decision.** In-app durable intake is the default and unpersisted notifications are never acknowledged; DOKU routes are now exempt from maintenance. Retry/resend semantics remain unevidenced and no edge-rejection ledger policy exists. | `DokuWebhookIngressService::receive()`; `bootstrap/app.php` maintenance exceptions |
 | B3 | **Shared publisher lock absent** on the host, so `capture` will abort (`publisher_lock`). A provisioning procedure now exists but has not been executed. | `Policy.lock` required; observed absent; `provision_checkpoint_tool.py` |
 | B4 | **Checkpoint tool not provisioned** in `private-backups` with a pinned digest. Provisioning procedure exists; not executed. | `provision_checkpoint_tool.py`, `CHECKPOINT_PROVISIONING.md` |
 | B5 | **Approvals are not authenticated identity.** The production path now requires an HMAC over the approval bytes, but that authenticates possession of an operator-held symmetric key — not a person, and not `independent_verifier != operator`. | `publish_artifact_production`; `CODE_PUBLISHER.md` |
