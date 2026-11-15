@@ -81,6 +81,154 @@ PRODUCTION_REALM = "production"
 FIXTURE_REALM = "fixture"
 REALMS = (FIXTURE_REALM, PRODUCTION_REALM)
 
+# ── Volatile runtime paths ────────────────────────────────────────────────
+#
+# A production filesystem is never perfectly still: the framework appends to its
+# logs while a publication runs, and the checkpoint pins a digest of the *whole*
+# root inventory. Without an explicit allowance, a single appended log line aborts
+# the run after some files have already been replaced.
+#
+# The allowance is deliberately narrow and structural:
+#
+#   * only a DIRECT child file of one of the exact directories below;
+#   * only `protected` entries (so it can never excuse a managed-code change);
+#   * only a regular file that is still the same inode, owner and mode;
+#   * only append-style content/mtime/size drift is tolerated.
+#
+# Everything else still aborts: additions, removals, type changes, symlink
+# substitution, ownership/mode changes, and any drift outside these directories.
+# `storage/app` (uploads, backups, delivery proofs) and `storage/framework/cache`,
+# `sessions` and `views` are intentionally NOT listed: they hold business or
+# generated state whose change must keep failing closed.
+VOLATILE_LOG_PREFIX = "storage/logs/"
+VOLATILE_POLICY_SCHEMA = "dombi-volatile-runtime-v1"
+VOLATILE_POLICY_FIELDS = ("schema", "allowed_prefixes", "mode")
+
+# The only drift an allowed volatile entry may exhibit: content hash, size and
+# mtime. Structure (type/inode/owner/mode/class/device) must be identical.
+VOLATILE_DRIFT_FIELDS = ("size", "sha256", "mtime_ns")
+
+
+def volatile_policy():
+    """The single allowlist the approval must echo exactly."""
+    return {
+        "schema": VOLATILE_POLICY_SCHEMA,
+        "allowed_prefixes": [VOLATILE_LOG_PREFIX],
+        "mode": "append-only",
+    }
+
+
+def require_volatile_policy(value):
+    """Bound to the approval: a missing, widened or narrowed policy is rejected.
+
+    Equality is exact, so an approval cannot quietly add `storage/app/` or drop the
+    restriction; the publisher only ever honours the one reviewed policy.
+    """
+    fs.require(value == volatile_policy(), "volatile_policy_mismatch")
+
+
+def volatile_path(name):
+    """True only for a direct child file of an allowed volatile directory."""
+    for prefix in volatile_policy()["allowed_prefixes"]:
+        if name.startswith(prefix):
+            leaf = name[len(prefix):]
+            return bool(leaf) and "/" not in leaf
+    return False
+
+
+def volatile_structure_unchanged(baseline, entry):
+    """True only if every non-content field still matches the baseline entry."""
+    if baseline is None or entry.get("class") != "protected" or baseline.get("class") != "protected":
+        return False
+    if any(entry.get(k) != baseline.get(k) for k in entry.keys()
+           if k not in VOLATILE_DRIFT_FIELDS):
+        return False
+    return all(k in entry for k in VOLATILE_DRIFT_FIELDS if k in baseline)
+
+
+def append_only_prefix_intact(policy, name, baseline):
+    """True only when the baseline bytes are still an exact prefix of the file.
+
+    "append-only" cannot be proven from metadata: a same-size overwrite or a
+    truncate-and-regrow keeps size and structure identical. The baseline entry
+    carries the SHA-256 of the whole file as it was, so re-reading exactly
+    `baseline["size"]` bytes and hashing them proves the old content survived
+    with only appends after it.
+
+    Returns False for a truncated file or a prefix mismatch (the caller then
+    declines to normalise, so the drift check aborts). Raises for unsafe
+    conditions — unreadable file, symlink, or a change observed while reading —
+    because those must never be silently tolerated.
+    """
+    fs.require(baseline.get("type") == "file", "volatile_baseline_type")
+    size, digest = baseline.get("size"), baseline.get("sha256")
+    fs.require(fs.integer(size) and size >= 0, "volatile_baseline_size")
+    fs.require(isinstance(digest, str) and re.fullmatch(fs.SHA_PATTERN, digest) is not None,
+               "volatile_baseline_hash")
+    with fs.absolute_parent(policy.root / name) as (parent, leaf):
+        try:
+            fd = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+        except OSError as error:
+            # ELOOP/EISDIR/ENOENT here means the entry was substituted or removed
+            # between inventory and this read; that is drift, never tolerance.
+            raise fs.CheckpointError("volatile_open_failed") from error
+        try:
+            opened = os.fstat(fd)
+            fs.require(stat.S_ISREG(opened.st_mode) and opened.st_nlink == 1,
+                       "volatile_not_regular")
+            if opened.st_size < size:
+                return False
+            h, remaining = hashlib.sha256(), size
+            while remaining > 0:
+                block = os.read(fd, min(1048576, remaining))
+                if not block:
+                    return False
+                h.update(block)
+                remaining -= len(block)
+            # A concurrent append or rewrite during the read invalidates the
+            # comparison; refuse rather than reason about a torn snapshot.
+            fs.require(fs.stat_identity(opened) == fs.stat_identity(os.fstat(fd)),
+                       "volatile_read_drift")
+            return h.hexdigest() == digest
+        finally:
+            os.close(fd)
+
+
+def normalize_volatile(policy, before, after):
+    """Drop tolerated drift from allowed volatile entries.
+
+    Returns a copy of `after` in which every allowed volatile entry that is still the
+    same structural file *and* whose baseline bytes survive as an exact prefix has
+    its content-bearing fields replaced by the baseline's. Anything else is left
+    untouched so the existing equality check catches it.
+    """
+    result = dict(after)
+    for name, entry in after.items():
+        baseline = before.get(name)
+        if not volatile_path(name) or not volatile_structure_unchanged(baseline, entry):
+            continue
+        if not append_only_prefix_intact(policy, name, baseline):
+            continue
+        result[name] = dict(entry, **{k: baseline[k] for k in VOLATILE_DRIFT_FIELDS
+                                      if k in baseline})
+    return result
+
+
+def inventory_matches(policy, boundaries, before, expected=None):
+    """Full-inventory equality that tolerates only the approved volatile drift.
+
+    `expected` defaults to `before`, so the common call is "has anything changed?".
+    """
+    baseline = before if expected is None else expected
+    observed = fs.inventory(policy, boundaries)
+    return normalize_volatile(policy, baseline, observed) == baseline, observed
+
+
+def require_no_drift(policy, boundaries, before, reason):
+    """Fail closed unless the tree still matches the baseline modulo volatile drift."""
+    matched, _ = inventory_matches(policy, boundaries, before)
+    fs.require(matched, reason)
+
 
 def require_production_policy(policy):
     """The production realm needs a self-consistent host/account/root policy.
@@ -653,8 +801,13 @@ def artifact_matches(policy, manifest, before, files):
                    and e["type"] == "directory"}
     after_dirs = {n for n, e in managed.items() if e["type"] == "directory"}
     fs.require(before_dirs == after_dirs, "managed_directory_changed")
-    fs.require(fs.stable_protected(after) == fs.stable_protected(before),
-               "protected_state_changed")
+    # Protected state must still match, modulo the approved volatile log drift.
+    # `normalize_volatile` only rewrites allowed volatile entries whose structure
+    # is unchanged *and* whose baseline bytes survive as an exact prefix, so a
+    # symlink swap, inode/ownership/mode change, truncation or same-size overwrite
+    # all still fail here.
+    fs.require(fs.stable_protected(normalize_volatile(policy, before, after))
+               == fs.stable_protected(before), "protected_state_changed")
 
 
 def publish_artifact(policy, checkpoint_id, manifest_sha256, approval_path,
@@ -703,6 +856,7 @@ def artifact_publication(policy, checkpoint_id, manifest_sha256, approval_path,
     fs.require(approved.get("boundaries") == manifest["boundaries"], "approval_boundaries")
     fs.require(approved.get("manifest_sha256") == manifest_sha256, "approval_manifest")
     fs.require(approved.get("publisher_sha256") == publisher_digest(), "approval_publisher")
+    require_volatile_policy(approved.get("volatile_policy"))
     application_sha = approved.get("artifact_application_sha")
     archive_sha256 = approved.get("artifact_sha256")
     fs.require(checksum_token(checksum_path) == archive_sha256,
@@ -720,7 +874,7 @@ def artifact_publication(policy, checkpoint_id, manifest_sha256, approval_path,
 
     operation = directory / ("publication-" + approval_sha)
     with fs.publisher_lock(policy):
-        fs.require(fs.inventory(policy, manifest["boundaries"]) == before, "publication_drift")
+        require_no_drift(policy, manifest["boundaries"], before, "publication_drift")
         fs.require(prior_operation_lineage(directory) == previous, "publication_lineage_drift")
         fs.require(shutil.disk_usage(policy.private).free >
                    2 * payload_bytes + 4 * len(fs.encoded(before)) + 1048576,
@@ -736,7 +890,7 @@ def artifact_publication(policy, checkpoint_id, manifest_sha256, approval_path,
         staged = stage_artifact(archive_path, files, operation)
         fs.require(fs.load_checkpoint(policy, checkpoint_id, manifest_sha256)[1] == manifest,
                    "checkpoint_drift")
-        fs.require(fs.inventory(policy, manifest["boundaries"]) == before, "publication_drift")
+        require_no_drift(policy, manifest["boundaries"], before, "publication_drift")
         fs.require(fs.authorize(policy, approval_path, OPERATION, checkpoint_id, before,
                                 expected_digest=approval_sha) == approved, "approval_drift")
         artifact_preflight(policy, manifest, before, plan, files, staged, realm)
