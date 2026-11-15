@@ -80,24 +80,41 @@ no owner acknowledgement.
 
 ---
 
-## Phase P3 — Web/DOKU containment **[STATE-CHANGING]** — **BLOCKED**
+## Phase P3 — Web/DOKU containment **[STATE-CHANGING]** — **PARTIALLY RESOLVED**
 
-**No verified admission control exists on this account.** The application defines no
-deploy-independent gate; `artisan down` is forbidden because it blocks `/up` and the
-DOKU endpoints, and it also writes no durable record for rejected callbacks.
+An in-app admission gate now exists: `App\Http\Middleware\CheckCustomerAdmission`, attached
+per-route to the five checkout/order/payment-initiation routes, controlled by
+`ADMISSION_CUSTOMER_CHECKOUT` through `config/admission.php`.
 
 | # | Action | Status |
 | --- | --- | --- |
-| P3.1 | Close customer admission with an **external** boundary (vhost/`.htaccess` deny) that preserves an operator smoke path | **UNAVAILABLE — requires provider-supported mechanism not established** |
-| P3.2 | Decide DOKU disposition: edge-reject **with a maintained rejection ledger**, or durable intake | **UNAVAILABLE — no non-mutating intake mode exists; retry semantics unevidenced** |
-| P3.3 | Record chosen DOKU disposition + merchant-confirmed retry deadline | pending |
+| P3.1 | Close customer admission in-app: set `ADMISSION_CUSTOMER_CHECKOUT=held` and rebuild the config cache | **AVAILABLE — only after this code is deployed** |
+| P3.2 | Close the **pre-deploy** window with an external boundary (vhost/`.htaccess` deny) that preserves an operator smoke path | **STILL UNAVAILABLE — requires a provider-supported mechanism not established** |
+| P3.3 | Decide DOKU disposition: durable intake is now the in-app behaviour; record any edge-rejection ledger if an external boundary is used instead | pending |
+| P3.4 | Record chosen DOKU disposition + merchant-confirmed retry deadline | pending |
+
+**Gate properties (verified):**
+- Default is **OPEN**. Only the literal token `held` (trimmed, case-insensitive) closes the
+  gate; unset, empty, `0`, `false`, `closed` or a typo all leave admissions open, so the
+  control cannot close production by accident.
+- Blocked when held: `POST /customer/checkout`, `/checkout/customer`, `/checkout/payment`,
+  `/customer/orders`, `/customer/orders/{order}/pay`.
+- **Never** gated: `/payment/doku/notify`, `/payment/doku/redirect`,
+  `/customer/orders/{order}/payment-status`, order confirm, product browsing, cart.
+- Reversal is a config change plus config-cache rebuild; no code change or redeploy needed.
+
+**Two hard limits remain.** First, this is application code, so it only takes effect once
+this release is deployed — it does **not** cover the deploy window itself, which still
+needs P3.2. Second, holding admissions stops *new* payment attempts only; payments already
+initiated at DOKU remain completable by design. If the window requires a hard money-stop,
+that is a separate decision and is **not** provided here.
 
 **Never** treat any of these as callback safety: `schedule:pause`, a quiet queue,
 maintenance mode, a 503 alone, or "DOKU will retry". DOKU retry/resend behaviour is
 **not evidenced in this repository**.
 
-**STOP gate (hard):** if P3.1 and P3.2 are not both satisfied with recorded evidence,
-**do not proceed to P5 or P6**. Execution stops here by design.
+**STOP gate (hard):** if P3.2 is not satisfied with recorded evidence, the pre-deploy
+window is uncovered. If P3.3/P3.4 are not recorded, **do not proceed to P6**.
 
 ---
 
@@ -133,8 +150,8 @@ operator, all 8 `FLAGS` true, all 8 `EVIDENCE` references non-empty, timestamps 
 | # | Action | Command / evidence |
 | --- | --- | --- |
 | P5.1 | **[READ-ONLY]** produce plan digests | `python3 -I -B <tool> inspect --plan <private>/release-plan.json` → `observed_state_sha256=` |
-| P5.2 | Provision shared lock (separate authorization; `0600` regular single-link, no symlink) | `lock=` — **currently ABSENT** |
-| P5.3 | Provision tool into `private-backups` and pin its digest | `tool_sha256=` — **currently not provisioned** |
+| P5.2 | Provision shared lock — **dry-run first**, then apply: `python3 -I -B <provisioner> --tool <tool> --private /home/u399215191/private-backups --app-root <app> --create-lock` (add `--apply` only after review) | `lock=` — **currently ABSENT** |
+| P5.3 | Provision tool into `private-backups` with a pinned digest (`--publish-tool --expected-tool-sha256 <pin> --apply`) | `tool_sha256=` — **currently not provisioned** |
 | P5.4 | Write approval JSON (no generator exists) | `approval_sha256=` `independent_verifier=` `issued_utc=` |
 | P5.5 | Capture | `python3 -I -B <tool> capture --approval <private>/capture-approval.json` → `checkpoint_id=` `manifest_sha256=` |
 | P5.6 | Verify | `python3 -I -B <tool> verify --checkpoint <id> --manifest-sha256 <sha>` → expect `MANAGED_INVENTORY_MATCH_KEEP_HELD` |
@@ -226,13 +243,13 @@ not documentation gaps.
 
 | # | Blocker | Evidence |
 | --- | --- | --- |
-| B1 | **No deploy-independent admission/writer gate.** `artisan down` is unusable (blocks `/up` and DOKU, no durable rejection record). | app has no maintenance `except`; global `PreventRequestsDuringMaintenance` |
-| B2 | **No DOKU containment disposition.** No non-mutating intake mode; DOKU retry/resend semantics unevidenced. A callback without `Request-Id` is rejected `400` **before** any row is written. | `DokuWebhookIngressService::receive()` |
-| B3 | **Shared publisher lock absent** on the host, so `capture` will abort (`publisher_lock`). | `Policy.lock` required; observed absent |
-| B4 | **Checkpoint tool not provisioned** in `private-backups` with a pinned digest. | only historical recovery tools present |
-| B5 | **No authenticated approval generator/signer.** Approvals are operator attestations; `independent_verifier` is a name, not a verified identity. | `authorize()` |
-| B6 | **No production publication path.** The artifact mode exists and is tested, but `main()` is an unconditional refusal and `require_fixture_policy()` refuses the production identity. No approved wrapper enables it. | `code_publisher.py` `main()`, `require_fixture_policy()` |
-| B7 | **Artifact-mode preconditions are unprovisioned on the host.** The shared publisher lock is absent, the checkpoint tool is not provisioned with a pinned digest, and no artifact or checksum receipt exists in the private directory. | `Policy.lock`; `artifact_files()` input requirements |
+| B1 | **No deploy-independent, pre-deploy admission boundary.** An in-app gate exists (P3.1) but only works after deployment; the deploy window itself is uncovered. `artisan down` remains unusable (blocks `/up` and DOKU, no durable rejection record). | `CheckCustomerAdmission`; global `PreventRequestsDuringMaintenance` |
+| B2 | **No edge-level DOKU containment decision.** In-app durable intake is now the default behaviour and unpersisted notifications are never acknowledged, but DOKU retry/resend semantics remain unevidenced and no edge-rejection ledger policy exists. | `DokuWebhookIngressService::receive()` |
+| B3 | **Shared publisher lock absent** on the host, so `capture` will abort (`publisher_lock`). A provisioning procedure now exists but has not been executed. | `Policy.lock` required; observed absent; `provision_checkpoint_tool.py` |
+| B4 | **Checkpoint tool not provisioned** in `private-backups` with a pinned digest. Provisioning procedure exists; not executed. | `provision_checkpoint_tool.py`, `CHECKPOINT_PROVISIONING.md` |
+| B5 | **Approvals are not authenticated identity.** The production path now requires an HMAC over the approval bytes, but that authenticates possession of an operator-held symmetric key — not a person, and not `independent_verifier != operator`. | `publish_artifact_production`; `CODE_PUBLISHER.md` |
+| B6 | **No authorized production execution.** A production entrypoint exists (`--production` + all fail-closed prerequisites) but `main()` refuses by default and no release authorization has been granted. | `code_publisher.py` `main()` |
+| B7 | **Artifact-mode preconditions unprovisioned on the host.** Shared lock absent, checkpoint tool not provisioned, no artifact/checksum receipt or approval key in the private directory. | `Policy.lock`; `artifact_files()`; production key requirement |
 | B8 | **Web-worker DB identity UNKNOWN.** Never assume LSAPI workers run the NEW schema; workers older than the last `.env` change may still hold the previous schema. | prior read-only smoke test |
 | B9 | **Two identical cron entries.** `schedule:pause` covers both via shared cache, but the duplicate remains unexplained. | `cronjob_oGUFKybU14`, `cronjob_ZwUE8CLMt5` |
 | B10 | **Sibling `apidombi` app** uses a different database on the same account; containment scope unverified. | prior evidence |
@@ -243,9 +260,9 @@ separate authorization — it is the single prerequisite that makes `inspect --p
 `capture` → `verify` executable and is required by every existing checkpoint control.
 
 **Next implementation step:** provision the shared publisher lock and a pinned checkpoint
-tool under separate authorization, then add the production wrapper for
-`publish_artifact()`. The artifact transport itself now exists and is tested; no
-deployment enablement is included.
+tool under separate authorization using `scripts/recovery/provision_checkpoint_tool.py`
+(dry-run first, always). The production publisher entrypoint, artifact transport and
+admission gate all now exist and are tested; no deployment enablement is included.
 
 ---
 
@@ -255,6 +272,9 @@ deployment enablement is included.
 | --- | --- |
 | Documentation readiness (this runbook) | **PASS** — phases, gates, evidence fields and reversals defined; commands match current source |
 | Artifact publication implementation (fixture-only) | **PASS** — additions, replacements and removals implemented and synthetically tested |
+| Production publisher entrypoint | **PASS (not authorized)** — `--production` with fail-closed prerequisites and HMAC approvals; refuses by default |
+| Admission gate | **PASS (post-deploy only)** — config-driven, default open, DOKU routes never gated |
+| Checkpoint provisioning procedure | **PASS (not executed)** — dry-run-by-default script, doc and tests |
 | Execution readiness | **FAIL** — B1–B10 open |
 | Scheduler pause capability | **PASS** — `schedule:pause`/`resume`, all 15 events covered |
 | Scheduler pause as writer containment | **FAIL by definition** — scheduled entrypoints only |

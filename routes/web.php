@@ -144,10 +144,11 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
             Route::post('/cart/add', [CartController::class, 'addItem'])->name('cart.add');
             Route::post('/cart/remove', [CartController::class, 'removeItem'])->name('cart.remove');
             Route::post('/cart/quantity', [CartController::class, 'setQuantity'])->name('cart.quantity');
-            Route::post('/checkout', [CustomerCheckoutController::class, 'storeIndex'])->name('checkout.store');
-            Route::post('/checkout/customer', [CustomerCheckoutController::class, 'storeCustomer'])->name('checkout.customer.store');
-            Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->middleware('throttle:payment-submit')->name('checkout.process-payment');
-            Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
+            // --- Admission-gated: new checkout drafts, orders, and payment initiation ---
+            Route::post('/checkout', [CustomerCheckoutController::class, 'storeIndex'])->middleware('admission.customer')->name('checkout.store');
+            Route::post('/checkout/customer', [CustomerCheckoutController::class, 'storeCustomer'])->middleware('admission.customer')->name('checkout.customer.store');
+            Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->middleware(['admission.customer', 'throttle:payment-submit'])->name('checkout.process-payment');
+            Route::post('/orders', [CustomerOrderController::class, 'store'])->middleware('admission.customer')->name('orders.store');
             Route::post('/register', [AccountPromotionController::class, 'register'])->middleware('throttle:3,1')->name('register');
         });
     });
@@ -190,13 +191,16 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
 });
 
 // Pay — must be accessible to guest (no auth required, ownership checked in controller)
-Route::post('/customer/orders/{order}/pay', [CustomerOrderController::class, 'pay'])->middleware('throttle:pay-token')->name('orders.pay');
+// Admission-gated: this is where a new DOKU payment attempt is created.
+Route::post('/customer/orders/{order}/pay', [CustomerOrderController::class, 'pay'])->middleware(['admission.customer', 'throttle:pay-token'])->name('orders.pay');
 
 // Payment status polling — accessible to guest (same ownership check as pay)
+// NOT admission-gated: it only reads state and must keep working while admissions are held.
 Route::get('/customer/orders/{order}/payment-status', [CustomerOrderController::class, 'paymentStatus'])->middleware('throttle:60,1')->name('orders.payment-status');
 
 // Guest tracking — no auth, token-validated via recovery token
 // DOKU payment — no auth, signature-verified (called by DOKU servers)
+// NEVER admission-gated: callbacks for already-initiated payments must keep landing.
 Route::match(['get', 'post'], '/payment/doku/notify', [DokuPaymentController::class, 'notify'])->name('doku.notify');
 Route::match(['get', 'post'], '/payment/doku/redirect', [DokuPaymentController::class, 'redirect'])->name('doku.redirect');
 

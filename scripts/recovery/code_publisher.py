@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
-"""Fixture-only managed-code publisher. Production execution is hard-disabled."""
+"""Fixture-only managed-code publisher behind a gated, unprovisioned production door.
+
+The production door (`publish_artifact_production` / `--production`) still needs an
+operator-held signature key, a detached approval signature, a verified candidate
+artifact, a verified checkpoint and the shared publisher lock. None of those are
+provisioned here, so this repository still cannot publish code anywhere.
+"""
 
 import argparse
+import datetime as dt
 import hashlib
+import hmac
 import importlib.util
+import json
 import os
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
@@ -20,7 +29,13 @@ PUBLICATION_PATTERN = r"publication-[0-9a-f]{64}"
 PUBLICATION_ENTRIES = ("authorization.json", "pre-state.json", "journal.jsonl", "outcome.json")
 PAYLOAD_PATTERN = r"payload-[0-9]+"
 SUCCESS = "CODE_PUBLISH_COMPLETE_KEEP_HELD"
-DISABLED = "PUBLISHER_DISABLED; no production publication path exists; keep doors held"
+DISABLED = ("PUBLISHER_DISABLED; fixture publication only; production needs --production, a "
+            "provisioned approval key and every fail-closed prerequisite; keep doors held")
+PRODUCTION_ABORT = "PRODUCTION_ABORT; keep doors held; no automatic cleanup or reopening"
+SIGNATURE_CONTEXT = b"dombi-code-publication-approval-v1\x00"
+SIGNATURE_PATTERN = r"[0-9a-f]{64}"
+KEY_MINIMUM_BYTES = 32
+KEY_MAXIMUM_BYTES = 4096
 
 
 def checkpoint_module():
@@ -60,6 +75,112 @@ def require_fixture_policy(policy):
                and not private.is_relative_to(production.private)
                and not production.private.is_relative_to(private),
                "production_execution_disabled")
+
+
+PRODUCTION_REALM = "production"
+FIXTURE_REALM = "fixture"
+REALMS = (FIXTURE_REALM, PRODUCTION_REALM)
+
+
+def require_production_policy(policy):
+    """The production realm needs a self-consistent host/account/root policy.
+
+    This is the mirror of `require_fixture_policy()`: it does not exclude the pinned
+    identity, it validates that the supplied policy really describes the account,
+    root, device and private directory the caller claims. It is never reachable from
+    `main()` with an operator-supplied path; `main()` always passes `fs.PRODUCTION`.
+    """
+    fs.require(isinstance(policy, fs.Policy), "policy_type")
+    try:
+        fs.check_policy(policy)
+    except OSError as error:
+        raise fs.CheckpointError("production_policy_identity") from error
+
+
+def enforce_realm(policy, realm):
+    """Apply exactly one realm guard from a closed set, so neither realm can borrow the other.
+
+    The realm is a constant, never a callback: a caller cannot inject a no-op guard to
+    skip the fixture refusal, and cannot reach the production branch under the
+    fixture name.
+    """
+    fs.require(realm in REALMS, "publisher_realm")
+    if realm == PRODUCTION_REALM:
+        require_production_policy(policy)
+    else:
+        require_fixture_policy(policy)
+
+
+def require_publication_lock(policy):
+    """The shared lock must already exist as a private single-link regular file.
+
+    The production path never creates the lock: provisioning it is a separate,
+    externally authorized host action.
+    """
+    try:
+        with fs.regular_file(Path(policy.lock), private=True):
+            pass
+    except FileNotFoundError:
+        raise fs.CheckpointError("publisher_lock_missing") from None
+
+
+def approval_key(key_path, policy):
+    """Read the operator-held symmetric approval key; it is never logged or returned twice.
+
+    The key is a local operator secret: 32..4096 raw bytes in a `0600` single-link
+    regular file owned by the publisher account, outside the application root and
+    outside the private state directory that also holds approvals.
+    """
+    key_path = Path(key_path)
+    fs.require(key_path.is_absolute(), "approval_key_path")
+    fs.require(not key_path.is_relative_to(policy.root), "approval_key_inside_root")
+    fs.require(not key_path.is_relative_to(policy.private), "approval_key_private_boundary")
+    try:
+        with fs.regular_file(key_path, private=True) as (stream, opened):
+            fs.require(KEY_MINIMUM_BYTES <= opened.st_size <= KEY_MAXIMUM_BYTES,
+                       "approval_key_size")
+            key = stream.read(KEY_MAXIMUM_BYTES + 1)
+            fs.require(len(key) == opened.st_size, "approval_key_drift")
+    except FileNotFoundError:
+        raise fs.CheckpointError("approval_key_missing") from None
+    return key
+
+
+def approval_signature(approval_raw, key):
+    """Symmetric HMAC-SHA256 over the exact approval bytes, domain-separated."""
+    return hmac.new(key, SIGNATURE_CONTEXT + approval_raw, hashlib.sha256).hexdigest()
+
+
+def signed_approval_digest(policy, approval_path, signature_path, key):
+    """Verify a detached signature and return the digest of the signed approval bytes.
+
+    This is an operator-held shared key, not a third-party identity: a valid
+    signature proves the signer possessed the key file, nothing about who they are.
+    """
+    approval_path, signature_path = Path(approval_path), Path(signature_path)
+    fs.private_directory(approval_path.parent)
+    fs.private_directory(signature_path.parent)
+    fs.require(approval_path.is_relative_to(policy.private), "approval_boundary")
+    fs.require(signature_path.is_relative_to(policy.private), "approval_signature_boundary")
+    fs.require(approval_path != signature_path, "approval_signature_boundary")
+    try:
+        with fs.regular_file(signature_path, private=True) as (stream, opened):
+            fs.require(opened.st_size <= 4096, "approval_signature_size")
+            raw = stream.read(4097)
+    except FileNotFoundError:
+        raise fs.CheckpointError("approval_signature_missing") from None
+    try:
+        token = raw.decode("ascii", "strict").strip()
+    except UnicodeDecodeError as error:
+        raise fs.CheckpointError("approval_signature") from error
+    fs.require(re.fullmatch(SIGNATURE_PATTERN, token) is not None, "approval_signature")
+    try:
+        _, digest, approval_raw = fs.json_snapshot(approval_path)
+    except FileNotFoundError:
+        raise fs.CheckpointError("approval_missing") from None
+    fs.require(hmac.compare_digest(approval_signature(approval_raw, key), token),
+               "approval_signature_mismatch")
+    return digest
 
 
 def publication_plan(manifest, observed):
@@ -455,9 +576,10 @@ def stage_artifact(archive_path, files, operation):
     return staged
 
 
-def artifact_preflight(policy, manifest, before, plan, files, staged):
+def artifact_preflight(policy, manifest, before, plan, files, staged,
+                       realm=FIXTURE_REALM):
     """Complete every inventory, type and staging check before the first mutation."""
-    require_fixture_policy(policy)
+    enforce_realm(policy, realm)
     for name in plan["replacements"] + plan["additions"]:
         fs.expected_target(policy, name, before.get(name))
         staged_payload(staged[name], {"size": staged[name].stat().st_size,
@@ -468,8 +590,9 @@ def artifact_preflight(policy, manifest, before, plan, files, staged):
         fs.expected_target(policy, name, before[name])
 
 
-def publish_artifact_file(policy, name, sha256, staged, before, operation, directories):
-    require_fixture_policy(policy)
+def publish_artifact_file(policy, name, sha256, staged, before, operation, directories,
+                          realm=FIXTURE_REALM):
+    enforce_realm(policy, realm)
     observed = before.get(name)
     fs.journal(operation, {"action": "publish-intent", "path": name, "sha256": sha256,
                            "mode": 0o644, "observed": observed})
@@ -498,8 +621,9 @@ def publish_artifact_file(policy, name, sha256, staged, before, operation, direc
     fs.journal(operation, {"action": "published", "path": name})
 
 
-def remove_artifact_file(policy, name, observed, operation, directories):
-    require_fixture_policy(policy)
+def remove_artifact_file(policy, name, observed, operation, directories,
+                         realm=FIXTURE_REALM):
+    enforce_realm(policy, realm)
     fs.journal(operation, {"action": "remove-intent", "path": name, "expected": observed})
     fs.expected_target(policy, name, observed)
     with fs.parent_fd(policy, name, directories) as (parent, leaf):
@@ -536,13 +660,32 @@ def artifact_matches(policy, manifest, before, files):
 def publish_artifact(policy, checkpoint_id, manifest_sha256, approval_path,
                      archive_path, checksum_path):
     """Publish a verified candidate release artifact onto a checkpointed fixture tree."""
-    require_fixture_policy(policy)
+    return artifact_publication(
+        policy, checkpoint_id, manifest_sha256, approval_path, archive_path,
+        checksum_path, realm=FIXTURE_REALM)
+
+
+def artifact_publication(policy, checkpoint_id, manifest_sha256, approval_path,
+                         archive_path, checksum_path, realm, authenticate=None,
+                         checkpoint_check=None):
+    """The shared artifact publication body; the realm and extra proof are injected.
+
+    `realm` selects exactly one identity guard (see `enforce_realm`), `authenticate`
+    is the optional extra approval proof a realm requires, and `checkpoint_check` is
+    an optional extra checkpoint requirement. Only one implementation of the apply
+    sequence exists, so the fixture and production realms cannot diverge in what they
+    validate or mutate; they differ only in who may run them and what extra proof is
+    demanded.
+    """
+    enforce_realm(policy, realm)
     approval_path, archive_path = Path(approval_path), Path(archive_path)
     fs.private_directory(approval_path.parent)
     fs.private_directory(archive_path.parent)
     fs.require(approval_path.is_relative_to(policy.private), "approval_boundary")
     fs.require(archive_path.is_relative_to(policy.private), "artifact_boundary")
     directory, manifest = fs.load_checkpoint(policy, checkpoint_id, manifest_sha256)
+    if checkpoint_check is not None:
+        checkpoint_check(directory, manifest)
     before = fs.inventory(policy, manifest["boundaries"])
     baseline_shared = {n: e for n, e in fs.stable_protected(manifest["inventory"]).items()
                        if manifest["inventory"][n]["class"] == "shared-parent"}
@@ -555,6 +698,8 @@ def publish_artifact(policy, checkpoint_id, manifest_sha256, approval_path,
     approved, approval_sha, approval_raw = fs.authorize(
         policy, approval_path, OPERATION, checkpoint_id, before,
         manifest_sha256, return_snapshot=True)
+    if authenticate is not None:
+        authenticate(approved, approval_sha)
     fs.require(approved.get("boundaries") == manifest["boundaries"], "approval_boundaries")
     fs.require(approved.get("manifest_sha256") == manifest_sha256, "approval_manifest")
     fs.require(approved.get("publisher_sha256") == publisher_digest(), "approval_publisher")
@@ -594,15 +739,15 @@ def publish_artifact(policy, checkpoint_id, manifest_sha256, approval_path,
         fs.require(fs.inventory(policy, manifest["boundaries"]) == before, "publication_drift")
         fs.require(fs.authorize(policy, approval_path, OPERATION, checkpoint_id, before,
                                 expected_digest=approval_sha) == approved, "approval_drift")
-        artifact_preflight(policy, manifest, before, plan, files, staged)
+        artifact_preflight(policy, manifest, before, plan, files, staged, realm)
         directories = {n: (e["device"], e["inode"]) for n, e in before.items()
                        if e["type"] == "directory"}
         try:
             for name in sorted(plan["removals"], key=lambda n: (n.count("/"), n), reverse=True):
-                remove_artifact_file(policy, name, before[name], operation, directories)
+                remove_artifact_file(policy, name, before[name], operation, directories, realm)
             for name in plan["replacements"] + plan["additions"]:
                 publish_artifact_file(policy, name, files[name], staged[name],
-                                      before, operation, directories)
+                                      before, operation, directories, realm)
             artifact_matches(policy, manifest, before, files)
             fs.write_json(operation / "outcome.json", {"status": SUCCESS})
         except BaseException:
@@ -616,15 +761,107 @@ def publish_artifact(policy, checkpoint_id, manifest_sha256, approval_path,
             "removals": sorted(plan["removals"])}
 
 
+def candidate_pin(candidate):
+    """Validate the fixed release-candidate pin the production caller supplies.
+
+    `main()` always supplies `fs.CANDIDATE`. The pin is what binds the artifact the
+    publisher is willing to write to one reviewed release identity, so a substituted
+    artifact that merely has a valid internal manifest cannot be published.
+    """
+    fs.require(isinstance(candidate, dict)
+               and set(candidate) == {"artifact_id", "application_sha", "archive_sha256"}
+               and isinstance(candidate["artifact_id"], str)
+               and bool(candidate["artifact_id"].strip())
+               and re.fullmatch(r"[a-f0-9]{40}", candidate["application_sha"] or "") is not None
+               and re.fullmatch(SIGNATURE_PATTERN, candidate["archive_sha256"] or "") is not None,
+               "production_candidate_pin")
+    return candidate
+
+
+def checkpoint_freshness(directory, manifest):
+    """Production-only: the checkpoint baseline must be recent, not future-dated.
+
+    A checkpoint is the pre-release baseline. Publishing against a stale baseline
+    would push code over state nobody recently reviewed, so the production realm
+    additionally requires the capture to have completed inside the same bounded
+    window the approval itself lives in.
+    """
+    completed = fs.timestamp(manifest["capture"]["completed_utc"])
+    current = fs.now()
+    fs.require(current - dt.timedelta(minutes=15) <= completed <= current,
+               "production_checkpoint_stale")
+
+
+def publish_artifact_production(policy, checkpoint_id, manifest_sha256, approval_path,
+                                signature_path, key_path, archive_path, checksum_path,
+                                candidate=None):
+    """The gated production door. Every prerequisite is checked before any mutation.
+
+    Prerequisites, in order: a self-consistent production policy, the shared
+    publisher lock already present, a readable operator approval key, a detached
+    HMAC-SHA256 signature over the exact approval bytes, an approval that pins the
+    key identity and the fixed candidate digests, then the shared body's verified
+    checkpoint, verified candidate artifact, protected-state equality, single-use
+    approval and interruption journal.
+
+    `candidate` defaults to the fixed `fs.CANDIDATE`; `main()` never overrides it.
+    Nothing about this door is provisioned in this repository: no key, no lock, no
+    approval and no production approval policy exist yet.
+    """
+    pin = candidate_pin(fs.CANDIDATE if candidate is None else candidate)
+    require_production_policy(policy)
+    require_publication_lock(policy)
+    key = approval_key(key_path, policy)
+    key_identity = hashlib.sha256(key).hexdigest()
+    signed_digest = signed_approval_digest(policy, approval_path, signature_path, key)
+
+    def authenticate(approved, approval_sha):
+        fs.require(hmac.compare_digest(approval_sha, signed_digest),
+                   "approval_signature_drift")
+        fs.require(approved.get("production_key_sha256") == key_identity,
+                   "approval_key_identity")
+        fs.require(approved.get("artifact_application_sha") == pin["application_sha"],
+                   "approval_candidate_application")
+        fs.require(approved.get("artifact_sha256") == pin["archive_sha256"],
+                   "approval_candidate_archive")
+
+    result = artifact_publication(
+        policy, checkpoint_id, manifest_sha256, approval_path, archive_path,
+        checksum_path, realm=PRODUCTION_REALM, authenticate=authenticate,
+        checkpoint_check=checkpoint_freshness)
+    return dict(result, realm=PRODUCTION_REALM, approval_key_sha256=key_identity)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", nargs="?", choices=("publish",), default="publish")
     parser.add_argument("--checkpoint")
     parser.add_argument("--manifest-sha256")
     parser.add_argument("--approval", type=Path)
-    parser.parse_args(argv)
-    print(DISABLED, file=sys.stderr)
-    return 1
+    parser.add_argument("--archive", type=Path)
+    parser.add_argument("--checksum", type=Path)
+    parser.add_argument("--signature", type=Path)
+    parser.add_argument("--approval-key", type=Path)
+    parser.add_argument("--production", action="store_true")
+    args = parser.parse_args(argv)
+    if not args.production:
+        print(DISABLED, file=sys.stderr)
+        return 1
+    try:
+        fs.require(args.signature is not None and args.approval_key is not None
+                   and bool(args.checkpoint) and bool(args.manifest_sha256)
+                   and args.approval is not None and args.archive is not None
+                   and args.checksum is not None, "production_arguments")
+        os.umask(0o077)
+        result = publish_artifact_production(
+            fs.PRODUCTION, args.checkpoint, args.manifest_sha256, args.approval,
+            args.signature, args.approval_key, args.archive, args.checksum)
+        print(json.dumps(result, sort_keys=True))
+        return 0
+    except (fs.CheckpointError, OSError, ValueError, KeyError, TypeError,
+            tarfile.TarError, ArithmeticError):
+        print(PRODUCTION_ABORT, file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
