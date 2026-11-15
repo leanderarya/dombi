@@ -1,9 +1,14 @@
 # Dombi V1.0 after-hours maintenance runbook
 
 Status: **DOCUMENTATION ONLY — EXECUTION NO-GO.** This runbook is prepared against
-merged `develop` `b92e8d3b`. It authorizes nothing. Every phase below is gated by a
+merged `develop` `2b07ef1c`. It authorizes nothing. Every phase below is gated by a
 STOP condition, and several are currently **blocked by missing controls** (see
 [Blockers](#blockers)). Do not execute a phase whose gate is not green.
+
+For the short operator decision list, see [V1-WRITER-CONTAINMENT.md](V1-WRITER-CONTAINMENT.md).
+That checklist enumerates every writer class with its containment method, evidence and
+STOP gate, and carries the DOKU maintenance policy. It summarises this document and does
+not replace it.
 
 - Repository: `leanderarya/dombi`
 - Production root: `/home/u399215191/domains/dombicenter.com/public_html/app`
@@ -90,8 +95,8 @@ per-route to the five checkout/order/payment-initiation routes, controlled by
 | --- | --- | --- |
 | P3.1 | Close customer admission in-app: set `ADMISSION_CUSTOMER_CHECKOUT=held` and rebuild the config cache | **AVAILABLE — only after this code is deployed** |
 | P3.2 | Narrow `artisan down` so `/up` and the two DOKU routes stay reachable: `$middleware->preventRequestsDuringMaintenance(except: ['up','payment/doku/notify','payment/doku/redirect'])` in `bootstrap/app.php` | **AVAILABLE once this release is deployed — see P3.5** |
-| P3.3 | Decide DOKU disposition: durable intake is now the in-app behaviour; record any edge-rejection ledger if an external boundary is used instead | pending |
-| P3.4 | Record chosen DOKU disposition + merchant-confirmed retry deadline | pending |
+| P3.3 | DOKU disposition | **DECIDED — keep intake open.** Durable in-app intake; unpersisted notifications never acknowledged; retry/resend are recovery options only. Edge rejection is unavailable (no established provider capability). See [V1-WRITER-CONTAINMENT.md](V1-WRITER-CONTAINMENT.md). |
+| P3.4 | Capture the pre-window payment inventory (all non-final states incl. `created`/`initiated`/legacy) and obtain the **DOKU transaction export** | `inventory=` `doku_export=` — **NO-GO without the export** |
 | P3.5 | Close the **pre-deploy** window (while old code is still serving) | **UNAVAILABLE — no provider-supported mechanism established** |
 
 **Verified activation / verification / restoration (P3.2):**
@@ -295,7 +300,7 @@ not documentation gaps.
 | # | Blocker | Evidence |
 | --- | --- | --- |
 | B1 | **No deploy-independent, pre-deploy admission boundary.** An in-app gate exists (P3.1) and `artisan down` now preserves `/up` + DOKU (P3.2), but neither covers the window while old code is still serving, nor in-place file replacement. | `CheckCustomerAdmission`; `preventRequestsDuringMaintenance` in `bootstrap/app.php` |
-| B2 | **No edge-level DOKU containment decision.** In-app durable intake is the default and unpersisted notifications are never acknowledged; DOKU routes are now exempt from maintenance. Retry/resend semantics remain unevidenced and no edge-rejection ledger policy exists. | `DokuWebhookIngressService::receive()`; `bootstrap/app.php` maintenance exceptions |
+| B2 | **DOKU policy decided; evidence not yet captured.** Intake stays open, unpersisted notifications are never acknowledged, and retry/resend are recovery options only. Still open: the pre-window non-final-attempt inventory (incl. `created`, `initiated` and legacy invoices), the external DOKU transaction export, and the manual `created`-invoice sweep. `created` attempts are not processed by any scheduled job. | `ReconcileDokuPayment.php:25`; `DokuReconciliationService.php:20`; `DokuService.php:236,605`; [V1-WRITER-CONTAINMENT.md](V1-WRITER-CONTAINMENT.md) |
 | B3 | **Shared publisher lock absent** on the host, so `capture` will abort (`publisher_lock`). A provisioning procedure now exists but has not been executed. | `Policy.lock` required; observed absent; `provision_checkpoint_tool.py` |
 | B4 | **Checkpoint tool not provisioned** in `private-backups` with a pinned digest. Provisioning procedure exists; not executed. | `provision_checkpoint_tool.py`, `CHECKPOINT_PROVISIONING.md` |
 | B5 | **Approvals are not authenticated identity.** The production path now requires an HMAC over the approval bytes, but that authenticates possession of an operator-held symmetric key — not a person, and not `independent_verifier != operator`. | `publish_artifact_production`; `CODE_PUBLISHER.md` |
