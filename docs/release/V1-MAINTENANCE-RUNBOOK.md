@@ -225,6 +225,17 @@ identity from every caller.
 **Prohibited substitutes:** `rsync`/`scp` by hand, editing files in place, `git pull` in
 the web root, running the GitHub workflow, or restoring the historical recovery tool.
 
+**Runtime log appends during publication.** The publisher tolerates one narrow class of
+drift: a `protected` regular file that is a direct child of `storage/logs/` may grow or
+change content, provided its inode, device, owner, group, mode and type are unchanged.
+That allowance is bound to the approval's `volatile_policy` field and cannot be widened
+per run (`volatile_policy_mismatch` otherwise). Everything else still aborts:
+`scheduler_pause` is **not** a filesystem guarantee, and log writes are only one writer —
+uploads under `storage/app/`, `storage/framework/{cache,sessions,views}`,
+`bootstrap/cache`, sessions and database files remain strict. Still prefer a window that
+does not overlap `backup:clean` (02:00), `backup:run` (02:30) or `backup:monitor` (03:00):
+those write inside `storage/` outside the allowlist and will abort publication.
+
 ---
 
 ## Phase P7 — Acceptance **[READ-ONLY]**

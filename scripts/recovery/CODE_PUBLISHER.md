@@ -19,6 +19,7 @@ rather than defining a competing one.
 | `scripts/recovery/code_publisher.py` | Fixture `publish()` (checkpoint-to-checkpoint) and `publish_artifact()` (candidate artifact), plus the gated `publish_artifact_production()`. |
 | `scripts/recovery/test_code_publisher.py` | Focused synthetic tests for `publish()`. |
 | `scripts/recovery/test_publisher_artifact.py` | Focused synthetic tests for `publish_artifact()`. |
+| `scripts/recovery/test_publisher_volatile.py` | Focused synthetic tests for the volatile-log allowance. |
 | `scripts/recovery/test_publisher_production.py` | Focused synthetic tests for the production door and its refusals. |
 | Production CLI command | **Gated and unprovisioned.** `main()` refuses unless `--production` plus every prerequisite is supplied; without the flag it prints a refusal and exits 1. |
 | Production host/account/root override | **Does not exist.** No such argument is parsed; the CLI always passes `fs.PRODUCTION`. |
@@ -100,11 +101,72 @@ with `operation` set to `filesystem-code-publication` plus:
 | `artifact_entries_sha256` | `object_digest` of the artifact's `name → sha256` map. |
 | `publication_plan_sha256` | `plan_digest(plan)` for the exact additions/replacements/removals. |
 | `removals` | Exactly `plan["removals"]`; any removal must be listed here. |
+| `volatile_policy` | Exactly `volatile_policy()`; see [Volatile runtime paths](#volatile-runtime-paths). |
 
 `publish()` (checkpoint-to-checkpoint) ignores `removals` entirely: that mode never
 deletes, creates or relinks anything, so a deletion map carries no meaning there.
 `publish_artifact()` **does** honour `removals`, and refuses to remove anything the
 approval did not list.
+
+## Volatile runtime paths
+
+A production tree is never perfectly still. The checkpoint pins a digest of the *whole*
+root inventory, so a framework log append during publication would otherwise abort the
+run after some files were already replaced. `publish_artifact()` therefore tolerates a
+single narrow class of drift, and only that class.
+
+**Allowlist (exact):**
+
+```python
+{
+    "schema": "dombi-volatile-runtime-v1",
+    "allowed_prefixes": ["storage/logs/"],
+    "mode": "append-only",
+}
+```
+
+**What is tolerated:** for a path that is a **direct child file** of `storage/logs/`, that
+is still a `protected` regular file with the **same inode, device, owner, group, mode,
+type and classification**, and whose baseline bytes **survive as an exact prefix**, only
+`size`, `sha256` and `mtime_ns` may differ. Those three fields are replaced by the
+baseline values before the equality comparison.
+
+**Append-only is enforced by content, not metadata.** Size and structure alone cannot
+distinguish an append from a same-size overwrite or a truncate-and-regrow. The publisher
+therefore re-opens the file with `O_NOFOLLOW` relative to a validated parent descriptor,
+re-checks that it is still a single-link regular file, reads exactly the baseline byte
+count, hashes those bytes, and requires the result to equal the baseline `sha256`. The
+file is re-`fstat`ed after the read, and the comparison against the pre-read `fstat`
+covers device, inode, mode, uid, gid, size, `mtime_ns`, `ctime_ns` and link count — so any
+write that lands during the read, append or rewrite, aborts with `volatile_read_drift`
+rather than being reasoned about from a torn snapshot. A truncated file, a prefix
+mismatch, an unreadable or substituted entry (`volatile_open_failed`) and a missing
+baseline hash (`volatile_baseline_hash`) all fail closed: normalisation is declined and
+the ordinary drift check aborts.
+
+**What is never tolerated:**
+
+- additions, removals or renames anywhere, including inside `storage/logs/`;
+- any change to a `managed` path (the tolerance cannot excuse code);
+- symlink substitution, type changes, inode/device changes;
+- ownership, group or mode changes;
+- nested paths (`storage/logs/x/y.log`) — only direct children qualify;
+- `storage/app/` (uploads, delivery proofs, backups), `storage/framework/cache`,
+  `storage/framework/sessions`, `storage/framework/views`, `bootstrap/cache`,
+  `.env*`, keys and database files — these keep failing closed;
+- any drift outside the allowlist, which still aborts with `publication_drift` or
+  `protected_state_changed`.
+
+**Binding:** the approval must carry `volatile_policy` equal to `volatile_policy()`
+exactly. A missing, widened (`storage/app/`), narrowed (`[]`) or different-mode policy is
+rejected with `volatile_policy_mismatch`. The publisher only ever honours the one reviewed
+policy, so an operator cannot broaden the allowance per run.
+
+**Unchanged guarantees:** the checkpoint capture itself remains fully strict — no
+normalisation is applied at capture, so a checkpoint still records exact content hashes.
+Only the publisher's own drift gate and its post-condition compare modulo this allowance,
+and the post-condition still refuses to report success on any unapproved protected-state
+change.
 
 ## The production door
 
@@ -234,7 +296,9 @@ authenticates the truth of those attestations; they remain operator statements.
    `artifact_matches()` for the artifact mode) requires the managed set to equal
    the intended state *and* `stable_protected()` to equal its own immediate
    pre-publication value. Database files stay metadata-only; no content is read
-   and no integrity is claimed.
+   and no integrity is claimed. The artifact mode compares protected state modulo
+   the single approved volatile allowlist (see above); everything outside it must
+   still match exactly, and an unapproved protected change never reports success.
 9. **Approval is single-use.** The audit directory name embeds the approval
    digest, so replaying an approval aborts. An interrupted operation stays on
    disk and must be acknowledged in a fresh approval.
@@ -304,10 +368,11 @@ files and their sidecars are preserved and are absent from the code archive.
 python3 -B -m unittest discover -s scripts/recovery -p 'test_publisher_production.py' -v
 python3 -B -m unittest discover -s scripts/recovery -p 'test_code_publisher.py'
 python3 -B -m unittest discover -s scripts/recovery -p 'test_publisher_artifact.py'
+python3 -B -m unittest discover -s scripts/recovery -p 'test_publisher_volatile.py'
 python3 -B -m unittest discover -s scripts/recovery -p 'test_filesystem_checkpoint.py' -v
 ```
 
-All four suites use synthetic fixtures under a temporary directory. They mock only
+All five suites use synthetic fixtures under a temporary directory. They mock only
 the macOS metadata adapters (`os.listxattr`, POSIX ACL probes); real file
 replacement, unlink, timestamps, ownership, locking and `fsync` are exercised.
 
@@ -318,6 +383,15 @@ inventory and plan digest approval, unapproved removals, type conflicts, unbasel
 stale files, stale approvals, interruption with a required fresh approval, unfinished
 prior recovery, shared-lock contention, symlinked-parent escape, input boundary, and
 the production refusal.
+
+`test_publisher_volatile.py` covers the volatile allowance: the policy shape and its
+exact allowlist, that only direct children of `storage/logs/` qualify, that
+`storage/app/` and `storage/framework/{cache,sessions,views}` do **not**, an append
+during publication succeeding, unauthorised protected change, upload change, symlink
+substitution, an added or removed log file, a mode change, managed-code drift, a
+missing/widened/narrowed/altered policy, interruption still never reporting success,
+and direct unit tests pinning that normalisation copies only the three content fields
+so inode/uid/mode/type/device/class changes are never excused.
 
 `test_publisher_production.py` covers the production door with a synthetic fixture
 policy that is **not** the pinned identity: refusal without the explicit flag (and

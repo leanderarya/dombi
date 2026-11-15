@@ -123,6 +123,7 @@ class ArtifactPublisherTests(unittest.TestCase):
         if kind == publisher.OPERATION:
             value["manifest_sha256"] = self.manifest_sha
             value["publisher_sha256"] = publisher.publisher_digest()
+            value["volatile_policy"] = publisher.volatile_policy()
             value["prior_operations"] = publisher.prior_operation_lineage(self.directory)
         value.update(overrides)
         path = self.private / ("synthetic-approval-" + str(self.sequence) + ".json")
