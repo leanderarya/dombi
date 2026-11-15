@@ -11,6 +11,7 @@ import re
 import shutil
 import stat
 import sys
+import tarfile
 
 
 VARIANT = "dombi-code-publisher-v1"
@@ -28,7 +29,8 @@ def checkpoint_module():
     source = Path(__file__).with_name("filesystem_checkpoint.py").resolve()
     module = sys.modules.get(name)
     if module is not None and getattr(module, "VARIANT", None) == "dombi-filesystem-checkpoint-v1":
-        fs.require(Path(module.__file__).resolve() == source, "foreign_checkpoint_module")
+        if Path(module.__file__).resolve() != source:
+            raise ImportError("foreign_checkpoint_module")
         return module
     spec = importlib.util.spec_from_file_location(name, source)
     module = importlib.util.module_from_spec(spec)
@@ -305,6 +307,313 @@ def publish(policy, checkpoint_id, manifest_sha256, approval_path):
             raise
     return {"status": SUCCESS, "checkpoint_id": checkpoint_id,
             "manifest_sha256": manifest_sha256, "published": plan}
+
+
+def release_module():
+    """Load the existing release-format validator so the artifact contract is reused."""
+    name = "dombi_release"
+    source = Path(__file__).parents[1] / "ci" / "release.py"
+    module = sys.modules.get(name)
+    if module is not None:
+        return module
+    spec = importlib.util.spec_from_file_location(name, source)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+release = release_module()
+
+
+def checksum_token(checksum_path):
+    """Read the pinned release checksum receipt; return its digest token."""
+    with fs.regular_file(Path(checksum_path), private=True) as (stream, opened):
+        fs.require(opened.st_size <= 4096, "artifact_checksum_size")
+        raw = stream.read(4097)
+    fields = raw.decode("ascii", "strict").split()
+    fs.require(len(fields) == 2 and fields[1] == "release.tar.gz",
+               "artifact_checksum_receipt")
+    return fields[0]
+
+
+def artifact_files(archive_path, application_sha, archive_sha256):
+    """Validate a candidate release artifact and return its manifest and payload size.
+
+    Reuses the release format's own verifier (schema, allowed paths, member modes,
+    inventory equality, per-member digests) plus a digest re-check for substitution.
+    """
+    fs.require(isinstance(archive_path, Path), "artifact_path")
+    fs.require(re.fullmatch(r"[a-f0-9]{40}", application_sha or "") is not None,
+               "artifact_application_sha")
+    fs.require(re.fullmatch(r"[a-f0-9]{64}", archive_sha256 or "") is not None,
+               "artifact_archive_sha256")
+    fs.require(fs.file_digest(archive_path, private=True) == archive_sha256,
+               "artifact_pin")
+    try:
+        manifest = release.verify(str(archive_path), application_sha, archive_sha256)
+    except (ValueError, KeyError, TypeError, OSError, EOFError) as error:
+        raise fs.CheckpointError("artifact_invalid") from error
+    fs.require(fs.file_digest(archive_path, private=True) == archive_sha256,
+               "artifact_pin_drift")
+    files = manifest["files"]
+    fs.require(isinstance(files, dict) and files, "artifact_empty")
+    payload = 0
+    for name in files:
+        fs.relative(name)
+    with fs.regular_file(archive_path, private=True) as (source, _):
+        with tarfile.open(fileobj=source, mode="r:gz") as archive:
+            for member in archive:
+                if member.name == "release.json":
+                    continue
+                fs.require(member.isfile() and member.size >= 0, "artifact_member")
+                payload += member.size
+    return manifest, payload
+
+
+def artifact_plan(manifest, observed, files):
+    """Plan managed-file additions, replacements and removals against a checkpoint.
+
+    The checkpoint defines the managed scope and the pre-release baseline; the
+    artifact defines the candidate file set. Anything the artifact cannot express
+    (directories, symlinks) must already exist and stay unchanged.
+    """
+    boundaries = manifest["boundaries"]
+    baseline = {n: e for n, e in manifest["inventory"].items() if e["class"] == "managed"}
+    baseline_files = {n for n, e in baseline.items() if e["type"] == "file"}
+    for name in files:
+        fs.relative(name)
+        fs.require(any(fs.beneath(name, scope) for scope in boundaries["managed_scopes"]),
+                   "artifact_path_outside_managed_scope")
+        fs.require(not fs.protected(name, boundaries), "artifact_path_protected")
+        fs.require(fs.classification(name, boundaries, False) == "managed",
+                   "artifact_path_not_managed")
+        entry = observed.get(name)
+        if entry is None:
+            fs.require(ancestors_present(name, observed), "missing_target_parent")
+        else:
+            fs.require(entry["type"] == "file", "target_type_conflict")
+
+    current = {n: e for n, e in observed.items()
+               if e["class"] == "managed" and e["type"] == "file"}
+    removals = {}
+    for name, entry in current.items():
+        if name in files:
+            continue
+        fs.require(name in baseline_files, "unbaselined_target_removal")
+        fs.require(not fs.protected(name, boundaries), "removal_of_protected")
+        fs.require(not any(other != name and fs.beneath(other, name)
+                           and observed[other]["class"] != "managed" for other in observed),
+                   "removal_ancestor_of_protected")
+        removals[name] = {"observed_entry_sha256": fs.object_digest(entry)}
+
+    additions, replacements, unchanged = [], [], []
+    for name in sorted(files):
+        entry = current.get(name)
+        if entry is None:
+            additions.append(name)
+        elif (entry["sha256"] != files[name] or entry["mode"] != 0o644
+              or entry["nlink"] != 1):
+            replacements.append(name)
+        else:
+            unchanged.append(name)
+    return {"additions": additions, "replacements": replacements,
+            "removals": removals, "unchanged": unchanged}
+
+
+def plan_digest(plan):
+    return fs.object_digest({"additions": plan["additions"],
+                             "replacements": plan["replacements"],
+                             "removals": plan["removals"]})
+
+
+def stage_artifact(archive_path, files, operation):
+    """Extract verified members into the private operation directory only."""
+    staged = {}
+    with fs.regular_file(archive_path, private=True) as (source, _):
+        with tarfile.open(fileobj=source, mode="r:gz") as archive:
+            for member in archive:
+                name = fs.relative(member.name)
+                if name == "release.json":
+                    continue
+                fs.require(name in files and name not in staged, "artifact_member")
+                destination = operation / ("payload-" + str(len(staged)))
+                fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL
+                             | os.O_NOFOLLOW, 0o600)
+                digest = hashlib.sha256()
+                with os.fdopen(fd, "wb") as output:
+                    with archive.extractfile(member) as data:
+                        for block in iter(lambda: data.read(1048576), b""):
+                            digest.update(block)
+                            output.write(block)
+                    output.flush()
+                    os.fsync(output.fileno())
+                fs.require(digest.hexdigest() == files[name], "artifact_content")
+                staged[name] = destination
+    fs.require(set(staged) == set(files), "artifact_completeness")
+    fs.fsync_directory(operation)
+    return staged
+
+
+def artifact_preflight(policy, manifest, before, plan, files, staged):
+    """Complete every inventory, type and staging check before the first mutation."""
+    require_fixture_policy(policy)
+    for name in plan["replacements"] + plan["additions"]:
+        fs.expected_target(policy, name, before.get(name))
+        staged_payload(staged[name], {"size": staged[name].stat().st_size,
+                                      "sha256": files[name]})
+    for name in plan["additions"]:
+        fs.require(ancestors_present(name, before), "missing_target_parent")
+    for name in plan["removals"]:
+        fs.expected_target(policy, name, before[name])
+
+
+def publish_artifact_file(policy, name, sha256, staged, before, operation, directories):
+    require_fixture_policy(policy)
+    observed = before.get(name)
+    fs.journal(operation, {"action": "publish-intent", "path": name, "sha256": sha256,
+                           "mode": 0o644, "observed": observed})
+    fs.require(fs.file_digest(staged) == sha256, "staging_drift")
+    with fs.absolute_parent(staged) as (source_parent, source):
+        fd = os.open(source, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=source_parent)
+        try:
+            fs.require(stat.S_ISREG(os.fstat(fd).st_mode), "staged_not_regular")
+            os.fchown(fd, os.getuid(), os.getgid())
+            os.fchmod(fd, 0o644)
+            os.fsync(fd)
+            pinned = os.fstat(fd)
+            fs.journal(operation, {"action": "publish-staged", "path": name,
+                                   "staged": {"device": pinned.st_dev,
+                                              "inode": pinned.st_ino,
+                                              "size": pinned.st_size}})
+            fs.expected_target(policy, name, observed)
+            with fs.parent_fd(policy, name, directories) as (target_parent, target):
+                fs.target_at(target_parent, target, observed)
+                os.replace(source, target, src_dir_fd=source_parent,
+                           dst_dir_fd=target_parent)
+                os.fsync(target_parent)
+        finally:
+            os.close(fd)
+    fs.fsync_directory(operation)
+    fs.journal(operation, {"action": "published", "path": name})
+
+
+def remove_artifact_file(policy, name, observed, operation, directories):
+    require_fixture_policy(policy)
+    fs.journal(operation, {"action": "remove-intent", "path": name, "expected": observed})
+    fs.expected_target(policy, name, observed)
+    with fs.parent_fd(policy, name, directories) as (parent, leaf):
+        fs.target_at(parent, leaf, observed)
+        os.unlink(leaf, dir_fd=parent)
+        os.fsync(parent)
+    fs.journal(operation, {"action": "removed", "path": name})
+
+
+def artifact_matches(policy, manifest, before, files):
+    """Verify the published tree equals the artifact for managed files, nothing else."""
+    after = fs.inventory(policy, manifest["boundaries"])
+    managed = {n: e for n, e in after.items() if e["class"] == "managed"}
+    present = {n for n, e in managed.items() if e["type"] == "file"}
+    fs.require(present == set(files), "artifact_inventory_mismatch")
+    for name, entry in managed.items():
+        if entry["type"] != "file":
+            continue
+        fs.require(entry["sha256"] == files[name] and entry["mode"] == 0o644
+                   and entry["nlink"] == 1, "artifact_metadata_mismatch")
+    before_links = {n: fs.managed_metadata({n: e}) for n, e in before.items()
+                    if e["class"] == "managed" and e["type"] == "symlink"}
+    after_links = {n: fs.managed_metadata({n: e}) for n, e in managed.items()
+                   if e["type"] == "symlink"}
+    fs.require(before_links == after_links, "managed_symlink_changed")
+    before_dirs = {n for n, e in before.items() if e["class"] == "managed"
+                   and e["type"] == "directory"}
+    after_dirs = {n for n, e in managed.items() if e["type"] == "directory"}
+    fs.require(before_dirs == after_dirs, "managed_directory_changed")
+    fs.require(fs.stable_protected(after) == fs.stable_protected(before),
+               "protected_state_changed")
+
+
+def publish_artifact(policy, checkpoint_id, manifest_sha256, approval_path,
+                     archive_path, checksum_path):
+    """Publish a verified candidate release artifact onto a checkpointed fixture tree."""
+    require_fixture_policy(policy)
+    approval_path, archive_path = Path(approval_path), Path(archive_path)
+    fs.private_directory(approval_path.parent)
+    fs.private_directory(archive_path.parent)
+    fs.require(approval_path.is_relative_to(policy.private), "approval_boundary")
+    fs.require(archive_path.is_relative_to(policy.private), "artifact_boundary")
+    directory, manifest = fs.load_checkpoint(policy, checkpoint_id, manifest_sha256)
+    before = fs.inventory(policy, manifest["boundaries"])
+    baseline_shared = {n: e for n, e in fs.stable_protected(manifest["inventory"]).items()
+                       if manifest["inventory"][n]["class"] == "shared-parent"}
+    fs.require(all(fs.stable_protected(before).get(n) == e for n, e in baseline_shared.items()),
+               "shared_parent_checkpoint_drift")
+    fs.require(not any(n in before and before[n]["class"] != "managed"
+                       for n, e in manifest["inventory"].items() if e["class"] == "managed"),
+               "managed_protected_overlap")
+
+    approved, approval_sha, approval_raw = fs.authorize(
+        policy, approval_path, OPERATION, checkpoint_id, before,
+        manifest_sha256, return_snapshot=True)
+    fs.require(approved.get("boundaries") == manifest["boundaries"], "approval_boundaries")
+    fs.require(approved.get("manifest_sha256") == manifest_sha256, "approval_manifest")
+    fs.require(approved.get("publisher_sha256") == publisher_digest(), "approval_publisher")
+    application_sha = approved.get("artifact_application_sha")
+    archive_sha256 = approved.get("artifact_sha256")
+    fs.require(checksum_token(checksum_path) == archive_sha256,
+               "artifact_checksum_receipt")
+    artifact, payload_bytes = artifact_files(archive_path, application_sha, archive_sha256)
+    files = artifact["files"]
+    plan = artifact_plan(manifest, before, files)
+    fs.require(approved.get("artifact_entries_sha256") == fs.object_digest(files),
+               "approval_artifact_inventory")
+    fs.require(approved.get("publication_plan_sha256") == plan_digest(plan),
+               "approval_publication_plan")
+    fs.require(approved.get("removals") == plan["removals"], "approval_removals")
+    previous = prior_operation_lineage(directory)
+    fs.require(approved.get("prior_operations") == previous, "unapproved_prior_publications")
+
+    operation = directory / ("publication-" + approval_sha)
+    with fs.publisher_lock(policy):
+        fs.require(fs.inventory(policy, manifest["boundaries"]) == before, "publication_drift")
+        fs.require(prior_operation_lineage(directory) == previous, "publication_lineage_drift")
+        fs.require(shutil.disk_usage(policy.private).free >
+                   2 * payload_bytes + 4 * len(fs.encoded(before)) + 1048576,
+                   "insufficient_space")
+        try:
+            operation.mkdir(mode=0o700)
+        except FileExistsError:
+            raise fs.CheckpointError("publication_approval_used") from None
+        fs.fsync_directory(directory)
+        fs.write_bytes(operation / "authorization.json", approval_raw)
+        fs.write_json(operation / "pre-state.json", before)
+        fs.write_json(operation / "journal.jsonl", {"status": "AUTHORIZED_NOT_COMPLETED"})
+        staged = stage_artifact(archive_path, files, operation)
+        fs.require(fs.load_checkpoint(policy, checkpoint_id, manifest_sha256)[1] == manifest,
+                   "checkpoint_drift")
+        fs.require(fs.inventory(policy, manifest["boundaries"]) == before, "publication_drift")
+        fs.require(fs.authorize(policy, approval_path, OPERATION, checkpoint_id, before,
+                                expected_digest=approval_sha) == approved, "approval_drift")
+        artifact_preflight(policy, manifest, before, plan, files, staged)
+        directories = {n: (e["device"], e["inode"]) for n, e in before.items()
+                       if e["type"] == "directory"}
+        try:
+            for name in sorted(plan["removals"], key=lambda n: (n.count("/"), n), reverse=True):
+                remove_artifact_file(policy, name, before[name], operation, directories)
+            for name in plan["replacements"] + plan["additions"]:
+                publish_artifact_file(policy, name, files[name], staged[name],
+                                      before, operation, directories)
+            artifact_matches(policy, manifest, before, files)
+            fs.write_json(operation / "outcome.json", {"status": SUCCESS})
+        except BaseException:
+            fs.journal(operation, {"status": "FAILED_OR_INTERRUPTED_KEEP_HELD"})
+            raise
+    return {"status": SUCCESS, "checkpoint_id": checkpoint_id,
+            "manifest_sha256": manifest_sha256,
+            "artifact_application_sha": application_sha,
+            "artifact_sha256": archive_sha256,
+            "additions": plan["additions"], "replacements": plan["replacements"],
+            "removals": sorted(plan["removals"])}
 
 
 def main(argv=None):

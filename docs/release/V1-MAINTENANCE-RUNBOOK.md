@@ -148,25 +148,22 @@ issued in the future · verifier equals operator · any flag/evidence missing ·
 
 ---
 
-## Phase P6 — Code-only publication **[STATE-CHANGING]** — **BLOCKED**
+## Phase P6 — Code-only publication **[STATE-CHANGING]** — **BLOCKED (production path only)**
 
-**There is no production publication path.** `code_publisher.py` `main()` prints
-`PUBLISHER_DISABLED; no production publication path exists; keep doors held` and exits 1,
-and `require_fixture_policy()` refuses the production identity from any caller.
-
-**And the payload source is wrong for a release.** `publish()` stages from
-`<checkpoint>/code.tar.gz` (`code_publisher.py:292`), i.e. it republishes the
-**checkpoint's own contents** — the pre-change baseline. It cannot install a candidate
-artifact from the release pipeline. As merged, this tool is a *restore* primitive, not a
-release primitive; publishing the checkpoint back is a no-op. A code-only release needs a
-publisher whose payload is the verified artifact, still bound to the same checkpoint,
-approval and shared lock.
+The publisher now has an artifact mode, `publish_artifact(policy, checkpoint_id,
+manifest_sha256, approval_path, archive_path, checksum_path)`. It validates the
+candidate `release.tar.gz` with the release format's own verifier, binds it to the
+pre-release checkpoint, and performs approval-scoped additions, replacements and
+removals under the shared lock. It is **fixture-only**: `main()` still prints
+`PUBLISHER_DISABLED` and exits 1, and `require_fixture_policy()` refuses the production
+identity from every caller.
 
 | # | Action | Status |
 | --- | --- | --- |
-| P6.1 | Obtain a reviewed production publisher bound to the checkpoint + approval + shared lock, **staging the verified artifact payload** (not the checkpoint's own archive) | **MISSING CONTROL** |
-| P6.2 | Publish managed code only, under the shared lock | `published_sha=` — **cannot run** |
+| P6.1 | Obtain a separately authorized production publisher wrapper: same artifact/checkpoint/approval/lock bindings, but with the production policy enabled | **MISSING CONTROL** |
+| P6.2 | Publish the approved artifact, under the shared lock | `published_sha=` — **cannot run** |
 | P6.3 | Expect `CODE_PUBLISH_COMPLETE_KEEP_HELD`; any other result = STOP | pending |
+| P6.4 | Confirm the reported `additions`/`replacements`/`removals` equal the approved plan | exact match required |
 
 **Prohibited substitutes:** `rsync`/`scp` by hand, editing files in place, `git pull` in
 the web root, running the GitHub workflow, or restoring the historical recovery tool.
@@ -234,8 +231,8 @@ not documentation gaps.
 | B3 | **Shared publisher lock absent** on the host, so `capture` will abort (`publisher_lock`). | `Policy.lock` required; observed absent |
 | B4 | **Checkpoint tool not provisioned** in `private-backups` with a pinned digest. | only historical recovery tools present |
 | B5 | **No authenticated approval generator/signer.** Approvals are operator attestations; `independent_verifier` is a name, not a verified identity. | `authorize()` |
-| B6 | **Publisher is fixture-only and restores the wrong payload.** CLI is an unconditional refusal; `require_fixture_policy()` refuses production; and `publish()` stages the checkpoint's own `code.tar.gz`, so it cannot install a candidate artifact. | `code_publisher.py` `main()`, `require_fixture_policy()`, `:292` |
-| B7 | **Publisher cannot create or prune paths.** Missing managed files and removal of obsolete files both abort; a code-only release that adds/removes files cannot complete. | `publication_plan()` `missing_target_entry` / `unexpected_target_inventory` |
+| B6 | **No production publication path.** The artifact mode exists and is tested, but `main()` is an unconditional refusal and `require_fixture_policy()` refuses the production identity. No approved wrapper enables it. | `code_publisher.py` `main()`, `require_fixture_policy()` |
+| B7 | **Artifact-mode preconditions are unprovisioned on the host.** The shared publisher lock is absent, the checkpoint tool is not provisioned with a pinned digest, and no artifact or checksum receipt exists in the private directory. | `Policy.lock`; `artifact_files()` input requirements |
 | B8 | **Web-worker DB identity UNKNOWN.** Never assume LSAPI workers run the NEW schema; workers older than the last `.env` change may still hold the previous schema. | prior read-only smoke test |
 | B9 | **Two identical cron entries.** `schedule:pause` covers both via shared cache, but the duplicate remains unexplained. | `cronjob_oGUFKybU14`, `cronjob_ZwUE8CLMt5` |
 | B10 | **Sibling `apidombi` app** uses a different database on the same account; containment scope unverified. | prior evidence |
@@ -245,11 +242,10 @@ not documentation gaps.
 separate authorization — it is the single prerequisite that makes `inspect --plan` →
 `capture` → `verify` executable and is required by every existing checkpoint control.
 
-**Smallest implementation step for B6/B7:** one reviewed production publisher mode that
-(a) is selected by explicit production policy plus approval binding, not a bypass flag,
-(b) stages the **verified candidate artifact** rather than the checkpoint archive,
-(c) creates only approval-listed managed paths whose parents validate, and
-(d) removes only approval-listed managed paths. No deployment enablement.
+**Next implementation step:** provision the shared publisher lock and a pinned checkpoint
+tool under separate authorization, then add the production wrapper for
+`publish_artifact()`. The artifact transport itself now exists and is tested; no
+deployment enablement is included.
 
 ---
 
@@ -258,6 +254,7 @@ separate authorization — it is the single prerequisite that makes `inspect --p
 | Dimension | Result |
 | --- | --- |
 | Documentation readiness (this runbook) | **PASS** — phases, gates, evidence fields and reversals defined; commands match current source |
+| Artifact publication implementation (fixture-only) | **PASS** — additions, replacements and removals implemented and synthetically tested |
 | Execution readiness | **FAIL** — B1–B10 open |
 | Scheduler pause capability | **PASS** — `schedule:pause`/`resume`, all 15 events covered |
 | Scheduler pause as writer containment | **FAIL by definition** — scheduled entrypoints only |
