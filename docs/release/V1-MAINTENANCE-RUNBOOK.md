@@ -16,6 +16,8 @@ not replace it.
 - Hostinger cron IDs: `cronjob_oGUFKybU14`, `cronjob_ZwUE8CLMt5` (leave **unchanged**)
 - Window: after store closing; code-only release; **no migrations, no DB rollback**
 - Framework: `laravel/framework` **v13.8.0** (`composer.lock`)
+- Production cache state: `bootstrap/cache/config.php` and `bootstrap/cache/routes-v7.php`
+  are **ACTIVE** as of 2026-11-16 (see [§P0](#phase-p0--production-cache-state-verified-2026-11-16))
 
 **This runbook must never be read as writer containment.** `schedule:pause` stops only
 scheduled entrypoints. Maintenance mode is explicitly **not used** (§P3). Web requests,
@@ -35,6 +37,12 @@ contained.
    waiver). This window does **not** re-open them and does **not** require a new
    restore drill.
 7. Record every evidence field. An empty field is a failed gate.
+8. **Never probe production DOKU or payment endpoints directly** — no `HEAD`, `GET` or
+   `POST` against `/payment/doku/notify`, `/payment/doku/redirect`, or any checkout,
+   order or payment-initiation route. These routes are excluded from maintenance mode
+   and write on every request; `HEAD` is routed to the `GET` controller and creates
+   database rows. Reachability must be established without executing a controller
+   (see §P3 probe rule). See [V1-PROBE-INCIDENT-20261116.md](V1-PROBE-INCIDENT-20261116.md).
 
 ## Verified control surface
 
@@ -47,8 +55,61 @@ contained.
 | Maintenance mode blocks HTTP | `PreventRequestsDuringMaintenance` is global; app registers no `except`; `/up` registered without exempt middleware | `artisan down` would block `/up` **and** `/payment/doku/*` ⇒ forbidden |
 | Checkpoint CLI | `scripts/recovery/filesystem_checkpoint.py` modes `inspect|verify|capture|recover` | §P5 commands below |
 | Publisher has **no production path** | `code_publisher.py` `main()` always prints `PUBLISHER_DISABLED`; `require_fixture_policy()` refuses the production identity | §P6 is **BLOCKED** |
-| Shared publisher lock | `Policy.lock` = `<private>/dombi-filesystem-publication.lock` | Must be pre-provisioned; observed **ABSENT** |
+| Shared publisher lock | `Policy.lock` = `<private>/dombi-filesystem-publication.lock` | **PROVISIONED and verified 2026-11-15**: present, `0600`, single-link, owner `u399215191` |
+| Checkpoint tool | `<private>/filesystem_checkpoint.py` | **PROVISIONED and verified 2026-11-15**: `0600`, single-link, sha256 `edc305160fe9a298507a3e8538a92a426858e8a7b0439290692314138fc06933` (matches `develop`) |
 | Deploy workflow | `.github/workflows/deploy.yml` ends with a fail-closed `exit 1` | No automatic deployment can occur |
+
+---
+
+## Phase P0 — Production cache state (verified 2026-11-16)
+
+**Status: both caches ACTIVE on production.** Before 2026-11-16 production ran with
+neither cache present: `configurationIsCached()` and `routesAreCached()` were both
+`false`, so `config/*.php` and `routes/web.php` were read on every request.
+
+| Artifact | State before | State now | Size |
+| --- | --- | --- | --- |
+| `bootstrap/cache/config.php` | **ABSENT** | **ACTIVE** | 32,270 B, `0644`, mtime `2026-11-16 03:45:03Z` |
+| `bootstrap/cache/routes-v7.php` | **ABSENT** | **ACTIVE** | 438,576 B, `0644`, mtime `2026-11-16 03:45:21Z` |
+| `bootstrap/cache/packages.php` | present | unchanged | 1,769 B, mtime `2026-11-04 11:07:20Z` |
+| `bootstrap/cache/services.php` | present | unchanged | 22,689 B, mtime `2026-11-04 11:07:20Z` |
+
+Activation was owner-authorized and performed in place on `dombi-prod` with
+`php artisan config:cache` then `php artisan route:cache` (PHP 8.3.36). Verification at
+the time of activation:
+
+- `308` routes both before and after; `method + uri + middleware` set **identical**.
+  The only difference was Laravel assigning `generated::*` names to the two unnamed
+  routes (`GET /up`, `POST login`) once cached — cosmetic, not semantic.
+- Config resolve: `app.env=production`, `database.connections.mysql.database=u399215191_dombi_pr_1023`,
+  `session.driver=database`, `cache.default=database`, `admission.customer_checkout=NULL`.
+- HTTP behavior preserved: `/up` `200`, DOKU `PUT /payment/doku/notify` `405`,
+  `/payment/doku/redirect` `302`, unknown path `404`.
+- Deployed release unchanged: `334637a9e8cd2ba639c557e4be80d4a19fdfc92d`.
+
+### Consequences that now bind every later phase
+
+1. **File replacement alone no longer changes route or config behavior.** With
+   `routes-v7.php` present, `RouteServiceProvider` loads cached routes and never
+   evaluates `routes/web.php`; with `config.php` present, `config/*.php` is not read.
+   Editing a `config/` or `routes/` file on the host has **no effect** until its cache is
+   rebuilt.
+2. **The cache rebuild is the activation point, not the file copy.** For the admission
+   candidate this is decisive: after all four files are installed, admission is still
+   inert (`0` gated routes). It becomes active only when `route:cache` runs.
+3. **Order is fixed: config cache first, route cache second, and only after the complete
+   candidate is installed and verified.** Rebuilding `route:cache` while
+   `app/Http/Middleware/CheckCustomerAdmission.php` is still absent produces a route
+   cache referencing a missing class, and the five admission-gated routes return `500`
+   until the class lands. `/up` and the DOKU routes stay healthy throughout.
+4. **Publication must preserve both caches.** `bootstrap/cache` is classified as
+   protected generated cache: the publisher must not add, replace or remove
+   `config.php` or `routes-v7.php` as part of the artifact. If publication or any later
+   step changes them, a separately reviewed cache-restoration/regeneration step is
+   required before the window can be declared closed (§P7.5).
+5. **Cache preparation is not containment.** It changes *when* new code becomes active;
+   it does nothing about DOKU callbacks, in-flight requests, or the pre-deploy window
+   (B1, B2). Treat §P0 as an ordering control only.
 
 ---
 
@@ -107,22 +168,35 @@ php artisan down --retry=15
 # verify: 503 for customers, 200 for health, DOKU NOT swallowed by 503
 curl -s -o /dev/null -w '%{http_code}\n' https://app.dombicenter.com/           # expect 503
 curl -s -o /dev/null -w '%{http_code}\n' https://app.dombicenter.com/up        # expect 200
-curl -s -o /dev/null -w '%{http_code}\n' https://app.dombicenter.com/api/health # expect 200 (authenticated path if gated)
-curl -s -o /dev/null -w '%{http_code}\n' -X POST \
-  https://app.dombicenter.com/payment/doku/notify                              # expect 400, not 503
+# DOKU reachability WITHOUT executing the controller: both routes are GET|POST,
+# so PUT hits the router and returns 405. A 405 proves the route exists and is not
+# maintenance-blocked; it never reaches DokuPaymentController and writes nothing.
+curl -s -o /dev/null -w '%{http_code}\n' -X PUT \
+  https://app.dombicenter.com/payment/doku/notify                              # expect 405, not 503
+curl -s -o /dev/null -w '%{http_code}\n' -X PUT \
+  https://app.dombicenter.com/payment/doku/redirect                            # expect 405, not 503
 # restore
 php artisan up
 curl -s -o /dev/null -w '%{http_code}\n' https://app.dombicenter.com/           # expect 200
 ```
+
+**DOKU probe rule — do not use `HEAD`, `GET` or `POST` here.** `HEAD` is routed to the
+`GET` controller, and both DOKU routes *write on every request*: a `payment_webhook_logs`
+row is created before signature verification, and even a rejected callback signs an
+observability row. An earlier revision of this runbook recommended
+`curl -X POST …/payment/doku/notify`; following it wrote two rejected rows to production
+on 2026-11-16. Use `-X PUT` (expect `405`) — that is the only probe that proves
+reachability with zero writes. Never probe checkout, order or payment-initiation routes.
+See [V1-PROBE-INCIDENT-20261116.md](V1-PROBE-INCIDENT-20261116.md).
 
 The `/up` probe is the authoritative health signal during maintenance. A `500` on `/`
 immediately after `artisan up` must be investigated before declaring the window closed: the
 application can be genuinely up while an unrelated fault (for example a missing or stale
 Vite manifest in `public/build`) still breaks page rendering.
 
-**STOP if:** `/up` is not `200` while down · `POST /payment/doku/notify` returns `503`
-(routes not exempt) · the DOKU route returns `2xx` for a request with no `Request-Id`
-(false acknowledgement) · any path outside the three listed URIs stops returning `503`.
+**STOP if:** `/up` is not `200` while down · `PUT /payment/doku/{notify,redirect}` returns
+`503` (routes not exempt) · either DOKU route returns anything other than `405` to `PUT`
+· any path outside the three listed URIs stops returning `503`.
 
 **Why this is exact-match only.** Verified in `Illuminate\Foundation\Http\Middleware\Concerns\ExcludesPaths`:
 exception entries are compared with `$request->is($pattern)`, so a wildcard such as
@@ -195,8 +269,8 @@ operator, all 8 `FLAGS` true, all 8 `EVIDENCE` references non-empty, timestamps 
 | # | Action | Command / evidence |
 | --- | --- | --- |
 | P5.1 | **[READ-ONLY]** produce plan digests | `python3 -I -B <tool> inspect --plan <private>/release-plan.json` → `observed_state_sha256=` |
-| P5.2 | Provision shared lock — **dry-run first**, then apply: `python3 -I -B <provisioner> --tool <tool> --private /home/u399215191/private-backups --app-root <app> --create-lock` (add `--apply` only after review) | `lock=` — **currently ABSENT** |
-| P5.3 | Provision tool into `private-backups` with a pinned digest (`--publish-tool --expected-tool-sha256 <pin> --apply`) | `tool_sha256=` — **currently not provisioned** |
+| P5.2 | Shared lock — **already provisioned 2026-11-15**; verify only: `ls -l <private>/dombi-filesystem-publication.lock` → expect `0600` single-link owner `u399215191` | `lock=` — **PRESENT** |
+| P5.3 | Checkpoint tool — **already provisioned 2026-11-15**; verify only: `sha256sum <private>/filesystem_checkpoint.py` → expect `edc305160fe9a298507a3e8538a92a426858e8a7b0439290692314138fc06933` | `tool_sha256=` — **PRESENT** |
 | P5.4 | Write approval JSON (no generator exists) | `approval_sha256=` `independent_verifier=` `issued_utc=` |
 | P5.5 | Capture | `python3 -I -B <tool> capture --approval <private>/capture-approval.json` → `checkpoint_id=` `manifest_sha256=` |
 | P5.6 | Verify | `python3 -I -B <tool> verify --checkpoint <id> --manifest-sha256 <sha>` → expect `MANAGED_INVENTORY_MATCH_KEEP_HELD` |
@@ -226,6 +300,8 @@ identity from every caller.
 | P6.2 | Publish the approved artifact, under the shared lock | `published_sha=` — **cannot run** |
 | P6.3 | Expect `CODE_PUBLISH_COMPLETE_KEEP_HELD`; any other result = STOP | pending |
 | P6.4 | Confirm the reported `additions`/`replacements`/`removals` equal the approved plan | exact match required |
+| P6.5 | **Cache handling during replacement.** `bootstrap/cache/config.php` and `routes-v7.php` must be **preserved unchanged** through the whole replacement — they are protected generated cache, never artifact payload. Confirm their mtimes and digests are identical before and after. | `cache_before=` `cache_after=` |
+| P6.6 | **Rebuild only after P6.4 passes**, in this order: `php artisan config:cache` → verify config values → `php artisan route:cache` → confirm `/up` `200` and `PUT /payment/doku/notify` `405`. Never run `route:cache` before every candidate file is installed. | `config_cached=` `routes_cached=` `gated_routes=` |
 
 **Prohibited substitutes:** `rsync`/`scp` by hand, editing files in place, `git pull` in
 the web root, running the GitHub workflow, or restoring the historical recovery tool.
@@ -301,24 +377,27 @@ not documentation gaps.
 | --- | --- | --- |
 | B1 | **No deploy-independent, pre-deploy admission boundary.** An in-app gate exists (P3.1) and `artisan down` now preserves `/up` + DOKU (P3.2), but neither covers the window while old code is still serving, nor in-place file replacement. | `CheckCustomerAdmission`; `preventRequestsDuringMaintenance` in `bootstrap/app.php` |
 | B2 | **DOKU policy decided; evidence not yet captured.** Intake stays open, unpersisted notifications are never acknowledged, and retry/resend are recovery options only. Still open: the pre-window non-final-attempt inventory (incl. `created`, `initiated` and legacy invoices), the external DOKU transaction export, and the manual `created`-invoice sweep. `created` attempts are not processed by any scheduled job. | `ReconcileDokuPayment.php:25`; `DokuReconciliationService.php:20`; `DokuService.php:236,605`; [V1-WRITER-CONTAINMENT.md](V1-WRITER-CONTAINMENT.md) |
-| B3 | **Shared publisher lock absent** on the host, so `capture` will abort (`publisher_lock`). A provisioning procedure now exists but has not been executed. | `Policy.lock` required; observed absent; `provision_checkpoint_tool.py` |
-| B4 | **Checkpoint tool not provisioned** in `private-backups` with a pinned digest. Provisioning procedure exists; not executed. | `provision_checkpoint_tool.py`, `CHECKPOINT_PROVISIONING.md` |
+| B3 | ~~**Shared publisher lock absent**~~ **CLOSED 2026-11-15** — lock provisioned and read-only verified on the host. No longer blocks `capture`. | `Policy.lock` present, `0600`, single-link, owner `u399215191` |
+| B4 | ~~**Checkpoint tool not provisioned**~~ **CLOSED 2026-11-15** — tool installed in `private-backups` with a digest matching `develop`. | sha256 `edc305160fe9a298507a3e8538a92a426858e8a7b0439290692314138fc06933` |
 | B5 | **Approvals are not authenticated identity.** The production path now requires an HMAC over the approval bytes, but that authenticates possession of an operator-held symmetric key — not a person, and not `independent_verifier != operator`. | `publish_artifact_production`; `CODE_PUBLISHER.md` |
 | B6 | **No authorized production execution.** A production entrypoint exists (`--production` + all fail-closed prerequisites) but `main()` refuses by default and no release authorization has been granted. | `code_publisher.py` `main()` |
-| B7 | **Artifact-mode preconditions unprovisioned on the host.** Shared lock absent, checkpoint tool not provisioned, no artifact/checksum receipt or approval key in the private directory. | `Policy.lock`; `artifact_files()`; production key requirement |
+| B7 | **Artifact-mode preconditions partly unprovisioned.** Lock and checkpoint tool are now present (B3, B4 closed), but there is still no artifact/checksum receipt and no approval key in the private directory. | `Policy.lock`; `artifact_files()`; production key requirement |
 | B8 | **Web-worker DB identity UNKNOWN.** Never assume LSAPI workers run the NEW schema; workers older than the last `.env` change may still hold the previous schema. | prior read-only smoke test |
 | B9 | **Two identical cron entries.** `schedule:pause` covers both via shared cache, but the duplicate remains unexplained. | `cronjob_oGUFKybU14`, `cronjob_ZwUE8CLMt5` |
 | B10 | **Sibling `apidombi` app** uses a different database on the same account; containment scope unverified. | prior evidence |
 | B11 | **Restore drill not required but also not available** if code rollback proves insufficient. Waivers preserved; this remains a residual risk, not a new gate. | existing waivers |
 
-**Small step that unblocks the most:** provision the **shared publisher lock** (B3) under
-separate authorization — it is the single prerequisite that makes `inspect --plan` →
-`capture` → `verify` executable and is required by every existing checkpoint control.
+**Small step that unblocks the most:** capture a fresh checkpoint (B3/B4 are closed, so
+`inspect --plan` → `capture` → `verify` is now executable) under separate authorization.
+The remaining blockers after that are referral approval (B5), production execution
+authorization (B6) and the DOKU pre-window evidence (B2).
 
-**Next implementation step:** provision the shared publisher lock and a pinned checkpoint
-tool under separate authorization using `scripts/recovery/provision_checkpoint_tool.py`
-(dry-run first, always). The production publisher entrypoint, artifact transport and
-admission gate all now exist and are tested; no deployment enablement is included.
+**Next implementation step:** repin `CANDIDATE` to the verified bootstrap artifact
+(`14170454946` / `d4b018b0…` / `5094f82b…`) in a reviewed change, then capture a fresh
+checkpoint inside the 15-minute fuse. Repinning invalidates any existing checkpoint
+manifest by design (`candidate` is embedded in the manifest and compared on load and
+authorize). The production publisher entrypoint, artifact transport and admission gate all
+now exist and are tested; no deployment enablement is included.
 
 ---
 
@@ -330,8 +409,9 @@ admission gate all now exist and are tested; no deployment enablement is include
 | Artifact publication implementation (fixture-only) | **PASS** — additions, replacements and removals implemented and synthetically tested |
 | Production publisher entrypoint | **PASS (not authorized)** — `--production` with fail-closed prerequisites and HMAC approvals; refuses by default |
 | Admission gate | **PASS (post-deploy only)** — config-driven, default open, DOKU routes never gated |
-| Checkpoint provisioning procedure | **PASS (not executed)** — dry-run-by-default script, doc and tests |
-| Execution readiness | **FAIL** — B1–B10 open |
+| Checkpoint provisioning procedure | **PASS (executed)** — lock and pinned tool verified on host 2026-11-15 |
+| Production cache ordering control | **PASS (verified)** — both caches active; rebuild-after-install order documented (§P0) |
+| Execution readiness | **FAIL** — B1, B2, B5–B10 open |
 | Scheduler pause capability | **PASS** — `schedule:pause`/`resume`, all 15 events covered |
 | Scheduler pause as writer containment | **FAIL by definition** — scheduled entrypoints only |
 | Maintenance mode as containment | **FAIL** — blocks `/up` and DOKU; no durable rejection record |
