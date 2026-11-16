@@ -437,12 +437,16 @@ risks. Any of them occurring is an immediate STOP and an incident:
 
 Acceptance of R1–R7 does **not** substitute for any of these. All remain required:
 
-- **DOKU transaction export** covering the window — **NO-GO without it**;
+- **DOKU transaction export** covering the window — **NO-GO without it**, unless a
+  separate explicit waiver is granted (§11.2). An owner attestation is recorded but is
+  **not** a waiver and does **not** discharge this gate;
 - **pre-window payment inventory** across all non-final states (`created`, `initiated`,
   `pending`, `unknown`, legacy);
 - fresh checkpoint within the 15-minute fuse;
 - signed publication approval with the exact closed field set;
 - the §4 preflight gates and the §7 STOP conditions.
+
+See §11 for the full gate matrix with blocking classes.
 
 ### 9.4 Risk acceptance is not publication approval
 
@@ -493,23 +497,90 @@ Boundaries:
 
 ---
 
-## 11. Remaining prerequisites and the one next action
+## 11. Publication gate matrix
 
-Risk acceptance (§9.1) is recorded. Publication approval is **not**. Outstanding
-prerequisites, in dependency order:
+Every gate, with its blocking class. "Agent-fixable" means no owner decision and no
+credential/production access is required. Nothing in this table is satisfied by this
+document alone.
 
-| # | Prerequisite | Owner of the action |
-| --- | --- | --- |
-| P1 | Adopt the repin so the production checkpoint tool recognises `d4b018b0` (A-1). Committed on `docs/v1-release-docs-and-pin-20261116` (`c32cc581`); not on `develop`, not on host. | repo review + merge |
-| P2 | **DOKU transaction export** for the window | external provider / operator |
-| P3 | Pre-window payment inventory (§4 A9) | operator read-only DB session |
-| P4 | Signing key available for approval HMAC | separately authorized provisioning |
-| P5 | Fresh checkpoint inside the 15-minute fuse (A-3) | operator + independent verifier |
-| P6 | Signed publication approval bound to `d4b018b0…` / `5094f82b…` | operator key holder |
+| # | Gate | Status | Class | Blocking? |
+| --- | --- | --- | --- | --- |
+| G1 | Repin reviewed and merged so `CANDIDATE` = `14170454946` / `d4b018b0…` / `5094f82b…` reaches `develop` and the host tool | committed `c32cc581` on `docs/v1-release-docs-and-pin-20261116`; **not merged**, host tool unchanged | **owner decision** (review + merge) | **YES** |
+| G2 | Artifact + checksum receipt present in `/home/u399215191/private-backups` | absent | **credential/access** (operator file transfer) | **YES** |
+| G3 | Signing key provisioned, approval HMAC possible | absent | **credential/access** | **YES** |
+| G4 | Pre-window payment inventory (all non-final states) | not captured | **credential/access** (read-only DB) | **YES** |
+| G5 | DOKU transaction export for the window | not obtained | **owner decision + access** — see §11.2 | **YES (unless waived)** |
+| G6 | Fresh checkpoint inside the 15-minute fuse | not captured (requires G1, G4, G8, G11, and all checkpoint flags) | **owner decision + control/access** + independent verifier; `admissions_stopped` conflicts with the accepted open-checkout state, and no satisfying control is established | **YES — NO-GO until resolved** |
+| G7 | Signed publication approval bound to the artifact | not produced (requires G3, G6, G11) | **credential/access** | **YES** |
+| G8 | Window authorization A-2 | not requested | **owner decision** | **YES** |
+| G9 | Cache invariant recorded pre/post | procedure ready (§5) | agent-fixable | no (runtime) |
+| G10 | Route/health/DOKU verification after activation | procedure ready (§6 Stage 5/6) | agent-fixable | no (runtime) |
+| G11 | Checkpoint and approval authorization A-3 | not requested | **owner decision** | **YES** |
 
-**One next action:** complete **P2 — obtain the DOKU transaction export.** It is the
-single precondition this document cannot satisfy, and A-2 must not be requested without
-it. Everything else is either already available (P1 is committed and reviewable) or is
-downstream of P2.
+**Agent-fixable, already done:** the containment procedure, the probe prohibition, the
+risk-acceptance record, the repin commit, and this matrix. There is **no remaining
+agent-fixable blocker.** Everything left is an owner decision or a credential/access
+prerequisite — none of which this agent may perform.
 
-Publication itself remains **HOLD**.
+### 11.1 Dependency order
+
+```
+G1 (merge repin) ──┐
+G2 (artifact on host) ──┤
+G3 (signing key) ───────┤
+G4 (payment inventory) ─┤
+G5 (DOKU export / explicit waiver) ──┘
+        └──> G8 (A-2 window authorization; before pause/drain)
+                 └──> pause + three-interval scheduler drain (§6 Stage 2)
+                          └──> G11 (A-3 authorization)
+                                   └──> G6 fresh checkpoint (needs G1, G4, G8, G11)
+                                            └──> G7 signed approval (needs G3, G6, G11)
+                                                     └──> publication (§6 Stage 4)
+                                                              └──> cache activation (§6 Stage 5)
+                                                                       └──> verification + resume (§6 Stage 6)
+```
+
+The 15-minute fuse binds **G6 → G7 → publication** as one unbroken run. G1–G5, G8,
+and G11 can be completed earlier, but must exist before their respective stages. Under
+the current checkpoint contract, G6 remains **NO-GO** while `admissions_stopped` cannot
+truthfully be asserted with checkout intentionally left open. No owner risk acceptance
+waives that checkpoint flag.
+
+### 11.2 DOKU export vs owner attestation
+
+The requirement is **not interchangeable** with an attestation, and this is a technical
+distinction rather than a procedural preference:
+
+- The export is the only artefact that can prove **absence** of a DOKU-side transaction
+  with no local row. Local tables (`payment_attempts`, `payment_webhook_logs`) prove
+  **identification**, never **detection** — a transaction created at DOKU whose callback
+  never arrived leaves no local trace. This is stated verbatim in
+  `V1-WRITER-CONTAINMENT.md` §4.
+- An owner attestation that "only one historical QRIS test transaction of IDR 13,000
+  exists" is a **claim about recall**, not an instrumented record of the specific window.
+  It cannot detect a customer-initiated invoice during the window.
+
+**Therefore the export requirement needs an explicit waiver**, and this document does
+**not** grant it. Recorded as owner input, not as a discharged gate:
+
+> Owner asserts: only one historical QRIS test transaction of IDR 13,000 exists, and
+> Nov 15–16 transaction checks must not be repeated.
+
+That attestation is **recorded here for the record only**. It reduces the *expected*
+population of in-flight payments but does not satisfy A10/§9.3. If the owner wishes to
+proceed without the export, the waiver must be a separate, explicit, dated decision
+acknowledging: (a) absence cannot be proven; (b) `initiated` and `created` attempts are
+not selected by `payments:reconcile-doku` or `DokuReconciliationService` (both accept only
+`pending`/`unknown`), so an unreconciled invoice could exist unobserved; (c) the accepted
+risk is bounded to this single window.
+
+**No repeat transaction check is requested or implied by this document.**
+
+### 11.3 One next executable action
+
+**Owner decision on G1: approve and merge the repin** so the production checkpoint tool
+recognises `d4b018b0`. It is the only gate that is already prepared, reviewed-in-repo, and
+purely local to advance; G2–G7 all require credentials or production access that this
+agent does not hold, and G5 additionally requires the waiver decision above.
+
+Publication remains **HOLD**.
