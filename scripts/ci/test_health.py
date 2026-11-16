@@ -31,6 +31,12 @@ class HealthTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'Unhealthy'):
                 health.main('.')
 
+    def test_health_json_contract_rejects_extra_or_non_string_fields(self):
+        for body in (b'{"status":"up","extra":true}', b'{"status":true}', b'[]'):
+            with self.subTest(body=body), patch.object(health, 'fetch', return_value=body):
+                with self.assertRaisesRegex(ValueError, 'Unhealthy'):
+                    health.main('.')
+
     def test_invalid_liveness_json_rejected(self):
         with patch.object(health, 'fetch', return_value=b'<html>maintenance</html>'):
             with self.assertRaises(json.JSONDecodeError):

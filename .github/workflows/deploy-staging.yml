@@ -1,14 +1,10 @@
 name: Deploy Staging
 
 on:
-  workflow_run:
-    workflows: [Quality Gate]
-    types: [completed]
-    branches: [develop]
   workflow_dispatch:
     inputs:
       ci_run_id:
-        description: Successful Quality Gate push run on develop
+        description: Must be the approved Quality Gate run 43720516972
         required: true
         type: string
 
@@ -22,22 +18,80 @@ concurrency:
 
 jobs:
   deploy:
-    if: vars.STAGING_DEPLOY_ENABLED == 'true' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    if: github.event_name == 'workflow_dispatch' && github.run_attempt == 1 && github.repository == 'leanderarya/dombi' && github.actor == 'leanderarya' && github.ref == 'refs/heads/develop' && github.workflow_ref == 'leanderarya/dombi/.github/workflows/deploy-staging.yml@refs/heads/develop' && github.workflow_sha == github.sha
     runs-on: ubuntu-latest
     environment: staging
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: develop
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - name: Verify owner dispatch and exact develop workflow revision
+        id: dispatch
+        env:
+          STAGING_EVENT_NAME: ${{ github.event_name }}
+          STAGING_WORKFLOW_KIND: deploy
+          STAGING_REPOSITORY: ${{ github.repository }}
+          STAGING_ACTOR: ${{ github.actor }}
+          STAGING_REF: ${{ github.ref }}
+          STAGING_WORKFLOW_REF: ${{ github.workflow_ref }}
+          STAGING_WORKFLOW_SHA: ${{ github.workflow_sha }}
+          STAGING_SOURCE_SHA: ${{ github.sha }}
+          STAGING_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: node scripts/ci/verify-staging-dispatch.cjs
+      - name: Verify workflow checkout revision
+        env:
+          STAGING_WORKFLOW_SHA: ${{ steps.dispatch.outputs.workflow_sha }}
+        run: test "$(git rev-parse HEAD)" = "$STAGING_WORKFLOW_SHA"
       - name: Verify trusted CI provenance
         id: release
         uses: actions/github-script@v7
         env:
-          CI_RUN_ID: ${{ inputs.ci_run_id || github.event.workflow_run.id }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
         with:
           script: |
             const select = require('./scripts/ci/select-release.cjs');
             await select({github, context, core, runId: process.env.CI_RUN_ID});
+      - name: Bind the approved deployment target
+        env:
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
+          ARTIFACT_ID: ${{ steps.release.outputs.artifact_id }}
+          ARTIFACT_RUN_ID: ${{ steps.release.outputs.artifact_run_id }}
+          ARCHIVE_SHA256: ${{ steps.release.outputs.archive_sha256 }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+          STAGING_REPOSITORY: ${{ github.repository }}
+          STAGING_ACTOR: ${{ github.actor }}
+          STAGING_REF: ${{ github.ref }}
+          STAGING_WORKFLOW_REF: ${{ github.workflow_ref }}
+          STAGING_WORKFLOW_SHA: ${{ steps.dispatch.outputs.workflow_sha }}
+          STAGING_SOURCE_SHA: ${{ github.sha }}
+          STAGING_RUN_ID: ${{ github.run_id }}
+          STAGING_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          target = {
+              'release_sha': os.environ['RELEASE_SHA'],
+              'artifact_id': os.environ['ARTIFACT_ID'],
+              'artifact_run_id': os.environ['ARTIFACT_RUN_ID'],
+              'archive_sha256': os.environ['ARCHIVE_SHA256'],
+              'ci_run_id': os.environ['CI_RUN_ID'],
+              'github_run_id': os.environ['STAGING_RUN_ID'],
+              'github_run_attempt': os.environ['STAGING_RUN_ATTEMPT'],
+              'repository': os.environ['STAGING_REPOSITORY'],
+              'actor': os.environ['STAGING_ACTOR'],
+              'ref': os.environ['STAGING_REF'],
+              'workflow_ref': os.environ['STAGING_WORKFLOW_REF'],
+              'workflow_sha': os.environ['STAGING_WORKFLOW_SHA'],
+              'source_sha': os.environ['STAGING_SOURCE_SHA'],
+          }
+          pathlib.Path('deployment-target.json').write_text(json.dumps(target, indent=2) + '\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: staging-target-${{ github.run_id }}-${{ github.run_attempt }}
+          path: deployment-target.json
+          retention-days: 90
       - uses: actions/download-artifact@v4
         with:
           artifact-ids: ${{ steps.release.outputs.artifact_id }}
@@ -48,15 +102,41 @@ jobs:
       - name: Prepare verified transfer
         env:
           RELEASE_SHA: ${{ steps.release.outputs.sha }}
+          ARCHIVE_SHA256: ${{ steps.release.outputs.archive_sha256 }}
         run: |
+          printf '%s  %s\n' "$ARCHIVE_SHA256" transfer/release.tar.gz | sha256sum --check --status
+          grep -Fx "$ARCHIVE_SHA256  release.tar.gz" transfer/release.sha256
           python3 scripts/ci/release.py verify --archive transfer/release.tar.gz --sha "$RELEASE_SHA" --checksum-file transfer/release.sha256
-          cp scripts/ci/release.py scripts/ci/deploy-staging.sh transfer/
+          cp scripts/ci/release.py scripts/ci/deploy-staging.sh scripts/ci/rollback-staging.sh \
+            scripts/ci/staging_rollback.py scripts/ci/staging_attempt_guard.py transfer/
       - name: Require pinned SSH identity
         env:
           FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
         run: test -n "$FINGERPRINT"
       - name: Install runner-only OpenSSH password helper
         run: sudo apt-get update -qq && sudo apt-get install -y -qq openssh-client sshpass
+      - name: Claim persistent one-use staging attempt
+        env:
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+          ARTIFACT_ID: ${{ steps.release.outputs.artifact_id }}
+          ARTIFACT_RUN_ID: ${{ steps.release.outputs.artifact_run_id }}
+          ARCHIVE_SHA256: ${{ steps.release.outputs.archive_sha256 }}
+          TRANSFER_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          STAGING_REPOSITORY: ${{ github.repository }}
+          STAGING_ACTOR: ${{ github.actor }}
+          STAGING_REF: ${{ github.ref }}
+          STAGING_WORKFLOW_REF: ${{ github.workflow_ref }}
+          STAGING_WORKFLOW_SHA: ${{ steps.dispatch.outputs.workflow_sha }}
+          STAGING_SOURCE_SHA: ${{ github.sha }}
+          STAGING_RUN_ID: ${{ github.run_id }}
+          STAGING_RUN_ATTEMPT: ${{ github.run_attempt }}
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
+        run: python3 -B scripts/ci/staging_deploy_transport.py claim
       - name: Prepare exclusive private staging transfer
         env:
           TRANSFER_ID: ${{ github.run_id }}-${{ github.run_attempt }}
@@ -65,7 +145,7 @@ jobs:
           HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
           HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
           HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
-        run: python3 -B scripts/ci/staging_transport.py prepare
+        run: python3 -B scripts/ci/staging_deploy_transport.py prepare
       - name: Upload into private run-owned directory
         env:
           TRANSFER_ID: ${{ github.run_id }}-${{ github.run_attempt }}
@@ -74,18 +154,28 @@ jobs:
           HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
           HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
           HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
-        run: python3 -B scripts/ci/staging_transport.py upload
+        run: python3 -B scripts/ci/staging_deploy_transport.py upload
       - name: Deploy staging only
         env:
           RELEASE_SHA: ${{ steps.release.outputs.sha }}
           TRANSFER_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          STAGING_DATABASE_NAME: ${{ secrets.STAGING_DATABASE_NAME }}
+          STAGING_WORKFLOW_SHA: ${{ steps.dispatch.outputs.workflow_sha }}
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
+        run: python3 -B scripts/ci/staging_deploy_transport.py deploy
+      - name: Read-only database and storage acceptance
+        env:
           STAGING_DATABASE_NAME: ${{ secrets.STAGING_DATABASE_NAME }}
           HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
           HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
           HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
           HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
           HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
-        run: python3 -B scripts/ci/staging_transport.py deploy
+        run: python3 -B scripts/ci/check-staging-readiness.py
       - name: Health and deployed asset checks
         env:
           RELEASE_SHA: ${{ steps.release.outputs.sha }}
@@ -97,16 +187,36 @@ jobs:
           RELEASE_SHA: ${{ steps.release.outputs.sha }}
           ARTIFACT_ID: ${{ steps.release.outputs.artifact_id }}
           ARTIFACT_RUN_ID: ${{ steps.release.outputs.artifact_run_id }}
-          CI_RUN_ID: ${{ inputs.ci_run_id || github.event.workflow_run.id }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+          STAGING_REPOSITORY: ${{ github.repository }}
+          STAGING_ACTOR: ${{ github.actor }}
+          STAGING_REF: ${{ github.ref }}
+          STAGING_WORKFLOW_REF: ${{ github.workflow_ref }}
+          STAGING_WORKFLOW_SHA: ${{ steps.dispatch.outputs.workflow_sha }}
+          STAGING_SOURCE_SHA: ${{ github.sha }}
         run: |
           python3 - <<'PY'
           import json, os, pathlib
           receipt = {key.lower(): os.environ[key] for key in ('RELEASE_SHA', 'ARTIFACT_ID', 'ARTIFACT_RUN_ID', 'CI_RUN_ID', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT')}
+          receipt.update({
+              'repository': os.environ['STAGING_REPOSITORY'],
+              'actor': os.environ['STAGING_ACTOR'],
+              'ref': os.environ['STAGING_REF'],
+              'workflow_ref': os.environ['STAGING_WORKFLOW_REF'],
+              'workflow_sha': os.environ['STAGING_WORKFLOW_SHA'],
+              'source_sha': os.environ['STAGING_SOURCE_SHA'],
+          })
           receipt['sha256'] = pathlib.Path('transfer/release.sha256').read_text().split()[0]
+          release = json.loads(pathlib.Path(os.environ['RUNNER_TEMP'], 'expected', 'release.json').read_text())
+          receipt['route_source_files'] = {
+              name: checksum for name, checksum in release['files'].items() if name.startswith('routes/')
+          }
+          if not receipt['route_source_files']:
+              raise SystemExit('Verified artifact has no route source inventory')
           receipt['status'] = 'staging-health-and-assets-passed'
           pathlib.Path('staging-acceptance.json').write_text(json.dumps(receipt, indent=2) + '\n')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
-              summary.write(f"Staging code-only PASS: `{receipt['release_sha']}`, artifact `{receipt['artifact_id']}`, SHA-256 `{receipt['sha256']}`. JSON /up and every built asset matched. No migrations, seeders or payment operations were run. Database/cache/storage health, session pages, runtime worker adoption and business smoke are not proved.\n")
+              summary.write(f"Staging code-only PASS: `{receipt['release_sha']}`, artifact `{receipt['artifact_id']}`, SHA-256 `{receipt['sha256']}`. Exact JSON /up, built asset hashes, read-only database identity/connectivity, storage path compatibility, and route-source inventory passed. Route runtime registration, session pages, worker adoption and business smoke are not proved. No migration, seeder or payment operation was run.\n")
           PY
       - uses: actions/upload-artifact@v4
         with:
@@ -115,4 +225,4 @@ jobs:
           retention-days: 90
       - name: Failure disposition
         if: failure()
-        run: echo 'Staging FAIL. No acceptance issued. If mutation began, inspect the private before-code archive and maintenance state; do not blindly migrate back or reopen.' >> "$GITHUB_STEP_SUMMARY"
+        run: echo 'Staging FAIL. No acceptance issued. Preserve the private before-code archive and maintenance state. After separate staging-owner approval, run the staging-only rollback script for this run/attempt; do not migrate back or reopen by hand.' >> "$GITHUB_STEP_SUMMARY"

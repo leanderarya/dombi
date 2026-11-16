@@ -28,7 +28,7 @@ yang boleh dilewati karena "kecil" atau "mendesak".
 ubah kode lokal
   → quality gate lokal (pint, eslint, prettier, tsc, phpunit)
   → commit ke branch, buka PR ke develop
-  → merge ke develop          → deploy-staging otomatis
+  → merge ke develop          → owner dispatch staging sekali
   → verifikasi di staging     → (bukti, bukan asumsi)
   → PR develop → main         → job berhenti di `waiting`
   → setujui environment production
@@ -40,7 +40,7 @@ ubah kode lokal
 | --- | --- | --- |
 | 1. Quality lokal | `composer lint:check && npm run lint && npm run format:check && npx tsc --noEmit && php artisan test` | Semua hijau sebelum commit |
 | 2. Masuk `develop` | PR ke `develop` (push langsung ditolak) | Check `quality` hijau |
-| 3. Staging | otomatis dari merge ke `develop` | `/up` + `/api/health` 200 |
+| 3. Staging | dispatch manual oleh owner, satu kali per kandidat | immutable artifact, persistent one-use guard, `/up` dan asset checks |
 | 4. Verifikasi staging | jalankan skenario yang berubah, simpan bukti | Bukti nyata, bukan "kelihatannya jalan" |
 | 5. Masuk `main` | `gh pr create --base main --head develop` lalu `gh pr merge --merge` | Environment `production` disetujui |
 | 6. Health gate | `/up` + `/api/health` production | Keduanya 2xx |
@@ -101,18 +101,21 @@ Jangan push `main` sebelum setiap item memiliki evidence:
 
 ## Staging Deploy
 
-Push ke `develop` menjalankan `.github/workflows/deploy-staging.yml`.
-Workflow menjalankan quality gate, build frontend, deploy code melalui SSH ke staging,
-menjalankan dependency install dan migration, membersihkan cache, memasang storage link,
-mengunggah `public/build`, lalu memeriksa:
+Push atau merge ke `develop` tidak menjalankan deploy. Setelah publication dan owner
+approval terpisah, `.github/workflows/deploy-staging.yml` hanya dapat di-dispatch manual
+oleh repository owner untuk artifact V1.0 yang terpin. Guard atomik persisten menolak
+dispatch duplikat, rerun, dan attempt kedua untuk kandidat yang sama. Workflow mengirim
+artifact immutable melalui SSH, melakukan code-only sync, menyegarkan cache yang
+diizinkan, lalu memeriksa:
 
 ```text
 https://staging.dombicenter.com/up
-https://staging.dombicenter.com/api/health
 ```
 
-Simpan commit SHA, workflow run, hasil health check, dan hasil smoke test sebagai staging
-evidence sebelum melanjutkan ke pre-cutover gate.
+Simpan commit SHA, workflow run, artifact/digest, receipt, hasil health check, dan hasil
+smoke test sebagai staging evidence sebelum melanjutkan ke pre-cutover gate. Rollback
+adalah dispatch manual terpisah yang hanya menerima deployment run/attempt gagal yang
+tepat; ia tidak menghapus atau mengatur ulang one-use guard.
 
 ## Production Deploy
 

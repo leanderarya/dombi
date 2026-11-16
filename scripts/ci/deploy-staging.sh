@@ -6,15 +6,30 @@ transfer="$(realpath "${1:?transfer directory required}")"
 sha="${2:?full SHA required}"
 [[ "$sha" =~ ^[a-f0-9]{40}$ ]]
 [[ "$transfer" == "$HOME"/dombi-ci-staging/* ]]
+transfer_id="${transfer##*/}"
 root="$HOME/domains/dombicenter.com/public_html/staging"
 [[ -d "$root" && ! -L "$root" && "$(realpath "$root")" == "$root" ]]
 [[ -f "$root/.env" && ! -L "$root/.env" ]]
-for tool in php python3 rsync flock tar find mktemp rm rmdir; do command -v "$tool" >/dev/null; done
+for tool in php python3 rsync flock tar find mktemp rm rmdir stat; do command -v "$tool" >/dev/null; done
+parent="$HOME/dombi-ci-staging"
+[[ -d "$parent" && ! -L "$parent" && -O "$parent" && "$(realpath "$parent")" == "$parent" ]]
+test "$(stat -c %a "$parent")" = 700
+[[ -f "$transfer/staging_attempt_guard.py" && ! -L "$transfer/staging_attempt_guard.py" ]]
+: "${STAGING_WORKFLOW_SHA:?verified deployment workflow revision required}"
+python3 "$transfer/staging_attempt_guard.py" verify --parent "$parent" \
+    --transfer-id "$transfer_id" --workflow-sha "$STAGING_WORKFLOW_SHA" \
+    --release-sha "$sha" --mode deploy
 cd "$root"
 chmod 700 "$transfer"
 
 # The shared lock is outside the code tree; never unlock another publisher's file.
-exec 9>"$HOME/dombi-ci-staging/deploy.lock"
+lock_file="$parent/deploy.lock"
+[[ ! -L "$lock_file" ]]
+if [[ ! -e "$lock_file" ]]; then
+    (umask 077; set -o noclobber; : > "$lock_file")
+fi
+[[ -f "$lock_file" && ! -L "$lock_file" && -O "$lock_file" ]]
+exec 9>>"$lock_file"
 flock -n 9 || { echo 'Staging publisher busy'; exit 1; }
 test ! -e storage/framework/down
 test ! -L storage/framework/down
@@ -119,7 +134,7 @@ while IFS= read -r -d '' path; do
 done < "$list_dir/public"
 cleanup_deployment_lists
 (umask 077; tar -czf "$transfer/before-code.tar.gz" "${backup[@]}")
-sha256sum "$transfer/before-code.tar.gz" > "$transfer/before-code.sha256"
+(cd "$transfer" && sha256sum before-code.tar.gz > before-code.sha256)
 
 php artisan down --retry=15 --no-interaction
 test -f storage/framework/down

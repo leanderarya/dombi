@@ -27,6 +27,8 @@ class StagingReadinessTest(unittest.TestCase):
 
     def test_exact_pin_and_duplicate_scan(self):
         self.assertEqual(readiness.pinned_key(self.line + "\n" + self.line, self.pin), self.key)
+        with self.assertRaisesRegex(ValueError, "Unexpected"):
+            readiness.pinned_key(self.line, self.pin, "different-host")
 
     def test_wrong_pin_missing_key_and_invalid_format(self):
         for scan, pin in [(self.line, "SHA256:" + "A" * 43), ("", self.pin),
@@ -56,6 +58,15 @@ class StagingReadinessTest(unittest.TestCase):
             with self.subTest(field=field, value=value), self.assertRaises(ValueError):
                 readiness.connection_values({**env, field: value})
 
+    def test_database_and_storage_acceptance_is_read_only_and_identity_bound(self):
+        probe = readiness.DATABASE_PROBE
+        self.assertIn('SELECT DATABASE(), CURRENT_USER()', probe)
+        self.assertIn('PDO::MYSQL_ATTR_MULTI_STATEMENTS', probe)
+        self.assertIn('realpath($storageLink) !== realpath($root.\'/storage/app/public\')', probe)
+        self.assertIn('!is_writable($path)', probe)
+        for write in ('INSERT ', 'UPDATE ', 'DELETE ', 'CREATE ', 'ALTER ', 'DROP '):
+            self.assertNotIn(write, probe.upper())
+
     def test_password_only_connection_and_cleanup(self):
         env = {"HOSTINGER_SSH_HOST": "example.com", "HOSTINGER_SSH_USER": "staging",
                "HOSTINGER_SSH_PASSWORD": "never-print-password", "HOSTINGER_SSH_PORT": "22",
@@ -64,7 +75,7 @@ class StagingReadinessTest(unittest.TestCase):
 
         def run(command, **kwargs):
             if command[0] == "ssh-keyscan":
-                return subprocess.CompletedProcess(command, 0, self.line, "")
+                return subprocess.CompletedProcess(command, 0, "example.com ssh-ed25519 " + self.key, "")
             self.assertEqual(command[:3], ["sshpass", "-e", "ssh"])
             for option in ["StrictHostKeyChecking=yes", "PreferredAuthentications=password",
                            "PubkeyAuthentication=no", "KbdInteractiveAuthentication=no"]:
@@ -74,7 +85,7 @@ class StagingReadinessTest(unittest.TestCase):
             self.assertEqual(kwargs["env"]["SSHPASS"], env["HOSTINGER_SSH_PASSWORD"])
             self.assertNotIn("STAGING_DATABASE_NAME", kwargs["env"])
             known = Path(next(x.split("=", 1)[1] for x in command if x.startswith("UserKnownHostsFile=")))
-            self.assertTrue(known.is_file())
+            self.assertEqual(known.read_text(), "example.com ssh-ed25519 " + self.key + "\n")
             known_files.append(known)
             return subprocess.CompletedProcess(command, 0, "STAGING_DATABASE_BINDING_PASS\n", "")
 
