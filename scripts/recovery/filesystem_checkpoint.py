@@ -22,9 +22,9 @@ import tarfile
 
 
 CANDIDATE = {
-    "artifact_id": "14015610232",
-    "application_sha": "4ebe5e1da608b0c7404e2667cb99742747db4796",
-    "archive_sha256": "5b5a54453badc86134e890cb4f5448a80dce1fc1b391eec03ec41284988225d5",
+    "artifact_id": "14170454946",
+    "application_sha": "d4b018b06cd5915ce8a88fa1277e6007e479640b",
+    "archive_sha256": "5094f82b4be5a59308322475883601304ea0cc862af45f255e30ebb5c9084adf",
 }
 VARIANT = "dombi-filesystem-checkpoint-v1"
 METADATA_POLICY = "no-xattrs-acls-hardlinks;integer-ns;shared-parent-stable-identity"
