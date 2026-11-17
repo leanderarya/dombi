@@ -102,9 +102,9 @@ def validate_claim(claim):
 
     for name in ("ci_run_id", "artifact_id", "artifact_run_id", "github_run_id"):
         _positive_id(claim[name], name)
-    if (claim["ci_run_id"] != "43720516972" or
-            claim["artifact_id"] != "14164321503" or
-            claim["artifact_run_id"] != "43720516972"):
+    if (claim["ci_run_id"] != "44032192481" or
+            claim["artifact_id"] != "14305937487" or
+            claim["artifact_run_id"] != "44032192481"):
         raise ValueError("One-use claim does not identify the approved CI artifact")
     if claim["github_run_attempt"] != "1":
         raise ValueError("Only the first deployment run attempt may claim staging")

@@ -2,10 +2,10 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const select = require('./select-release.cjs');
 
-const sha = 'dbfe218de8cc3ae49796524007e214ec8dfe464a';
-const runId = 43720516972;
-const artifactId = 14164321503;
-const archiveSha256 = '16f7aa17486f7264da7e8d25110eb5dad8358ff1e42c2352f91e6ba329ed8f8b';
+const sha = '220a0190ec57c8ed64f5792dcaa10c7ca906f2b7';
+const runId = 44032192481;
+const artifactId = 14305937487;
+const archiveSha256 = 'f48b68fb0678df3c752fe3ce600709bda7f706ccda0570e447d5fcda834598fd';
 const run = { id: runId, path: '.github/workflows/tests.yml@refs/heads/develop', event: 'push', head_branch: 'develop',
     conclusion: 'success', head_sha: sha, head_repository: { full_name: 'leanderarya/dombi' } };
 const artifact = { id: artifactId, name: `release-${sha}`, expired: false,

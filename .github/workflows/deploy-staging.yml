@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       ci_run_id:
-        description: Must be the approved Quality Gate run 43720516972
+        description: Approved revised V1.0 candidate Quality Gate run 44032192481
         required: true
         type: string
 

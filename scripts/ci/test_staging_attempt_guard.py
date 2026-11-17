@@ -21,9 +21,9 @@ def claim(home, run_id="7001", workflow_sha="c" * 40, release_sha="a" * 40):
         "workflow_sha": workflow_sha,
         "source_sha": workflow_sha,
         "release_sha": release_sha,
-        "ci_run_id": "43720516972",
-        "artifact_id": "14164321503",
-        "artifact_run_id": "43720516972",
+        "ci_run_id": "44032192481",
+        "artifact_id": "14305937487",
+        "artifact_run_id": "44032192481",
         "archive_sha256": "b" * 64,
         "github_run_id": run_id,
         "github_run_attempt": "1",
@@ -62,6 +62,36 @@ class StagingAttemptGuardTests(unittest.TestCase):
             self.assertEqual((path / "claim.json").stat().st_mode & 0o777, 0o400)
             with self.assertRaisesRegex(ValueError, "already consumed"):
                 self.run_in_home(home, guard.create_claim, parent, claim(home, run_id="7002"))
+
+    def test_distinct_release_uses_new_claim_without_resetting_previous_claim(self):
+        with tempfile.TemporaryDirectory() as temp:
+            home = Path(temp)
+            parent = home / "dombi-ci-staging"
+            parent.mkdir(mode=0o700)
+
+            previous_sha = "dbfe218de8cc3ae49796524007e214ec8dfe464a"
+            previous = guard.claim_path(parent, previous_sha)
+            previous.mkdir(mode=0o700)
+            receipt = previous / "claim.json"
+            receipt.write_text("previous consumed claim\n")
+            receipt.chmod(0o400)
+            previous.chmod(0o500)
+
+            candidate_sha = "220a0190ec57c8ed64f5792dcaa10c7ca906f2b7"
+            value = claim(home, run_id="7201", workflow_sha="d" * 40, release_sha=candidate_sha)
+            self.run_in_home(home, guard.create_claim, parent, value)
+
+            candidate = guard.claim_path(parent, candidate_sha)
+            self.assertNotEqual(previous, candidate)
+            self.assertTrue(candidate.is_dir())
+            self.assertEqual(receipt.read_text(), "previous consumed claim\n")
+            self.assertEqual(previous.stat().st_mode & 0o777, 0o500)
+            self.assertEqual(receipt.stat().st_mode & 0o777, 0o400)
+            with self.assertRaisesRegex(ValueError, "already consumed"):
+                self.run_in_home(
+                    home, guard.create_claim, parent,
+                    claim(home, run_id="7202", workflow_sha="d" * 40, release_sha=candidate_sha),
+                )
 
     def test_rerun_duplicate_and_mismatched_rollback_are_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
