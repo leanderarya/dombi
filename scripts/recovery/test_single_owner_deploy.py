@@ -82,12 +82,38 @@ class DeployFixture(unittest.TestCase):
             ".env": b"APP_ENV=production\nDB_DATABASE=secret\n",
             "database/db.sqlite": b"not a real database\n",
             "storage/app/public/upload.txt": b"synthetic upload\n",
-            "bootstrap/cache/config.php": b"<?php // generated cache\n",
+            # Untouched neighbour inside bootstrap/cache: never rebuilt, never archived.
+            "bootstrap/cache/packages.php": b"<?php // operator-owned package cache\n",
         }
+        # The compiled caches a release may rewrite, captured in the baseline.
+        self.caches = {
+            "bootstrap/cache/config.php": b"<?php // stale generated config\n",
+            "bootstrap/cache/routes-v7.php": b"<?php // stale generated routes\n",
+        }
+        for name, data in self.caches.items():
+            (self.root / name).parent.mkdir(parents=True, exist_ok=True)
+            (self.root / name).write_bytes(data)
         for name, data in self.protected.items():
             (self.root / name).parent.mkdir(parents=True, exist_ok=True)
             (self.root / name).write_bytes(data)
         (self.root / "public/storage").symlink_to("../storage/app/public")
+
+        # No real PHP/Laravel in tests: inject a fake interpreter path and stub the
+        # three subprocess-backed steps. Each stub is individually overridable so a
+        # test can fail exactly one stage.
+        self.php = mock.MagicMock()
+        php_patch = mock.patch.object(deploy, "resolve_php",
+                                      lambda root: (self.php, "8.3.36"))
+        php_patch.start(); self.addCleanup(php_patch.stop)
+        self.rebuild = mock.MagicMock(return_value=["config:cache", "route:cache"])
+        rebuild_patch = mock.patch.object(deploy, "rebuild_caches", self.rebuild)
+        rebuild_patch.start(); self.addCleanup(rebuild_patch.stop)
+        self.effective = mock.MagicMock(return_value={
+            "admission_state": "held", "held": True,
+            "doku_routes": ["payment/doku/notify|web",
+                            "payment/doku/redirect|web"]})
+        effective_patch = mock.patch.object(deploy, "require_effective_held", self.effective)
+        effective_patch.start(); self.addCleanup(effective_patch.stop)
 
         self.candidate = dict(self.baseline)
         self.candidate["app/Http/Kernel.php"] = b"<?php // candidate kernel\n"
@@ -392,6 +418,330 @@ class DeployFixture(unittest.TestCase):
         for name, path in deploy.code_inventory(self.root).items():
             result[name] = path.read_bytes()
         return result
+
+
+
+class CacheSafeDeploymentTests(DeployFixture):
+    """Compiled config/route caches are part of the transaction, not an afterthought.
+
+    The production failure this guards against: old Nov-16 caches make the new
+    admission gate inert, so checkout stays open while the config says held.
+    """
+
+    # ── baseline capture ────────────────────────────────────────────────
+    def test_backup_captures_the_compiled_caches(self):
+        result = self.deploy()
+        record = fs.load_json(self.private / (result["operation_id"] + ".backup.json"))
+        self.assertEqual(record["caches"],
+                         ["bootstrap/cache/config.php",
+                          "bootstrap/cache/routes-v7.php"])
+        self.assertNotIn("bootstrap/cache/packages.php", record["caches"],
+                         "operator-owned cache must never be archived or rewritten")
+
+    def test_backup_archive_contains_source_and_caches_together(self):
+        result = self.deploy()
+        record = fs.load_json(self.private / (result["operation_id"] + ".backup.json"))
+        with tarfile.open(record["path"], "r:gz") as tar:
+            names = set(tar.getnames())
+        self.assertIn("app/Http/Kernel.php", names)
+        self.assertIn("bootstrap/cache/config.php", names)
+        self.assertIn("bootstrap/cache/routes-v7.php", names)
+        self.assertNotIn("bootstrap/cache/packages.php", names)
+        self.assertNotIn(".env", names)
+        self.assertNotIn("database/db.sqlite", names)
+
+    # ── transaction ordering ────────────────────────────────────────────
+    def test_caches_rebuilt_only_after_source_is_committed(self):
+        order = []
+        self.rebuild.side_effect = lambda root, php: (
+            order.append(("rebuild", (self.root / "app/Http/Kernel.php").read_bytes()))
+            or ["config:cache", "route:cache"])
+        self.deploy()
+        self.assertEqual(order[0][1], b"<?php // candidate kernel\n",
+                         "cache rebuild must see the NEW source, not the old")
+
+    def test_effective_state_probe_runs_after_rebuild(self):
+        calls = []
+        self.rebuild.side_effect = lambda *a: (calls.append("rebuild")
+                                               or ["config:cache", "route:cache"])
+        self.effective.side_effect = lambda *a: (calls.append("probe")
+                                                 or {"admission_state": "held", "held": True,
+                                                     "doku_routes": []})
+        self.deploy()
+        self.assertEqual(calls, ["rebuild", "probe"])
+
+    def test_outcome_records_cache_and_effective_evidence(self):
+        result = self.deploy()
+        self.assertEqual(result["caches_rebuilt"], ["config:cache", "route:cache"])
+        self.assertEqual(result["cache_baseline"],
+                         ["bootstrap/cache/config.php", "bootstrap/cache/routes-v7.php"])
+        self.assertEqual(result["effective"]["admission_state"], "held")
+        self.assertTrue(result["effective"]["held"])
+
+    # ── failure containment ─────────────────────────────────────────────
+    def _assert_restored_both(self, before_source, before_caches):
+        for name, data in before_source.items():
+            self.assertEqual((self.root / name).read_bytes(), data, name)
+        for name, data in before_caches.items():
+            self.assertEqual((self.root / name).read_bytes(), data, "cache " + name)
+
+    def test_failure_after_config_cache_restores_source_and_caches(self):
+        before_source = {n: (self.root / n).read_bytes() for n in self.baseline}
+        before_caches = {n: (self.root / n).read_bytes() for n in self.caches}
+        self.rebuild.side_effect = deploy.DeployError("cache_rebuild_failed:route:cache")
+        code, out = self.run_mode("deploy")
+        self.assertEqual(code, 1, out)
+        self._assert_restored_both(before_source, before_caches)
+
+    def test_failure_when_admission_not_held_restores_everything(self):
+        """A probe that reports OPEN must abort and roll back, never report success."""
+        before_source = {n: (self.root / n).read_bytes() for n in self.baseline}
+        before_caches = {n: (self.root / n).read_bytes() for n in self.caches}
+        self.effective.side_effect = deploy.DeployError("admission_not_held")
+        code, out = self.run_mode("deploy")
+        self.assertEqual(code, 1, out)
+        self._assert_restored_both(before_source, before_caches)
+        # No completion may be claimed.
+        ops = [p for p in self.private.iterdir() if p.is_dir()]
+        self.assertEqual(len(ops), 1)
+        self.assertFalse((ops[0] / "outcome.json").exists())
+
+    def test_missing_doku_route_in_probe_aborts_and_restores(self):
+        before_source = {n: (self.root / n).read_bytes() for n in self.baseline}
+        before_caches = {n: (self.root / n).read_bytes() for n in self.caches}
+        self.effective.side_effect = deploy.DeployError("doku_route_missing")
+        code, _ = self.run_mode("deploy")
+        self.assertEqual(code, 1)
+        self._assert_restored_both(before_source, before_caches)
+
+    def test_wrong_php_binary_aborts_before_any_rebuild(self):
+        before_source = {n: (self.root / n).read_bytes() for n in self.baseline}
+        before_caches = {n: (self.root / n).read_bytes() for n in self.caches}
+        with mock.patch.object(deploy, "resolve_php",
+                               side_effect=deploy.DeployError("php_binary_missing_or_wrong_version")):
+            code, _ = self.run_mode("deploy")
+        self.assertEqual(code, 1)
+        self.rebuild.assert_not_called()
+        self._assert_restored_both(before_source, before_caches)
+
+    def test_restore_failure_is_reported_not_hidden(self):
+        self.rebuild.side_effect = deploy.DeployError("cache_rebuild_failed:config:cache")
+        with mock.patch.object(deploy, "restore_from_backup",
+                               side_effect=deploy.DeployError("rollback_inventory")):
+            code, out = self.run_mode("deploy")
+        self.assertEqual(code, 1)
+        op = [p for p in self.private.iterdir() if p.is_dir()][0]
+        journal = (op / "journal.jsonl").read_bytes()
+        self.assertIn(b"AUTO_RESTORE_FAILED_KEEP_HELD", journal)
+        self.assertFalse((op / "outcome.json").exists())
+
+    # ── rollback restores both ──────────────────────────────────────────
+    def test_rollback_restores_original_caches_with_source(self):
+        before_caches = {n: (self.root / n).read_bytes() for n in self.caches}
+        result = self.deploy()
+        # Simulate a rebuilt cache differing from the baseline.
+        (self.root / "bootstrap/cache/config.php").write_bytes(b"<?php // rebuilt\n")
+        code, out = self.run_mode("rollback", operation=result["operation_id"])
+        self.assertEqual(code, 0, out)
+        for name, data in before_caches.items():
+            self.assertEqual((self.root / name).read_bytes(), data, name)
+        self.assertEqual(json.loads(out)["caches_restored"],
+                         ["bootstrap/cache/config.php", "bootstrap/cache/routes-v7.php"])
+
+    def test_repeated_rollback_is_idempotent_for_caches(self):
+        result = self.deploy()
+        first, out1 = self.run_mode("rollback", operation=result["operation_id"])
+        self.assertEqual(first, 0, out1)
+        second, out2 = self.run_mode("rollback", operation=result["operation_id"])
+        self.assertEqual(second, 0, out2)
+        for name, data in self.caches.items():
+            self.assertEqual((self.root / name).read_bytes(), data)
+
+    def test_rollback_refuses_a_baseline_with_a_swapped_cache_member(self):
+        result = self.deploy()
+        record_path = self.private / (result["operation_id"] + ".backup.json")
+        record = fs.load_json(record_path)
+        record["caches"] = ["bootstrap/cache/config.php"]
+        record_path.chmod(0o600)
+        record_path.write_bytes(fs.encoded(record) + b"\n")
+        with self.assertRaisesRegex(deploy.DeployError, "backup_inventory"):
+            deploy.verify_backup(record, self.private)
+
+    # ── protected neighbours survive every path ─────────────────────────
+    def test_untouched_bootstrap_cache_files_survive_deploy_and_rollback(self):
+        before = self.protected_snapshot()
+        result = self.deploy()
+        self.assertEqual(before, self.protected_snapshot())
+        self.run_mode("rollback", operation=result["operation_id"])
+        self.assertEqual(before, self.protected_snapshot())
+
+    def test_env_and_database_are_never_restored_from_the_archive(self):
+        result = self.deploy()
+        record = fs.load_json(self.private / (result["operation_id"] + ".backup.json"))
+        with tarfile.open(record["path"], "r:gz") as tar:
+            names = set(tar.getnames())
+        for forbidden in (".env", "database/db.sqlite", "storage/app/public/upload.txt"):
+            self.assertNotIn(forbidden, names)
+
+
+
+class RealCacheFunctionTests(unittest.TestCase):
+    """The subprocess-backed helpers, tested without touching a real Laravel app."""
+
+    def test_resolve_php_refuses_when_no_candidate_matches(self):
+        with mock.patch.object(deploy, "PHP_CANDIDATES", ()), \
+                self.assertRaisesRegex(deploy.DeployError,
+                                       "php_binary_missing_or_wrong_version"):
+            deploy.resolve_php(Path("/tmp"))
+
+    def test_resolve_php_refuses_a_wrong_major_version(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fake = Path(directory) / "php"
+            fake.write_text("#!/bin/sh\necho 8.2.0\n")
+            fake.chmod(0o755)
+            with mock.patch.object(deploy, "PHP_CANDIDATES", (str(fake),)), \
+                    self.assertRaisesRegex(deploy.DeployError,
+                                           "php_binary_missing_or_wrong_version"):
+                deploy.resolve_php(Path(directory))
+
+    def test_resolve_php_accepts_the_required_version(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fake = Path(directory) / "php"
+            fake.write_text("#!/bin/sh\necho 8.3.36\n")
+            fake.chmod(0o755)
+            with mock.patch.object(deploy, "PHP_CANDIDATES", (str(fake),)):
+                path, version = deploy.resolve_php(Path(directory))
+        self.assertEqual(version, "8.3.36")
+
+    def test_rebuild_stops_at_the_first_failing_command(self):
+        calls = []
+
+        def fake_run(command, **kwargs):
+            calls.append(command[2])
+            code = 0 if command[2] == "config:cache" else 1
+            return mock.Mock(returncode=code, stdout="", stderr="")
+
+        with mock.patch.object(deploy.subprocess, "run", side_effect=fake_run):
+            with self.assertRaisesRegex(deploy.DeployError,
+                                        "cache_rebuild_failed:route:cache"):
+                deploy.rebuild_caches(Path("/tmp"), Path("/usr/bin/php"))
+        self.assertEqual(calls, ["config:cache", "route:cache"],
+                         "route:cache may be attempted but its failure must raise")
+
+    def test_rebuild_order_is_config_then_route(self):
+        calls = []
+        with mock.patch.object(deploy.subprocess, "run",
+                               side_effect=lambda c, **k: (calls.append(c[2])
+                                                           or mock.Mock(returncode=0))):
+            deploy.rebuild_caches(Path("/tmp"), Path("/usr/bin/php"))
+        self.assertEqual(calls, ["config:cache", "route:cache"])
+
+    def test_effective_probe_refuses_open_admission(self):
+        with mock.patch.object(deploy.subprocess, "run",
+                               return_value=mock.Mock(
+                                   returncode=0,
+                                   stdout='{"state":"open","held":false,"doku":[]}')):
+            with self.assertRaisesRegex(deploy.DeployError, "admission_not_held"):
+                deploy.require_effective_held(Path("/tmp"), Path("/usr/bin/php"))
+
+    def test_effective_probe_refuses_an_unknown_state(self):
+        with mock.patch.object(deploy.subprocess, "run",
+                               return_value=mock.Mock(
+                                   returncode=0,
+                                   stdout='{"state":"garbage","held":false,"doku":[]}')):
+            with self.assertRaisesRegex(deploy.DeployError, "admission_not_held"):
+                deploy.require_effective_held(Path("/tmp"), Path("/usr/bin/php"))
+
+    def test_effective_probe_accepts_held_with_both_callbacks(self):
+        payload = ('{"state":"held","held":true,"doku":'
+                   '["payment/doku/notify|web","payment/doku/redirect|web"]}')
+        with mock.patch.object(deploy.subprocess, "run",
+                               return_value=mock.Mock(returncode=0, stdout=payload)):
+            facts = deploy.require_effective_held(Path("/tmp"), Path("/usr/bin/php"))
+        self.assertTrue(facts["held"])
+        self.assertEqual(facts["admission_state"], "held")
+
+    def test_effective_probe_refuses_a_missing_callback(self):
+        payload = '{"state":"held","held":true,"doku":["payment/doku/notify|web"]}'
+        with mock.patch.object(deploy.subprocess, "run",
+                               return_value=mock.Mock(returncode=0, stdout=payload)):
+            with self.assertRaisesRegex(deploy.DeployError, "doku_route_missing"):
+                deploy.require_effective_held(Path("/tmp"), Path("/usr/bin/php"))
+
+    def test_effective_probe_refuses_a_gated_callback(self):
+        payload = ('{"state":"held","held":true,"doku":'
+                   '["payment/doku/notify|web,admission.customer",'
+                   '"payment/doku/redirect|web"]}')
+        with mock.patch.object(deploy.subprocess, "run",
+                               return_value=mock.Mock(returncode=0, stdout=payload)):
+            with self.assertRaisesRegex(deploy.DeployError, "doku_route_gated"):
+                deploy.require_effective_held(Path("/tmp"), Path("/usr/bin/php"))
+
+    def test_effective_probe_refuses_a_failed_boot(self):
+        with mock.patch.object(deploy.subprocess, "run",
+                               return_value=mock.Mock(returncode=1, stdout="", stderr="")):
+            with self.assertRaisesRegex(deploy.DeployError,
+                                        "effective_state_probe_failed"):
+                deploy.require_effective_held(Path("/tmp"), Path("/usr/bin/php"))
+
+    def test_child_environment_strips_secrets(self):
+        with mock.patch.dict(os.environ, {"HOSTINGER_SSH_PASSWORD": "x",
+                                          "DB_PASSWORD": "y", "PATH": "/bin"}):
+            env = deploy.child_environment()
+        self.assertNotIn("HOSTINGER_SSH_PASSWORD", env)
+        self.assertNotIn("DB_PASSWORD", env)
+        self.assertEqual(env["PATH"], "/bin")
+
+    def test_cache_commands_contain_no_maintenance_or_migration(self):
+        flat = " ".join(" ".join(c) for c in deploy.CACHE_COMMANDS)
+        for forbidden in ("down", "up", "migrate", "db:wipe", "queue:restart"):
+            self.assertNotIn(forbidden, flat)
+
+
+
+class CacheInterruptionTests(DeployFixture):
+    """An interruption during cache rebuild must not leave a half-rebuilt runtime."""
+
+    def test_keyboard_interrupt_during_rebuild_restores_source_and_caches(self):
+        before_source = {n: (self.root / n).read_bytes() for n in self.baseline}
+        before_caches = {n: (self.root / n).read_bytes() for n in self.caches}
+        self.rebuild.side_effect = KeyboardInterrupt()
+        with self.assertRaises(KeyboardInterrupt):
+            deploy.main(["deploy", "--archive", str(self.archive),
+                         "--checksum-file", str(self.checksum),
+                         "--application-sha", APP_SHA,
+                         "--archive-sha256", self.archive_sha])
+        for name, data in before_source.items():
+            self.assertEqual((self.root / name).read_bytes(), data, name)
+        for name, data in before_caches.items():
+            self.assertEqual((self.root / name).read_bytes(), data, "cache " + name)
+
+    def test_interruption_is_journalled_before_restore(self):
+        self.rebuild.side_effect = KeyboardInterrupt()
+        with self.assertRaises(KeyboardInterrupt):
+            deploy.main(["deploy", "--archive", str(self.archive),
+                         "--checksum-file", str(self.checksum),
+                         "--application-sha", APP_SHA,
+                         "--archive-sha256", self.archive_sha])
+        op = [p for p in self.private.iterdir() if p.is_dir()][0]
+        journal = (op / "journal.jsonl").read_bytes()
+        self.assertIn(b"CACHE_STAGE_FAILED_RESTORING", journal)
+        self.assertIn(b"AUTO_RESTORED_KEEP_HELD", journal)
+        self.assertFalse((op / "outcome.json").exists(),
+                         "an interrupted deploy must never claim completion")
+
+    def test_partial_cache_write_is_reverted(self):
+        """config:cache succeeded, route:cache never ran: both caches roll back."""
+        def half_rebuild(root, php):
+            (root / "bootstrap/cache/config.php").write_bytes(b"<?php // half rebuilt\n")
+            raise deploy.DeployError("cache_rebuild_failed:route:cache")
+
+        before_caches = {n: (self.root / n).read_bytes() for n in self.caches}
+        self.rebuild.side_effect = half_rebuild
+        code, _ = self.run_mode("deploy")
+        self.assertEqual(code, 1)
+        for name, data in before_caches.items():
+            self.assertEqual((self.root / name).read_bytes(), data, name)
 
 
 if __name__ == "__main__":
