@@ -1,9 +1,9 @@
 const expected = {
     repository: 'leanderarya/dombi',
-    sha: 'dbfe218de8cc3ae49796524007e214ec8dfe464a',
-    ciRunId: '43720516972',
-    artifactId: '14164321503',
-    archiveSha256: '16f7aa17486f7264da7e8d25110eb5dad8358ff1e42c2352f91e6ba329ed8f8b',
+    sha: '220a0190ec57c8ed64f5792dcaa10c7ca906f2b7',
+    ciRunId: '44032192481',
+    artifactId: '14305937487',
+    archiveSha256: 'f48b68fb0678df3c752fe3ce600709bda7f706ccda0570e447d5fcda834598fd',
 };
 
 const isWorkflowPath = (path, expectedPath) =>

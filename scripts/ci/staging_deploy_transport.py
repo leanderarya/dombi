@@ -18,11 +18,11 @@ import staging_attempt_guard
 
 
 APPROVED_RELEASE = {
-    'sha': 'dbfe218de8cc3ae49796524007e214ec8dfe464a',
-    'ci_run_id': '43720516972',
-    'artifact_id': '14164321503',
-    'artifact_run_id': '43720516972',
-    'archive_sha256': '16f7aa17486f7264da7e8d25110eb5dad8358ff1e42c2352f91e6ba329ed8f8b',
+    'sha': '220a0190ec57c8ed64f5792dcaa10c7ca906f2b7',
+    'ci_run_id': '44032192481',
+    'artifact_id': '14305937487',
+    'artifact_run_id': '44032192481',
+    'archive_sha256': 'f48b68fb0678df3c752fe3ce600709bda7f706ccda0570e447d5fcda834598fd',
 }
 
 

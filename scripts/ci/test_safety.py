@@ -64,22 +64,23 @@ class StagingCodeOnlySafetyTests(unittest.TestCase):
         self.assertEqual(events, ['workflow_dispatch'])
         self.assertIn("if: github.event_name == 'workflow_dispatch'", workflow)
         self.assertIn('CI_RUN_ID: ${{ inputs.ci_run_id }}', workflow)
+        self.assertIn('description: Approved revised V1.0 candidate Quality Gate run 44032192481', workflow)
         self.assertNotIn('github.event.workflow_run', workflow)
         self.assertNotIn('STAGING_DEPLOY_ENABLED', workflow)
         combined = workflow + (ROOT / 'scripts/ci/select-release.cjs').read_text()
         for pinned in [
-            'dbfe218de8cc3ae49796524007e214ec8dfe464a',
-            '43720516972',
-            '14164321503',
-            '16f7aa17486f7264da7e8d25110eb5dad8358ff1e42c2352f91e6ba329ed8f8b',
+            '220a0190ec57c8ed64f5792dcaa10c7ca906f2b7',
+            '44032192481',
+            '14305937487',
+            'f48b68fb0678df3c752fe3ce600709bda7f706ccda0570e447d5fcda834598fd',
         ]:
             self.assertIn(pinned, combined)
         transport = (ROOT / 'scripts/ci/staging_deploy_transport.py').read_text()
         for pinned in [
-            'dbfe218de8cc3ae49796524007e214ec8dfe464a',
-            '43720516972',
-            '14164321503',
-            '16f7aa17486f7264da7e8d25110eb5dad8358ff1e42c2352f91e6ba329ed8f8b',
+            '220a0190ec57c8ed64f5792dcaa10c7ca906f2b7',
+            '44032192481',
+            '14305937487',
+            'f48b68fb0678df3c752fe3ce600709bda7f706ccda0570e447d5fcda834598fd',
         ]:
             self.assertIn(pinned, transport)
         guard = (ROOT / 'scripts/ci/staging_attempt_guard.py').read_text()
@@ -117,6 +118,13 @@ class StagingCodeOnlySafetyTests(unittest.TestCase):
         self.assertIn('staging_attempt_guard.py" verify', script)
         self.assertIn('--mode rollback', script)
         self.assertNotIn('staging_deploy_transport.py claim', workflow)
+        for pinned in [
+            '220a0190ec57c8ed64f5792dcaa10c7ca906f2b7',
+            '44032192481',
+            '14305937487',
+            'f48b68fb0678df3c752fe3ce600709bda7f706ccda0570e447d5fcda834598fd',
+        ]:
+            self.assertIn(pinned, workflow)
         self.assertIn('exec 9>>"$lock_file"', script)
         self.assertIn('[[ ! -L "$lock_file" ]]', script)
         for forbidden in [
