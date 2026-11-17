@@ -27,7 +27,9 @@ sys.modules[SPEC.name] = fs
 SPEC.loader.exec_module(fs)
 
 
-class FilesystemCheckpointTests(unittest.TestCase):
+class CheckpointFixture(unittest.TestCase):
+    """The reviewed synthetic checkpoint fixture, shared by related test modules."""
+
     def setUp(self):
         temporary = Path(tempfile.gettempdir()).resolve()
         preferred = temporary / "opencode"
@@ -193,6 +195,10 @@ class FilesystemCheckpointTests(unittest.TestCase):
         with self.assertRaises((fs.CheckpointError, tarfile.TarError, ValueError)):
             fs.inspect(self.policy, self.checkpoint_id, self.manifest_sha)
         self.assertEqual(before, self.snapshot(self.root))
+
+
+class FilesystemCheckpointTests(CheckpointFixture):
+    """The reviewed checkpoint suite, run from the shared synthetic fixture."""
 
     def test_round_trip_preserves_exact_managed_metadata_without_old_sha(self):
         m = self.capture()

@@ -11,10 +11,10 @@ their recorded scope. This document neither reopens them nor treats them as proo
 - Fixed root: `/home/u399215191/domains/dombicenter.com/public_html/app`.
 - Fixed document root: application root plus `/public`.
 - Historical application SHA: **UNKNOWN**, not a prerequisite or a fabricated value.
-- Proposed candidate artifact: `14015610232`.
-- Candidate application SHA: `4ebe5e1da608b0c7404e2667cb99742747db4796`.
+- Accepted candidate artifact: `14305937487`.
+- Candidate application SHA: `220a0190ec57c8ed64f5792dcaa10c7ca906f2b7`.
 - Candidate archive SHA-256:
-  `5b5a54453badc86134e890cb4f5448a80dce1fc1b391eec03ec41284988225d5`.
+  `f48b68fb0678df3c752fe3ce600709bda7f706ccda0570e447d5fcda834598fd`.
 
 Historical context, not a dependency shipped with this candidate: the previously
 inspected recovery README and `recover-production.py` describe a separate
