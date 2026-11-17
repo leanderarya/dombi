@@ -37,6 +37,21 @@ class FinanceSettlementController extends Controller
      */
     public function dashboard(Request $request): Response
     {
+        $requestedTab = $request->query('tab', 'tagihan');
+        $tab = is_string($requestedTab) && in_array($requestedTab, ['tagihan', 'pembayaran', 'rekening', 'refund'], true)
+            ? $requestedTab
+            : 'tagihan';
+
+        if ($tab !== 'tagihan') {
+            $tabData = match ($tab) {
+                'pembayaran' => $this->paymentTabData($request),
+                'rekening' => $this->rekeningTabData(),
+                'refund' => $this->refundTabData($request),
+            };
+
+            return Inertia::render('owner/finance/index', ['tab' => $tab] + $tabData);
+        }
+
         // Don't cache Eloquent models — they have serialization issues
         $outlets = Outlet::where('status', 'active')
             ->orderBy('name')
@@ -199,7 +214,22 @@ class FinanceSettlementController extends Controller
             }
         }
 
-        // Pembayaran tab data
+        return Inertia::render('owner/finance/index', [
+            'tab' => $tab,
+            'kpis' => [
+                'total_unpaid' => (float) $totalUnpaid,
+                'outlets_unpaid' => (int) $outletsUnpaid,
+                'due_this_week' => (float) $dueThisWeek,
+            ],
+            'outlets' => $outletList,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function paymentTabData(Request $request): array
+    {
         $status = $request->string('status', 'all')->toString();
         $paymentQuery = SettlementPayment::query()->with(['outlet', 'verifier', 'settlement']);
         if ($status !== 'all') {
@@ -215,10 +245,28 @@ class FinanceSettlementController extends Controller
             ->whereInMonth('verified_at', now())
             ->sum('amount');
 
-        // Rekening tab data
-        $accounts = PaymentAccount::orderBy('bank_name')->get();
+        return [
+            'payments' => $payments,
+            'statusFilter' => $status,
+            'paymentKpis' => [
+                'pending_count' => $pendingCount,
+                'verified_today' => (float) $verifiedToday,
+                'verified_month' => (float) $verifiedMonth,
+            ],
+        ];
+    }
 
-        // Refund tab data
+    /** @return array<string, mixed> */
+    private function rekeningTabData(): array
+    {
+        return ['accounts' => PaymentAccount::orderBy('bank_name')->get()];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function refundTabData(Request $request): array
+    {
         $filter = $request->string('filter', 'ready')->toString();
         $validQueues = RefundPayloadService::QUEUES;
         if (! in_array($filter, $validQueues, true)) {
@@ -242,14 +290,14 @@ class FinanceSettlementController extends Controller
 
         $query = match ($filter) {
             'awaiting_customer' => $query->withCanonicalRefund([RefundObligationStatus::Pending->value], false)
+                ->whereHas('customer', fn ($cq) => $cq->whereNotNull('user_id')),
+            'awaiting_guest' => $query->withCanonicalRefund([RefundObligationStatus::Pending->value], false)
                 ->where(fn ($q) => $q
-                    ->whereHas('customer', fn ($cq) => $cq->whereNotNull('user_id'))
+                    ->whereHas('customer', fn ($cq) => $cq->whereNull('user_id'))
                     ->orDoesntHave('customer')
                 ),
-            'awaiting_guest' => $query->withCanonicalRefund([RefundObligationStatus::Pending->value], false)
-                ->whereHas('customer', fn ($cq) => $cq->whereNull('user_id')),
             'ready' => $query->withCanonicalRefund([RefundObligationStatus::Pending->value], true),
-            'in_progress' => $query->withCanonicalRefund([RefundObligationStatus::InProgress->value]),
+            'in_progress' => $query->withCanonicalRefund([RefundObligationStatus::InProgress->value], null, false, true),
             'action_required' => $query->withCanonicalRefund(null, null, true),
             'completed' => $query->withCanonicalRefund([RefundObligationStatus::Completed->value]),
             'rejected' => $query->withCanonicalRefund([RefundObligationStatus::Rejected->value]),
@@ -260,7 +308,10 @@ class FinanceSettlementController extends Controller
             default => $query,
         };
 
-        $refunds = $query->paginate(20)->through(
+        $refunds = $query->paginate(20)->appends([
+            'tab' => 'refund',
+            'filter' => $filter,
+        ])->through(
             fn (Order $order) => $this->refundPayloads->forOwner($order),
         );
 
@@ -277,29 +328,11 @@ class FinanceSettlementController extends Controller
             }
         });
 
-        return Inertia::render('owner/finance/index', [
-            // Tagihan
-            'kpis' => [
-                'total_unpaid' => (float) $totalUnpaid,
-                'outlets_unpaid' => (int) $outletsUnpaid,
-                'due_this_week' => (float) $dueThisWeek,
-            ],
-            'outlets' => $outletList,
-            // Pembayaran
-            'payments' => $payments,
-            'statusFilter' => $status,
-            'paymentKpis' => [
-                'pending_count' => $pendingCount,
-                'verified_today' => (float) $verifiedToday,
-                'verified_month' => (float) $verifiedMonth,
-            ],
-            // Rekening
-            'accounts' => $accounts,
-            // Refund
+        return [
             'refunds' => $refunds,
             'refundCounts' => $refundCounts,
             'refundFilter' => $filter,
-        ]);
+        ];
     }
 
     /**
