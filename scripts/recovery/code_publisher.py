@@ -26,7 +26,8 @@ import tarfile
 VARIANT = "dombi-code-publisher-v1"
 OPERATION = "filesystem-code-publication"
 PUBLICATION_PATTERN = r"publication-[0-9a-f]{64}"
-PUBLICATION_ENTRIES = ("authorization.json", "pre-state.json", "journal.jsonl", "outcome.json")
+PUBLICATION_ENTRIES = ("authorization.json", "pre-state.json", "journal.jsonl", "outcome.json",
+                       "rollback.json")
 PAYLOAD_PATTERN = r"payload-[0-9]+"
 SUCCESS = "CODE_PUBLISH_COMPLETE_KEEP_HELD"
 DISABLED = ("PUBLISHER_DISABLED; fixture publication only; production needs --production, a "
@@ -401,6 +402,12 @@ def prior_publications(directory):
         fs.require(entries["authorization.json"]["sha256"]
                    == operation.name.removeprefix("publication-"),
                    "publication_authorization_identity")
+        if "rollback.json" in entries:
+            validate_rollback_record(operation)
+        else:
+            # A completed publication must carry its rollback record, and an
+            # interrupted one must too. Nothing may claim completion without it.
+            fs.require("outcome.json" not in entries, "rollback_metadata_missing")
         result[operation.name] = fs.object_digest(entries)
     return result
 
@@ -560,6 +567,7 @@ def publish(policy, checkpoint_id, manifest_sha256, approval_path):
         fs.write_bytes(operation / "authorization.json", approval_raw)
         fs.write_json(operation / "pre-state.json", before)
         fs.write_json(operation / "journal.jsonl", {"status": "AUTHORIZED_NOT_COMPLETED"})
+        prepare_rollback(policy, operation, manifest, manifest_sha256, plan, before)
         staged = fs.validate_archive(directory / "code.tar.gz", manifest, operation)
         fs.require(fs.load_checkpoint(policy, checkpoint_id, manifest_sha256)[1] == manifest,
                    "checkpoint_drift")
@@ -570,7 +578,8 @@ def publish(policy, checkpoint_id, manifest_sha256, approval_path):
         try:
             apply_publication(policy, manifest, before, staged, operation, plan)
             fs.restored_matches(policy, manifest, before)
-            fs.write_json(operation / "outcome.json", {"status": SUCCESS})
+            fs.write_json(operation / "outcome.json",
+                          dict({"status": SUCCESS}, **rollback_receipt(operation)))
         except BaseException:
             fs.journal(operation, {"status": "FAILED_OR_INTERRUPTED_KEEP_HELD"})
             raise
@@ -694,6 +703,235 @@ def plan_digest(plan):
     return fs.object_digest({"additions": plan["additions"],
                              "replacements": plan["replacements"],
                              "removals": plan["removals"]})
+
+
+ROLLBACK_CONTRACT = "dombi-code-publication-rollback-v1"
+ROLLBACK_PRESERVED = ("database", "storage", ".env", "public/storage")
+
+
+def plan_identity(plan):
+    """Digest a plan whatever shape the calling operation's planner returns."""
+    if isinstance(plan, dict):
+        return plan_digest(plan)
+    return fs.object_digest(list(plan))
+
+
+CUTOVER_CONTRACT = "dombi-cutover-attestation-v1"
+CUTOVER_EVIDENCE_CLASS = "declared-not-verified"
+CUTOVER_CALLBACK_GATE = "independent-of-checkout-admission"
+CUTOVER_CALLBACK_ROUTES = "registered-without-admission-middleware"
+CUTOVER_ADMISSION_SCOPE = "checkout-only"
+CUTOVER_WORKER_PHASES = ("drain", "adopt", "verify")
+CUTOVER_FORBIDDEN = ("artisan down", "artisan migrate", "artisan migrate:", "db:wipe",
+                     "migrate:fresh", "migrate:rollback", "migrate:reset")
+CUTOVER_KEYS = {"contract", "evidence_class", "verified_by_publisher", "callback_continuity",
+                "worker_adoption", "procedure"}
+CUTOVER_CALLBACK_KEYS = {"gate", "routes", "admission_scope", "verification"}
+CUTOVER_WORKER_KEYS = {"global_maintenance_mode", "steps", "commands", "verification"}
+CUTOVER_PROCEDURE_KEYS = {"reference", "sha256"}
+
+
+def cutover_procedure(policy, procedure):
+    """Resolve the approved cutover procedure document and pin its exact bytes.
+
+    `reference` is a path relative to the operator's private state directory. The
+    highlighted digest is only meaningful if the same bytes were reviewed, so the
+    publisher reads that file and refuses a mismatch. The document's content is a
+    human procedure: this proves identity and integrity, not that anyone ran it.
+    """
+    fs.require(isinstance(procedure, dict) and set(procedure) == CUTOVER_PROCEDURE_KEYS,
+               "cutover_procedure_contract")
+    fs.require(fs.text(procedure["reference"]), "cutover_procedure_reference")
+    fs.require(re.fullmatch(SIGNATURE_PATTERN, procedure["sha256"] or "") is not None,
+               "cutover_procedure_digest")
+    path = Path(policy.private) / procedure["reference"]
+    fs.require(path.is_relative_to(policy.private), "cutover_procedure_boundary")
+    fs.require(".." not in Path(procedure["reference"]).parts,
+               "cutover_procedure_boundary")
+    try:
+        digest = fs.file_digest(path, private=True)
+    except FileNotFoundError:
+        raise fs.CheckpointError("cutover_procedure_missing") from None
+    fs.require(digest == procedure["sha256"], "cutover_procedure_drift")
+    return digest
+
+
+def cutover_attestation(approved, policy=None):
+    """Validate the cutover readiness attestation the production approval must carry.
+
+    The publisher cannot observe Laravel routes, running workers or callback
+    delivery, so it must never record these facts as verified. The accepted
+    evidence class is therefore exactly `declared-not-verified`, and an approval
+    that claims a stronger class is refused rather than trusted: an unverifiable
+    claim is worse than an honest declaration. Everything here is fail-closed and
+    purely structural — it proves the operator submitted a complete, bounded,
+    non-destructive procedure, not that the host behaves that way.
+    """
+    value = approved.get("cutover")
+    fs.require(isinstance(value, dict), "cutover_evidence_missing")
+    fs.require(set(value) == CUTOVER_KEYS, "cutover_evidence_contract")
+    fs.require(value["contract"] == CUTOVER_CONTRACT, "cutover_evidence_contract")
+    fs.require(value["evidence_class"] == CUTOVER_EVIDENCE_CLASS
+               and value["verified_by_publisher"] is False, "cutover_evidence_overclaim")
+
+    callback = value["callback_continuity"]
+    fs.require(isinstance(callback, dict) and set(callback) == CUTOVER_CALLBACK_KEYS,
+               "cutover_callback_contract")
+    fs.require(callback["gate"] == CUTOVER_CALLBACK_GATE, "cutover_callback_gate")
+    fs.require(callback["routes"] == CUTOVER_CALLBACK_ROUTES, "cutover_callback_routes")
+    fs.require(callback["admission_scope"] == CUTOVER_ADMISSION_SCOPE,
+               "cutover_callback_admission_scope")
+    fs.require(fs.text(callback["verification"]), "cutover_callback_verification")
+
+    worker = value["worker_adoption"]
+    fs.require(isinstance(worker, dict) and set(worker) == CUTOVER_WORKER_KEYS,
+               "cutover_worker_contract")
+    fs.require(worker["global_maintenance_mode"] is False, "cutover_worker_maintenance")
+    steps = worker["steps"]
+    fs.require(isinstance(steps, list) and 3 <= len(steps) <= 16
+               and all(fs.text(step) for step in steps), "cutover_worker_steps")
+    positions = []
+    for phase in CUTOVER_WORKER_PHASES:
+        matches = [i for i, step in enumerate(steps) if phase in step.lower()]
+        fs.require(matches, "cutover_worker_steps")
+        positions.append(matches[0])
+    fs.require(positions == sorted(positions), "cutover_worker_order")
+    commands = worker["commands"]
+    fs.require(isinstance(commands, list) and 1 <= len(commands) <= 32
+               and all(fs.text(command) for command in commands), "cutover_worker_commands")
+    for command in commands:
+        lowered = command.lower()
+        fs.require(not any(token in lowered for token in CUTOVER_FORBIDDEN),
+                   "cutover_forbidden_command")
+    fs.require(fs.text(worker["verification"]), "cutover_worker_verification")
+
+    procedure = value["procedure"]
+    fs.require(isinstance(procedure, dict) and set(procedure) == CUTOVER_PROCEDURE_KEYS,
+               "cutover_procedure_contract")
+    fs.require(fs.text(procedure["reference"]), "cutover_procedure_reference")
+    fs.require(re.fullmatch(SIGNATURE_PATTERN, procedure["sha256"] or "") is not None,
+               "cutover_procedure_digest")
+    if policy is not None:
+        cutover_procedure(policy, procedure)
+    return value
+
+
+def rollback_metadata(policy, manifest, manifest_sha256, plan, before,
+                      application_sha=None, archive_sha256=None, realm=None,
+                      attestation=None):
+    """Describe, before any mutation, exactly how this publication is undone.
+
+    The record is derived from the same pinned inputs the publication itself is
+    authorized by, so it cannot describe a different checkpoint, baseline or
+    release than the one being written. It never mutates the application root:
+    it only points at the pre-release checkpoint that `filesystem_checkpoint.py
+    recover` restores, and it states which state must survive that recovery.
+    """
+    return {
+        "contract": ROLLBACK_CONTRACT,
+        "status": "PREPARED_NOT_EXECUTED",
+        "realm": realm,
+        "checkpoint_id": manifest["checkpoint_id"],
+        "manifest_sha256": manifest_sha256,
+        "checkpoint_archive_sha256": manifest["archives"][0]["sha256"],
+        "pre_state_sha256": fs.object_digest(before),
+        "publication_plan_sha256": plan_identity(plan),
+        "artifact_application_sha": application_sha,
+        "artifact_sha256": archive_sha256,
+        "cutover_attestation": attestation,
+        "cutover_evidence_sha256": (fs.object_digest(attestation)
+                                    if attestation is not None else None),
+        "tool_sha256": fs.tool_digest(),
+        "publisher_sha256": publisher_digest(),
+        "volatile_policy": volatile_policy(),
+        "recovery": {
+            "mode": "filesystem_checkpoint_recover",
+            "restores": "managed-code-only",
+            "preserved": list(ROLLBACK_PRESERVED),
+            "confirmation": (f"RECOVER {policy.root} TO CHECKPOINT "
+                             f"{manifest['checkpoint_id']} {manifest_sha256}"),
+        },
+        "requires_reopening_decision": True,
+    }
+
+
+def validate_rollback_record(operation):
+    """A persisted rollback record must be complete, self-consistent and unreleased.
+
+    This runs when a later publication reads prior lineage, so a tampered or
+    partial record blocks further publication instead of being trusted silently.
+    """
+    record = fs.load_json(operation / "rollback.json")
+    fs.require(isinstance(record, dict) and record.get("contract") == ROLLBACK_CONTRACT,
+               "rollback_metadata_contract")
+    fs.require(record.get("status") == "PREPARED_NOT_EXECUTED", "rollback_metadata_status")
+    fs.require(record.get("requires_reopening_decision") is True,
+               "rollback_reopening_decision")
+    fs.require(record.get("realm") in (None, FIXTURE_REALM, PRODUCTION_REALM),
+               "rollback_realm")
+    fs.require(fs.text(record.get("checkpoint_id")), "rollback_checkpoint_id")
+    for name in ("manifest_sha256", "checkpoint_archive_sha256", "pre_state_sha256",
+                 "publication_plan_sha256", "tool_sha256", "publisher_sha256"):
+        fs.require(re.fullmatch(SIGNATURE_PATTERN, record.get(name) or "") is not None,
+                   "rollback_metadata_digest")
+    application = record.get("artifact_application_sha")
+    fs.require(application is None
+               or re.fullmatch(r"[a-f0-9]{40}", application) is not None,
+               "rollback_metadata_application")
+    archive = record.get("artifact_sha256")
+    fs.require(archive is None
+               or re.fullmatch(SIGNATURE_PATTERN, archive) is not None,
+               "rollback_metadata_release")
+    if record.get("realm") == PRODUCTION_REALM:
+        # A production record must carry the cutover attestation it was approved
+        # under, and its digest must still match, so evidence cannot be swapped
+        # after the fact.
+        attestation = record.get("cutover_attestation")
+        fs.require(isinstance(attestation, dict), "cutover_evidence_missing")
+        fs.require(record.get("cutover_evidence_sha256")
+                   == fs.object_digest(attestation), "cutover_evidence_digest")
+        cutover_attestation({"cutover": attestation})
+    else:
+        fs.require(record.get("cutover_attestation") is None
+                   and record.get("cutover_evidence_sha256") is None,
+                   "cutover_evidence_unexpected")
+    recovery = record.get("recovery")
+    fs.require(isinstance(recovery, dict)
+               and recovery.get("mode") == "filesystem_checkpoint_recover"
+               and recovery.get("restores") == "managed-code-only"
+               and recovery.get("preserved") == list(ROLLBACK_PRESERVED)
+               and fs.text(recovery.get("confirmation")),
+               "rollback_recovery_contract")
+    fs.require(record["checkpoint_id"] in recovery["confirmation"]
+               and record["manifest_sha256"] in recovery["confirmation"],
+               "rollback_confirmation_identity")
+    return record
+
+
+def prepare_rollback(policy, operation, manifest, manifest_sha256, plan, before,
+                     application_sha=None, archive_sha256=None, realm=None,
+                     attestation=None):
+    """Persist the rollback record and prove it is readable before touching code.
+
+    An interrupted publication keeps an operation directory behind. Writing this
+    record first and verifying it by digest means such a directory always carries
+    a usable description of the state to return to, even if the process dies in
+    the middle of the apply sequence.
+    """
+    metadata = rollback_metadata(policy, manifest, manifest_sha256, plan, before,
+                                 application_sha, archive_sha256, realm, attestation)
+    path = operation / "rollback.json"
+    fs.write_json(path, metadata)
+    fs.require(fs.load_json(path) == metadata, "rollback_metadata_drift")
+    return metadata
+
+
+def rollback_receipt(operation):
+    """Pin the rollback record's digest into the completion outcome."""
+    path = operation / "rollback.json"
+    fs.require(path.exists(), "rollback_metadata_missing")
+    return {"rollback_sha256": fs.file_digest(path, private=True),
+            "rollback_status": "PREPARED_NOT_EXECUTED"}
 
 
 def stage_artifact(archive_path, files, operation):
@@ -820,15 +1058,16 @@ def publish_artifact(policy, checkpoint_id, manifest_sha256, approval_path,
 
 def artifact_publication(policy, checkpoint_id, manifest_sha256, approval_path,
                          archive_path, checksum_path, realm, authenticate=None,
-                         checkpoint_check=None):
+                         checkpoint_check=None, readiness=None, preconditions=None):
     """The shared artifact publication body; the realm and extra proof are injected.
 
     `realm` selects exactly one identity guard (see `enforce_realm`), `authenticate`
-    is the optional extra approval proof a realm requires, and `checkpoint_check` is
-    an optional extra checkpoint requirement. Only one implementation of the apply
-    sequence exists, so the fixture and production realms cannot diverge in what they
-    validate or mutate; they differ only in who may run them and what extra proof is
-    demanded.
+    is the optional extra approval proof a realm requires, `checkpoint_check` is an
+    optional extra checkpoint requirement, `preconditions` is an optional extra
+    baseline/preservation/candidate proof evaluated against the observed baseline,
+    and `readiness` is the optional cutover readiness gate: it returns the
+    attestation to bind into the rollback record, or raises to refuse. All are
+    evaluated before any mutation.
     """
     enforce_realm(policy, realm)
     approval_path, archive_path = Path(approval_path), Path(archive_path)
@@ -853,6 +1092,9 @@ def artifact_publication(policy, checkpoint_id, manifest_sha256, approval_path,
         manifest_sha256, return_snapshot=True)
     if authenticate is not None:
         authenticate(approved, approval_sha)
+    attestation = readiness(approved, policy) if readiness is not None else None
+    if preconditions is not None:
+        preconditions(policy, manifest, before, approved)
     fs.require(approved.get("boundaries") == manifest["boundaries"], "approval_boundaries")
     fs.require(approved.get("manifest_sha256") == manifest_sha256, "approval_manifest")
     fs.require(approved.get("publisher_sha256") == publisher_digest(), "approval_publisher")
@@ -887,6 +1129,8 @@ def artifact_publication(policy, checkpoint_id, manifest_sha256, approval_path,
         fs.write_bytes(operation / "authorization.json", approval_raw)
         fs.write_json(operation / "pre-state.json", before)
         fs.write_json(operation / "journal.jsonl", {"status": "AUTHORIZED_NOT_COMPLETED"})
+        prepare_rollback(policy, operation, manifest, manifest_sha256, plan, before,
+                         application_sha, archive_sha256, realm, attestation)
         staged = stage_artifact(archive_path, files, operation)
         fs.require(fs.load_checkpoint(policy, checkpoint_id, manifest_sha256)[1] == manifest,
                    "checkpoint_drift")
@@ -903,7 +1147,8 @@ def artifact_publication(policy, checkpoint_id, manifest_sha256, approval_path,
                 publish_artifact_file(policy, name, files[name], staged[name],
                                       before, operation, directories, realm)
             artifact_matches(policy, manifest, before, files)
-            fs.write_json(operation / "outcome.json", {"status": SUCCESS})
+            fs.write_json(operation / "outcome.json",
+                          dict({"status": SUCCESS}, **rollback_receipt(operation)))
         except BaseException:
             fs.journal(operation, {"status": "FAILED_OR_INTERRUPTED_KEEP_HELD"})
             raise
@@ -946,6 +1191,42 @@ def checkpoint_freshness(directory, manifest):
                "production_checkpoint_stale")
 
 
+def production_preconditions(policy, manifest, before, approved, pin):
+    """Re-prove candidate identity, checkpoint integrity and data preservation.
+
+    These are the three facts the publisher can actually establish locally, so
+    they are checked together and before the door can open: the release candidate
+    in the approval is the pinned one, the checkpoint archive still matches its
+    manifest and the recovery tool is the checkpointed one, and every protected
+    path the checkpoint recorded is still present with the same type. Content of
+    protected paths may legitimately differ (rotated `.env`, new uploads, growing
+    logs); the publisher never writes them, and post-publication equality is
+    enforced separately by `artifact_matches()`. What the host must prove about
+    callbacks or workers is deliberately *not* asserted here.
+    """
+    fs.require(approved.get("artifact_application_sha") == pin["application_sha"]
+               and approved.get("artifact_sha256") == pin["archive_sha256"],
+               "production_candidate_identity")
+    fs.require(re.fullmatch(r"[a-f0-9]{40}", pin["application_sha"] or "") is not None
+               and re.fullmatch(SIGNATURE_PATTERN, pin["archive_sha256"] or "") is not None,
+               "production_candidate_pin")
+    directory = fs.checkpoint_path(policy, manifest["checkpoint_id"])
+    fs.require(fs.file_digest(directory / "code.tar.gz", private=True)
+               == manifest["archives"][0]["sha256"], "production_checkpoint_archive_drift")
+    fs.require(manifest["recovery_contract"]["tool_sha256"] == fs.tool_digest(),
+               "production_checkpoint_tool_drift")
+    baseline_protected = fs.stable_protected(manifest["inventory"])
+    observed_protected = fs.stable_protected(before)
+    fs.require(all(name in observed_protected
+                   and observed_protected[name]["type"] == entry["type"]
+                   for name, entry in baseline_protected.items()),
+               "production_protected_state_missing")
+    return {"candidate": pin["artifact_id"],
+            "checkpoint_archive_sha256": manifest["archives"][0]["sha256"],
+            "protected_paths": sorted(baseline_protected),
+            "observed_protected_sha256": fs.object_digest(observed_protected)}
+
+
 def publish_artifact_production(policy, checkpoint_id, manifest_sha256, approval_path,
                                 signature_path, key_path, archive_path, checksum_path,
                                 candidate=None):
@@ -982,7 +1263,8 @@ def publish_artifact_production(policy, checkpoint_id, manifest_sha256, approval
     result = artifact_publication(
         policy, checkpoint_id, manifest_sha256, approval_path, archive_path,
         checksum_path, realm=PRODUCTION_REALM, authenticate=authenticate,
-        checkpoint_check=checkpoint_freshness)
+        checkpoint_check=checkpoint_freshness, readiness=cutover_attestation,
+        preconditions=lambda p, m, b, a: production_preconditions(p, m, b, a, pin))
     return dict(result, realm=PRODUCTION_REALM, approval_key_sha256=key_identity)
 
 

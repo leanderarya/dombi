@@ -35,7 +35,9 @@ fs = publisher.fs
 APP_SHA = "a" * 40
 
 
-class ProductionPublisherTests(unittest.TestCase):
+class ProductionPublisherFixture(unittest.TestCase):
+    """The reviewed synthetic production fixture, shared by related test modules."""
+
     def setUp(self):
         temporary = Path(tempfile.gettempdir()).resolve()
         preferred = temporary / "opencode"
@@ -117,6 +119,46 @@ class ProductionPublisherTests(unittest.TestCase):
     def key_identity(self, path=None):
         return hashlib.sha256((path or self.key).read_bytes()).hexdigest()
 
+    def cutover(self, **changes):
+        """A synthetic cutover attestation; every value is a declaration, not proof."""
+        procedure = self.private / "synthetic-cutover-procedure.md"
+        if not procedure.exists():
+            procedure.write_bytes(b"Synthetic callback/worker cutover procedure.\n")
+            procedure.chmod(0o600)
+        value = {
+            "contract": publisher.CUTOVER_CONTRACT,
+            "evidence_class": publisher.CUTOVER_EVIDENCE_CLASS,
+            "verified_by_publisher": False,
+            "callback_continuity": {
+                "gate": publisher.CUTOVER_CALLBACK_GATE,
+                "routes": publisher.CUTOVER_CALLBACK_ROUTES,
+                "admission_scope": publisher.CUTOVER_ADMISSION_SCOPE,
+                "verification": "synthetic: webhook route list holds no admission middleware",
+            },
+            "worker_adoption": {
+                "global_maintenance_mode": False,
+                "steps": [
+                    "drain: stop accepting new checkout traffic via admission hold",
+                    "adopt: publish code and restart queue workers with the new release",
+                    "verify: confirm callback delivery and worker liveness before reopening",
+                ],
+                "commands": ["php artisan queue:restart"],
+                "verification": "synthetic: queue:restart acknowledged by every worker",
+            },
+            "procedure": {
+                "reference": "synthetic-cutover-procedure.md",
+                "sha256": fs.file_digest(procedure, private=True),
+            },
+        }
+        for name, change in changes.items():
+            if isinstance(change, dict) and isinstance(value.get(name), dict):
+                nested = dict(value[name])
+                nested.update(change)
+                value[name] = nested
+            else:
+                value[name] = change
+        return value
+
     def approval(self, kind, **overrides):
         self.sequence += 1
         current = fs.now()
@@ -146,6 +188,7 @@ class ProductionPublisherTests(unittest.TestCase):
             value["publisher_sha256"] = publisher.publisher_digest()
             value["volatile_policy"] = publisher.volatile_policy()
             value["prior_operations"] = publisher.prior_operation_lineage(self.directory)
+            value["cutover"] = self.cutover()
         value.update(overrides)
         path = self.private / ("synthetic-approval-" + str(self.sequence) + ".json")
         fs.write_json(path, value)
@@ -262,6 +305,11 @@ class ProductionPublisherTests(unittest.TestCase):
                 self.candidate(digest), digest, files)
 
     # ── explicit activation only ──────────────────────────────────────
+
+
+class ProductionPublisherTests(ProductionPublisherFixture):
+    """The reviewed production suite, run from the shared synthetic fixture."""
+
     def test_production_is_unreachable_without_the_explicit_flag(self):
         request = self.signed_candidate(**{"app/service.php": b"synthetic candidate\n"})
         approval, signature, archive, checksum = request[:4]
