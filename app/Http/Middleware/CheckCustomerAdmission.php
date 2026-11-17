@@ -12,14 +12,18 @@ use Symfony\Component\HttpFoundation\Response;
  * Attached per-route only (see routes/web.php), never globally: DOKU callbacks
  * must keep working while admissions are held.
  *
- * Default state is OPEN — config('admission.customer_checkout') must be
- * explicitly 'held' for this middleware to reject anything.
+ * Only an explicit active state allows new admissions. Missing or invalid
+ * configuration keeps the gate closed.
  */
 class CheckCustomerAdmission
 {
+    private const ACTIVE_STATES = ['active', 'open'];
+
     public static function held(): bool
     {
-        return strtolower(trim((string) config('admission.customer_checkout'))) === 'held';
+        $state = strtolower(trim((string) config('admission.customer_checkout', 'held')));
+
+        return ! in_array($state, self::ACTIVE_STATES, true);
     }
 
     public function handle(Request $request, Closure $next): Response

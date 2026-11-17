@@ -145,8 +145,8 @@ class MaintenanceModeExceptionsTest extends TestCase
         $this->assertFalse(app()->isDownForMaintenance());
         $this->get('/up')->assertOk();
 
-        // Gate is open by default, so the route is not short-circuited by the
-        // admission middleware; a validation failure (not 503) proves it ran.
+        // The explicit legacy open value keeps admission middleware from
+        // short-circuiting the route; validation failure (not 503) proves it ran.
         $response = $this->post('/customer/checkout', []);
         $this->assertNotSame(503, $response->getStatusCode());
     }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\CheckCustomerAdmission;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\PaymentAttempt;
@@ -12,6 +13,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
+use Symfony\Component\Process\Process;
 use Tests\TestCase;
 use Tests\WithTestOutlet;
 
@@ -34,8 +36,8 @@ class CustomerAdmissionGateTest extends TestCase
     {
         parent::setUp();
 
-        // Default state under test: admissions open. Individual tests hold them.
-        config(['admission.customer_checkout' => 'open']);
+        // Active mode is explicit in tests; production defaults to held.
+        config(['admission.customer_checkout' => 'active']);
 
         config([
             'doku.client_id' => 'test-client-id',
@@ -166,8 +168,10 @@ class CustomerAdmissionGateTest extends TestCase
         $this->assertSame(0, PaymentWebhookLog::query()->where('request_id', 'REQ-ADMISSION-UNPERSISTED')->count());
     }
 
-    public function test_default_open_admissions_leave_checkout_behaviour_unchanged(): void
+    public function test_active_admissions_leave_checkout_behaviour_unchanged(): void
     {
+        config(['admission.customer_checkout' => 'active']);
+
         $product = Product::factory()->create(['is_active' => true, 'selling_price' => 25000]);
 
         $response = $this->post('/customer/checkout', [
@@ -202,20 +206,87 @@ class CustomerAdmissionGateTest extends TestCase
         }
     }
 
-    public function test_gate_fails_open_for_unset_or_unrecognised_values(): void
+    public function test_missing_admission_configuration_fails_closed(): void
     {
-        // Anything that is not the literal token leaves admissions OPEN, so a
-        // typo or a missing env var can never close production by accident.
-        foreach ([null, '', 'open', 'closed', 'false', '0', '1', 'hold', 'paused'] as $value) {
+        $this->app['config']->offsetUnset('admission.customer_checkout');
+
+        $this->from('/customer/checkout')
+            ->post('/customer/checkout', ['items' => [['product_id' => 1, 'quantity' => 1]]])
+            ->assertRedirect('/customer/checkout')
+            ->assertSessionHasErrors('admission_held');
+
+        $this->assertSame(0, Order::query()->count());
+
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $this->postJson('/customer/orders/'.$order->id.'/pay')
+            ->assertStatus(503)
+            ->assertJson(['error' => 'admission_held']);
+        $this->assertSame(0, PaymentAttempt::query()->count());
+    }
+
+    public function test_unrecognised_admission_values_fail_closed_before_order_creation(): void
+    {
+        $invalidValues = ['', 'closed', 'false', '0', '1', 'hold', 'paused', 'active-ish'];
+
+        foreach ($invalidValues as $value) {
             config(['admission.customer_checkout' => $value]);
 
             $this->from('/customer/checkout')
-                ->post('/customer/checkout', ['items' => [['product_id' => 1, 'quantity' => 1]]])
-                ->assertSessionDoesntHaveErrors('admission_held');
+                ->post('/customer/orders', ['items' => [['product_id' => 1, 'quantity' => 1]]])
+                ->assertSessionHasErrors('admission_held');
+        }
+
+        $this->assertSame(0, Order::query()->count());
+
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        config(['admission.customer_checkout' => 'closed']);
+        $this->postJson('/customer/orders/'.$order->id.'/pay')
+            ->assertStatus(503)
+            ->assertJson(['error' => 'admission_held']);
+
+        $this->assertSame(0, PaymentAttempt::query()->count());
+    }
+
+    public function test_cached_admission_configuration_is_authoritative_after_environment_changes(): void
+    {
+        $cachePath = base_path('bootstrap/cache/admission-test-'.bin2hex(random_bytes(8)).'.php');
+        $baseEnvironment = [
+            'APP_ENV' => 'testing',
+            'APP_KEY' => 'base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+            'APP_CONFIG_CACHE' => $cachePath,
+        ];
+        $this->assertFileDoesNotExist($cachePath);
+
+        try {
+            $cache = new Process(
+                [PHP_BINARY, base_path('artisan'), 'config:cache'],
+                base_path(),
+                $baseEnvironment + ['ADMISSION_CUSTOMER_CHECKOUT' => 'held'],
+            );
+            $cache->mustRun();
+
+            $verifyCode = <<<'PHP'
+require "vendor/autoload.php";
+$app = require "bootstrap/app.php";
+$app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+echo \App\Http\Middleware\CheckCustomerAdmission::held() ? "held" : "active";
+PHP;
+            $verify = new Process(
+                [PHP_BINARY, '-r', $verifyCode],
+                base_path(),
+                $baseEnvironment + ['ADMISSION_CUSTOMER_CHECKOUT' => 'active'],
+            );
+            $verify->mustRun();
+
+            $this->assertSame('held', trim($verify->getOutput()));
+        } finally {
+            if (is_file($cachePath)) {
+                unlink($cachePath);
+            }
         }
     }
 
-    public function test_gate_closes_only_for_the_held_token(): void
+    public function test_held_admission_values_are_normalized_and_closed(): void
     {
         foreach (['held', 'HELD', ' Held ', 'held '] as $value) {
             config(['admission.customer_checkout' => $value]);
@@ -223,6 +294,15 @@ class CustomerAdmissionGateTest extends TestCase
             $this->from('/customer/checkout')
                 ->post('/customer/checkout', ['items' => [['product_id' => 1, 'quantity' => 1]]])
                 ->assertSessionHasErrors('admission_held');
+        }
+    }
+
+    public function test_active_and_legacy_open_values_allow_admissions(): void
+    {
+        foreach (['active', 'open'] as $value) {
+            config(['admission.customer_checkout' => $value]);
+
+            $this->assertFalse(CheckCustomerAdmission::held());
         }
     }
 

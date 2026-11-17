@@ -7,15 +7,14 @@ return [
     | Customer Admission
     |--------------------------------------------------------------------------
     |
-    | 'open' (the default) preserves normal behaviour: no customer route is
-    | blocked. 'held' closes new customer checkout and payment initiation by
-    | attaching App\Http\Middleware\CheckCustomerAdmission to the routes that
-    | create checkout drafts, orders, or DOKU payment attempts.
+    | 'active' (or the legacy alias 'open') allows new customer admissions.
+    | 'held' closes new customer checkout and payment initiation by attaching
+    | App\Http\Middleware\CheckCustomerAdmission to routes that create checkout
+    | drafts, orders, or DOKU payment attempts.
     |
-    | Reversible without a code change: set ADMISSION_CUSTOMER_CHECKOUT=held
-    | and rebuild the config cache. Any value other than 'held' — including an
-    | unset, empty, or misspelled one — leaves admissions OPEN, so this control
-    | cannot close production by accident.
+    | The default is held. Only an explicit active/open value allows customer
+    | admissions; missing, empty, or unrecognized values remain held. Rebuild
+    | the config cache after changing ADMISSION_CUSTOMER_CHECKOUT.
     |
     | DOKU callbacks (/payment/doku/notify, /payment/doku/redirect) are never
     | behind this gate. They must stay reachable so already-initiated payments
@@ -23,7 +22,7 @@ return [
     |
     */
 
-    'customer_checkout' => env('ADMISSION_CUSTOMER_CHECKOUT', 'open'),
+    'customer_checkout' => env('ADMISSION_CUSTOMER_CHECKOUT', 'held'),
 
     'message' => env(
         'ADMISSION_CUSTOMER_CHECKOUT_MESSAGE',
