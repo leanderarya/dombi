@@ -4,9 +4,20 @@ on:
   workflow_call:
   pull_request:
     branches: [develop, main]
+  # A main merge must produce its own immutable artifact: the production
+  # pipeline deploys `release-<merge sha>` and nothing else.
+  push:
+    branches: [main]
 
 permissions:
   contents: read
+  actions: read
+
+# One packaging run per commit; never cancel an in-flight build that a deploy
+# may already be waiting on.
+concurrency:
+  group: quality-${{ github.sha }}
+  cancel-in-progress: false
 
 jobs:
   quality:
@@ -64,3 +75,31 @@ jobs:
       - run: php artisan test --testsuite Unit
       - run: php artisan test --testsuite Feature
       - run: npm test
+      - name: Locate an existing immutable release for this commit
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: existing
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo,
+              {...context.repo, name: `release-${context.sha}`, per_page: 100});
+            if (artifacts.some(a => !a.expired)) {
+              core.setOutput('found', 'true');
+              await core.summary.addRaw('Existing immutable release retained; not rebuilding or replacing it.\n').write();
+            }
+      - name: Assemble production dependencies without changing the tested workspace
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.existing.outputs.found != 'true'
+        run: |
+          mkdir "$RUNNER_TEMP/runtime"
+          cp composer.json composer.lock "$RUNNER_TEMP/runtime/"
+          composer install --working-dir="$RUNNER_TEMP/runtime" --no-dev --no-scripts --no-interaction --prefer-dist --optimize-autoloader
+          composer check-platform-reqs --working-dir="$RUNNER_TEMP/runtime" --no-dev
+          python3 scripts/ci/release.py pack --root . --vendor "$RUNNER_TEMP/runtime/vendor" --sha "$GITHUB_SHA" --output "$RUNNER_TEMP/release"
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.existing.outputs.found != 'true'
+        with:
+          name: release-${{ github.sha }}
+          path: ${{ runner.temp }}/release/*
+          if-no-files-found: error
+          overwrite: false
+          retention-days: 90

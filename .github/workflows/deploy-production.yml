@@ -1,0 +1,136 @@
+name: Deploy Production
+
+# Permanently disabled until the bootstrap activation step. Two independent
+# controls must both be enabled, and neither can be flipped from a normal merge:
+#   * PRODUCTION_DEPLOY_ACTIVATED in scripts/ci/production_deploy_transport.py
+#   * the repository variable PRODUCTION_DEPLOY_ENABLED
+# Until both are set, this workflow runs only the non-mutating gate job.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      operation_id:
+        description: Operation to roll back (manual rollback only)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+# Never cancel an in-progress publication: an interrupted deploy is inspectable,
+# a half-cancelled one is not.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    if: github.repository == 'leanderarya/dombi'
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      enabled: ${{ steps.activation.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Report activation state
+        id: activation
+        env:
+          REPOSITORY_ENABLED: ${{ vars.PRODUCTION_DEPLOY_ENABLED }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, sys
+          source = pathlib.Path('scripts/ci/production_deploy_transport.py').read_text()
+          activated = 'PRODUCTION_DEPLOY_ACTIVATED = True' in source
+          repo = os.environ.get('REPOSITORY_ENABLED') == 'true'
+          enabled = activated and repo and os.environ.get('GITHUB_EVENT_NAME') == 'push'
+          print(json.dumps({'source_activated': activated, 'repository_variable': repo,
+                            'push_triggered': os.environ.get('GITHUB_EVENT_NAME') == 'push',
+                            'enabled': enabled}))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write('enabled=%s\n' % ('true' if enabled else 'false'))
+          if not enabled:
+              print('Production deploy disabled; nothing was changed.')
+          PY
+
+  deploy:
+    needs: gate
+    if: needs.gate.outputs.enabled == 'true' && github.repository == 'leanderarya/dombi'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Bind the merge commit to its own immutable artifact
+        id: bind
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          sha = os.environ['RELEASE_SHA']
+          target = {'release_sha': sha, 'artifact_name': 'release-' + sha,
+                    'transfer_id': 'release-' + sha[:16]}
+          pathlib.Path('production-target.json').write_text(json.dumps(target, indent=2) + '\n')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write('transfer_id=%s\n' % target['transfer_id'])
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-${{ github.sha }}
+          path: transfer
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify activation, artifact binding and transfer inventory
+        id: artifact
+        env:
+          PRODUCTION_DEPLOY_ENABLED: ${{ vars.PRODUCTION_DEPLOY_ENABLED }}
+        run: python3 -B scripts/ci/production_deploy_transport.py --phase deploy
+      - name: Upload the verified artifact to the production account
+        env:
+          TRANSFER_ID: ${{ steps.bind.outputs.transfer_id }}
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
+        run: |
+          cp scripts/recovery/filesystem_checkpoint.py scripts/recovery/single_owner_deploy.py \
+             scripts/ci/release.py transfer/
+          python3 -B scripts/ci/production_ssh_transport.py --phase upload
+      - name: Publish managed code with verified backup
+        env:
+          TRANSFER_ID: ${{ steps.bind.outputs.transfer_id }}
+          RELEASE_SHA: ${{ github.sha }}
+          ARCHIVE_SHA256: ${{ steps.artifact.outputs.archive_sha256 }}
+          HOSTINGER_SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
+        run: python3 -B scripts/ci/production_ssh_transport.py --phase deploy
+
+  rollback:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'leanderarya/dombi'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Record the requested rollback operation
+        env:
+          OPERATION_ID: ${{ inputs.operation_id }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          operation = os.environ.get('OPERATION_ID', '')
+          if not re.fullmatch(r'[a-z]+-[0-9TZ]+-[0-9a-f]{8}', operation):
+              raise SystemExit('Malformed operation id')
+          print('Rollback requested for', operation)
+          print('A manual rollback is never retried automatically.')
+          PY
