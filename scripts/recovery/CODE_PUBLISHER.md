@@ -335,6 +335,89 @@ authenticates the truth of those attestations; they remain operator statements.
     `PRODUCTION_ABORT` on stderr with empty stdout. No key material, approval
     content, path or inventory digest is printed by the production path.
 
+## Rollback metadata
+
+Every publication writes `rollback.json` into its private operation directory
+**before the first replacement or removal**, and verifies it reads back intact.
+The record makes an interrupted operation recoverable without guesswork:
+
+| Field | Meaning |
+| --- | --- |
+| `contract` | Fixed `dombi-code-publication-rollback-v1`; anything else blocks lineage. |
+| `status` | Always `PREPARED_NOT_EXECUTED`. This tool never executes a rollback. |
+| `checkpoint_id`, `manifest_sha256` | The checkpoint the recovery restores to. |
+| `checkpoint_archive_sha256` | The pinned pre-release code archive. |
+| `pre_state_sha256` | Digest of the observed inventory the publication was approved against. |
+| `publication_plan_sha256` | Digest of the exact additions/replacements/removals. |
+| `artifact_application_sha`, `artifact_sha256` | Release identity, when publishing an artifact (`null` in checkpoint mode). |
+| `tool_sha256`, `publisher_sha256`, `volatile_policy` | The tool and allowance the record was written under. |
+| `recovery` | `filesystem_checkpoint_recover`, `restores: managed-code-only`, `preserved`, and the exact `RECOVER …` confirmation string. |
+| `requires_reopening_decision` | Always `true`. |
+
+`outcome.json` additionally pins `rollback_sha256` (the record's digest) and
+`rollback_status`, so completion and its rollback description cannot drift apart.
+
+`recovery.preserved` names the state a recovery must **not** touch: `database`,
+`storage`, `.env` and `public/storage`. That matches what the checkpoint already
+treats as protected — `apply_recovery()` restores managed code only — so rollback
+cannot silently revert data, uploads, credentials or the storage link.
+
+When a later publication reads prior lineage, `prior_publications()` validates
+every existing `rollback.json`. A missing record next to a completed outcome, a
+widened `preserved` list, a changed contract or a status other than
+`PREPARED_NOT_EXECUTED` aborts with a `rollback_*` error instead of being trusted.
+
+What this does **not** do: it does not run a recovery, decide that a rollback is
+warranted, restore `.env`/database/storage, drain workers, or reopen traffic. A
+real rollback is still the separate, approved `filesystem_checkpoint.py recover`
+invocation whose confirmation string is in the record, followed by a human
+reopening decision.
+
+## Cutover readiness gate
+
+Before the production door opens, the approval must also carry a `cutover`
+attestation. It is strictly fail-closed and deliberately **declared, not
+verified**: the publisher cannot see Laravel routes, running workers or callback
+delivery, so it refuses to record a stronger claim than the truth.
+
+| Field | Required value / rule |
+| --- | --- |
+| `contract` | `dombi-cutover-attestation-v1`, exact key set only |
+| `evidence_class` | exactly `declared-not-verified` |
+| `verified_by_publisher` | exactly `false`. A `true` or `"verified"` claim is refused (`cutover_evidence_overclaim`): an unverifiable claim is worse than an honest declaration |
+| `callback_continuity.gate` | `independent-of-checkout-admission` |
+| `callback_continuity.routes` | `registered-without-admission-middleware` |
+| `callback_continuity.admission_scope` | `checkout-only` (no wide scope) |
+| `callback_continuity.verification` | non-empty evidence reference |
+| `worker_adoption.global_maintenance_mode` | exactly `false`; `artisan down` is refused |
+| `worker_adoption.steps` | 3–16 non-empty steps containing `drain`, then `adopt`, then `verify` in that order |
+| `worker_adoption.commands` | 1–32 non-empty commands; any `artisan down`, `migrate*`, `db:wipe` is refused (`cutover_forbidden_command`) |
+| `worker_adoption.verification` | non-empty evidence reference |
+| `procedure.reference` | path relative to the operator private directory (no `..`) |
+| `procedure.sha256` | must equal the digest of that file; a changed or missing document refuses (`cutover_procedure_drift` / `cutover_procedure_missing`) |
+
+The accepted attestation is bound into `rollback.json` as `cutover_attestation`
+plus `cutover_evidence_sha256`. Lineage validation re-checks both, so editing the
+attestation after publication blocks the next publication.
+
+What this gate does **not** do: it does not prove callbacks were reachable, that
+workers adopted the new code, or that the procedure was followed. Those remain
+host facts. The procedure document is
+[`docs/CUTOVER_CALLBACK_WORKER.md`](../docs/CUTOVER_CALLBACK_WORKER.md); pinning
+its digest proves *which reviewed procedure* was approved, not that it ran.
+
+### Candidate, checkpoint and preservation preconditions
+
+Immediately before mutation the production door also re-proves the three facts it
+can establish locally: the approval's candidate SHA and archive digest equal the
+pinned candidate (`production_candidate_identity`), the checkpoint archive still
+matches its manifest and the recovery tool is the checkpointed one
+(`production_checkpoint_archive_drift`, `production_checkpoint_tool_drift`), and
+every protected path the checkpoint recorded is still present with the same type
+(`production_protected_state_missing`). Protected content may legitimately differ
+— rotated `.env`, new uploads, growing logs — because the publisher never writes
+it and `artifact_matches()` enforces protected-state equality across the mutation.
+
 ## Success and failure semantics
 
 Success means only `CODE_PUBLISH_COMPLETE_KEEP_HELD`. It is a filesystem
@@ -368,6 +451,8 @@ files and their sidecars are preserved and are absent from the code archive.
 python3 -B -m unittest discover -s scripts/recovery -p 'test_publisher_production.py' -v
 python3 -B -m unittest discover -s scripts/recovery -p 'test_code_publisher.py'
 python3 -B -m unittest discover -s scripts/recovery -p 'test_publisher_artifact.py'
+python3 -B -m unittest discover -s scripts/recovery -p 'test_publisher_rollback.py'
+python3 -B -m unittest discover -s scripts/recovery -p 'test_publisher_cutover.py'
 python3 -B -m unittest discover -s scripts/recovery -p 'test_publisher_volatile.py'
 python3 -B -m unittest discover -s scripts/recovery -p 'test_filesystem_checkpoint.py' -v
 ```
