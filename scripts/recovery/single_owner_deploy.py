@@ -10,7 +10,10 @@ serves the single-owner path and keeps equivalent preservation guards:
 * it verifies the release artifact with the same release-format validator CI uses;
 * it backs up every path it may overwrite, digest-verified, before any mutation;
 * it never touches `.env*`, `storage/`, the database, cron or `public/storage`;
-* it never runs `artisan down`, migrations or cache commands;
+* it never runs `artisan down` or migrations;
+* it rebuilds compiled config/route caches only as an explicit, ordered step whose
+  originals are captured in the same verified baseline, and restores both source
+  and cache together on any failure;
 * it fails closed and leaves the tree inspectable rather than auto-reverting.
 
 Modes: ``preflight``, ``backup``, ``deploy``, ``verify``, ``rollback``.
@@ -27,6 +30,7 @@ from pathlib import Path, PurePosixPath
 import re
 import shutil
 import stat
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -45,6 +49,17 @@ CALLBACK_ROUTES = ("/payment/doku/notify", "/payment/doku/redirect")
 PROTECTED = (".env", "storage", "database", "public/storage", ".git", "node_modules")
 PROTECTED_PREFIXES = (".env.",)
 BACKUP_SUFFIX = ".predeploy.tar.gz"
+
+# Compiled Laravel caches. These are the only files inside `bootstrap/cache` that a
+# release may rebuild; everything else there stays untouched and unarchived.
+CACHE_PATHS = ("bootstrap/cache/config.php", "bootstrap/cache/routes-v7.php")
+CACHE_FILES = ("bootstrap/cache/packages.php", "bootstrap/cache/services.php")
+# The PHP binary the release requires. Resolved explicitly rather than from PATH so
+# a wrong interpreter is a refusal, not a silent rebuild with the wrong version.
+PHP_REQUIRED = "8.3"
+PHP_CANDIDATES = ("/opt/alt/php83/usr/bin/php", "/usr/bin/php8.3", "/usr/bin/php")
+# Commands are run one at a time, in this exact order, only after source commit.
+CACHE_COMMANDS = (("config:cache", "--no-interaction"), ("route:cache", "--no-interaction"))
 
 
 class DeployError(RuntimeError):
@@ -174,6 +189,21 @@ def code_inventory(root):
     return found
 
 
+def cache_inventory(root):
+    """The compiled caches this deployment may rewrite, if present.
+
+    Only the two generated artifacts are considered. `packages.php`, `services.php`
+    and any operator file in `bootstrap/cache` are deliberately outside this set:
+    they are neither rebuilt nor archived, so they survive untouched.
+    """
+    found = {}
+    for name in CACHE_PATHS:
+        path = root / name
+        if path.is_file() and not path.is_symlink():
+            found[name] = path
+    return found
+
+
 def digest(path):
     h = hashlib.sha256()
     with path.open("rb") as stream:
@@ -234,33 +264,48 @@ def preflight(root, private, manifest, staging):
     require(link.is_symlink() or not link.exists(), "storage_link_type")
     require(not (root / "storage/framework/down").exists(), "site_in_maintenance")
     payload = sum(p.stat().st_size for p in Path(staging).rglob("*") if p.is_file())
-    backup_estimate = sum(p.stat().st_size for p in code_inventory(root).values())
+    inventory = code_inventory(root)
+    caches = cache_inventory(root)
+    backup_estimate = (sum(p.stat().st_size for p in inventory.values())
+                       + sum(p.stat().st_size for p in caches.values()))
     require(shutil.disk_usage(private).free > 2 * payload + backup_estimate + 1048576,
             "insufficient_space")
-    return {"payload_bytes": payload, "backup_estimate_bytes": backup_estimate}
+    php, php_version = resolve_php(root)
+    return {"payload_bytes": payload, "backup_estimate_bytes": backup_estimate,
+            "php_path": str(php), "php_version": php_version,
+            "caches_present": sorted(caches)}
 
 
 # ── backup ────────────────────────────────────────────────────────────────
 def create_backup(root, private, operation_id):
-    """Digest-verified tar of every file this deployment may overwrite or add."""
+    """Digest-verified tar of every file this deployment may overwrite or add.
+
+    Includes the compiled config/route caches when present, so a rollback can put
+    back the exact bytes Laravel was serving before the deploy. Caches are captured
+    in the same archive, under the same digest, rather than a separate one: a
+    source-only backup could not restore a working runtime.
+    """
     inventory = code_inventory(root)
     require(inventory, "empty_code_inventory")
+    caches = cache_inventory(root)
     path = private / (operation_id + BACKUP_SUFFIX)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     with os.fdopen(fd, "wb") as raw:
         with tarfile.open(fileobj=raw, mode="w:gz") as tar:
-            for name in sorted(inventory):
-                info = tar.gettarinfo(str(root / name), arcname=name)
+            for name in sorted({**inventory, **caches}):
+                source_path = inventory.get(name) or caches[name]
+                info = tar.gettarinfo(str(source_path), arcname=name)
                 info.mode, info.uid, info.gid = 0o644, os.getuid(), os.getgid()
                 info.uname = info.gname = ""
-                with (root / name).open("rb") as source:
+                with source_path.open("rb") as source:
                     tar.addfile(info, source)
         raw.flush()
         os.fsync(raw.fileno())
     path.chmod(0o600)
     fs.fsync_directory(private)
     record = {"path": str(path), "sha256": digest(path),
-              "files": sorted(inventory), "created_utc": fs.now().isoformat()}
+              "files": sorted(inventory), "caches": sorted(caches),
+              "created_utc": fs.now().isoformat()}
     fs.write_json(private / (operation_id + ".backup.json"), record)
     return record
 
@@ -272,8 +317,100 @@ def verify_backup(record, private):
     require(digest(path) == record["sha256"], "backup_digest")
     with tarfile.open(path, "r:gz") as tar:
         names = tar.getnames()
-    require(sorted(names) == record["files"], "backup_inventory")
+    expected = sorted(set(record["files"]) | set(record.get("caches", [])))
+    require(sorted(names) == expected, "backup_inventory")
     return path
+
+
+
+def resolve_php(root):
+    """Pick the required PHP binary explicitly; never guess from PATH order.
+
+    Returns (path, version). Refuses when no candidate satisfies `PHP_REQUIRED`,
+    because rebuilding caches with the wrong interpreter produces artifacts the
+    runtime cannot load.
+    """
+    for candidate in PHP_CANDIDATES:
+        path = Path(candidate)
+        if not path.is_file() or path.is_symlink():
+            continue
+        try:
+            result = subprocess.run([str(path), "-r", "echo PHP_VERSION;"],
+                                    capture_output=True, text=True, timeout=20,
+                                    cwd=str(root), env=child_environment())
+        except (OSError, subprocess.SubprocessError):
+            continue
+        version = (result.stdout or "").strip()
+        if result.returncode == 0 and version.startswith(PHP_REQUIRED + "."):
+            return path, version
+    raise DeployError("php_binary_missing_or_wrong_version")
+
+
+def child_environment():
+    """A minimal environment: no inherited secrets, no interactive prompts."""
+    keep = ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")
+    return {name: os.environ[name] for name in keep if name in os.environ} | {
+        "COMPOSER_NO_INTERACTION": "1",
+    }
+
+
+def rebuild_caches(root, php):
+    """Rebuild compiled config and routes, one command at a time, in fixed order.
+
+    Each command's exit status is checked before the next runs, so a failure after
+    `config:cache` cannot be mistaken for success, and `route:cache` never runs on
+    top of a broken config cache. Output is captured, not echoed, so a stack trace
+    cannot leak configuration values into the journal.
+    """
+    completed = []
+    for command, flag in CACHE_COMMANDS:
+        result = subprocess.run([str(php), "artisan", command, flag],
+                                capture_output=True, text=True, timeout=300,
+                                cwd=str(root), env=child_environment())
+        if result.returncode != 0:
+            raise DeployError("cache_rebuild_failed:" + command)
+        completed.append(command)
+    return completed
+
+
+def require_effective_held(root, php):
+    """Prove, from the booted application, that admission resolves to HELD.
+
+    A config *file* saying `held` is not proof: the running app may load a stale
+    cache. This boots the framework through the same interpreter that will serve
+    requests and reads the resolved value, plus the registered route state for the
+    two DOKU callbacks. Read-only: it writes nothing.
+    """
+    probe = r"""
+$app = require 'bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$state = strtolower(trim((string) config('admission.customer_checkout', 'held')));
+$held  = ! in_array($state, ['active', 'open'], true);
+$routes = collect(app('router')->getRoutes()->getRoutes())
+    ->map(fn ($r) => $r->uri() . '|' . implode(',', $r->gatherMiddleware()))
+    ->filter(fn ($s) => str_starts_with($s, 'payment/doku/'))
+    ->values()->all();
+echo json_encode(['state' => $state, 'held' => $held, 'doku' => $routes]);
+"""
+    result = subprocess.run([str(php), "-r", probe], capture_output=True, text=True,
+                            timeout=120, cwd=str(root), env=child_environment())
+    if result.returncode != 0:
+        raise DeployError("effective_state_probe_failed")
+    try:
+        facts = json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        raise DeployError("effective_state_probe_invalid") from error
+    if facts.get("held") is not True:
+        raise DeployError("admission_not_held")
+    doku = facts.get("doku") or []
+    for route in CALLBACK_ROUTES:
+        matching = [entry for entry in doku if entry.split("|", 1)[0] == route.lstrip("/")]
+        if not matching:
+            raise DeployError("doku_route_missing")
+        if "admission" in matching[0].lower():
+            raise DeployError("doku_route_gated")
+    return {"admission_state": facts.get("state"), "held": True,
+            "doku_routes": sorted(doku)}
 
 
 # ── apply / verify / rollback ─────────────────────────────────────────────
@@ -341,36 +478,68 @@ def deploy(root, private, manifest, staging, record, operation_dir):
                   if not (root / name).is_file() or digest(root / name) != expected]
     require(not mismatched, "deployed_inventory_mismatch")
     stale = sorted(before - set(files))
+    fs.journal(operation_dir, {"status": "SOURCE_COMMITTED", "files": len(files)})
+
+    # Phase 3: rebuild compiled caches and prove effective runtime state. Any
+    # failure here restores BOTH the new source and the original caches, because
+    # half-new code with half-old caches is the worst of both worlds.
+    try:
+        php, php_version = resolve_php(root)
+        rebuilt = rebuild_caches(root, php)
+        facts = require_effective_held(root, php)
+    except BaseException as error:
+        fs.journal(operation_dir, {"status": "CACHE_STAGE_FAILED_RESTORING",
+                                   "reason": str(error)[:200]})
+        try:
+            restore_from_backup(root, private, record,
+                                operation_dir / "auto-restore", added)
+            fs.journal(operation_dir, {"status": "AUTO_RESTORED_KEEP_HELD"})
+        except BaseException as restore_error:
+            # Never claim recovery we did not achieve.
+            fs.journal(operation_dir, {"status": "AUTO_RESTORE_FAILED_KEEP_HELD",
+                                       "reason": str(restore_error)[:200]})
+            raise DeployError("cache_failure_restore_failed") from error
+        raise
+    fs.journal(operation_dir, {"status": "CACHE_REBUILT_AND_VERIFIED",
+                               "commands": rebuilt, "php": php_version})
+
     outcome = {"status": "DEPLOY_COMPLETE_KEEP_HELD",
                "application_sha": manifest["sha"],
                "operation_id": operation_dir.name,
                "backup": record["path"], "backup_sha256": record["sha256"],
                "overwritten": overwritten, "added": added,
                "stale_not_removed": stale,
+               "caches_rebuilt": rebuilt,
+               "cache_baseline": record.get("caches", []),
+               "php_version": php_version,
+               "effective": facts,
                "completed_utc": fs.now().isoformat()}
     fs.write_json(operation_dir / "outcome.json", outcome)
     return outcome
 
 
-def rollback(root, private, operation_dir):
-    """Restore the backed-up managed code and remove files this deploy added."""
-    outcome = fs.load_json(operation_dir / "outcome.json")
-    record = fs.load_json(private / (operation_dir.name + ".backup.json"))
+def restore_from_backup(root, private, record, staging_dir, added):
+    """Restore managed source AND compiled caches from one verified baseline.
+
+    Used by both the explicit `rollback` mode and the automatic in-transaction
+    restore. Caches are restored through the same path as source so the pair can
+    never drift: either both come back or the restore raises.
+    """
     backup = verify_backup(record, private)
-    before = [n for n in record["files"]]
-    staging_dir = operation_dir / "rollback-atomic"
-    # A retried rollback targets the same immutable backup, so it is safe to repeat.
     staging_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     for stale in staging_dir.glob("restore-*"):
         if stale.is_file() and not stale.is_symlink():
             stale.unlink()
+    wanted = set(record["files"]) | set(record.get("caches", []))
     restored = {}
     with tarfile.open(backup, "r:gz") as tar:
         for member in tar:
             require(member.isfile() and not member.issym() and not member.islnk(),
                     "backup_member")
             name = relative(member.name)
-            deployable(name)
+            require(name in wanted, "backup_member_unexpected")
+            if name not in record.get("caches", []):
+                deployable(name)
             staged = staging_dir / ("restore-" + hashlib.sha256(name.encode()).hexdigest()[:16])
             fd = os.open(staged, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
             with os.fdopen(fd, "wb") as target, tar.extractfile(member) as reader:
@@ -385,14 +554,25 @@ def rollback(root, private, operation_dir):
             os.replace(staged, destination)
             restored[name] = expected
     removed = []
-    for name in outcome.get("added", []):
+    for name in added:
         target = root / name
         if target.is_file() and not target.is_symlink():
             target.unlink()
             removed.append(name)
-    require(sorted(restored) == sorted(before), "rollback_inventory")
+    require(sorted(restored) == sorted(wanted), "rollback_inventory")
+    return restored, removed
+
+
+def rollback(root, private, operation_dir):
+    """Restore the backed-up managed code and compiled caches from one baseline."""
+    outcome = fs.load_json(operation_dir / "outcome.json")
+    record = fs.load_json(private / (operation_dir.name + ".backup.json"))
+    restored, removed = restore_from_backup(
+        root, private, record, operation_dir / "rollback-atomic",
+        outcome.get("added", []))
     result = {"status": "ROLLBACK_COMPLETE_KEEP_HELD",
               "restored": len(restored), "removed": sorted(removed),
+              "caches_restored": sorted(record.get("caches", [])),
               "backup_sha256": record["sha256"],
               "completed_utc": fs.now().isoformat()}
     receipt = operation_dir / "rollback-outcome.json"
