@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from staging_transport import connection_values, pinned_key
+from staging_transport import connection_values, endpoint_name, pinned_key
 
 
 DATABASE_PROBE = r"""
@@ -34,6 +34,22 @@ try {
         $config->get('database.staging_database_name') !== $expected ||
         ($db['database'] ?? null) !== $expected ||
         ($db['driver'] ?? null) !== 'mysql' || !empty($db['url'])) {
+        throw new RuntimeException();
+    }
+    foreach ([
+        'storage/app/public',
+        'storage/framework',
+        'storage/framework/views',
+        'storage/framework/cache',
+        'bootstrap/cache',
+    ] as $relative) {
+        $path = $root.'/'.$relative;
+        if (!is_dir($path) || is_link($path) || realpath($path) !== $path || !is_writable($path)) {
+            throw new RuntimeException();
+        }
+    }
+    $storageLink = $root.'/public/storage';
+    if (!is_link($storageLink) || realpath($storageLink) !== realpath($root.'/storage/app/public')) {
         throw new RuntimeException();
     }
     foreach (['host', 'port', 'database', 'unix_socket', 'charset'] as $key) {
@@ -73,21 +89,21 @@ def main():
             ["ssh-keyscan", "-T", "10", "-p", port, "-t", "ed25519", host],
             capture_output=True, text=True, timeout=20, check=True,
         )
-        key = pinned_key(scan.stdout, fingerprint)
+        endpoint = endpoint_name(host, port)
+        key = pinned_key(scan.stdout, fingerprint, endpoint)
         print("HOST_FINGERPRINT_FORMAT_AND_PIN_PASS", flush=True)
         payload = "<?php\n" + DATABASE_PROBE.replace(
             "__DATABASE_BASE64__", base64.b64encode(database.encode()).decode(),
         )
         with tempfile.TemporaryDirectory(prefix="staging-readiness-") as directory:
             known = Path(directory) / "known_hosts"
-            known.write_text(f"staging-readiness-pin ssh-ed25519 {key}\n")
+            known.write_text(f"{endpoint} ssh-ed25519 {key}\n")
             known.chmod(0o600)
             env = {k: v for k, v in os.environ.items() if not
                    k.startswith("HOSTINGER_SSH_") and k != "STAGING_DATABASE_NAME"}
             env["SSHPASS"] = password
             result = subprocess.run([
                 "sshpass", "-e", "ssh", "-F", "/dev/null", "-T", "-p", port,
-                "-o", "HostKeyAlias=staging-readiness-pin",
                 "-o", "StrictHostKeyChecking=yes", "-o", "UpdateHostKeys=no",
                 "-o", f"UserKnownHostsFile={known}",
                 "-o", "GlobalKnownHostsFile=/dev/null",

@@ -2,6 +2,7 @@ import base64
 import contextlib
 import hashlib
 import io
+import json
 import os
 from pathlib import Path
 import shutil
@@ -11,7 +12,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import staging_transport as transport
+import staging_deploy_transport as transport
 
 
 class StagingTransportTests(unittest.TestCase):
@@ -22,7 +23,15 @@ class StagingTransportTests(unittest.TestCase):
         self.env = {'HOSTINGER_SSH_HOST': 'staging.example.test', 'HOSTINGER_SSH_USER': 'staging',
                     'HOSTINGER_SSH_PASSWORD': 'secret-password', 'HOSTINGER_SSH_PORT': '65002',
                     'HOSTINGER_SSH_FINGERPRINT': self.fingerprint, 'STAGING_DATABASE_NAME': 'private_schema',
-                    'TRANSFER_ID': '123-1', 'RELEASE_SHA': 'a' * 40}
+                    'TRANSFER_ID': '123-1', 'RELEASE_SHA': 'dbfe218de8cc3ae49796524007e214ec8dfe464a',
+                    'CI_RUN_ID': '43720516972', 'ARTIFACT_ID': '14164321503',
+                    'ARTIFACT_RUN_ID': '43720516972',
+                    'ARCHIVE_SHA256': '16f7aa17486f7264da7e8d25110eb5dad8358ff1e42c2352f91e6ba329ed8f8b',
+                    'STAGING_REPOSITORY': 'leanderarya/dombi', 'STAGING_ACTOR': 'leanderarya',
+                    'STAGING_REF': 'refs/heads/develop',
+                    'STAGING_WORKFLOW_REF': 'leanderarya/dombi/.github/workflows/deploy-staging.yml@refs/heads/develop',
+                    'STAGING_WORKFLOW_SHA': 'c' * 40, 'STAGING_SOURCE_SHA': 'c' * 40,
+                    'STAGING_RUN_ID': '123', 'STAGING_RUN_ATTEMPT': '1'}
         self.endpoint = '[staging.example.test]:65002'
         self.line = f'{self.endpoint} ssh-ed25519 {self.key}'
 
@@ -118,8 +127,24 @@ class StagingTransportTests(unittest.TestCase):
                 self.assertIn('-P', command)
                 self.assertEqual(command[-1], 'staging@staging.example.test:dombi-ci-staging/123-1/')
                 sources = command[command.index('-P') + 2:-1]
-                self.assertEqual({Path(x).name for x in sources}, {'release.tar.gz', 'release.sha256', 'release.py', 'deploy-staging.sh'})
+                self.assertEqual({Path(x).name for x in sources}, {
+                    'release.tar.gz', 'release.sha256', 'release.py', 'deploy-staging.sh',
+                    'rollback-staging.sh', 'staging_rollback.py', 'staging_attempt_guard.py',
+                })
                 self.assertNotIn('input', kwargs)
+            elif phase == 'claim':
+                self.assertEqual(command[2], 'ssh')
+                self.assertEqual(command[-2:], ['staging@staging.example.test', 'bash -se'])
+                self.assertIn('python3 -c', kwargs['input'])
+                self.assertIn(' claim --parent "$HOME/dombi-ci-staging"', kwargs['input'])
+                self.assertIn(self.env['ARCHIVE_SHA256'], kwargs['input'])
+                self.assertIn(self.env['RELEASE_SHA'], kwargs['input'])
+                self.assertNotIn('STAGING_DB_DATABASE', kwargs['input'])
+            elif phase == 'rollback' and command[2] == 'scp':
+                self.assertIn('rollback-release.json', command[-2])
+                Path(command[-1]).write_text(json.dumps({
+                    'files': {'public/build/manifest.json': 'a' * 64},
+                }))
             else:
                 self.assertEqual(command[2], 'ssh')
                 self.assertEqual(command[-2:], ['staging@staging.example.test', 'bash -se'])
@@ -130,8 +155,20 @@ class StagingTransportTests(unittest.TestCase):
                     self.assertNotIn(self.env['STAGING_DATABASE_NAME'], kwargs['input'])
                 else:
                     self.assertIn('export STAGING_DB_DATABASE=private_schema', kwargs['input'])
-                    self.assertIn('deploy-staging.sh', kwargs['input'])
-                    self.assertIn(self.env['RELEASE_SHA'], kwargs['input'])
+                    script_name = 'deploy-staging.sh' if phase == 'deploy' else 'rollback-staging.sh'
+                    self.assertIn(script_name, kwargs['input'])
+                    self.assertIn('export STAGING_WORKFLOW_SHA=' + self.env['STAGING_WORKFLOW_SHA'],
+                                  kwargs['input'])
+                    if phase == 'deploy':
+                        self.assertIn(self.env['RELEASE_SHA'], kwargs['input'])
+                    else:
+                        mode = {
+                            'rollback': 'restore',
+                            'activate': 'activate',
+                            'close': 'close',
+                            'complete': 'complete',
+                        }[phase]
+                        self.assertIn(' ' + mode, kwargs['input'])
                     self.assertNotRegex(kwargs['input'], r'artisan|migrate|db:seed|payments:|refund')
             if fail == 'timeout':
                 raise subprocess.TimeoutExpired(command, 60, output='secret-password', stderr='private_schema')
@@ -145,26 +182,27 @@ class StagingTransportTests(unittest.TestCase):
             try:
                 os.chdir(directory)
                 transfer = Path('transfer');transfer.mkdir()
-                for name in ['release.tar.gz', 'release.sha256', 'release.py', 'deploy-staging.sh']:
+                for name in ['release.tar.gz', 'release.sha256', 'release.py', 'deploy-staging.sh',
+                             'rollback-staging.sh', 'staging_rollback.py', 'staging_attempt_guard.py']:
                     (transfer/name).write_text('fixture')
                 env = {**self.env, 'SSH_AUTH_SOCK': 'unwanted-agent', 'SSH_ASKPASS': 'unwanted-helper'}
-                with patch.dict(os.environ, env, clear=True), patch.object(transport.subprocess, 'run', side_effect=run), patch.object(transport.sys, 'argv', ['staging_transport.py', phase]), contextlib.redirect_stdout(output):
+                with patch.dict(os.environ, env, clear=True), patch.object(transport.subprocess, 'run', side_effect=run), patch.object(transport.sys, 'argv', ['staging_deploy_transport.py', phase]), contextlib.redirect_stdout(output):
                     self.assertEqual(transport.main(), 1 if fail else 0)
             finally:
                 os.chdir(old)
-        self.assertEqual(len(commands), 2)
+        self.assertEqual(len(commands), 3 if phase == 'rollback' and not fail else 2)
         self.assertTrue(known_paths)
         self.assertFalse(known_paths[0].exists())
         for value in [self.env['HOSTINGER_SSH_PASSWORD'], self.env['STAGING_DATABASE_NAME'], self.fingerprint, self.env['HOSTINGER_SSH_HOST']]:
             self.assertNotIn(value, output.getvalue())
 
-    def test_all_three_phases_use_strict_shared_transport_and_clean_up(self):
-        for phase in ['prepare', 'upload', 'deploy']:
+    def test_all_transport_phases_use_strict_shared_transport_and_clean_up(self):
+        for phase in ['claim', 'prepare', 'upload', 'deploy', 'rollback', 'activate', 'close', 'complete']:
             with self.subTest(phase=phase):
                 self.exercise(phase)
 
     def test_failures_suppress_output_and_remove_temporary_trust(self):
-        for phase in ['prepare', 'upload', 'deploy']:
+        for phase in ['claim', 'prepare', 'upload', 'deploy', 'rollback', 'activate', 'close', 'complete']:
             with self.subTest(phase=phase):
                 self.exercise(phase, fail=True)
 
@@ -189,10 +227,30 @@ class StagingTransportTests(unittest.TestCase):
         self.exercise('prepare', fail='timeout')
 
     def test_invalid_transfer_or_release_stops_before_network(self):
-        for overrides in [{'TRANSFER_ID': '../other'}, {'TRANSFER_ID': '123-0'}, {'TRANSFER_ID': ''}, {'RELEASE_SHA': 'bad'}]:
+        for overrides in [
+            {'TRANSFER_ID': '../other'}, {'TRANSFER_ID': '123-0'}, {'TRANSFER_ID': ''},
+            {'RELEASE_SHA': 'bad'}, {'RELEASE_SHA': 'a' * 40},
+            {'STAGING_WORKFLOW_SHA': 'bad'},
+        ]:
             with patch.dict(os.environ, {**self.env, **overrides}, clear=True), patch.object(transport.subprocess, 'run') as network:
                 with self.assertRaises(ValueError):
                     transport.run('deploy')
+                network.assert_not_called()
+
+    def test_invalid_one_use_claim_stops_before_network(self):
+        for overrides in [
+            {'ARCHIVE_SHA256': '0' * 64},
+            {'ARTIFACT_ID': '14164321504'},
+            {'STAGING_REPOSITORY': 'fork/dombi'},
+            {'STAGING_ACTOR': 'another-maintainer'},
+            {'STAGING_SOURCE_SHA': 'd' * 40},
+            {'STAGING_RUN_ATTEMPT': '2'},
+        ]:
+            with self.subTest(overrides=overrides), patch.dict(
+                os.environ, {**self.env, **overrides}, clear=True,
+            ), patch.object(transport.subprocess, 'run') as network:
+                with self.assertRaises(ValueError):
+                    transport.run('claim')
                 network.assert_not_called()
 
     def test_extra_or_linked_upload_inputs_rejected_before_network(self):
@@ -201,7 +259,8 @@ class StagingTransportTests(unittest.TestCase):
             try:
                 os.chdir(directory)
                 source = Path('transfer');source.mkdir()
-                for name in ['release.tar.gz', 'release.sha256', 'release.py', 'deploy-staging.sh']:
+                for name in ['release.tar.gz', 'release.sha256', 'release.py', 'deploy-staging.sh',
+                             'rollback-staging.sh', 'staging_rollback.py', 'staging_attempt_guard.py']:
                     (source/name).write_text('fixture')
                 for kind in ['extra', 'symlink', 'hardlink']:
                     with self.subTest(kind=kind):

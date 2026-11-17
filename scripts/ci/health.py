@@ -46,7 +46,7 @@ def fetch(path):
 
 def main(root):
     root = Path(root)
-    if json.loads(fetch('up')).get('status') != 'up':
+    if json.loads(fetch('up')) != {'status': 'up'}:
         raise ValueError('Unhealthy staging application')
     release = json.loads((root / 'release.json').read_text())
     assets = {name: checksum for name, checksum in release['files'].items() if name.startswith('public/build/')}

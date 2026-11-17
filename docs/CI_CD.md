@@ -26,26 +26,49 @@ pinned artifact, recovery tools, backups, runbook or worktree with this pipeline
    evidence externally under existing backup policy before expiry. Artifacts are not
    permanent release storage or a substitute for backups. Never recreate an expired
    release under an old acceptance receipt: promotion also binds the artifact ID.
-4. `deploy-staging.yml`: after trusted successful `develop` push CI, or manual selection
-   of such a run, resolve exactly one unexpired artifact and validate its origin.
-   PR/fork/failed/non-CI runs are rejected. No server-side Composer/npm install, Git
-   reset or separate asset build. OpenSSH password-only SSH/SCP transport validates the
-   scanned ED25519 key against the existing fingerprint before constructing temporary,
-   endpoint-scoped `known_hosts`. Every SSH/SCP connection forces
-   `HostKeyAlgorithms=ssh-ed25519`, `StrictHostKeyChecking=yes` and `UpdateHostKeys=no`,
-   with user/global SSH configuration and agent/interactive-key fallback excluded.
-   The existing owner-approved TOFU pin is retained; no independent provider verification
-   or new trust anchor is implied. Multiple distinct ED25519 candidates, wrong endpoints,
-   invalid secrets and fingerprint mismatches fail closed before authenticated transport.
-   Only validated DNS/IPv4 host strings and canonical numeric ports are supported; IPv6,
-   embedded ports, multi-host lists and proxy configuration are not supported. SCP uses
-   OpenSSH's SFTP transfer mode with no automatic legacy fallback. Unsupported server
-   capabilities fail the run rather than weakening verification. No raw SSH/SCP output,
-   credentials or database-secret values are printed; remote failures require inspection
-   of the preserved private transfer and maintenance state. Temporary runner trust files
-   are removed on both success and failure. Deployment is opt-in and serialized,
-   never cancelled by a newer deployment. GitHub concurrency may supersede pending runs;
-   it is not a FIFO queue. Deploy the desired CI run manually when necessary.
+4. `deploy-staging.yml` is **manual-only** and pinned to the V1.0 candidate:
+   SHA `dbfe218de8cc3ae49796524007e214ec8dfe464a`, Quality Gate run `43720516972`,
+   artifact `14164321503`, archive SHA-256
+   `16f7aa17486f7264da7e8d25110eb5dad8358ff1e42c2352f91e6ba329ed8f8b`. The required
+   run input and GitHub artifact metadata must match all four pins. The workflow checks
+   repository, owner, `develop` ref, workflow path, and equality of workflow/source SHA,
+   then checks out that exact workflow revision. There is no `workflow_run`, automatic
+   trigger, or `STAGING_DEPLOY_ENABLED` switch. Only attempt 1 can execute; reruns are
+   rejected.
+
+   Before preparing a transfer, an atomic `mkdir` claims a persistent release-specific
+   guard under the owner-only `$HOME/dombi-ci-staging` directory. The helper fsyncs the
+   parent entry, claim receipt, and guard directory before returning success. The claim
+   binds the exact repository, owner, workflow/ref revision, CI run, artifact ID, archive
+   digest, and deployment run/attempt. Deploy and rollback never remove it. Duplicate
+   dispatches, concurrent runs, and later runs for the same candidate fail closed;
+   workflow concurrency is additional serialization, not the one-use control. A claim
+   remains spent if transfer or deployment is interrupted.
+
+   The GitHub `staging` environment has branch policy but no required reviewer. This
+    workflow implements the selected single-owner exception instead of implying
+    independent review. It must be on the default branch and run against `develop`;
+    publication still requires the owner's separate approval and normal PR integration,
+    not a direct push. PR/fork/failed/non-CI runs and alternate artifacts are rejected.
+   No server-side Composer/npm install, Git reset or separate asset build. Deployment and
+   rollback use `staging_deploy_transport.py`;
+   the byte-pinned transport revision used by the existing read-only diagnostic remains
+   unchanged. OpenSSH password-only SSH/SCP transport validates the scanned ED25519 key
+   against the existing fingerprint before constructing temporary, endpoint-scoped
+   `known_hosts`. Every SSH/SCP connection forces `HostKeyAlgorithms=ssh-ed25519`,
+   `StrictHostKeyChecking=yes` and `UpdateHostKeys=no`, with user/global SSH configuration
+   and agent/interactive-key fallback excluded. The existing owner-approved TOFU pin is
+   retained; no independent provider verification or new trust anchor is implied.
+   Multiple distinct ED25519 candidates, wrong endpoints, invalid secrets and fingerprint
+   mismatches fail closed before authenticated transport. Only validated DNS/IPv4 host
+   strings and canonical numeric ports are supported; IPv6, embedded ports, multi-host
+   lists and proxy configuration are not supported. SCP uses OpenSSH's SFTP transfer
+   mode with no automatic legacy fallback. Unsupported server capabilities fail the run
+   rather than weakening verification. No raw SSH/SCP output, credentials or
+   database-secret values are printed; remote failures require inspection of the preserved
+   private transfer and maintenance state. Temporary runner trust files are removed on
+   both success and failure. Dispatches are serialized and never cancelled by a newer
+   deployment. GitHub concurrency may supersede pending runs; it is not a FIFO queue.
 5. Staging preflight binds the fixed resolved staging root, effective `APP_ENV`, URL and
    expected database. It refuses existing maintenance, busy locks, unwritable runtime
    directories, unsafe links in managed destinations and unsafe archive contents.
@@ -63,38 +86,60 @@ pinned artifact, recovery tools, backups, runbook or worktree with this pipeline
 7. Staging deployment is code-only: no migration, seeder, payment or refund command is
    invoked. Schema compatibility with the selected artifact must be established before
    activation; this workflow cannot repair an incompatible schema. Post-copy CLI failures
-   leave maintenance held. No automatic `up` trap or rollback is added. After successful
-   cache/discovery refresh, staging is brought up for HTTP acceptance. JSON `/up` must
-   return unredirected 2xx with `status: up`; every built asset and manifest must match
-   its SHA-256. The HTTP probe allows only `/up` and static `/build/` asset paths.
-   `/api/health` is excluded because it writes cache/storage. `/`, `/login` and business
-   pages are excluded because their web middleware may persist sessions even for GETs.
-   No cookies, login, authenticated routes or application-session configuration changes
-   are used. The installed health route must remain outside session middleware with no
-   write-producing health listeners; verify that contract before activation. Database,
-   cache, storage, scheduler, page rendering and business health are not proved by these
-   probes. A health failure after `up` does not automatically close staging again;
-   investigate before accepting/retrying. No production probe is performed. HTTP health
-   and disk hashes do not prove complete PHP worker-pool adoption.
-8. Only complete success issues `staging-acceptance-<run>-<attempt>` binding CI run,
-   release artifact ID/origin run, full SHA and tarball checksum. The existing receipt
-   status `staging-health-and-assets-passed` now means JSON liveness and static-asset
-   acceptance only, not dependency/page/business acceptance. Run summary states that
-   scope explicitly and is secret-free.
+   leave maintenance held. After cache/discovery refresh, acceptance checks exact JSON
+   `{"status":"up"}` with no redirect, and every built asset and manifest SHA-256. The
+   HTTP probe allows only `/up` and static `/build/` asset paths. `/api/health` is excluded
+   because it writes cache/storage. `/`, `/login` and business pages are excluded because
+   their web middleware may persist sessions even for GETs. No cookies, login,
+   authenticated routes or application-session configuration changes are used.
+8. Before HTTP acceptance, `check-staging-readiness.py` uses a pinned SSH host key,
+   confirms staging environment/database identity, executes only a read-only
+   `SELECT DATABASE(), CURRENT_USER()` with multi-statements disabled, and checks the
+   existing storage directories and `public/storage` link without writing. The acceptance
+   receipt records route-source file names and hashes from the verified release manifest.
+   This is not a live `route:list` or route-registration assertion; runtime route
+   registration, middleware, sessions, worker adoption, scheduler, page rendering and
+   business health remain unproved. No DOKU/payment request or production probe is
+   performed. HTTP health and disk hashes do not prove complete PHP worker-pool adoption.
+9. `rollback-staging.yml` is a separate manual, owner-only, staging-environment-gated
+   action. It accepts only the run ID and attempt of an exact failed, cancelled, or
+   timed-out V1.0 deployment run, is itself attempt-1 only, and verifies that run's bound
+   deployment-target receipt and persistent one-use claim before using its private
+   before-code archive. Rollback reads the spent claim but never creates, clears, or
+   bypasses it. It is the separately authorized attempt-bound recovery path; successful
+   rollback does not permit redeploying that candidate. The executor validates its
+   checksum and archive paths, extracts to
+   a fresh private directory, restores only code, rebuilds package discovery, clears
+   config/route/view caches, verifies read-only database identity and restored asset hashes,
+   then temporarily opens staging for JSON `/up` and static asset probes. Failed acceptance
+   attempts to restore maintenance. A completion marker blocks a second successful rollback
+   for the same transfer. `.env`, uploads/storage data, database files and schema are not
+   restored or changed. Each recovery requires a separate owner dispatch; no automatic
+   rollback or unconditional `up` trap runs.
+10. Only complete success issues `staging-acceptance-<run>-<attempt>` binding CI run,
+    release artifact ID/origin run, full SHA, tarball checksum, and route-source hashes.
+    Receipt status `staging-health-and-assets-passed` is a compatibility label; completed
+    checks additionally include read-only database identity/connectivity and storage-path
+    compatibility, but not live route registration or business acceptance. The run summary
+    states those limits and is secret-free.
 
 ## Required GitHub configuration
 
-- Merge the workflows/scripts through normal review. The current checkout has unrelated
-  dirty work; it is not an approved release. Workflows are not remotely installed by
-  editing local files. No commit/push or GitHub setting was performed for this task.
-- Protect `develop` and `main`; require `Quality Gate / quality`, review workflow/script
-  changes, and restrict who may dispatch workflows or change environment configuration.
-  `workflow_run` uses the default branch workflow; keep that trusted branch current
-  (the local origin HEAD currently points to `develop`).
-- Create **staging** and **production** GitHub environments. Limit staging to the trusted
-  workflow refs (develop/default branch); limit production to `main` and require the
-  authorized release-owner approval under applicable policy. Enable prevention of
-  protection-rule bypass where supported. Do not fabricate an independent approver.
+- Publish only the scoped staging workflow/helper/test/documentation changes through a PR
+  to `develop`. `workflow_dispatch` is unavailable until the workflow file exists on the
+  default branch; dispatch the deploy workflow against `develop`. The selected exception
+  is single-owner: the repository owner must inspect and separately approve publication
+  and one deployment. No independent reviewer is asserted; do not direct-push to
+  `develop`, and require the existing `Quality Gate / quality` check before merging.
+- Protect `develop` and `main`; require `Quality Gate / quality`. Current `develop`
+  protection does not require PR approval. Keep the default branch containing the approved
+  manual-only workflow and preserve the owner-only dispatch checks.
+- Create **staging** and **production** GitHub environments. Staging has branch policy but
+  no required reviewer; do not describe that as reviewer enforcement. The workflow itself
+  requires the owner, exact repository/ref, and matching workflow/source revision. Limit
+  production to `main` and require the authorized release-owner approval under applicable
+  policy. Enable prevention of protection-rule bypass where supported. Do not fabricate
+  an independent approver.
 - Staging environment secrets: `HOSTINGER_SSH_HOST`, `HOSTINGER_SSH_USER`,
   `HOSTINGER_SSH_PASSWORD`, `HOSTINGER_SSH_PORT`, `HOSTINGER_SSH_FINGERPRINT`.
   Obtain the host fingerprint from an independently trusted inventory, not a fresh
@@ -104,16 +149,20 @@ pinned artifact, recovery tools, backups, runbook or worktree with this pipeline
 - Reuse staging environment secret `STAGING_DATABASE_NAME`: the independently verified staging
   schema name (not production). Confirm the effective host/schema/user isolation, PHP
   extensions, Python >=3.9, rsync, flock, tar, sha256sum, writable existing Laravel runtime
-  directories, Linux realpath/stat and private transfer-path ownership/free space before
-  enabling deployment. No server repair/install is done.
-  The private transfer parent must be operator-owned, real and 0700; a missing parent
-  is created privately only by a future authorized staging run. An unexpected existing
-  parent is rejected, not repaired. Each run/attempt directory is created exclusively
-  before SCP, so transfer cannot silently reuse an earlier deployment directory.
-- Repository variable `STAGING_DEPLOY_ENABLED`: absent/false initially. Set `true` only
-  after an authorized staging readiness review; this may enable future auto-staging.
-  No GitHub configuration was changed here. DOKU/OAuth/APP secrets stay in the existing
-  server `.env`, never injected into a build. Any intentional public `VITE_*` values
+  directories, Linux realpath/stat, directory `fsync`, and private transfer-path
+  ownership/free space before enabling deployment. The supported Hostinger filesystem's
+  directory-`fsync` behavior has not been tested remotely; claim creation aborts before
+  transfer/deploy if required sync operations fail. If a per-release guard directory was
+  created, it remains spent and must not be removed. No fallback to a concurrency-only
+  control or server repair/install is allowed.
+  The private transfer parent must be real, owned by the staging account and mode 0700.
+  A missing parent is created privately by the claim; an existing parent is accepted only
+  when those checks pass. Each run/attempt directory is created exclusively before SCP,
+  so transfer cannot silently reuse an earlier deployment directory.
+- No repository variable is needed to enable staging: the approved workflow is manually
+  dispatched by an authorized operator for one named CI run. No GitHub configuration was
+  changed here. DOKU/OAuth/APP secrets stay in the existing server `.env`, never injected
+  into a build. Any intentional public `VITE_*` values
   must be environment-neutral for exact-artifact promotion; do not embed staging hosts
   or secrets in assets.
 - Production secrets, if configured, belong only in the protected production environment.
@@ -176,8 +225,11 @@ Required production-only gates, still **unverified/NO-GO**:
 For a failed staging deployment, preserve the run-owned transfer, before-code checksum,
 maintenance state and failure output. The before-code archive is not a DB backup. No
 schema rollback is performed; schema compatibility remains required before separately
-authorizing any code restore. Existing production recovery scripts are never a staging
-rollback tool.
+authorizing code restore. Use the manual rollback workflow with the failed deployment's
+exact run ID and attempt, after staging-owner approval. Existing production recovery
+scripts are never a staging rollback tool. If deployment failed before producing a
+verified archive, or rollback acceptance/maintenance recovery fails, stop and inspect the
+preserved state. Do not rerun the deployment workflow or reopen manually.
 
 ## Previously approved artifact compatibility
 
