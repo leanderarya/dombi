@@ -21,10 +21,14 @@ import sys
 import tarfile
 
 
+# Deployment context for the release this checkpoint tool is reviewed against:
+# the accepted V1.0 candidate, not the identity of the old production code. The
+# old-code baseline is `historical_release_sha` (explicit JSON null) plus the
+# captured inventory, and is deliberately never repinned to this value.
 CANDIDATE = {
-    "artifact_id": "14015610232",
-    "application_sha": "4ebe5e1da608b0c7404e2667cb99742747db4796",
-    "archive_sha256": "5b5a54453badc86134e890cb4f5448a80dce1fc1b391eec03ec41284988225d5",
+    "artifact_id": "14305937487",
+    "application_sha": "220a0190ec57c8ed64f5792dcaa10c7ca906f2b7",
+    "archive_sha256": "f48b68fb0678df3c752fe3ce600709bda7f706ccda0570e447d5fcda834598fd",
 }
 VARIANT = "dombi-filesystem-checkpoint-v1"
 METADATA_POLICY = "no-xattrs-acls-hardlinks;integer-ns;shared-parent-stable-identity"
