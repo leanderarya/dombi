@@ -221,18 +221,22 @@ class Order extends Model
         return $query->where('payment_status', $status->value);
     }
 
-    public function scopeWithCanonicalRefund(Builder $query, ?array $statuses = null, ?bool $hasDestination = null, bool $staleInProgressOnly = false): Builder
+    public function scopeWithCanonicalRefund(Builder $query, ?array $statuses = null, ?bool $hasDestination = null, bool $staleInProgressOnly = false, bool $freshInProgressOnly = false): Builder
     {
-        $legacyStatuses = collect($statuses ?? ($staleInProgressOnly ? ['in_progress', 'failed'] : []))->map(fn (string $status): string => match ($status) {
+        $legacyStatuses = collect($statuses ?? ($staleInProgressOnly ? ['in_progress', 'failed'] : []))->map(fn (string $status): ?string => match ($status) {
             'pending' => PaymentStatus::RefundPending->value,
             'in_progress' => PaymentStatus::RefundInProgress->value,
             'completed' => PaymentStatus::Refunded->value,
             'rejected' => PaymentStatus::RefundRejected->value,
+            'failed' => PaymentStatus::RefundFailed->value,
+            'needs_review' => null,
             default => $status,
-        })->all();
+        })->filter()->all();
 
-        return $query->where(function (Builder $scope) use ($statuses, $hasDestination, $staleInProgressOnly, $legacyStatuses): void {
-            $scope->whereExists(function ($selected) use ($statuses, $hasDestination, $staleInProgressOnly): void {
+        $staleCutoff = now()->subHours(24);
+
+        return $query->where(function (Builder $scope) use ($statuses, $hasDestination, $staleInProgressOnly, $freshInProgressOnly, $legacyStatuses, $staleCutoff): void {
+            $scope->whereExists(function ($selected) use ($statuses, $hasDestination, $staleInProgressOnly, $freshInProgressOnly, $staleCutoff): void {
                 $selected->selectRaw('1')
                     ->from('refund_obligations')
                     ->join('payment_attempts', 'payment_attempts.id', '=', 'refund_obligations.payment_attempt_id')
@@ -246,11 +250,27 @@ class Order extends Model
                     ->when($hasDestination !== null, fn ($query) => $hasDestination
                         ? $query->whereNotNull('refund_obligations.destination_type')
                         : $query->whereNull('refund_obligations.destination_type'))
-                    ->when($staleInProgressOnly, fn ($query) => $query->where(function ($stale): void {
-                        $stale->where(function ($inProgress): void {
-                            $inProgress->where('refund_obligations.status', RefundObligationStatus::InProgress->value)
-                                ->where('refund_obligations.started_at', '<=', now()->subHours(24));
-                        })->orWhereIn('refund_obligations.status', [RefundObligationStatus::Failed->value]);
+                    ->when($staleInProgressOnly || $freshInProgressOnly, fn ($query) => $query->where(function ($state) use ($staleInProgressOnly, $staleCutoff): void {
+                        if ($staleInProgressOnly) {
+                            $state->where(function ($inProgress) use ($staleCutoff): void {
+                                $inProgress->where('refund_obligations.status', RefundObligationStatus::InProgress->value)
+                                    ->where(function ($started) use ($staleCutoff): void {
+                                        $started->where('refund_obligations.started_at', '<=', $staleCutoff)
+                                            ->orWhere(fn ($fallback) => $fallback
+                                                ->whereNull('refund_obligations.started_at')
+                                                ->where(fn ($orderStarted) => $orderStarted
+                                                    ->where('orders.refund_started_at', '<=', $staleCutoff)
+                                                    ->orWhereNull('orders.refund_started_at')));
+                                    });
+                            })->orWhere('refund_obligations.status', RefundObligationStatus::Failed->value);
+                        } else {
+                            $state->where('refund_obligations.status', RefundObligationStatus::InProgress->value)
+                                ->where(fn ($started) => $started
+                                    ->where('refund_obligations.started_at', '>', $staleCutoff)
+                                    ->orWhere(fn ($fallback) => $fallback
+                                        ->whereNull('refund_obligations.started_at')
+                                        ->where('orders.refund_started_at', '>', $staleCutoff)));
+                        }
                     }))
                     ->whereNotExists(function ($newer) {
                         $newer->selectRaw('1')
@@ -270,23 +290,31 @@ class Order extends Model
                                     ->orWhere('newer_attempts.metadata->provenance', '!=', 'synthetic_legacy_refund');
                             });
                     });
-            })->orWhere(function (Builder $legacy) use ($staleInProgressOnly, $legacyStatuses): void {
-                $legacy->where(function ($status) use ($staleInProgressOnly, $legacyStatuses): void {
+            })->orWhere(function (Builder $legacy) use ($hasDestination, $staleInProgressOnly, $freshInProgressOnly, $legacyStatuses, $staleCutoff): void {
+                $legacy->where(function ($status) use ($staleInProgressOnly, $freshInProgressOnly, $legacyStatuses, $staleCutoff): void {
                     if ($staleInProgressOnly) {
                         $status->where('payment_status', PaymentStatus::RefundFailed->value)
-                            ->orWhere(fn ($stale) => $stale->where('payment_status', PaymentStatus::RefundInProgress->value)->where('refund_started_at', '<=', now()->subHours(24)));
+                            ->orWhere(fn ($stale) => $stale->where('payment_status', PaymentStatus::RefundInProgress->value)->where(fn ($started) => $started->where('refund_started_at', '<=', $staleCutoff)->orWhereNull('refund_started_at')));
+                    } elseif ($freshInProgressOnly) {
+                        $status->where('payment_status', PaymentStatus::RefundInProgress->value)
+                            ->where('refund_started_at', '>', $staleCutoff);
                     } else {
                         $status->whereIn('payment_status', $legacyStatuses);
                     }
-                })->whereDoesntHave('paymentAttempts.refundObligations', function ($obligation): void {
-                    $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')
-                        ->whereHas('paymentAttempt', function ($attempt): void {
-                            $attempt->where(function ($metadata): void {
-                                $metadata->whereNull('metadata->provenance')
-                                    ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                })->when($hasDestination === true, fn ($query) => $query->where('refund_destination_status', 'valid'))
+                    ->when($hasDestination === false, fn ($query) => $query->where(function ($destination): void {
+                        $destination->whereNull('refund_destination_status')
+                            ->orWhere('refund_destination_status', '!=', 'valid');
+                    }))
+                    ->whereDoesntHave('paymentAttempts.refundObligations', function ($obligation): void {
+                        $obligation->whereColumn('refund_obligations.reason', 'orders.refund_reason')
+                            ->whereHas('paymentAttempt', function ($attempt): void {
+                                $attempt->where(function ($metadata): void {
+                                    $metadata->whereNull('metadata->provenance')
+                                        ->orWhere('metadata->provenance', '!=', 'synthetic_legacy_refund');
+                                });
                             });
-                        });
-                });
+                    });
             });
         });
     }

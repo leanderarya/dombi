@@ -5,6 +5,7 @@ use App\Console\Commands\RecoverOwnerPassword;
 use App\Exceptions\RegisteredPhoneException;
 use App\Http\Middleware\AllowCustomerOrRecoveredGuest;
 use App\Http\Middleware\AllowGuestOrCustomer;
+use App\Http\Middleware\CheckCustomerAdmission;
 use App\Http\Middleware\CheckStoreOpen;
 use App\Http\Middleware\CustomerInertiaRoot;
 use App\Http\Middleware\DevOnly;
@@ -36,6 +37,21 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        // Maintenance-mode exceptions. `artisan down` is a global middleware, so
+        // without these the operator loses the health probe and DOKU callbacks
+        // for already-initiated payments are rejected at the edge. These paths
+        // are exempted; every other URI still receives the maintenance response.
+        //
+        // Exact paths only — no wildcards. `/up` is Laravel's health route and
+        // the two DOKU URIs are the only routes DOKU servers and browsers hit
+        // for an in-flight payment. Adding a wildcard here would silently reopen
+        // unrelated customer routes during maintenance.
+        $middleware->preventRequestsDuringMaintenance(except: [
+            'up',
+            'payment/doku/notify',
+            'payment/doku/redirect',
+        ]);
+
         // Exclude guest cancel route and DOKU webhook from CSRF verification
         $middleware->validateCsrfTokens(except: [
             'track/*/cancel',
@@ -54,6 +70,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'enforce.session' => EnforceSessionPolicy::class,
             'dev' => DevOnly::class,
             'store.open' => CheckStoreOpen::class,
+            'admission.customer' => CheckCustomerAdmission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

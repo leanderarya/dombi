@@ -52,9 +52,42 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(job["needs"], "gate")
         self.assertIn("enabled == 'true'", job["if"])
 
-    def test_deploy_job_is_scoped_to_the_production_environment(self):
+    def test_mutating_jobs_are_scoped_to_the_production_environment(self):
+        """Only jobs that can touch production carry the protected environment."""
         self.assertEqual(self.data["jobs"]["deploy"]["environment"], "production")
-        self.assertEqual(self.data["jobs"]["gate"]["environment"], "production")
+        self.assertEqual(self.data["jobs"]["rollback"]["environment"], "production")
+
+    def test_gate_job_is_not_bound_to_the_protected_environment(self):
+        """The gate reads a constant and a variable and uses no secrets.
+
+        Binding it to `production` would block every push to main on a human
+        review just to evaluate a boolean, so it is deliberately unprotected
+        while the jobs that can actually mutate stay protected.
+        """
+        gate = self.data["jobs"]["gate"]
+        self.assertIsNone(gate.get("environment"))
+        self.assertNotIn("secrets.", str(gate))
+
+    def test_disabled_gate_can_complete_without_an_environment_approval(self):
+        """With activation off, the gate must finish, not wait on a reviewer.
+
+        The gate declares no environment and uses no secrets, so reading the two
+        controls never consumes a production approval.
+        """
+        gate = self.data["jobs"]["gate"]
+        self.assertIsNone(gate.get("environment"))
+        body = " ".join(str(step.get("run", "")) for step in gate["steps"])
+        # The decision is a pure constant/variable read.
+        self.assertIn("PRODUCTION_DEPLOY_ACTIVATED = True", body)
+        self.assertIn("GITHUB_OUTPUT", body)
+        # And the result of a disabled gate is the literal string false.
+        self.assertIn("'false'", body)
+
+    def test_activation_leaves_the_deploy_job_skipped_not_failed(self):
+        """`needs`+`if` means an inactive gate skips deploy; it never runs it."""
+        deploy = self.data["jobs"]["deploy"]
+        self.assertEqual(deploy["needs"], "gate")
+        self.assertIn("enabled == 'true'", deploy["if"])
 
     def test_every_job_requires_the_canonical_repository(self):
         for name, job in self.data["jobs"].items():

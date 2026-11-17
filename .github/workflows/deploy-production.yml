@@ -29,7 +29,10 @@ jobs:
   gate:
     if: github.repository == 'leanderarya/dombi'
     runs-on: ubuntu-latest
-    environment: production
+    # Deliberately NOT bound to the `production` environment: this job reads a
+    # source constant and a repository variable and uses no secrets, so binding it
+    # to a protected environment would block every push to main on a human review
+    # just to evaluate a boolean. The deploy and rollback jobs stay protected.
     outputs:
       enabled: ${{ steps.activation.outputs.enabled }}
     steps:
