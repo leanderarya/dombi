@@ -20,6 +20,7 @@ PROD = ROOT / ".github" / "workflows" / "deploy-production.yml"
 
 RESOLVER_FIXTURE = """
 const fixture = JSON.parse(require('node:fs').readFileSync(0, 'utf8'));
+process.env.RELEASE_ARTIFACT_ID = fixture.artifactId;
 const calls = [];
 const outputs = {};
 const github = {rest: {actions: {
@@ -59,13 +60,18 @@ class ArtifactPathTests(unittest.TestCase):
 
     def test_pack_and_upload_are_gated_to_main_push(self):
         steps = self.tests["jobs"]["quality"]["steps"]
+        existing = next(s for s in steps if s.get("id") == "existing")
         pack = [s for s in steps if "release.py pack" in str(s.get("run", ""))]
         upload = [s for s in steps if str(s.get("uses", "")).startswith("actions/upload-artifact")]
         self.assertEqual(len(pack), 1, "exactly one pack step")
         self.assertEqual(len(upload), 1, "exactly one upload step")
         gate = "github.event_name == 'push' && github.ref == 'refs/heads/main'"
-        self.assertIn(gate, pack[0]["if"])
-        self.assertIn(gate, upload[0]["if"])
+        for step in (existing, pack[0], upload[0]):
+            self.assertIn(gate, step["if"])
+            self.assertIn("github.workflow_ref == 'leanderarya/dombi/.github/workflows/tests.yml@refs/heads/main'",
+                          step["if"])
+        for step in (pack[0], upload[0]):
+            self.assertIn("steps.existing.outputs.found != 'true'", step["if"])
 
     def test_artifact_is_named_for_the_exact_commit_sha(self):
         steps = self.tests["jobs"]["quality"]["steps"]
@@ -78,6 +84,74 @@ class ArtifactPathTests(unittest.TestCase):
         steps = self.tests["jobs"]["quality"]["steps"]
         pack = [s for s in steps if "release.py pack" in str(s.get("run", ""))][0]
         self.assertIn('--sha "$GITHUB_SHA"', pack["run"])
+
+    def test_production_has_one_automatic_caller_after_quality_and_upload(self):
+        jobs = self.tests["jobs"]
+        self.assertEqual(jobs["production"]["needs"], "quality")
+        self.assertEqual(self.prod["jobs"]["deploy"]["needs"], "gate")
+        self.assertEqual(jobs["quality"]["outputs"]["release_artifact_id"],
+                         "${{ steps.release.outputs.artifact-id }}")
+        self.assertEqual(jobs["production"]["with"]["release_artifact_id"],
+                         "${{ needs.quality.outputs.release_artifact_id }}")
+        steps = jobs["quality"]["steps"]
+        upload = next(i for i, s in enumerate(steps) if s.get("id") == "release")
+        for command in ("php artisan test --testsuite Unit", "php artisan test --testsuite Feature"):
+            self.assertLess(next(i for i, s in enumerate(steps) if s.get("run") == command), upload)
+        self.assertNotIn("push", self.prod_triggers)
+        self.assertNotIn("workflow_run", self.prod_triggers)
+        callers = [(file.name, name)
+                   for file in TESTS.parent.glob("*.yml")
+                   for name, job in load(file)[0]["jobs"].items()
+                   if job.get("uses") == "./.github/workflows/deploy-production.yml"]
+        self.assertEqual(callers, [("tests.yml", "production")])
+        self.assertIn("github.workflow_ref", self.tests["concurrency"]["group"])
+        self.assertIn("github.sha", self.tests["concurrency"]["group"])
+        self.assertIs(self.tests["concurrency"]["cancel-in-progress"], False)
+        for workflow in (self.tests, self.prod):
+            self.assertEqual(workflow["permissions"], {"contents": "read", "actions": "read"})
+
+    def test_fail_closed_in_both_readiness_orders_and_on_duplicate_events(self):
+        # This guard uses the same operators in GitHub expressions and JavaScript.
+        # Execute the YAML itself with synthetic context; `needs` ordering is tested above.
+        caller = self.tests["jobs"]["production"]["if"]
+        gate = self.prod["jobs"]["gate"]["if"]
+        deploy = self.prod["jobs"]["deploy"]["if"]
+        github = {"repository": "leanderarya/dombi", "event_name": "push",
+                  "ref": "refs/heads/main", "ref_protected": True, "run_attempt": "1",
+                  "workflow_ref": "leanderarya/dombi/.github/workflows/tests.yml@refs/heads/main"}
+        cases = [
+            ("activation ready first; quality pending", "in_progress", "", "true", {}, [False, False, False]),
+            ("quality ready first; activation off", "success", "201", "false", {}, [True, True, False]),
+            ("both ready", "success", "201", "true", {}, [True, True, True]),
+            ("quality failed", "failure", "201", "true", {}, [False, False, False]),
+            ("quality cancelled", "cancelled", "201", "true", {}, [False, False, False]),
+            ("quality skipped", "skipped", "", "true", {}, [False, False, False]),
+            ("quality missing", "", "", "true", {}, [False, False, False]),
+            ("duplicate push retained artifact", "success", "", "true", {}, [False, False, False]),
+            ("duplicate run attempt", "success", "201", "true", {"run_attempt": "2"}, [False, False, False]),
+            ("other reusable caller", "success", "201", "true",
+             {"workflow_ref": "leanderarya/dombi/.github/workflows/deploy.yml@refs/heads/main"},
+             [False, False, False]),
+            ("unprotected main", "success", "201", "true", {"ref_protected": False}, [False, False, False]),
+            ("manual dispatch", "success", "201", "true",
+             {"event_name": "workflow_dispatch"}, [False, False, False]),
+        ]
+        evaluate = """
+const {guards, github, needs, inputs} = JSON.parse(require('node:fs').readFileSync(0, 'utf8'));
+const evaluate = expr => new Function('github', 'needs', 'inputs', `return (${expr})`)(github, needs, inputs);
+const called = evaluate(guards[0]);
+const gate = called && evaluate(guards[1]);
+console.log(JSON.stringify([called, gate, gate && evaluate(guards[2])]));
+"""
+        for name, result, artifact_id, enabled, overrides, expected in cases:
+            with self.subTest(case=name):
+                fixture = {"guards": [caller, gate, deploy], "github": dict(github, **overrides),
+                           "needs": {"quality": {"result": result, "outputs": {"release_artifact_id": artifact_id}},
+                                     "gate": {"outputs": {"enabled": enabled}}},
+                           "inputs": {"release_artifact_id": artifact_id}}
+                result = subprocess.check_output(["node", "-e", evaluate],
+                                                 input=json.dumps(fixture), text=True, timeout=10)
+                self.assertEqual(json.loads(result), expected)
 
     # ── the consumer ────────────────────────────────────────────────────
     def test_deploy_downloads_the_merge_commit_artifact_only(self):
@@ -176,14 +250,14 @@ class QualityRunResolverTests(unittest.TestCase):
         self.run = {"id": 101, "repository": {"full_name": "leanderarya/dombi"},
                     "head_repository": {"full_name": "leanderarya/dombi"},
                     "head_sha": self.sha, "head_branch": "main", "event": "push",
-                    "path": ".github/workflows/tests.yml", "status": "completed",
-                    "conclusion": "success"}
+                    "path": ".github/workflows/tests.yml", "status": "in_progress",
+                    "conclusion": None}
         self.artifact = {"id": 201, "name": self.name, "expired": False,
                          "workflow_run": {"id": 101, "head_sha": self.sha}}
-        self.fixture = {"script": step["with"]["script"],
+        self.fixture = {"script": step["with"]["script"], "artifactId": "201",
                         "context": {"repo": {"owner": "leanderarya", "repo": "dombi"},
                                     "sha": self.sha, "ref": "refs/heads/main",
-                                    "eventName": "push", "runId": 999},
+                                    "eventName": "push", "runId": 101},
                         "runs": {"total_count": 1, "workflow_runs": [self.run]},
                         "artifacts": {"total_count": 1, "artifacts": [self.artifact]}}
 
@@ -193,7 +267,7 @@ class QualityRunResolverTests(unittest.TestCase):
                                 capture_output=True, text=True, check=True, timeout=10)
         return json.loads(result.stdout)
 
-    def test_resolves_exact_quality_run_instead_of_current_deploy_run(self):
+    def test_resolves_only_the_current_quality_caller_run(self):
         self.assertEqual(self.exercise(), {
             "error": None, "outputs": {"run-id": "101"},
             "calls": [
@@ -224,25 +298,28 @@ class QualityRunResolverTests(unittest.TestCase):
                 fixture = dict(self.fixture, runs={"total_count": len(runs), "workflow_runs": runs})
                 self.assert_refused(fixture, "exactly one Quality Gate run", ["runs"])
 
-    def test_refuses_mismatched_or_unsuccessful_run_before_artifact_lookup(self):
+    def test_refuses_mismatched_or_inactive_caller_before_artifact_lookup(self):
         for key, value in (("id", 999), ("head_sha", "b" * 40), ("head_branch", "develop"),
                            ("event", "pull_request"), ("path", ".github/workflows/deploy.yml"),
                            ("repository", {"full_name": "fork/dombi"}),
                            ("head_repository", {"full_name": "fork/dombi"}),
-                           ("status", "queued"), ("status", "in_progress"),
-                           ("conclusion", "failure"), ("conclusion", None)):
+                           ("status", "queued"), ("status", "completed"),
+                           ("conclusion", "failure"), ("conclusion", "cancelled")):
             with self.subTest(key=key, value=value):
                 fixture = dict(self.fixture, runs={
                     "total_count": 1, "workflow_runs": [dict(self.run, **{key: value})]})
-                self.assert_refused(fixture, "mismatched or not successful", ["runs"])
+                self.assert_refused(fixture, "mismatched or not in progress", ["runs"])
 
     def test_refuses_missing_duplicate_expired_or_mismatched_artifacts(self):
         for artifacts, reason in (
             ([], "exactly one release artifact"),
             ([self.artifact, dict(self.artifact, id=202)], "exactly one release artifact"),
             ([dict(self.artifact, expired=True)], "expired or mismatched"),
+            ([dict(self.artifact, id=202)], "expired or mismatched"),
             ([dict(self.artifact, name="release-other")], "expired or mismatched"),
             ([dict(self.artifact, workflow_run={"id": 999, "head_sha": self.sha})],
+             "expired or mismatched"),
+            ([dict(self.artifact, workflow_run={"id": 101, "head_sha": "b" * 40})],
              "expired or mismatched"),
         ):
             with self.subTest(artifacts=artifacts):

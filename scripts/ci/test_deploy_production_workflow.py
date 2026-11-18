@@ -42,9 +42,11 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("PRODUCTION_DEPLOY_ACTIVATED = False", TRANSPORT.read_text())
         self.assertFalse(transport.PRODUCTION_DEPLOY_ACTIVATED)
 
-    def test_only_push_to_main_and_manual_dispatch_can_trigger(self):
-        self.assertEqual(sorted(self.triggers), ["push", "workflow_dispatch"])
-        self.assertEqual(self.triggers["push"]["branches"], ["main"])
+    def test_only_quality_caller_and_manual_dispatch_can_trigger(self):
+        self.assertEqual(sorted(self.triggers), ["workflow_call", "workflow_dispatch"])
+        artifact = self.triggers["workflow_call"]["inputs"]["release_artifact_id"]
+        self.assertEqual(artifact["type"], "string")
+        self.assertIs(artifact["required"], True)
 
     def test_no_schedule_or_pull_request_trigger(self):
         for forbidden in ("schedule", "pull_request", "repository_dispatch"):
