@@ -13,15 +13,16 @@ permissions:
   contents: read
   actions: read
 
-# One packaging run per commit; never cancel an in-flight build that a deploy
-# may already be waiting on.
+# Serialize duplicate runs without sharing the group with other callers.
 concurrency:
-  group: quality-${{ github.sha }}
+  group: quality-${{ github.workflow_ref }}-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
   quality:
     runs-on: ubuntu-latest
+    outputs:
+      release_artifact_id: ${{ steps.release.outputs.artifact-id }}
     services:
       mysql:
         image: mysql:8.0
@@ -76,7 +77,9 @@ jobs:
       - run: php artisan test --testsuite Feature
       - run: npm test
       - name: Locate an existing immutable release for this commit
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: >-
+          github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+          github.workflow_ref == 'leanderarya/dombi/.github/workflows/tests.yml@refs/heads/main'
         id: existing
         uses: actions/github-script@v7
         with:
@@ -88,7 +91,10 @@ jobs:
               await core.summary.addRaw('Existing immutable release retained; not rebuilding or replacing it.\n').write();
             }
       - name: Assemble production dependencies without changing the tested workspace
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.existing.outputs.found != 'true'
+        if: >-
+          github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+          github.workflow_ref == 'leanderarya/dombi/.github/workflows/tests.yml@refs/heads/main' &&
+          steps.existing.outputs.found != 'true'
         run: |
           mkdir "$RUNNER_TEMP/runtime"
           cp composer.json composer.lock "$RUNNER_TEMP/runtime/"
@@ -96,10 +102,25 @@ jobs:
           composer check-platform-reqs --working-dir="$RUNNER_TEMP/runtime" --no-dev
           python3 scripts/ci/release.py pack --root . --vendor "$RUNNER_TEMP/runtime/vendor" --sha "$GITHUB_SHA" --output "$RUNNER_TEMP/release"
       - uses: actions/upload-artifact@v4
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.existing.outputs.found != 'true'
+        id: release
+        if: >-
+          github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+          github.workflow_ref == 'leanderarya/dombi/.github/workflows/tests.yml@refs/heads/main' &&
+          steps.existing.outputs.found != 'true'
         with:
           name: release-${{ github.sha }}
           path: ${{ runner.temp }}/release/*
           if-no-files-found: error
           overwrite: false
           retention-days: 90
+
+  production:
+    needs: quality
+    if: >-
+      needs.quality.result == 'success' && github.repository == 'leanderarya/dombi' &&
+      github.event_name == 'push' && github.ref == 'refs/heads/main' && github.ref_protected &&
+      github.workflow_ref == 'leanderarya/dombi/.github/workflows/tests.yml@refs/heads/main' &&
+      github.run_attempt == '1' && needs.quality.outputs.release_artifact_id != ''
+    uses: ./.github/workflows/deploy-production.yml
+    with:
+      release_artifact_id: ${{ needs.quality.outputs.release_artifact_id }}
