@@ -4,12 +4,19 @@ Parsed structurally (not by string matching) so a formatting change cannot hide 
 disabled-by-default regression, and so an accidental auto-deploy trigger fails.
 """
 
+import hashlib
 import importlib.util
+import os
 from pathlib import Path
+import shutil
+import subprocess
 import sys
+import tempfile
 import unittest
+from unittest import mock
 
 import yaml
+import production_ssh_transport as ssh_transport
 
 
 WORKFLOW = Path(__file__).parents[2] / ".github" / "workflows" / "deploy-production.yml"
@@ -122,6 +129,76 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("production_ssh_transport.py --phase deploy", runs)
         # The upload/deploy steps may only exist behind the gate output.
         self.assertIn("needs.gate.outputs.enabled == 'true'", self.data["jobs"]["deploy"]["if"])
+
+    def test_download_then_stage_then_verify_the_exact_five(self):
+        steps = self.data["jobs"]["deploy"]["steps"]
+        download = next(i for i, s in enumerate(steps) if
+                        s.get("uses", "").startswith("actions/download-artifact@"))
+        verify = next(i for i, s in enumerate(steps) if s.get("id") == "artifact")
+        upload = next(i for i, s in enumerate(steps) if
+                      "production_ssh_transport.py --phase upload" in s.get("run", ""))
+        self.assertLess(download, verify)
+        self.assertLess(verify, upload)
+        self.assertEqual(steps[download]["with"]["path"], "transfer")
+        self.assertEqual(steps[upload]["run"],
+                         "python3 -B scripts/ci/production_ssh_transport.py --phase upload")
+        sources = {
+            "release.py": "scripts/ci/release.py",
+            "filesystem_checkpoint.py": "scripts/recovery/filesystem_checkpoint.py",
+            "single_owner_deploy.py": "scripts/recovery/single_owner_deploy.py",
+        }
+        expected = {"release.tar.gz", "release.sha256", *sources}
+        self.assertEqual(set(transport.REQUIRED_TOOLS), expected)
+        self.assertEqual(set(ssh_transport.UPLOAD_FILES), expected)
+        env = {"PATH": os.environ["PATH"], "PRODUCTION_DEPLOY_ENABLED": "true",
+               "GITHUB_EVENT_NAME": "push", "GITHUB_REF": "refs/heads/main",
+               "GITHUB_REPOSITORY": "leanderarya/dombi", "GITHUB_RUN_ATTEMPT": "1",
+               "GITHUB_SHA": "a" * 40}
+        # Invoke the real verifier with activation set only in the local child process.
+        activate_fixture = """python3() {
+          command python3 -B -c 'import sys
+sys.path.insert(0, "scripts/ci")
+import production_deploy_transport as transport
+transport.PRODUCTION_DEPLOY_ACTIVATED = True
+sys.exit(transport.main(sys.argv[1:]))' "${@:3}"
+        }
+        """
+        for case in ("complete", "missing receipt", "missing tool", "destination symlink"):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                transfer = root / "transfer"
+                transfer.mkdir()
+                archive = b"synthetic archive"
+                (transfer / "release.tar.gz").write_bytes(archive)
+                if case != "missing receipt":
+                    (transfer / "release.sha256").write_text(
+                        hashlib.sha256(archive).hexdigest() + "  release.tar.gz\n")
+                for source in (*sources.values(), "scripts/ci/production_deploy_transport.py"):
+                    if case == "missing tool" and source == sources["single_owner_deploy.py"]:
+                        continue
+                    (root / source).parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(WORKFLOW.parents[2] / source, root / source)
+                with mock.patch.object(transport, "PRODUCTION_DEPLOY_ACTIVATED", True):
+                    with self.assertRaisesRegex(transport.TransportError, "transfer_inventory"):
+                        transport.plan(env, transfer)
+                collision = transfer / "release.py"
+                if case == "destination symlink":
+                    collision.symlink_to(transfer / "not-created")
+                result = subprocess.run(
+                    ["bash", "-eo", "pipefail", "-c", activate_fixture + steps[verify]["run"]],
+                    cwd=root, env=env, capture_output=True, text=True)
+                if case == "complete":
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual({p.name for p in ssh_transport.transfer_files(transfer)}, expected)
+                    for name, source in sources.items():
+                        self.assertEqual((transfer / name).read_bytes(),
+                                         (WORKFLOW.parents[2] / source).read_bytes())
+                else:
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertEqual(result.stdout, "")
+                    if case == "destination symlink":
+                        self.assertTrue(collision.is_symlink())
+                        self.assertFalse(collision.exists())
 
     def test_rollback_is_manual_only_and_never_on_push(self):
         job = self.data["jobs"]["rollback"]
