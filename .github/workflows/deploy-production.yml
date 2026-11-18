@@ -83,11 +83,56 @@ jobs:
           with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
               out.write('transfer_id=%s\n' % target['transfer_id'])
           PY
+      - name: Resolve the successful Quality Gate run for this main push
+        id: quality-run
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const {owner, repo} = context.repo;
+            const repository = `${owner}/${repo}`;
+            const sha = context.sha;
+            if (repository !== 'leanderarya/dombi' || context.ref !== 'refs/heads/main' ||
+                context.eventName !== 'push' || !/^[a-f0-9]{40}$/.test(sha)) {
+              throw new Error('Expected a push to canonical main with a full SHA');
+            }
+
+            const {data: runs} = await github.rest.actions.listWorkflowRuns({
+              owner, repo, workflow_id: 'tests.yml', branch: 'main', event: 'push',
+              head_sha: sha, per_page: 2,
+            });
+            if (runs.total_count !== 1 || runs.workflow_runs.length !== 1) {
+              throw new Error('Expected exactly one Quality Gate run for this main push');
+            }
+            const [run] = runs.workflow_runs;
+            if (run.repository?.full_name !== repository ||
+                run.head_repository?.full_name !== repository ||
+                run.path !== '.github/workflows/tests.yml' ||
+                run.head_branch !== 'main' || run.event !== 'push' || run.head_sha !== sha ||
+                run.id === context.runId || !Number.isSafeInteger(run.id) || run.id <= 0 ||
+                run.status !== 'completed' || run.conclusion !== 'success') {
+              throw new Error('Quality Gate run is mismatched or not successful');
+            }
+
+            const name = `release-${sha}`;
+            const {data: result} = await github.rest.actions.listWorkflowRunArtifacts({
+              owner, repo, run_id: run.id, name, per_page: 2,
+            });
+            if (result.total_count !== 1 || result.artifacts.length !== 1) {
+              throw new Error('Expected exactly one release artifact in the Quality Gate run');
+            }
+            const [artifact] = result.artifacts;
+            if (artifact.name !== name || artifact.expired !== false ||
+                artifact.workflow_run?.id !== run.id || artifact.workflow_run?.head_sha !== sha) {
+              throw new Error('Quality Gate release artifact is expired or mismatched');
+            }
+            core.setOutput('run-id', String(run.id));
       - uses: actions/download-artifact@v4
         with:
           name: release-${{ github.sha }}
           path: transfer
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.quality-run.outputs.run-id }}
       - name: Verify activation, artifact binding and transfer inventory
         id: artifact
         env:
