@@ -11,6 +11,7 @@ import io
 import json
 import os
 from pathlib import Path
+import stat
 import struct
 import sys
 import tempfile
@@ -257,6 +258,120 @@ class ActivationTests(unittest.TestCase):
             (base / "release.py").symlink_to("/etc/passwd")
             with self.assertRaisesRegex(transport.TransportError, "transfer_entry"):
                 transport.transfer_files(base)
+
+    def test_incomplete_upload_inventory_never_starts_network_commands(self):
+        with tempfile.TemporaryDirectory() as directory, \
+                mock.patch.object(transport, "PRODUCTION_DEPLOY_ACTIVATED", True), \
+                mock.patch.object(transport.subprocess, "run") as runner:
+            for name in transport.UPLOAD_FILES[:-1]:
+                (Path(directory) / name).write_bytes(b"fixture")
+            with self.assertRaisesRegex(transport.TransportError, "transfer_inventory"):
+                transport.run_phase("upload", env(), directory)
+        runner.assert_not_called()
+
+    def test_upload_prepares_before_copy_and_stops_on_either_failure(self):
+        for failure in (None, "ssh", "scp"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as directory, \
+                    mock.patch.object(transport, "PRODUCTION_DEPLOY_ACTIVATED", True), \
+                    mock.patch.object(transport.subprocess, "run") as runner:
+                for name in transport.UPLOAD_FILES:
+                    (Path(directory) / name).write_bytes(b"fixture")
+
+                def fake_run(command, **kwargs):
+                    if command[0] == "ssh-keyscan":
+                        return mock.Mock(stdout=LINE)
+                    if command[2] == failure:
+                        raise transport.subprocess.CalledProcessError(1, command)
+                    return mock.Mock()
+
+                runner.side_effect = fake_run
+                if failure:
+                    with self.assertRaisesRegex(transport.TransportError, "transport_failed"):
+                        transport.run_phase("upload", env(), directory)
+                else:
+                    self.assertEqual(transport.run_phase("upload", env(), directory)["phase"],
+                                     "upload")
+                _, prepare, *copies = runner.call_args_list
+                self.assertEqual(prepare.args[0][2], "ssh")
+                self.assertEqual(prepare.kwargs["input"],
+                                 transport.host_script("upload", env(), TRANSFER_ID))
+                self.assertEqual([call.args[0][2] for call in copies],
+                                 [] if failure == "ssh" else ["scp"])
+
+
+class PrivateParentTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.boundary = Path(temporary.name).resolve()
+        self.home = self.boundary / "home"
+        self.home.mkdir(mode=0o700)
+        root = self.home / transport.PRODUCTION_ROOT
+        for name in ("storage/framework", "database", "bootstrap/cache", "public"):
+            (root / name).mkdir(parents=True)
+        (root / ".env").touch()
+        self.parent = self.home / transport.TRANSFER_PARENT
+        self.transfer = self.parent / TRANSFER_ID
+
+    def prepare(self, *, transfer_id=TRANSFER_ID, home=None, shell_stub=""):
+        # The host uses GNU stat; translate the mode query only on macOS.
+        if sys.platform == "darwin":
+            shell_stub += 'stat() { command stat -f %OLp "$3"; }\n'
+        return transport.subprocess.run(
+            ["bash", "-se"], input=shell_stub + transport.host_script("upload", {}, transfer_id),
+            env={"HOME": str(home or self.home), "PATH": os.defpath},
+            capture_output=True, text=True)
+
+    def test_creates_owned_private_parent_and_reuses_without_replacing_it(self):
+        result = self.prepare()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        inode = self.parent.stat().st_ino
+        for directory in (self.parent, self.transfer):
+            self.assertEqual(directory.stat().st_uid, os.geteuid())
+            self.assertEqual(stat.S_IMODE(directory.stat().st_mode), 0o700)
+        result = self.prepare(transfer_id="release-" + "e" * 16)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.parent.stat().st_ino, inode)
+        self.assertNotEqual(self.prepare().returncode, 0)  # Never reuse a transfer ID.
+
+    def test_refuses_parent_symlinks_live_and_dangling(self):
+        target = self.boundary / "target"
+        target.mkdir(mode=0o700)
+        for path in (target, self.boundary / "missing"):
+            with self.subTest(target=path):
+                self.parent.symlink_to(path)
+                self.assertNotEqual(self.prepare().returncode, 0)
+                self.assertEqual(self.parent.readlink(), path)
+                self.parent.unlink()
+        self.assertEqual(list(target.iterdir()), [])
+
+    def test_refuses_symlinked_home_and_transfer(self):
+        alias = self.boundary / "alias"
+        alias.symlink_to(self.home)
+        self.assertNotEqual(self.prepare(home=alias).returncode, 0)
+        self.assertFalse(self.parent.exists())
+        self.parent.mkdir(mode=0o700)
+        self.transfer.symlink_to(self.boundary / "missing")
+        self.assertNotEqual(self.prepare().returncode, 0)
+        self.assertTrue(self.transfer.is_symlink())
+
+    def test_refuses_wrong_mode_or_owner_without_repairing_existing_parent(self):
+        self.parent.mkdir(mode=0o755)
+        self.parent.chmod(0o755)
+        self.assertNotEqual(self.prepare().returncode, 0)
+        self.assertEqual(stat.S_IMODE(self.parent.stat().st_mode), 0o755)
+        self.parent.chmod(0o700)
+        owner_check = ('test() { if [[ "$1" == -O && "$2" == "$HOME/dombi-ci-production" ]]; '
+                       'then return 1; fi; builtin test "$@"; }\n')
+        self.assertNotEqual(self.prepare(shell_stub=owner_check).returncode, 0)
+        self.assertEqual(list(self.parent.iterdir()), [])
+
+    def test_permission_failure_aborts_before_copy(self):
+        denied = 'mkdir() { echo "Permission denied" >&2; return 1; }\n'
+        result = self.prepare(shell_stub=denied)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Permission denied", result.stderr)
+        self.assertFalse(self.parent.exists())
 
 
 if __name__ == "__main__":

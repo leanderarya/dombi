@@ -92,7 +92,17 @@ jobs:
         id: artifact
         env:
           PRODUCTION_DEPLOY_ENABLED: ${{ vars.PRODUCTION_DEPLOY_ENABLED }}
-        run: python3 -B scripts/ci/production_deploy_transport.py --phase deploy
+        run: |
+          test ! -L transfer
+          test -d transfer
+          for source in scripts/ci/release.py scripts/recovery/filesystem_checkpoint.py \
+                        scripts/recovery/single_owner_deploy.py; do
+            destination="transfer/${source##*/}"
+            test ! -e "$destination"
+            test ! -L "$destination"
+            cp "$source" "$destination"
+          done
+          python3 -B scripts/ci/production_deploy_transport.py --phase deploy
       - name: Upload the verified artifact to the production account
         env:
           TRANSFER_ID: ${{ steps.bind.outputs.transfer_id }}
@@ -101,10 +111,7 @@ jobs:
           HOSTINGER_SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
           HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
           HOSTINGER_SSH_FINGERPRINT: ${{ secrets.HOSTINGER_SSH_FINGERPRINT }}
-        run: |
-          cp scripts/recovery/filesystem_checkpoint.py scripts/recovery/single_owner_deploy.py \
-             scripts/ci/release.py transfer/
-          python3 -B scripts/ci/production_ssh_transport.py --phase upload
+        run: python3 -B scripts/ci/production_ssh_transport.py --phase upload
       - name: Publish managed code with verified backup
         env:
           TRANSFER_ID: ${{ steps.bind.outputs.transfer_id }}

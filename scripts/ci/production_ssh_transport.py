@@ -132,15 +132,24 @@ def host_script(phase, env, transfer_id):
                '  test -d "$root/$d"; test ! -L "$root/$d"\n'
                'done\n'
                'test ! -e "$root/storage/framework/down"\n')
+    script += ('test ! -L "$HOME"; test -d "$HOME"; test -O "$HOME"\n'
+               'test "$(realpath "$HOME")" = "$HOME"\n'
+               'home_mode="$(stat -c %a "$HOME")"\n'
+               '(( (8#$home_mode & 022) == 0 ))\n')
     script += 'parent="$HOME/%s"\n' % TRANSFER_PARENT
-    script += ('test -d "$parent"; test ! -L "$parent"; test -O "$parent"\n'
+    if phase == "upload":
+        script += 'if test ! -e "$parent" && test ! -L "$parent"; then mkdir -m 700 "$parent"; fi\n'
+    script += ('test ! -L "$parent"; test -d "$parent"; test -O "$parent"\n'
+               'test "$(realpath "$parent")" = "$parent"\n'
                'test "$(stat -c %a "$parent")" = 700\n')
     directory = '"$parent/%s"' % transfer_id
     if phase == "upload":
-        script += "test ! -e %s\ntest ! -L %s\nmkdir -m 700 %s\n" % (
-            directory, directory, directory)
-        return script
-    script += "cd %s\n" % directory
+        return script + "mkdir -m 700 %s\n" % directory
+    script += ('transfer=%s\n'
+               'test ! -L "$transfer"; test -d "$transfer"; test -O "$transfer"\n'
+               'test "$(realpath "$transfer")" = "$transfer"\n'
+               'test "$(stat -c %%a "$transfer")" = 700\n'
+               'cd "$transfer"\n') % directory
     if phase == "deploy":
         sha = env.get("RELEASE_SHA", "")
         archive_sha = env.get("ARCHIVE_SHA256", "")
@@ -194,17 +203,16 @@ def run_phase(phase, env, source="transfer"):
             child["SSHPASS"] = password
             target = "%s@%s" % (user, host)
             directory_path = "%s/%s" % (TRANSFER_PARENT, transfer_id)
+            command = ["sshpass", "-e", "ssh", *options, "-T", "-p", port,
+                       target, "bash -se"]
+            subprocess.run(command, input=script, capture_output=True, text=True,
+                           env=child, timeout=60 if phase == "upload" else 900, check=True)
             if phase == "upload":
                 command = ["sshpass", "-e", "scp", *options, "-P", port,
                            *[str(p.resolve()) for p in files],
                            "%s:%s/" % (target, directory_path)]
                 subprocess.run(command, capture_output=True, text=True, env=child,
                                timeout=300, check=True)
-            else:
-                command = ["sshpass", "-e", "ssh", *options, "-T", "-p", port,
-                           target, "bash -se"]
-                subprocess.run(command, input=script, capture_output=True, text=True,
-                               env=child, timeout=900, check=True)
         return {"phase": phase, "transfer_id": transfer_id}
     except (subprocess.SubprocessError, OSError) as error:
         # Never surface stderr: it can contain host banners or command echoes.
